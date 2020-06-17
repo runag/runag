@@ -1,6 +1,6 @@
 # stan-deploy-lib
 
-## bitwarden keys
+## Bitwarden keys
 
 ```
 my current ssh private key
@@ -9,7 +9,7 @@ my current password for ssh private key
 my github personal access token
 ```
 
-## env
+## Environment variables
 
 ```sh
 VERBOSE
