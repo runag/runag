@@ -22,10 +22,7 @@ benchmark() {
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
-benchmark::run() (
-  mkdir -p "${HOME}/.sysbench" || fail
-  cd "${HOME}/.sysbench" || fail
-
+benchmark::run() {
   echo "### CPU SPEED ###"
   sysbench cpu run || fail
 
@@ -35,33 +32,41 @@ benchmark::run() (
   echo "### RAM WRITE, 4KiB BLOCKS ###"
   sysbench memory run --memory-block-size=4096 || fail
 
-  sysbench fileio prepare || fail
+  benchmark::fileio
+  benchmark::fileio --file-extra-flags=direct
+}
 
-  echo "### SEQUENTIAL READ ###"
-  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 || fail
+benchmark::fileio() (
+  mkdir -p "${HOME}/.sysbench" || fail
+  cd "${HOME}/.sysbench" || fail
 
-  echo "### RANDOM READ QD1 ###"
-  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 || fail
+  sysbench fileio prepare --file-extra-flags=direct || fail
+
+  echo "### SEQUENTIAL READ ${1:-} ###"
+  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${1:-} || fail
+
+  echo "### RANDOM READ QD1 ${1:-} ###"
+  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${1:-} || fail
 
   if ! [[ "$OSTYPE" =~ ^darwin ]]; then
-    echo "### RANDOM READ QD32 ###"
-    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 || fail
+    echo "### RANDOM READ QD32 ${1:-} ###"
+    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
   fi
 
-  echo "### RANDOM WRITE QD1 ###"
-  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on || fail
+  echo "### RANDOM WRITE QD1 ${1:-} ###"
+  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
   if ! [[ "$OSTYPE" =~ ^darwin ]]; then
-    echo "### RANDOM WRITE QD32 ###"
-    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 || fail
+    echo "### RANDOM WRITE QD32 ${1:-} ###"
+    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
   fi
 
   # this should be final tests as they truncate files
-  echo "### SEQUENTIAL WRITE ###"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on || fail
+  echo "### SEQUENTIAL WRITE ${1:-} ###"
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
-  echo "### SEQUENTIAL WRITE IN SYNC MODE ###"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on || fail
+  echo "### SEQUENTIAL WRITE IN SYNC MODE ${1:-} ###"
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
   sysbench fileio cleanup || fail
 )
