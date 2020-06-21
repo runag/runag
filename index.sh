@@ -14,15 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-fail() {
-  echo "${BASH_SOURCE[1]}:${BASH_LINENO[0]}: in \`${FUNCNAME[1]}': Error: ${1:-"Abnormal termination"}" >&2
-  exit "${2:-1}"
-}
+if ! declare -f fail > /dev/null; then
+  fail() {
+    echo "${BASH_SOURCE[1]}:${BASH_LINENO[0]}: in \`${FUNCNAME[1]}': Error: ${1:-"Abnormal termination"}" >&2
+    exit "${2:-1}"
+  }
+fi
 
-SOPKA_SRC_DIR="$(dirname "${BASH_SOURCE[0]}")" || fail "Unable to determine SOPKA_SRC_DIR ($?)"
-SOPKA_SRC_DIR="$(cd "${SOPKA_SRC_DIR}" >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_SRC_DIR ($?)"
+if [ -z "${SOPKA_SRC_DIR:-}" ]; then
+  SOPKA_SRC_DIR="$(dirname "${BASH_SOURCE[0]}")" || fail "Unable to determine SOPKA_SRC_DIR ($?)"
+  SOPKA_SRC_DIR="$(cd "${SOPKA_SRC_DIR}" >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_SRC_DIR ($?)"
 
-export SOPKA_SRC_DIR
+  export SOPKA_SRC_DIR
+fi
 
 . "${SOPKA_SRC_DIR}/lib/benchmark.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/bitwarden.sh" || fail

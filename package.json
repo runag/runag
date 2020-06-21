@@ -1,0 +1,12 @@
+{
+  "name": "sopka",
+  "version": "0.0.1",
+  "homepage": "https://github.com/senotrusov/sopka",
+  "bugs": "https://github.com/senotrusov/sopka/issues",
+  "license": "Apache-2.0",
+  "author": "Stanislav Senotrusov",
+  "bin": {
+    "sopka": "bin/sopka"
+  },
+  "repository": "senotrusov/sopka"
+}
