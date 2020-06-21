@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::shellrcd::rbenv() {
+shellrcd::rbenv() {
   local output="${HOME}/.shellrc.d/rbenv.sh"
   local opensslDir
 
@@ -42,7 +42,7 @@ SHELL
   . "${output}" || fail
 }
 
-deploy-lib::ruby::install-gemrc() {
+ruby::install-gemrc() {
   local output="${HOME}/.gemrc"
   tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
 install: --no-document

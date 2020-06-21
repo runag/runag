@@ -14,14 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::shellrcd::stan-computer-deploy-path() {
-  local output="${HOME}/.shellrc.d/stan-computer-deploy-path.sh"
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
-    export PATH="${MY_COMPUTER_DEPLOY_DIR}/bin:\$PATH"
-SHELL
-}
-
-deploy-lib::shellrcd::use-nano-editor() {
+shellrcd::use-nano-editor() {
   local output="${HOME}/.shellrc.d/use-nano-editor.sh"
   local nanoPath; nanoPath="$(command -v nano)" || fail
   tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
@@ -29,7 +22,7 @@ deploy-lib::shellrcd::use-nano-editor() {
 SHELL
 }
 
-deploy-lib::shellrcd::hook-direnv() {
+shellrcd::hook-direnv() {
   local output="${HOME}/.shellrc.d/hook-direnv.sh"
   tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
   export DIRENV_LOG_FORMAT=""

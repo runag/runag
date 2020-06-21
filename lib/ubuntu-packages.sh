@@ -89,7 +89,7 @@ ubuntu::install-corecoding-vitals-gnome-shell-extension() {
 
   mkdir -p "${extensionsDir}" || fail
 
-  deploy-lib::git::make-repository-clone-available "https://github.com/corecoding/Vitals" "${extensionsDir}/${extensionUuid}" || fail
+  git::make-repository-clone-available "https://github.com/corecoding/Vitals" "${extensionsDir}/${extensionUuid}" || fail
 
   gnome-extensions enable "${extensionUuid}" || fail
 }

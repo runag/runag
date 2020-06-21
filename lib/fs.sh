@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::sudo-write-file() {
+fs::sudo-write-file() {
   local dest="$1"
   local mode="${2:-0644}"
   local owner="${3:-root}"
@@ -31,7 +31,7 @@ deploy-lib::sudo-write-file() {
   sudo chown "$owner:$group" "$dest" || fail "Unable to chown '${dest}' ($?)"
 }
 
-deploy-lib::remove-dir-if-empty() {
+fs::remove-dir-if-empty() {
   if [ -d "$1" ]; then
     # if directory is not empty then rm exit status will be non-zero
     rm --dir "$1" || true

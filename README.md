@@ -1,4 +1,4 @@
-# stan-deploy-lib
+# 🏔️ Sopka
 
 ## Bitwarden keys
 
@@ -17,4 +17,11 @@ BITWARDEN_LOGIN
 GIT_USER_NAME
 GIT_USER_EMAIL
 GITHUB_LOGIN
+```
+
+# Contributing
+
+## Please check shell scripts before commiting any changes
+```sh
+test/run-code-checks.sh
 ```

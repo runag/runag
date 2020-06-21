@@ -14,16 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::shellrcd::install() {
+shellrcd::install() {
   if [ ! -d "${HOME}/.shellrc.d" ]; then
     mkdir -p "${HOME}/.shellrc.d" || fail "Unable to create the directory: ${HOME}/.shellrc.d"
   fi
 
-  deploy-lib::shellrcd::add-loader "${HOME}/.bashrc" || fail
-  deploy-lib::shellrcd::add-loader "${HOME}/.zshrc" || fail
+  shellrcd::add-loader "${HOME}/.bashrc" || fail
+  shellrcd::add-loader "${HOME}/.zshrc" || fail
 }
 
-deploy-lib::shellrcd::add-loader() {
+shellrcd::add-loader() {
   local shellrcFile="$1"
 
   if [ ! -f "${shellrcFile}" ]; then

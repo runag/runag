@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::bitwarden::unlock() {
+bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     # the absence of error handling is intentional here
     local errorString; errorString="$(bw login "${BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
@@ -37,14 +37,14 @@ deploy-lib::bitwarden::unlock() {
   fi
 }
 
-deploy-lib::bitwarden::write-notes-to-file-if-not-exists() {
+bitwarden::write-notes-to-file-if-not-exists() {
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"0022"}"
   local bwdata
 
   if [ ! -f "${outputFile}" ]; then
-    deploy-lib::bitwarden::unlock || fail
+    bitwarden::unlock || fail
 
     if bwdata="$(bw get item "${item}")"; then
       local dirName; dirName="$(dirname "${outputFile}")" || fail

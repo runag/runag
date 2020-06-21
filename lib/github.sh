@@ -14,23 +14,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::github::get-release-by-label() {
+github::get-release-by-label() {
   local repoPath="$1"
   local label="$2"
   local release="${3:-latest}"
 
-  deploy-lib::github::get-release "${repoPath}" ".label == \"${label}\"" "${release}" || fail
+  github::get-release "${repoPath}" ".label == \"${label}\"" "${release}" || fail
 }
 
-deploy-lib::github::get-release-by-name() {
+github::get-release-by-name() {
   local repoPath="$1"
   local label="$2"
   local release="${3:-latest}"
 
-  deploy-lib::github::get-release "${repoPath}" ".name | test(\"${label}\")" "${release}" || fail
+  github::get-release "${repoPath}" ".name | test(\"${label}\")" "${release}" || fail
 }
 
-deploy-lib::github::get-release() {
+github::get-release() {
   local repoPath="$1"
   local query="$2"
   local release="${3:-latest}"

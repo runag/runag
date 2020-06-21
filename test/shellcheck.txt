@@ -1,0 +1,98 @@
+
+In bin/sopka line 38:
+  . "./sopka.sh" || fail
+    ^----------^ SC1091: Not following: ./sopka.sh was not specified as input (see shellcheck -x).
+
+
+In ./lib/ubuntu.sh line 250:
+  sudo checkrestart >"$tmpFile" || fail
+                    ^-- SC2024: sudo doesn't affect redirects. Use ..| sudo tee file
+
+
+In ./lib/benchmark.sh line 46:
+  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${1:-} || fail
+                                                                    ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 "${1:-}" || fail
+
+
+In ./lib/benchmark.sh line 49:
+  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${1:-} || fail
+                                                                    ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 "${1:-}" || fail
+
+
+In ./lib/benchmark.sh line 53:
+    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
+                                                                                                                   ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 "${1:-}" || fail
+
+
+In ./lib/benchmark.sh line 57:
+  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
+                                                                                                            ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on "${1:-}" || fail
+
+
+In ./lib/benchmark.sh line 61:
+    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
+                                                                                                                                                           ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 "${1:-}" || fail
+
+
+In ./lib/benchmark.sh line 66:
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
+                                                                                                            ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on "${1:-}" || fail
+
+
+In ./lib/benchmark.sh line 69:
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
+                                                                                                                                    ^----^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on "${1:-}" || fail
+
+
+In ./lib/ssh.sh line 30:
+    if [ ! -z "$key" ]; then
+         ^-- SC2236: Use -n instead of ! -z.
+
+
+In ./lib/ssh.sh line 101:
+    mkdir -p -m 0700 "${HOME}/.ssh" || fail
+             ^-- SC2174: When used with -p, -m only applies to the deepest directory.
+
+
+In ./lib/ssh.sh line 112:
+    ${REMOTE_HOST:-} \
+    ^--------------^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+    "${REMOTE_HOST:-}" \
+
+
+In ./test/run-code-checks.sh line 19:
+ruby test/check-shell-error-handling.rb bin/* $(find . -name '*.sh') | tee test/check-shell-error-handling.txt
+                                              ^--------------------^ SC2046: Quote this to prevent word splitting.
+
+
+In ./test/run-code-checks.sh line 21:
+shellcheck bin/* $(find . -name '*.sh') -e SC1090 | tee test/shellcheck.txt
+                 ^--------------------^ SC2046: Quote this to prevent word splitting.
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2024 -- sudo doesn't affect redirects. Us...
+  https://www.shellcheck.net/wiki/SC2046 -- Quote this to prevent word splitt...
+  https://www.shellcheck.net/wiki/SC2174 -- When used with -p, -m only applie...

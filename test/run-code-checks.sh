@@ -14,6 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::display-elapsed-time() {
-  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
+set -o nounset
+
+ruby test/check-shell-error-handling.rb bin/* $(find . -name '*.sh') | tee test/check-shell-error-handling.txt
+
+shellcheck bin/* $(find . -name '*.sh') -e SC1090 | tee test/shellcheck.txt

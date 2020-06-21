@@ -14,16 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# deploy-lib::ssh::add-host-known-hosts bitbucket.org || fail
-# deploy-lib::ssh::add-host-known-hosts github.com || fail
+# ssh::add-host-to-known-hosts bitbucket.org || fail
+# ssh::add-host-to-known-hosts github.com || fail
 
-deploy-lib::git::configure() {
+git::configure() {
   git config --global user.name "${GIT_USER_NAME}" || fail
   git config --global user.email "${GIT_USER_EMAIL}" || fail
   git config --global core.autocrlf input || fail
 }
 
-deploy-lib::git::cd-to-temp-clone() {
+git::cd-to-temp-clone() {
   local repoUrl="$1"
   local branch="${2:-}"
 
@@ -31,18 +31,18 @@ deploy-lib::git::cd-to-temp-clone() {
 
   local tempDir; tempDir="$(mktemp --dry-run --tmpdir="${HOME}" "${localCloneDir}-XXXXXX")" || fail "Unable to create temp file"
 
-  deploy-lib::git::make-repository-clone-available "${repoUrl}" "${tempDir}" "${branch}" || fail
+  git::make-repository-clone-available "${repoUrl}" "${tempDir}" "${branch}" || fail
 
   cd "${tempDir}" || fail
 
-  export DEPLOY_LIB_GIT_TEMP_CLONE_DIR="${tempDir}" || fail
+  SOPKA_SRC_GIT_TEMP_CLONE_DIR="${tempDir}" || fail
 }
 
-deploy-lib::git::remove-temp-clone() {
-  rm -rf "${DEPLOY_LIB_GIT_TEMP_CLONE_DIR}" || fail
+git::remove-temp-clone() {
+  rm -rf "${SOPKA_SRC_GIT_TEMP_CLONE_DIR}" || fail
 }
 
-deploy-lib::git::make-repository-clone-available() {
+git::make-repository-clone-available() {
   local repoUrl="$1"
   local localCloneDir; localCloneDir="${2:-$(basename "$repoUrl")}" || fail
   local branch="${3:-"master"}"

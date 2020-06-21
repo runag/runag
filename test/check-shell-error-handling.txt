@@ -1,0 +1,34 @@
+
+./lib/config-files.sh:
+  47:         git diff --ignore-cr-at-eol --color --unified=6 --no-index "${dst}" "${src}" | tee
+  49:         diff --strip-trailing-cr --context=6 --color "${dst}" "${src}"
+
+./lib/macos/exec-cat.sh:
+  17: exec cat
+
+./lib/ubuntu.sh:
+  143:     find /mnt/hgfs -maxdepth 1 -mindepth 1 -type d | while IFS="" read -r dirPath; do
+
+./lib/bitwarden.sh:
+  20:     local errorString; errorString="$(bw login "${BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
+
+./lib/ubuntu/background-fix.sh:
+  22:       rm /var/cache/background-fix-state
+  23:       su - stan bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/warty-final-ubuntu.png'"
+  25:       touch /var/cache/background-fix-state
+  26:       su - stan bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/Disco_Dingo_Alt_Default_by_Abubakar_NK.png'"
+
+./lib/ssh.sh:
+  28:   while true; do
+  29:     local key; key="$(ssh-keyscan "$ip" 2>/dev/null)" # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
+  31:       return
+  85:     shellOptions+="set -o xtrace; "
+  90:     for i in "${SEND_ENV[@]}"; do
+  91:       envString+="export $(printf "%q" "${i}")=$(printf "%q" "${!i}"); "
+  96:   for i in "${@}"; do
+  97:     argString+="$(printf "%q" "${i}") "
+  114:     || return $?
+
+./test/run-code-checks.sh:
+  19: ruby test/check-shell-error-handling.rb bin/* $(find . -name '*.sh') | tee test/check-shell-error-handling.txt
+  21: shellcheck bin/* $(find . -name '*.sh') -e SC1090 | tee test/shellcheck.txt

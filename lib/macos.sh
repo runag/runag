@@ -20,7 +20,7 @@ macos::increase-maxfiles-limit() {
   local dst="/Library/LaunchDaemons/limit.maxfiles.plist"
 
   if [ ! -f "${dst}" ]; then
-    sudo cp "${STAN_DEPLOY_LIB_DIR}/lib/macos/limit.maxfiles.plist" "${dst}" || fail "Unable to copy to $dst ($?)"
+    sudo cp "${SOPKA_SRC_DIR}/lib/macos/limit.maxfiles.plist" "${dst}" || fail "Unable to copy to $dst ($?)"
 
     sudo chmod 0644 "${dst}" || fail "Unable to chmod ${dst} ($?)"
 
@@ -61,11 +61,11 @@ macos::ssh::add-ssh-key-password-to-keychain() {
   if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
     echo "${keyFile} is already in the keychain"
   else
-    deploy-lib::bitwarden::unlock || fail
+    bitwarden::unlock || fail
 
     # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
     local password; password="$(bw get password "my current password for ssh private key")" || fail
-    echo "${password}" | SSH_ASKPASS="${STAN_DEPLOY_LIB_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
+    echo "${password}" | SSH_ASKPASS="${SOPKA_SRC_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
   fi
 }

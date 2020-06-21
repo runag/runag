@@ -14,12 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::config::install() {
+config::install() {
   src="$1"
   dst="$2"
 
   if [ -f "${dst}" ]; then
-    deploy-lib::config::merge "${src}" "${dst}" || fail
+    config::merge "${src}" "${dst}" || fail
   else
     local currentUserId; currentUserId="$(id -u)" || fail
     local currentGroupId; currentGroupId="$(id -g)" || fail
@@ -36,7 +36,7 @@ deploy-lib::config::install() {
   fi
 }
 
-deploy-lib::config::merge() {
+config::merge() {
   src="$1"
   dst="$2"
 

@@ -32,8 +32,8 @@ benchmark::run() {
   echo "### RAM WRITE, 4KiB BLOCKS ###"
   sysbench memory run --memory-block-size=4096 || fail
 
-  benchmark::fileio
-  benchmark::fileio --file-extra-flags=direct
+  benchmark::fileio || fail
+  benchmark::fileio --file-extra-flags=direct || fail
 }
 
 benchmark::fileio() (

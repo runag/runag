@@ -14,16 +14,36 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-lib::ssh::install-keys() {
+ssh::install-keys() {
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir -m 0700 "${HOME}/.ssh" || fail
   fi
 
-  deploy-lib::bitwarden::write-notes-to-file-if-not-exists "my current ssh private key" "${HOME}/.ssh/id_rsa" "077" || fail
-  deploy-lib::bitwarden::write-notes-to-file-if-not-exists "my current ssh public key" "${HOME}/.ssh/id_rsa.pub" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "my current ssh private key" "${HOME}/.ssh/id_rsa" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "my current ssh public key" "${HOME}/.ssh/id_rsa.pub" "077" || fail
 }
 
-deploy-lib::ssh::add-host-known-hosts() {
+ssh::wait-for-host-ssh-to-become-available() {
+  local ip="$1"
+  while true; do
+    local key; key="$(ssh-keyscan "$ip" 2>/dev/null)" # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
+    if [ ! -z "$key" ]; then
+      return
+    else
+      echo "Waiting for SSH to become available on host '$ip'..."
+      sleep 1 || fail
+    fi
+  done
+}
+
+ssh::refresh-host-in-known-hosts() {
+  local hostName="$1"
+  ssh::remove-host-from-known-hosts "$hostName" || fail
+  ssh::wait-for-host-ssh-to-become-available "$hostName" || fail
+  ssh::add-host-to-known-hosts "$hostName" || fail
+}
+
+ssh::add-host-to-known-hosts() {
   local hostName="$1"
   local knownHosts="${HOME}/.ssh/known_hosts"
 
@@ -44,4 +64,52 @@ deploy-lib::ssh::add-host-known-hosts() {
   if ! ssh-keygen -F "${hostName}" >/dev/null; then
     ssh-keyscan -T 60 -H "${hostName}" >> "${knownHosts}" || fail
   fi
+}
+
+ssh::remove-host-from-known-hosts() {
+  local hostName="$1"
+  ssh-keygen -R "$hostName" || fail
+}
+
+ssh::get-user-public-key() {
+  if [ -r "${HOME}/.ssh/id_rsa.pub" ]; then
+    cat "${HOME}/.ssh/id_rsa.pub" || fail
+  else
+    fail "Unable to find user public key"
+  fi
+}
+
+ssh::call() {
+  local shellOptions="set -o nounset; "
+  if [ -n "${VERBOSE:-}" ]; then
+    shellOptions+="set -o xtrace; "
+  fi
+
+  local i envString=""
+  if [ -n "${SEND_ENV:+x}" ]; then
+    for i in "${SEND_ENV[@]}"; do
+      envString+="export $(printf "%q" "${i}")=$(printf "%q" "${!i}"); "
+    done
+  fi
+
+  local i argString=""
+  for i in "${@}"; do
+    argString+="$(printf "%q" "${i}") "
+  done
+
+   if [ ! -d "${HOME}/.ssh" ]; then
+    mkdir -p -m 0700 "${HOME}/.ssh" || fail
+  fi
+
+  ssh \
+    -o ControlMaster=auto \
+    -o ControlPath="$HOME/.ssh/%C.control-socket" \
+    -o ControlPersist=yes \
+    -o ServerAliveInterval=50 \
+    -o ForwardAgent=yes \
+    ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
+    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"} \
+    ${REMOTE_HOST:-} \
+    bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
+    || return $?
 }

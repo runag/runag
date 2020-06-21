@@ -14,23 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-shellrcd::nodenv() {
-  local output="${HOME}/.shellrc.d/nodenv.sh"
-
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
-    if [ -d "\$HOME/.nodenv/bin" ]; then
-      if ! [[ ":\$PATH:" == *":\$HOME/.nodenv/bin:"* ]]; then
-        export PATH="\$HOME/.nodenv/bin:\$PATH"
-      fi
-    fi
-    if command -v nodenv >/dev/null; then
-      if [ -z \${NODENV_INITIALIZED+x} ]; then
-        eval "\$(nodenv init -)" || { echo "Unable to init nodenv" >&2; return 1; }
-        export NODENV_INITIALIZED=true
-      fi
-    fi
-SHELL
-
-  . "${output}" || fail
-  nodenv rehash || fail
+tools::display-elapsed-time() {
+  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }

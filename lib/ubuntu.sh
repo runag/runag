@@ -69,7 +69,7 @@ ubuntu::set-inotify-max-user-watches() {
 }
 
 ubuntu::fix-nvidia-gpu-background-image-glitch() {
-  sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${STAN_DEPLOY_LIB_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
+  sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${SOPKA_SRC_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
 }
 
 ubuntu::perhaps-fix-nvidia-screen-tearing() {
@@ -91,7 +91,7 @@ ubuntu::add-ssh-key-password-to-keyring() {
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_rsa" >/dev/null; then
-      deploy-lib::bitwarden::unlock || fail
+      bitwarden::unlock || fail
       bw get password "my current password for ssh private key" \
         | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_rsa" unique "ssh-store:${HOME}/.ssh/id_rsa"
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
@@ -114,7 +114,7 @@ ubuntu::add-git-credentials-to-keyring() {
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     if ! secret-tool lookup server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
-      deploy-lib::bitwarden::unlock || fail
+      bitwarden::unlock || fail
       bw get password "my github personal access token" \
         | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store github personal access token"
@@ -223,7 +223,7 @@ ubuntu::setup-gnome-keyring-pam() {
   local pamFile="/etc/pam.d/login"
   if ! grep --quiet "pam_gnome_keyring" "${pamFile}"; then
     local tmpFile; tmpFile="$(mktemp)" || fail "Unable to create temp file"
-    ruby "${STAN_DEPLOY_LIB_DIR}/lib/ubuntu/patch-pam-d-login.rb" <"${pamFile}" >"${tmpFile}" || fail "Unable to patch ${pamFile}"
+    ruby "${SOPKA_SRC_DIR}/lib/ubuntu/patch-pam-d-login.rb" <"${pamFile}" >"${tmpFile}" || fail "Unable to patch ${pamFile}"
     sudo install --mode=0644 --owner=root --group=root "$tmpFile" -D "${pamFile}" || fail "Unable to install file: ${pamFile} ($?)"
     rm "${tmpFile}" || fail
   fi
@@ -242,4 +242,20 @@ ubuntu::install-shellrcd::gnome-keyring-daemon-start() {
       export SSH_AUTH_SOCK
     fi
 SHELL
+}
+
+ubuntu::display-if-restart-required() {
+  local tmpFile; tmpFile="$(mktemp)" || fail
+
+  sudo checkrestart >"$tmpFile" || fail
+
+  if ! grep --quiet 'Found 0 processes using old versions of upgraded files' "$tmpFile"; then
+    cat "$tmpFile" || fail
+  fi
+
+  rm "$tmpFile" || fail
+
+  if [ -f /var/run/reboot-required ]; then
+    echo "Found /var/run/reboot-required" >&2
+  fi
 }
