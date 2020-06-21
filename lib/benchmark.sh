@@ -14,15 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-benchmark() {
+benchmark::run() {
   local current_date; current_date="$(date +"%Y-%m-%d %H-%M-%S")" || fail
   local hostname_string; hostname_string="$(hostname)" || fail
 
-  benchmark::run | tee "${HOME}/${hostname_string} ${current_date} benchmark.txt"
+  benchmark::actually-run | tee "${HOME}/${hostname_string} ${current_date} benchmark.txt"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
-benchmark::run() {
+benchmark::actually-run() {
   echo "### CPU SPEED ###"
   sysbench cpu run || fail
 

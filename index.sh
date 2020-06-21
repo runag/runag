@@ -26,7 +26,7 @@ export SOPKA_SRC_DIR
 
 . "${SOPKA_SRC_DIR}/lib/benchmark.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/bitwarden.sh" || fail
-. "${SOPKA_SRC_DIR}/lib/config-files.sh" || fail
+. "${SOPKA_SRC_DIR}/lib/config.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/fs.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/git.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/github.sh" || fail
