@@ -245,17 +245,9 @@ SHELL
 }
 
 ubuntu::display-if-restart-required() {
-  local tmpFile; tmpFile="$(mktemp)" || fail
+  sudo checkrestart || fail
 
-  sudo checkrestart >"$tmpFile" || fail
-
-  if ! grep --quiet 'Found 0 processes using old versions of upgraded files' "$tmpFile"; then
-    cat "$tmpFile" || fail
-  fi
-
-  rm "$tmpFile" || fail
-
-  if [ -f /var/run/reboot-required ]; then
-    echo "Found /var/run/reboot-required" >&2
+  if [ -x /usr/lib/update-notifier/update-motd-reboot-required ]; then
+    /usr/lib/update-notifier/update-motd-reboot-required >&2 || fail
   fi
 }
