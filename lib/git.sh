@@ -24,14 +24,12 @@ git::configure() {
 }
 
 git::cd-to-temp-clone() {
-  local repoUrl="$1"
+  local url="$1"
   local branch="${2:-}"
 
-  local localCloneDir; localCloneDir="$(basename "$repoUrl")" || fail
+  local tempDir; tempDir="$(mktemp -d)" || fail "Unable to create temp dir"
 
-  local tempDir; tempDir="$(mktemp --dry-run --tmpdir="${HOME}" "${localCloneDir}-XXXXXX")" || fail "Unable to create temp file"
-
-  git::make-repository-clone-available "${repoUrl}" "${tempDir}" "${branch}" || fail
+  git::clone-or-pull "${url}" "${tempDir}" "${branch}" || fail
 
   cd "${tempDir}" || fail
 
@@ -42,29 +40,19 @@ git::remove-temp-clone() {
   rm -rf "${SOPKA_SRC_GIT_TEMP_CLONE_DIR}" || fail
 }
 
-git::make-repository-clone-available() {
-  local repoUrl="$1"
-  local localCloneDir; localCloneDir="${2:-$(basename "$repoUrl")}" || fail
-  local branch="${3:-"master"}"
+git::clone-or-pull() {
+  local url="$1"
+  local dest="$2"
+  local branch="${3:-}"
 
-  if [ ! -d "${localCloneDir}" ]; then
-    git clone "${repoUrl}" "${localCloneDir}" || fail "Unable to clone ${repoUrl} into ${localCloneDir}"
+  if [ -d "$dest" ]; then
+    git -C "$dest" config remote.origin.url "${url}" || fail
+    git -C "$dest" pull || fail
   else
-    local existingRepoUrl; existingRepoUrl="$(cd "${localCloneDir}" && git config --get remote.origin.url)" || fail "Unable to get existingRepoUrl"
-
-    if [ "${existingRepoUrl}" = "${repoUrl}" ]; then
-      (cd "${localCloneDir}" && git pull) || fail "Unable to pull from ${repoUrl}"
-    else
-      if (cd "${localCloneDir}" 2>/dev/null && git diff-index --quiet HEAD --); then
-        rm -rf "${localCloneDir}" || fail "Unable to delete repository ${localCloneDir}"
-        git clone "${repoUrl}" "${localCloneDir}" || fail "Unable to clone ${repoUrl} into ${localCloneDir}"
-      else
-        fail "Local clone ${localCloneDir} is cloned from ${existingRepoUrl} and there are local changes. It is expected to be a clone of ${repoUrl}."
-      fi
-    fi
+    git clone "$url" "$dest" || fail
   fi
 
-  if [ -n "${branch}" ]; then
-    (cd "${localCloneDir}" && git checkout "${branch}") || fail "Unable to checkout ${branch}"
+  if [ -n "${branch:-}" ]; then
+    git -C "$dest" checkout "${branch}" || fail "Unable to checkout ${branch}"
   fi
 }
