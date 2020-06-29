@@ -26,12 +26,12 @@ fail() {
 }
 
 if [ -L "${BASH_SOURCE[0]}" ]; then
-  SOPKA_SRC_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail
+  SOPKA_SRC_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail "Unable to readlink ${BASH_SOURCE[0]} ($?)"
 else
   SOPKA_SRC_DIR="${BASH_SOURCE[0]}"
 fi
 
-SOPKA_SRC_DIR="$(dirname "${SOPKA_SRC_DIR}")" || fail "Unable to determine SOPKA_SRC_DIR ($?)"
+SOPKA_SRC_DIR="$(dirname "${SOPKA_SRC_DIR}")" || fail "Unable to get a dirname of ${SOPKA_SRC_DIR} ($?)"
 SOPKA_SRC_DIR="$(cd "${SOPKA_SRC_DIR}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_SRC_DIR ($?)"
 
 export SOPKA_SRC_DIR
