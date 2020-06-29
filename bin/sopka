@@ -39,12 +39,12 @@ export SOPKA_SRC_DIR
 . "${SOPKA_SRC_DIR}/index.sh" || fail
 
 if [ -f "./sopka.sh" ]; then
-  SOPKA_DIR="$(pwd)" || fail
+  SOPKA_DIR="$(pwd)" || fail "Unable to get current directory ($?)"
   export SOPKA_DIR
-  . "./sopka.sh" || fail
+  . "./sopka.sh" || fail "Error loading ./sopka.sh ($?)"
 elif [ -f "${HOME}/.sopka/index.sh" ]; then
   export SOPKA_DIR="${HOME}/.sopka"
-  . "${HOME}/.sopka/index.sh" || fail
+  . "${HOME}/.sopka/index.sh" || fail "Error loading ${HOME}/.sopka/index.sh ($?)"
 else
   fail "Unable to find ./sopka.sh or ${HOME}/.sopka/index.sh"
 fi
