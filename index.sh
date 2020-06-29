@@ -35,6 +35,7 @@ fi
 . "${SOPKA_SRC_DIR}/lib/git.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/github.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/macos.sh" || fail
+. "${SOPKA_SRC_DIR}/lib/menu.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/nodejs.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/ruby.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/shellrcd-files.sh" || fail
