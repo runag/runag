@@ -51,24 +51,9 @@ apt::add-obs-studio-source() {
   sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail "Unable to add-apt-repository ppa:obsproject/obs-studio ($?)"
 }
 
-apt::perhaps-install-mbpfan() {
-  if sudo dmidecode --string baseboard-version | grep --quiet "MacBookAir5\\,2"; then
-    apt::install mbpfan || fail
-  fi
-}
-
 apt::perhaps-install-open-vm-tools-desktop() {
   if sudo dmidecode -t system | grep --quiet "Product\\ Name\\:\\ VMware\\ Virtual\\ Platform"; then
     apt::install open-vm-tools open-vm-tools-desktop || fail
-  fi
-}
-
-apt::install-dconf() {
-  # dconf-tools for ubuntu earlier than 19.04
-  if [ "$(apt-cache search --names-only dconf-tools | wc -l)" = "0" ]; then
-    apt::install dconf-cli dconf-editor || fail
-  else
-    apt::install dconf-tools || fail
   fi
 }
 

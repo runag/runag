@@ -68,20 +68,22 @@ ubuntu::set-inotify-max-user-watches() {
   fi
 }
 
+ubuntu::is-nvidia-card-installed() {
+  lspci | grep --quiet "VGA.*NVIDIA Corporation"
+}
+
 ubuntu::fix-nvidia-gpu-background-image-glitch() {
   sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${SOPKA_SRC_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
 }
 
-ubuntu::perhaps-fix-nvidia-screen-tearing() {
+ubuntu::fix-nvidia-screen-tearing() {
   # based on https://www.reddit.com/r/linuxquestions/comments/8fb9oj/how_to_fix_screen_tearing_ubuntu_1804_nvidia_390/
   local modprobeFile="/etc/modprobe.d/zz-nvidia-modeset.conf"
-  if lspci | grep --quiet "VGA.*NVIDIA Corporation"; then
-    if [ ! -f "${modprobeFile}" ]; then
-      echo "options nvidia_drm modeset=1" | sudo tee "${modprobeFile}"
-      test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to write to ${modprobeFile}"
-      sudo update-initramfs -u || fail
-      echo "Please reboot to activate screen tearing fix (ubuntu::perhaps-fix-nvidia-screen-tearing)" >&2
-    fi
+  if [ ! -f "${modprobeFile}" ]; then
+    echo "options nvidia_drm modeset=1" | sudo tee "${modprobeFile}"
+    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to write to ${modprobeFile}"
+    sudo update-initramfs -u || fail
+    echo "Please reboot to activate screen tearing fix (ubuntu::fix-nvidia-screen-tearing)" >&2
   fi
 }
 
@@ -126,13 +128,15 @@ ubuntu::add-git-credentials-to-keyring() {
   git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }
 
-ubuntu::perhaps-add-hgfs-automount() {
+ubuntu::is-in-vmware-vm() {
+  hostnamectl status | grep --quiet "Virtualization\\:.*vmware"
+}
+
+ubuntu::add-hgfs-automount() {
   # https://askubuntu.com/a/1051620
   # TODO: Do I really need x-systemd.device-timeout here? think it works well even without it.
-  if hostnamectl status | grep --quiet "Virtualization\\:.*vmware"; then
-    if ! grep --quiet --fixed-strings "fuse.vmhgfs-fuse" /etc/fstab; then
-      echo ".host:/  /mnt/hgfs  fuse.vmhgfs-fuse  defaults,allow_other,uid=1000,nofail,x-systemd.device-timeout=1s  0  0" | sudo tee -a /etc/fstab || fail "Unable to write to /etc/fstab ($?)"
-    fi
+  if ! grep --quiet --fixed-strings "fuse.vmhgfs-fuse" /etc/fstab; then
+    echo ".host:/  /mnt/hgfs  fuse.vmhgfs-fuse  defaults,allow_other,uid=1000,nofail,x-systemd.device-timeout=1s  0  0" | sudo tee -a /etc/fstab || fail "Unable to write to /etc/fstab ($?)"
   fi
 }
 
