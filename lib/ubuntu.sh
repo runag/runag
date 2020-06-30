@@ -215,35 +215,6 @@ SHELL
   fi
 }
 
-# https://wiki.archlinux.org/index.php/GNOME/Keyring
-# https://wiki.gnome.org/Projects/GnomeKeyring
-# https://wiki.gnome.org/Projects/GnomeKeyring/Pam
-
-ubuntu::setup-gnome-keyring-pam() {
-  local pamFile="/etc/pam.d/login"
-  if ! grep --quiet "pam_gnome_keyring" "${pamFile}"; then
-    local tmpFile; tmpFile="$(mktemp)" || fail "Unable to create temp file"
-    ruby "${SOPKA_SRC_DIR}/lib/ubuntu/patch-pam-d-login.rb" <"${pamFile}" >"${tmpFile}" || fail "Unable to patch ${pamFile}"
-    sudo install --mode=0644 --owner=root --group=root "$tmpFile" -D "${pamFile}" || fail "Unable to install file: ${pamFile} ($?)"
-    rm "${tmpFile}" || fail
-  fi
-
-  if ! grep --quiet "pam_gnome_keyring" /etc/pam.d/passwd && ! grep --quiet "pam_gnome_keyring" /etc/pam.d/common-password; then
-    fail "pam_gnome_keyring is expected to be in /etc/pam.d/passwd or /etc/pam.d/common-password"
-  fi
-}
-
-ubuntu::install-shellrcd::gnome-keyring-daemon-start() {
-  local outputFile="${HOME}/.shellrc.d/gnome-keyring-daemon-start.sh"
-  tee "${outputFile}" <<'SHELL' || fail "Unable to write file: ${outputFile} ($?)"
-    if [ "${XDG_SESSION_TYPE}" = tty ] && [ -n "${GNOME_KEYRING_CONTROL:-}" ] && [ -z "${SSH_AUTH_SOCK:-}" ]; then
-      eval "$(gnome-keyring-daemon --start)"
-      export GNOME_KEYRING_CONTROL
-      export SSH_AUTH_SOCK
-    fi
-SHELL
-}
-
 ubuntu::display-if-restart-required() {
   sudo checkrestart || fail
 
