@@ -37,7 +37,9 @@ git::cd-to-temp-clone() {
 }
 
 git::remove-temp-clone() {
-  rm -rf "${SOPKA_SRC_GIT_TEMP_CLONE_DIR}" || fail
+  if [ -n "${SOPKA_SRC_GIT_TEMP_CLONE_DIR:-}" ]; then
+    rm -rf "${SOPKA_SRC_GIT_TEMP_CLONE_DIR}" || fail
+  fi
 }
 
 git::clone-or-pull() {

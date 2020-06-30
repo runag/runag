@@ -42,17 +42,6 @@ apt::add-key-and-source() {
   echo "${sourceString}" | sudo tee "${sourceFile}" || fail "Unable to write apt source into the ${sourceFile}"
 }
 
-apt::add-nodejs-source() {
-  # Please use only even-numbered nodejs releases here, they are LTS
-  local nodejsInstallerUrl="https://deb.nodesource.com/setup_12.x"
-  curl --location --fail --silent --show-error "${nodejsInstallerUrl}" | sudo -E bash -
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to curl ${nodejsInstallerUrl} | bash"
-}
-
-apt::add-yarn-source() {
-  apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
-}
-
 apt::add-syncthing-source() {
   # following https://apt.syncthing.net/
   apt::add-key-and-source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
