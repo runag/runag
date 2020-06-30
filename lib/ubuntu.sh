@@ -191,3 +191,22 @@ ubuntu::display-if-restart-required() {
     /usr/lib/update-notifier/update-motd-reboot-required >&2 || fail
   fi
 }
+
+ubuntu::hide-folder() {
+  local hiddenFile="${HOME}/.hidden"
+
+  touch "${hiddenFile}" || fail
+
+  if ! grep --quiet "^$1\$" "${hiddenFile}"; then
+    echo "$1" >>"${hiddenFile}" || fail
+  fi
+}
+
+ubuntu::moz-enable-wayland() {
+  local pamFile="${HOME}/.pam_environment"
+  touch "${pamFile}" || fail
+
+  if ! grep --quiet "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
+    echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || fail
+  fi
+}
