@@ -31,10 +31,11 @@ ruby::install-rbenv() {
 
 shellrcd::rbenv() {
   local output="${HOME}/.shellrc.d/rbenv.sh"
-  local opensslDir
+  local opensslLine=""
 
   if [[ "$OSTYPE" =~ ^darwin ]] && command -v brew >/dev/null; then
-    opensslDir="$(brew --prefix openssl@1.1)" || fail
+    local opensslDir; opensslDir="$(brew --prefix openssl@1.1)" || fail
+    opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
 
   tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
@@ -47,9 +48,7 @@ shellrcd::rbenv() {
       if [ -z \${RBENV_INITIALIZED+x} ]; then
         eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
         export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--disable-install-doc"
-        if [ -n "${opensslDir}" ]; then
-          export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"
-        fi
+        ${opensslLine}
         export RBENV_INITIALIZED=true
       fi
     fi
