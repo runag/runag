@@ -31,6 +31,7 @@ shellrcd::rbenv() {
     if command -v rbenv >/dev/null; then
       if [ -z \${RBENV_INITIALIZED+x} ]; then
         eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
+        export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--disable-install-doc"
         if [ -n "${opensslDir}" ]; then
           export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"
         fi
@@ -48,4 +49,11 @@ ruby::install-gemrc() {
 install: --no-document
 update: --no-document
 SHELL
+}
+
+ruby::install-rbenv() {
+  local rbenvRoot="${HOME}/.rbenv"
+
+  git::clone-or-pull "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
+  git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
