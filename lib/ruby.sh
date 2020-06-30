@@ -14,6 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+ruby::configure-gemrc() {
+  local output="${HOME}/.gemrc"
+  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
+install: --no-document
+update: --no-document
+SHELL
+}
+
+ruby::install-rbenv() {
+  local rbenvRoot="${HOME}/.rbenv"
+  git::clone-or-pull "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
+  mkdir -p "${rbenvRoot}/plugins" || fail
+  git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
+}
+
 shellrcd::rbenv() {
   local output="${HOME}/.shellrc.d/rbenv.sh"
   local opensslDir
@@ -41,19 +56,4 @@ shellrcd::rbenv() {
 SHELL
 
   . "${output}" || fail
-}
-
-ruby::install-gemrc() {
-  local output="${HOME}/.gemrc"
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
-install: --no-document
-update: --no-document
-SHELL
-}
-
-ruby::install-rbenv() {
-  local rbenvRoot="${HOME}/.rbenv"
-  git::clone-or-pull "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
-  mkdir -p "${rbenvRoot}/plugins" || fail
-  git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
