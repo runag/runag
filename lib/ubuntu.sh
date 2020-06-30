@@ -184,37 +184,6 @@ SHELL
   /usr/bin/imwheel --kill
 }
 
-# requires xcape
-ubuntu::setup-super-key-to-xfce-menu-workaround() {
-  # Alternatives:
-  #   https://github.com/hanschen/ksuperkey
-  #   https://www.linux-apps.com/p/1081256/
-  #   https://github.com/JixunMoe/xfce-superkey
-  #
-  if [ ! -d "${HOME}/.config/autostart" ]; then
-    mkdir -p "${HOME}/.config/autostart" || fail
-  fi
-
-  local outputFile="${HOME}/.config/autostart/super-key-to-xfce-menu.desktop"
-  tee "${outputFile}" <<SHELL || fail "Unable to write file: ${outputFile} ($?)"
-[Desktop Entry]
-Type=Application
-Exec=/usr/bin/xcape -e 'Super_L=Control_L|Escape'
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-OnlyShowIn=XFCE;
-Name[en_US]=super-key-to-xfce-menu
-Name=super-key-to-xfce-menu
-Comment[en_US]=Custom scroll speed
-Comment=Custom scroll speed
-SHELL
-
-  if ! pgrep -cf "/usr/bin/xcape -e Super_L=Control_L|Escape" >/dev/null; then
-    /usr/bin/xcape -e 'Super_L=Control_L|Escape' || fail
-  fi
-}
-
 ubuntu::display-if-restart-required() {
   sudo checkrestart || fail
 
