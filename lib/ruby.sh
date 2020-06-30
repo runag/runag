@@ -53,7 +53,7 @@ SHELL
 
 ruby::install-rbenv() {
   local rbenvRoot="${HOME}/.rbenv"
-
   git::clone-or-pull "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
+  mkdir -p "${rbenvRoot}/plugins" || fail
   git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }

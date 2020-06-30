@@ -45,3 +45,10 @@ apt::add-nodejs-source() {
 apt::add-yarn-source() {
   apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
 }
+
+nodejs::install-nodenv() {
+  local nodenvRoot="${HOME}/.nodenv"
+  git::clone-or-pull "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
+  mkdir -p "${nodenvRoot}/plugins" || fail
+  git::clone-or-pull "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
+}
