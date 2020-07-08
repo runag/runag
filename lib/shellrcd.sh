@@ -33,8 +33,7 @@ shellrcd::add-loader() {
   if grep --quiet "^# shellrc.d loader" "${shellrcFile}"; then
     echo "shellrc.d loader already present"
   else
-tee -a "${shellrcFile}" <<SHELL || fail "Unable to append to the file: ${shellrcFile}"
-
+    tee -a "${shellrcFile}" <<SHELL || fail "Unable to append to the file: ${shellrcFile}"
 # shellrc.d loader
 if [ -d "\${HOME}/.shellrc.d" ]; then
   for file_bb21go6nkCN82Gk9XeY2 in "\${HOME}/.shellrc.d"/*.sh; do

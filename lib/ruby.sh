@@ -31,14 +31,14 @@ ruby::install-rbenv() {
 
 shellrcd::rbenv() {
   local output="${HOME}/.shellrc.d/rbenv.sh"
-  local opensslLine=""
 
+  local opensslLine=""
   if [[ "$OSTYPE" =~ ^darwin ]] && command -v brew >/dev/null; then
     local opensslDir; opensslDir="$(brew --prefix openssl@1.1)" || fail
     opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
 
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
+  fs::write-file "${output}" <<SHELL || fail
     if [ -d "\$HOME/.rbenv/bin" ]; then
       if ! [[ ":\$PATH:" == *":\$HOME/.rbenv/bin:"* ]]; then
         export PATH="\$HOME/.rbenv/bin:\$PATH"

@@ -15,24 +15,22 @@
 #  limitations under the License.
 
 shellrcd::use-nano-editor() {
-  local output="${HOME}/.shellrc.d/use-nano-editor.sh"
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
-  if command -v nano >/dev/null; then
-    export EDITOR="\$(command -v nano)"
-  fi
+  fs::write-file "${HOME}/.shellrc.d/use-nano-editor.sh" <<SHELL || fail
+    if command -v nano >/dev/null; then
+      export EDITOR="\$(command -v nano)"
+    fi
 SHELL
 }
 
 shellrcd::hook-direnv() {
-  local output="${HOME}/.shellrc.d/hook-direnv.sh"
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
-  if command -v direnv >/dev/null; then
-    export DIRENV_LOG_FORMAT=""
-    if [ "\$SHELL" = "/bin/zsh" ]; then
-      eval "\$(direnv hook zsh)" || echo "Unable to hook direnv" >&2
-    elif [ "\$SHELL" = "/bin/bash" ]; then
-      eval "\$(direnv hook bash)" || echo "Unable to hook direnv" >&2
+  fs::write-file "${HOME}/.shellrc.d/hook-direnv.sh" <<SHELL || fail
+    if command -v direnv >/dev/null; then
+      export DIRENV_LOG_FORMAT=""
+      if [ "\$SHELL" = "/bin/zsh" ]; then
+        eval "\$(direnv hook zsh)" || echo "Unable to hook direnv" >&2
+      elif [ "\$SHELL" = "/bin/bash" ]; then
+        eval "\$(direnv hook bash)" || echo "Unable to hook direnv" >&2
+      fi
     fi
-  fi
 SHELL
 }

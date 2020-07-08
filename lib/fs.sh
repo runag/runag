@@ -24,11 +24,25 @@ fs::sudo-write-file() {
 
   sudo mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
-  cat | sudo tee "$dest"
+  cat | sudo tee "$dest" >/dev/null
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '$dest'"
 
   sudo chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
   sudo chown "$owner:$group" "$dest" || fail "Unable to chown '${dest}' ($?)"
+}
+
+fs::write-file() {
+  local dest="$1"
+  local mode="${2:-0644}"
+
+  local dirName; dirName="$(dirname "${dest}")" || fail "Unable to get dirName of '${dest}' ($?)"
+
+  mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
+
+  cat | tee "$dest" >/dev/null
+  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '$dest'"
+
+  chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
 }
 
 fs::remove-dir-if-empty() {
