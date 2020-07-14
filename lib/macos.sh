@@ -36,40 +36,6 @@ macos::install-homebrew() {
   fi
 }
 
-macos::ssh::add-use-keychain-to-ssh-config() {
-  local sshConfigFile="${HOME}/.ssh/config"
-
-  if [ ! -f "${sshConfigFile}" ]; then
-    touch "${sshConfigFile}" || fail
-  fi
-
-  if grep --quiet "^# Use keychain" "${sshConfigFile}"; then
-    echo "Use keychain config already present"
-  else
-tee -a "${sshConfigFile}" <<SHELL || fail "Unable to append to the file: ${sshConfigFile}"
-
-# Use keychain
-Host *
-  UseKeychain yes
-  AddKeysToAgent yes
-SHELL
-  fi
-}
-
-macos::ssh::add-ssh-key-password-to-keychain() {
-  local keyFile="${HOME}/.ssh/id_rsa"
-  if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
-    echo "${keyFile} is already in the keychain"
-  else
-    bitwarden::unlock || fail
-
-    # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
-    local password; password="$(bw get password "my current password for ssh private key")" || fail
-    echo "${password}" | SSH_ASKPASS="${SOPKA_SRC_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
-    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
-  fi
-}
-
 macos::hide-folder() {
   if [ -d "$1" ]; then
     chflags hidden "$1" || fail

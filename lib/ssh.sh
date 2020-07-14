@@ -113,3 +113,53 @@ ssh::call() {
     bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
     || return $?
 }
+
+ssh::ubuntu::add-key-password-to-keyring() {
+  # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
+  # the login keyring is also available and already initialized properly
+  # I don't know yet how to check for login keyring specifically
+  if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_rsa" >/dev/null; then
+      bitwarden::unlock || fail
+      bw get password "my current password for ssh private key" \
+        | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_rsa" unique "ssh-store:${HOME}/.ssh/id_rsa"
+      test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
+    fi
+  else
+    echo "Unable to store ssh key password into the gnome keyring, DBUS not found" >&2
+  fi
+}
+
+ssh::macos::add-key-password-to-keychain() {
+  local keyFile="${HOME}/.ssh/id_rsa"
+  if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
+    echo "${keyFile} is already in the keychain"
+  else
+    bitwarden::unlock || fail
+
+    # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
+    local password; password="$(bw get password "my current password for ssh private key")" || fail
+    echo "${password}" | SSH_ASKPASS="${SOPKA_SRC_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
+    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
+  fi
+}
+
+ssh::macos::add-use-keychain-to-config() {
+  local sshConfigFile="${HOME}/.ssh/config"
+
+  if [ ! -f "${sshConfigFile}" ]; then
+    touch "${sshConfigFile}" || fail
+  fi
+
+  if grep --quiet "^# Use keychain" "${sshConfigFile}"; then
+    echo "Use keychain config already present"
+  else
+tee -a "${sshConfigFile}" <<SHELL || fail "Unable to append to the file: ${sshConfigFile}"
+
+# Use keychain
+Host *
+  UseKeychain yes
+  AddKeysToAgent yes
+SHELL
+  fi
+}

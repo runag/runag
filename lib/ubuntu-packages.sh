@@ -42,28 +42,11 @@ apt::add-key-and-source() {
   echo "${sourceString}" | sudo tee "${sourceFile}" || fail "Unable to write apt source into the ${sourceFile}"
 }
 
+# in accordance with instructions at https://apt.syncthing.net/
 apt::add-syncthing-source() {
-  # following https://apt.syncthing.net/
   apt::add-key-and-source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
 }
 
 apt::add-obs-studio-source() {
   sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail "Unable to add-apt-repository ppa:obsproject/obs-studio ($?)"
-}
-
-apt::perhaps-install-open-vm-tools-desktop() {
-  if sudo dmidecode -t system | grep --quiet "Product\\ Name\\:\\ VMware\\ Virtual\\ Platform"; then
-    apt::install open-vm-tools open-vm-tools-desktop || fail
-  fi
-}
-
-ubuntu::install-corecoding-vitals-gnome-shell-extension() {
-  local extensionsDir="${HOME}/.local/share/gnome-shell/extensions"
-  local extensionUuid="Vitals@CoreCoding.com"
-
-  mkdir -p "${extensionsDir}" || fail
-
-  git::clone-or-pull "https://github.com/corecoding/Vitals" "${extensionsDir}/${extensionUuid}" || fail
-
-  gnome-extensions enable "${extensionUuid}" || fail
 }

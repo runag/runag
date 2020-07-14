@@ -58,3 +58,31 @@ git::clone-or-pull() {
     git -C "$dest" checkout "${branch}" || fail "Unable to checkout ${branch}"
   fi
 }
+
+# https://wiki.gnome.org/Projects/Libsecret
+git::ubuntu::install-credential-libsecret() (
+  apt::install gnome-keyring libsecret-tools libsecret-1-0 libsecret-1-dev || fail
+
+  if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
+    cd /usr/share/doc/git/contrib/credential/libsecret || fail
+    sudo make || fail "Unable to compile libsecret"
+  fi
+)
+
+git::ubuntu::add-credentials-to-keyring() {
+  # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
+  # the login keyring is also available and already initialized properly
+  # I don't know yet how to check for login keyring specifically
+  if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    if ! secret-tool lookup server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
+      bitwarden::unlock || fail
+      bw get password "my github personal access token" \
+        | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+      test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store github personal access token"
+    fi
+  else
+    echo "Unable to store git credentials into the gnome keyring, DBUS not found" >&2
+  fi
+
+  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
+}
