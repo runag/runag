@@ -41,6 +41,8 @@ fi
 . "${SOPKA_SRC_DIR}/lib/shellrcd-files.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/shellrcd.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/ssh.sh" || fail
+. "${SOPKA_SRC_DIR}/lib/sublime.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/tools.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/ubuntu-packages.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/ubuntu.sh" || fail
+. "${SOPKA_SRC_DIR}/lib/vscode.sh" || fail
