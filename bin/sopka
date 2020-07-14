@@ -51,6 +51,11 @@ fi
 
 if [ -n "${1:-}" ]; then
   declare -f "$1" >/dev/null || fail "Argument must be a function name: $1"
+  "$1" "${@:2}" || fail
+else
+  if declare -f sopka::menu >/dev/null; then
+    sopka::menu || fail
+  else
+    fail "sopka::menu function must be defined"
+  fi
 fi
-
-"${1:-sopka::menu}" "${@:2}" || fail
