@@ -68,7 +68,7 @@ ubuntu::desktop::moz-enable-wayland() {
   fi
 }
 
-ubuntu::desktop::install-corecoding-vitals-gnome-shell-extension() {
+ubuntu::desktop::install-vitals() {
   local extensionsDir="${HOME}/.local/share/gnome-shell/extensions"
   local extensionUuid="Vitals@CoreCoding.com"
 
