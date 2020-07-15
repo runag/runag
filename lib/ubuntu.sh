@@ -69,5 +69,5 @@ ubuntu::display-if-restart-required() {
 
 # "hostnamectl status" could also be used to detect that we are running insde the vm
 ubuntu::is-bare-metal() {
-  ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo; then
+  ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo
 }
