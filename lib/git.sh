@@ -61,8 +61,6 @@ git::clone-or-pull() {
 
 # https://wiki.gnome.org/Projects/Libsecret
 git::ubuntu::install-credential-libsecret() (
-  apt::install gnome-keyring libsecret-tools libsecret-1-0 libsecret-1-dev || fail
-
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
     cd /usr/share/doc/git/contrib/credential/libsecret || fail
     sudo make || fail "Unable to compile libsecret"
