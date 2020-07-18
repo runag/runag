@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-if [ -n "${VERBOSE:-}" ]; then
+if [ "${VERBOSE:-}" = true ]; then
   set -o xtrace
 fi
 
@@ -47,6 +47,13 @@ elif [ -f "${HOME}/.sopka/index.sh" ]; then
   . "${HOME}/.sopka/index.sh" || fail "Error loading ${HOME}/.sopka/index.sh ($?)"
 else
   fail "Unable to find ./sopka.sh or ${HOME}/.sopka/index.sh"
+fi
+
+if [[ "$OSTYPE" =~ ^msys ]]; then
+  if [ -z "${SOPKA_WIN_DIR:-}" ]; then
+    SOPKA_WIN_DIR="$(echo "${SOPKA_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
+    export SOPKA_WIN_DIR
+  fi
 fi
 
 if [ -n "${1:-}" ]; then

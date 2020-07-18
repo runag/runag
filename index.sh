@@ -30,7 +30,7 @@ fi
 
 if [[ "$OSTYPE" =~ ^msys ]]; then
   if [ -z "${SOPKA_SRC_WIN_DIR:-}" ]; then
-    SOPKA_SRC_WIN_DIR="$(echo "${SOPKA_SRC_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//")"
+    SOPKA_SRC_WIN_DIR="$(echo "${SOPKA_SRC_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
     export SOPKA_SRC_WIN_DIR
   fi
 fi

@@ -14,10 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-windows::enable-ssh-agent() {
-  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}/lib/windows/enable-ssh-agent.ps1" || fail
+windows::run-admin-powershell-script() {
+  powershell -Command "Start-Process powershell \"-ExecutionPolicy Bypass -NoProfile -NoExit -Command $1\" -Wait -Verb RunAs" || fail
+  # I have no idea on how to obtain the exit status here, so for now I just choose to put -NoExit and let the user decide
+  echo "Press ENTER if it went ok"
+  read
 }
 
-windows::run-admin-powershell-script() {
-  powershell -Command "Start-Process powershell \"-ExecutionPolicy Bypass -NoProfile -Command $1\" -Verb RunAs" || fail
+windows::enable-ssh-agent() {
+  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\enable-ssh-agent.ps1" || fail
+}
+
+windows::install-chocolatey() {
+  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\chocolatey-install.ps1" || fail
+}
+
+windows::chocolatey::upgrade-all() {
+  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\chocolatey-upgrade-all.ps1" || fail
+}
+
+windows::is-bare-metal() {
+  ! powershell -Command "Get-WmiObject Win32_computerSystem" | grep --quiet --fixed-strings "VMware"
 }

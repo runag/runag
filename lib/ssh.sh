@@ -16,7 +16,8 @@
 
 ssh::install-keys() {
   if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -m 0700 "${HOME}/.ssh" || fail
+    mkdir "${HOME}/.ssh" || fail
+    chmod 0700 "${HOME}/.ssh" || fail
   fi
 
   bitwarden::write-notes-to-file-if-not-exists "my current ssh private key" "${HOME}/.ssh/id_rsa" "077" || fail
@@ -81,7 +82,7 @@ ssh::get-user-public-key() {
 
 ssh::call() {
   local shellOptions="set -o nounset; "
-  if [ -n "${VERBOSE:-}" ]; then
+  if [ "${VERBOSE:-}" = true ]; then
     shellOptions+="set -o xtrace; "
   fi
 
