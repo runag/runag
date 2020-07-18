@@ -28,6 +28,13 @@ if [ -z "${SOPKA_SRC_DIR:-}" ]; then
   export SOPKA_SRC_DIR
 fi
 
+if [[ "$OSTYPE" =~ ^msys ]]; then
+  if [ -z "${SOPKA_SRC_WIN_DIR:-}" ]; then
+    SOPKA_SRC_WIN_DIR="$(echo "${SOPKA_SRC_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//")"
+    export SOPKA_SRC_WIN_DIR
+  fi
+fi
+
 . "${SOPKA_SRC_DIR}/lib/benchmark.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/bitwarden.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/config.sh" || fail
@@ -49,3 +56,4 @@ fi
 . "${SOPKA_SRC_DIR}/lib/ubuntu-vmware.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/ubuntu.sh" || fail
 . "${SOPKA_SRC_DIR}/lib/vscode.sh" || fail
+. "${SOPKA_SRC_DIR}/lib/windows.sh" || fail
