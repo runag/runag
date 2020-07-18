@@ -15,6 +15,7 @@
 #  limitations under the License.
 
 windows::run-admin-powershell-script() {
+  echo "Running $1 script..."
   powershell -Command "Start-Process powershell \"-ExecutionPolicy Bypass -NoProfile -NoExit -Command $1\" -Wait -Verb RunAs" || fail
   # I have no idea on how to obtain the exit status here, so for now I just choose to put -NoExit and let the user decide
   echo "Press ENTER if it went ok"
