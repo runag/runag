@@ -22,14 +22,6 @@ windows::run-admin-powershell-script() {
   read
 }
 
-windows::enable-ssh-agent() {
-  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\enable-ssh-agent.ps1" || fail
-}
-
-windows::install-chocolatey() {
-  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\chocolatey-install.ps1" || fail
-}
-
 windows::chocolatey::upgrade-all() {
   windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\chocolatey-upgrade-all.ps1" || fail
 }
