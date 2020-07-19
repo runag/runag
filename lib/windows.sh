@@ -14,18 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-windows::run-admin-powershell-script() {
-  echo "Running $1 script..."
-  powershell -Command "Start-Process powershell \"-ExecutionPolicy Bypass -NoProfile -NoExit -Command $1\" -Wait -Verb RunAs" || fail
-  # I have no idea on how to obtain the exit status here, so for now I just choose to put -NoExit and let the user decide
-  echo "Press ENTER if it went ok"
-  read
-}
-
-windows::chocolatey::upgrade-all() {
-  windows::run-admin-powershell-script "${SOPKA_SRC_WIN_DIR}\lib\windows\chocolatey-upgrade-all.ps1" || fail
-}
-
 windows::is-bare-metal() {
   ! powershell -Command "Get-WmiObject Win32_computerSystem" | grep --quiet --fixed-strings "VMware"
 }
