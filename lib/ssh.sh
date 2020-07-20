@@ -20,8 +20,8 @@ ssh::install-keys() {
     chmod 0700 "${HOME}/.ssh" || fail
   fi
 
-  bitwarden::write-notes-to-file-if-not-exists "my current ssh private key" "${HOME}/.ssh/id_rsa" "077" || fail
-  bitwarden::write-notes-to-file-if-not-exists "my current ssh public key" "${HOME}/.ssh/id_rsa.pub" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "my current ssh private key" "${HOME}/.ssh/id_ed25519" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "my current ssh public key" "${HOME}/.ssh/id_ed25519.pub" "077" || fail
 }
 
 ssh::wait-for-host-ssh-to-become-available() {
@@ -73,8 +73,8 @@ ssh::remove-host-from-known-hosts() {
 }
 
 ssh::get-user-public-key() {
-  if [ -r "${HOME}/.ssh/id_rsa.pub" ]; then
-    cat "${HOME}/.ssh/id_rsa.pub" || fail
+  if [ -r "${HOME}/.ssh/id_ed25519.pub" ]; then
+    cat "${HOME}/.ssh/id_ed25519.pub" || fail
   else
     fail "Unable to find user public key"
   fi
@@ -120,10 +120,10 @@ ssh::ubuntu::add-key-password-to-keyring() {
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_rsa" >/dev/null; then
+    if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_ed25519" >/dev/null; then
       bitwarden::unlock || fail
       bw get password "my current password for ssh private key" \
-        | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_rsa" unique "ssh-store:${HOME}/.ssh/id_rsa"
+        | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_ed25519" unique "ssh-store:${HOME}/.ssh/id_ed25519"
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
     fi
   else
@@ -132,7 +132,7 @@ ssh::ubuntu::add-key-password-to-keyring() {
 }
 
 ssh::macos::add-key-password-to-keychain() {
-  local keyFile="${HOME}/.ssh/id_rsa"
+  local keyFile="${HOME}/.ssh/id_ed25519"
   if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
     echo "${keyFile} is already in the keychain"
   else
