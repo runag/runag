@@ -20,16 +20,20 @@ menu::select-and-run() {
   echo "Please select:"
   local i
   for i in "${!list[@]}"; do
-    echo "  ${i}: ${list[$i]}"
+    echo "  $((i+1)): ${list[$i]}"
   done
   echo -n "> "
 
   local action
   IFS="" read -r action || fail
 
-  if [ -n "${action:-}" ]; then
-    local actionFunction="${list[$action]}"
-    declare -f "${actionFunction}" >/dev/null || fail "Argument must be a function name"
-    "${actionFunction}" || fail
+  if ! [[ "${action}" =~ ^[0-9]+$ ]]; then
+    fail "Please select number"
   fi
+
+  local actionFunction="${list[$((action-1))]}" || fail
+
+  # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
+  ${actionFunction}
+  test $? = 0 || fail "Error performing ${actionFunction}"
 }
