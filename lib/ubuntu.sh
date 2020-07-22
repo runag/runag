@@ -73,3 +73,10 @@ ubuntu::display-if-restart-required() {
 ubuntu::is-bare-metal() {
   ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo
 }
+
+ubuntu::add-user() {
+  local user="$1"
+  if ! id -u "${user}" ; then
+    sudo adduser --system --group --shell /bin/bash "${user}" || fail
+  fi
+}
