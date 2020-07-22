@@ -60,7 +60,9 @@ ubuntu::set-inotify-max-user-watches() {
 }
 
 ubuntu::display-if-restart-required() {
-  sudo checkrestart || fail
+  if command -v checkrestart >/dev/null; then
+    sudo checkrestart || fail
+  fi
 
   if [ -x /usr/lib/update-notifier/update-motd-reboot-required ]; then
     /usr/lib/update-notifier/update-motd-reboot-required >&2 || fail
