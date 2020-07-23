@@ -53,7 +53,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
         (umask "${setUmask}" && mkdir -p "${dirName}") || fail
       fi
 
-      builtin echo "${bwdata}" | jq '.notes' --raw-output --exit-status | (umask "${setUmask}" && tee "${outputFile}.tmp >/dev/null")
+      builtin echo "${bwdata}" | jq '.notes' --raw-output --exit-status | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
       local savedPipeStatus="${PIPESTATUS[*]}"
 
       if [ "${savedPipeStatus}" = "0 0 0" ]; then
@@ -89,7 +89,7 @@ bitwarden::write-password-to-file-if-not-exists() {
         (umask "${setUmask}" && mkdir -p "${dirName}") || fail
       fi
 
-      builtin echo "${bwdata}" | (umask "${setUmask}" && tee "${outputFile}.tmp >/dev/null")
+      builtin echo "${bwdata}" | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
       local savedPipeStatus="${PIPESTATUS[*]}"
 
       if [ "${savedPipeStatus}" = "0 0" ]; then
