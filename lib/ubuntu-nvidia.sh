@@ -30,5 +30,5 @@ ubuntu::nvidia::fix-screen-tearing() {
 }
 
 ubuntu::nvidia::fix-gpu-background-image-glitch() {
-  sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${SOPKA_SRC_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
+  sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${SOPKA_LIB_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
 }

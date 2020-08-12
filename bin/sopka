@@ -26,17 +26,17 @@ fail() {
 }
 
 if [ -L "${BASH_SOURCE[0]}" ]; then
-  SOPKA_SRC_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail "Unable to readlink ${BASH_SOURCE[0]} ($?)"
+  SOPKA_LIB_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail "Unable to readlink ${BASH_SOURCE[0]} ($?)"
 else
-  SOPKA_SRC_DIR="${BASH_SOURCE[0]}"
+  SOPKA_LIB_DIR="${BASH_SOURCE[0]}"
 fi
 
-SOPKA_SRC_DIR="$(dirname "${SOPKA_SRC_DIR}")" || fail "Unable to get a dirname of ${SOPKA_SRC_DIR} ($?)"
-SOPKA_SRC_DIR="$(cd "${SOPKA_SRC_DIR}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_SRC_DIR ($?)"
+SOPKA_LIB_DIR="$(dirname "${SOPKA_LIB_DIR}")" || fail "Unable to get a dirname of ${SOPKA_LIB_DIR} ($?)"
+SOPKA_LIB_DIR="$(cd "${SOPKA_LIB_DIR}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_LIB_DIR ($?)"
 
-export SOPKA_SRC_DIR
+export SOPKA_LIB_DIR
 
-. "${SOPKA_SRC_DIR}/index.sh" || fail
+. "${SOPKA_LIB_DIR}/index.sh" || fail
 
 if [ -f "./sopka.sh" ]; then
   SOPKA_DIR="$(pwd)" || fail "Unable to get current directory ($?)"

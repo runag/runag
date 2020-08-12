@@ -33,12 +33,12 @@ git::cd-to-temp-clone() {
 
   cd "${tempDir}" || fail
 
-  SOPKA_SRC_GIT_TEMP_CLONE_DIR="${tempDir}" || fail
+  SOPKA_LIB_GIT_TEMP_CLONE_DIR="${tempDir}" || fail
 }
 
 git::remove-temp-clone() {
-  if [ -n "${SOPKA_SRC_GIT_TEMP_CLONE_DIR:-}" ]; then
-    rm -rf "${SOPKA_SRC_GIT_TEMP_CLONE_DIR}" || fail
+  if [ -n "${SOPKA_LIB_GIT_TEMP_CLONE_DIR:-}" ]; then
+    rm -rf "${SOPKA_LIB_GIT_TEMP_CLONE_DIR}" || fail
   fi
 }
 
