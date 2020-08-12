@@ -23,7 +23,7 @@ ubuntu::set-hostname() {
   local hostname="$1"
   local hostnameFile=/etc/hostname
   local hostsFile=/etc/hosts
-  local hostsString="127.0.0.1 $hostname"
+  local hostsString="127.0.1.1 $hostname"
 
   echo "$hostname" | sudo tee "$hostnameFile" || fail "Unable to write to $hostnameFile ($?)"
   sudo hostname --file "$hostnameFile" || fail "Unable to load hostname from $hostnameFile ($?)"
