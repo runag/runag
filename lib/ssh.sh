@@ -15,8 +15,8 @@
 #  limitations under the License.
 
 ssh::install-keys() {
-  privateKeyName="${1:-"my current ssh private key"}"
-  publicKeyName="${2:-"my current ssh public key"}"
+  local privateKeyName="${1:-"my current ssh private key"}"
+  local publicKeyName="${2:-"my current ssh public key"}"
 
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir "${HOME}/.ssh" || fail
