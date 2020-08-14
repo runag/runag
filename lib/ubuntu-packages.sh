@@ -50,3 +50,10 @@ apt::add-syncthing-source() {
 apt::add-obs-studio-source() {
   sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail "Unable to add-apt-repository ppa:obsproject/obs-studio ($?)"
 }
+
+ubuntu::install-rclone() {
+  if ! command -v rclone >/dev/null; then
+    curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
+    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"
+  fi
+}

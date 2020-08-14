@@ -15,13 +15,16 @@
 #  limitations under the License.
 
 ssh::install-keys() {
+  privateKeyName="${1:-"my current ssh private key"}"
+  publicKeyName="${2:-"my current ssh public key"}"
+
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir "${HOME}/.ssh" || fail
     chmod 0700 "${HOME}/.ssh" || fail
   fi
 
-  bitwarden::write-notes-to-file-if-not-exists "my current ssh private key" "${HOME}/.ssh/id_ed25519" "077" || fail
-  bitwarden::write-notes-to-file-if-not-exists "my current ssh public key" "${HOME}/.ssh/id_ed25519.pub" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/id_ed25519" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "${publicKeyName}" "${HOME}/.ssh/id_ed25519.pub" "077" || fail
 }
 
 ssh::wait-for-host-ssh-to-become-available() {
@@ -46,6 +49,7 @@ ssh::refresh-host-in-known-hosts() {
 
 ssh::add-host-to-known-hosts() {
   local hostName="$1"
+  local sshPort="${2:-"22"}"
   local knownHosts="${HOME}/.ssh/known_hosts"
 
   if ! command -v ssh-keygen >/dev/null; then
@@ -62,8 +66,8 @@ ssh::add-host-to-known-hosts() {
     chmod 644 "${knownHosts}" || fail
   fi
 
-  if ! ssh-keygen -F "${hostName}" >/dev/null; then
-    ssh-keyscan -T 60 -H "${hostName}" >> "${knownHosts}" || fail
+  if ! ssh-keygen -F "[${hostName}]:${sshPort}" >/dev/null; then
+    ssh-keyscan -p "${sshPort}" -T 60 "${hostName}" >> "${knownHosts}" || fail
   fi
 }
 
