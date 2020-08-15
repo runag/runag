@@ -65,7 +65,7 @@ fs::mount-cifs() {
 
   if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
     echo "${fstabTag}" | sudo tee --append /etc/fstab || fail
-    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0640,dir_mode=0750,uid=${USER},gid=${USER} 0 0" | sudo tee --append /etc/fstab || fail
+    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0640,dir_mode=0750,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino 0 0" | sudo tee --append /etc/fstab || fail
   fi
 
   if [ ! -f "${credentialsFile}" ]; then
