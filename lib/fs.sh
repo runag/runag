@@ -51,3 +51,31 @@ fs::remove-dir-if-empty() {
     rm --dir "$1" || true
   fi
 }
+
+fs::mount-cifs() {
+  local serverPath="$1"
+  local mountName="$2"
+  local bwItem="$3"
+
+  local mountPoint="${HOME}/${mountName}"
+  local credentialsFile="${HOME}/.${mountName}.cifs-credentials"
+  local fstabTag="# ${mountName}"
+
+  mkdir -p "${mountPoint}" || fail
+
+  if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
+    echo "${fstabTag}" | sudo tee --append /etc/fstab || fail
+    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0640,dir_mode=0750,uid=${USER},gid=${USER} 0 0" | sudo tee --append /etc/fstab || fail
+  fi
+
+  if [ ! -f "${credentialsFile}" ]; then
+    bitwarden::unlock || fail
+    local cifsUsername; cifsUsername="$(bw get username "${bwItem}")" || fail
+    local cifsPassword; cifsPassword="$(bw get password "${bwItem}")" || fail
+    builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
+  fi
+
+  sudo mount -a || fail
+
+  findmnt -M "${mountPoint}" >/dev/null || fail "${mountPoint} is not mounted"
+}

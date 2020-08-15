@@ -37,6 +37,7 @@ fi
 
 . "${SOPKA_LIB_DIR}/lib/benchmark.sh" || fail
 . "${SOPKA_LIB_DIR}/lib/bitwarden.sh" || fail
+. "${SOPKA_LIB_DIR}/lib/borg.sh" || fail
 . "${SOPKA_LIB_DIR}/lib/config.sh" || fail
 . "${SOPKA_LIB_DIR}/lib/fs.sh" || fail
 . "${SOPKA_LIB_DIR}/lib/git.sh" || fail
