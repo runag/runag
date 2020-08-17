@@ -83,8 +83,8 @@ elif [ -f "./sopkafile/index.sh" ]; then
 elif [ -f "${HOME}/.sopkafile" ]; then
   sopka::load-sopkafile "${HOME}" ".sopkafile" || fail
 
-elif [ -f "${HOME}/sopkafile/index.sh" ]; then
-  sopka::load-sopkafile "${HOME}/sopkafile" "index.sh" || fail
+elif [ -f "${HOME}/.sopkafile/index.sh" ]; then
+  sopka::load-sopkafile "${HOME}/.sopkafile" "index.sh" || fail
 
 else
   fail "Unable to find sopkafile"
