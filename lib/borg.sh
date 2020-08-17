@@ -25,14 +25,12 @@ borg::menu() {
   list+=(borg::export-key)
   list+=(borg::connect-sftp)
 
-  list+=(borg::systemd::install)
-  list+=(borg::systemd::disable)
+  list+=(borg::systemd::init-service)
+  list+=(borg::systemd::start-service)
+  list+=(borg::systemd::stop-service)
 
-  list+=(borg::systemd::start)
-  list+=(borg::systemd::stop)
-
-  list+=(borg::systemd::start-timer)
-  list+=(borg::systemd::stop-timer)
+  list+=(borg::systemd::enable-timer)
+  list+=(borg::systemd::disable-timer)
 
   list+=(borg::systemd::status)
   list+=(borg::systemd::log)
@@ -61,6 +59,13 @@ borg::configure-backup-credentials() {
 
     builtin printf "export BACKUP_NAME=$(printf "%q" "${backupName}")\nexport STORAGE_USERNAME=$(printf "%q" "${storageUsername}")\nexport STORAGE_HOST=$(printf "%q" "${storageHost}")\nexport STORAGE_PORT=$(printf "%q" "${storagePort}")\nexport BORG_REPO=$(printf "%q" "ssh://${storageUsername}@${storageUri}/./${backupPath}")\nexport BORG_PASSPHRASE=$(printf "%q" "${passphrase}")\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
   fi
+}
+
+borg::load-backup-credentials() {
+  local backupName="$1"
+  local credentialsFile="${HOME}/.${backupName}.backup-credentials"
+
+  . "${credentialsFile}" || fail
 }
 
 borg::init() {
@@ -99,11 +104,11 @@ borg::connect-sftp() {
   sftp -P "${STORAGE_PORT}" "${STORAGE_USERNAME}@${STORAGE_HOST}" || fail
 }
 
-borg::systemd::install() {
+borg::systemd::init-service() {
   local servicesPath="${HOME}/.config/systemd/user"
   mkdir -p "${servicesPath}" || fail
 
-tee "${servicesPath}/${BACKUP_NAME}.service" <<EOF || fail
+  tee "${servicesPath}/${BACKUP_NAME}.service" <<EOF || fail
 [Unit]
 Description=Backup service for ${BACKUP_NAME}
 
@@ -116,7 +121,26 @@ PrivateTmp=true
 NoNewPrivileges=true
 EOF
 
-tee "${servicesPath}/${BACKUP_NAME}.timer" <<EOF || fail
+  systemctl --user reenable "${BACKUP_NAME}.service" || fail
+
+  if systemctl --user is-enabled "${BACKUP_NAME}.timer" >/dev/null 2>&1; then
+    borg::systemd::enable-timer || fail
+  fi
+}
+
+borg::systemd::start-service() {
+  systemctl --user --no-block start "${BACKUP_NAME}.service" || fail
+}
+
+borg::systemd::stop-service() {
+  systemctl --user stop "${BACKUP_NAME}.service" || fail
+}
+
+borg::systemd::enable-timer() {
+  local servicesPath="${HOME}/.config/systemd/user"
+  mkdir -p "${servicesPath}" || fail
+
+  tee "${servicesPath}/${BACKUP_NAME}.timer" <<EOF || fail
 [Unit]
 Description=Backup service timer for ${BACKUP_NAME}
 
@@ -128,35 +152,12 @@ RandomizedDelaySec=600
 WantedBy=timers.target
 EOF
 
-  systemctl --user reenable "${BACKUP_NAME}.service" || fail
   systemctl --user reenable "${BACKUP_NAME}.timer" || fail
-
   systemctl --user start "${BACKUP_NAME}.timer" || fail
 }
 
-borg::systemd::disable() {
-  borg::systemd::pause || fail
-
+borg::systemd::disable-timer() {
   systemctl --user disable "${BACKUP_NAME}.timer" || fail
-  systemctl --user disable "${BACKUP_NAME}.service" || fail
-}
-
-borg::systemd::start() {
-  systemctl --user --no-block start "${BACKUP_NAME}.service" || fail
-}
-
-borg::systemd::stop() {
-  systemctl --user stop "${BACKUP_NAME}.service" || fail
-}
-
-borg::systemd::start-timer() {
-  systemctl --user start "${BACKUP_NAME}.timer" || fail
-}
-
-borg::systemd::stop-timer() {
-  if systemctl --user is-enabled "${BACKUP_NAME}.timer" >/dev/null 2>&1; then
-    systemctl --user stop "${BACKUP_NAME}.timer" || fail
-  fi
 }
 
 borg::systemd::status() {
