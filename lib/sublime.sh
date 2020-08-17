@@ -54,10 +54,10 @@ sublime::install-package-control() {
 
 sublime::install-config-file() {
   sublime::determine-config-path || fail
-  config::install "${SOPKA_DIR}/lib/sublime/$1" "${SUBLIME_CONFIG_PATH}/Packages/User/$1" || fail "Unable to install $1 ($?)"
+  config::install "$1/$2" "${SUBLIME_CONFIG_PATH}/Packages/User/$2" || fail "Unable to install $1 ($?)"
 }
 
 sublime::merge-config-file() {
   sublime::determine-config-path || fail
-  config::merge "${SOPKA_DIR}/lib/sublime/$1" "${SUBLIME_CONFIG_PATH}/Packages/User/$1" || fail "Unable to merge $1 ($?)"
+  config::merge "$1/$2" "${SUBLIME_CONFIG_PATH}/Packages/User/$2" || fail "Unable to merge $1 ($?)"
 }

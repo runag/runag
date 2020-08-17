@@ -36,10 +36,11 @@ vscode::list-extensions-to-temp-file() {
 }
 
 vscode::install-extensions() {
-  if [ -f "${SOPKA_DIR}/lib/vscode/extensions.txt" ]; then
+  local extensionsList="$1"
+  if [ -f "${extensionsList}" ]; then
     local extensionsList; extensionsList="$(vscode::list-extensions-to-temp-file)" || fail "Unable get extensions list"
 
-    if ! diff --strip-trailing-cr "${SOPKA_DIR}/lib/vscode/extensions.txt" "${extensionsList}" >/dev/null 2>&1; then
+    if ! diff --strip-trailing-cr "${extensionsList}" "${extensionsList}" >/dev/null 2>&1; then
       local extension
 
       if [[ "$OSTYPE" =~ ^msys ]]; then
@@ -49,7 +50,7 @@ vscode::install-extensions() {
       fi
 
       # TODO: how to do correct error handling here (cat | while)?
-      cat "${SOPKA_DIR}/lib/vscode/extensions.txt" | while IFS="${ifs_value}" read -r extension; do
+      cat "${extensionsList}" | while IFS="${ifs_value}" read -r extension; do
         if [ -n "${extension}" ]; then
           code --install-extension "${extension}" || fail "Unable to install vscode extension ${extension}"
         fi
