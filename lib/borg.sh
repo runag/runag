@@ -161,10 +161,12 @@ borg::systemd::stop-timer() {
 
 borg::systemd::status() {
   systemctl --user status "${BACKUP_NAME}.service"
+  echo ""
   systemctl --user status "${BACKUP_NAME}.timer"
-  systemctl --user list-timers "${BACKUP_NAME}.timer" --all
+  echo ""
+  systemctl --user list-timers "${BACKUP_NAME}.timer" --all || fail
 }
 
 borg::systemd::log() {
-  journalctl --user -u "${BACKUP_NAME}.service" --since today
+  journalctl --user -u "${BACKUP_NAME}.service" --since today || fail
 }
