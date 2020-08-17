@@ -14,58 +14,95 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+
+# set shell options
 if [ "${VERBOSE:-}" = true ]; then
   set -o xtrace
 fi
 
 set -o nounset
 
+
+# define fail() function
 fail() {
   echo "${BASH_SOURCE[1]}:${BASH_LINENO[0]}: in \`${FUNCNAME[1]}': Error: ${1:-"Abnormal termination"}" >&2
   exit "${2:-1}"
 }
 
+
+# determine SOPKA_DIR
 if [ -L "${BASH_SOURCE[0]}" ]; then
-  SOPKA_LIB_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail "Unable to readlink ${BASH_SOURCE[0]} ($?)"
+  SOPKA_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail "Unable to readlink ${BASH_SOURCE[0]} ($?)"
 else
-  SOPKA_LIB_DIR="${BASH_SOURCE[0]}"
+  SOPKA_DIR="${BASH_SOURCE[0]}"
 fi
 
-SOPKA_LIB_DIR="$(dirname "${SOPKA_LIB_DIR}")" || fail "Unable to get a dirname of ${SOPKA_LIB_DIR} ($?)"
-SOPKA_LIB_DIR="$(cd "${SOPKA_LIB_DIR}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_LIB_DIR ($?)"
+SOPKA_DIR="$(dirname "${SOPKA_DIR}")" || fail "Unable to get a dirname of ${SOPKA_DIR} ($?)"
+SOPKA_DIR="$(cd "${SOPKA_DIR}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_DIR ($?)"
 
-export SOPKA_LIB_DIR
+export SOPKA_DIR
 
-. "${SOPKA_LIB_DIR}/index.sh" || fail
 
-if [ -f "./sopka.sh" ]; then
-  SOPKA_DIR="$(pwd)" || fail "Unable to get current directory ($?)"
-  export SOPKA_DIR
-  . "./sopka.sh" || fail "Error loading ./sopka.sh ($?)"
-elif [ -f "${HOME}/.sopka/index.sh" ]; then
-  export SOPKA_DIR="${HOME}/.sopka"
-  . "${HOME}/.sopka/index.sh" || fail "Error loading ${HOME}/.sopka/index.sh ($?)"
-else
-  fail "Unable to find ./sopka.sh or ${HOME}/.sopka/index.sh"
-fi
+# load all libraries (also determine SOPKA_WIN_DIR)
+. "${SOPKA_DIR}/index.sh" || fail
 
-if [[ "$OSTYPE" =~ ^msys ]]; then
-  if [ -z "${SOPKA_WIN_DIR:-}" ]; then
-    SOPKA_WIN_DIR="$(echo "${SOPKA_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
-    export SOPKA_WIN_DIR
+
+# find sopkafile, set SOPKAFILE_DIR and SOPKAFILE_WIN_DIR, load sopkafile
+#
+# possible sopkafile locations are:
+#
+# ./sopkafile
+# ./sopkafile/index.sh
+#
+# ~/.sopkafile
+# ~/.sopkafile/index.sh
+
+sopka::load-sopkafile() {
+  local targetDir="$1"
+  local targetFile="$2"
+
+  SOPKAFILE_DIR="$(cd "${targetDir}" >/dev/null 2>&1 && pwd)" || fail "Unable to get sopkafile directory ($?)"
+  export SOPKAFILE_DIR
+
+  if [[ "$OSTYPE" =~ ^msys ]]; then
+    if [ -z "${SOPKAFILE_WIN_DIR:-}" ]; then
+      SOPKAFILE_WIN_DIR="$(echo "${SOPKAFILE_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
+      export SOPKAFILE_WIN_DIR
+    fi
   fi
+
+  . "${targetDir}/${targetFile}" || fail
+}
+
+if [ -f "./sopkafile" ]; then
+  sopka::load-sopkafile "." "sopkafile" || fail
+
+elif [ -f "./sopkafile/index.sh" ]; then
+  sopka::load-sopkafile "./sopkafile" "index.sh" || fail
+
+elif [ -f "${HOME}/.sopkafile" ]; then
+  sopka::load-sopkafile "${HOME}" ".sopkafile" || fail
+
+elif [ -f "${HOME}/sopkafile/index.sh" ]; then
+  sopka::load-sopkafile "${HOME}/sopkafile" "index.sh" || fail
+
+else
+  fail "Unable to find sopkafile"
 fi
 
-# I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
+
+# run function provided in first argument, or display the menu, if defined
+#
+# I use "test" instead of "|| fail" here for the case if someone wants to
+# "set -o errexit" in their functions
+#
 if [ -n "${1:-}" ]; then
   declare -f "$1" >/dev/null || fail "Argument must be a function name: $1"
   "$1" "${@:2}"
   test $? = 0 || fail "Error performing $1"
+elif declare -f sopkafile::menu >/dev/null; then
+  sopkafile::menu
+  test $? = 0 || fail "Error performing sopkafile::menu"
 else
-  if declare -f sopka::menu >/dev/null; then
-    sopka::menu
-    test $? = 0 || fail "Error performing sopka::menu"
-  else
-    fail "sopka::menu function must be defined"
-  fi
+  fail "please specify a function name to run, or define a sopkafile::menu to display"
 fi

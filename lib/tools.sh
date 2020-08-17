@@ -14,12 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-tools::display-elapsed-time() {
-  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
 sopka::nothing-deployed() {
   test -z "$(find . -maxdepth 1 -name '.sopka.*.deployed' -print -quit)"
+}
+
+tools::display-elapsed-time() {
+  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
 
 tools::once-per-day() {
