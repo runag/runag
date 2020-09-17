@@ -53,6 +53,7 @@ fi
 . "${SOPKA_DIR}/lib/macos.sh" || fail
 . "${SOPKA_DIR}/lib/menu.sh" || fail
 . "${SOPKA_DIR}/lib/nodejs.sh" || fail
+. "${SOPKA_DIR}/lib/rsync.sh" || fail
 . "${SOPKA_DIR}/lib/ruby.sh" || fail
 . "${SOPKA_DIR}/lib/shellrcd-files.sh" || fail
 . "${SOPKA_DIR}/lib/shellrcd.sh" || fail

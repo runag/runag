@@ -27,96 +27,12 @@ ssh::install-keys() {
   bitwarden::write-notes-to-file-if-not-exists "${publicKeyName}" "${HOME}/.ssh/id_ed25519.pub" "077" || fail
 }
 
-ssh::wait-for-host-ssh-to-become-available() {
-  local ip="$1"
-  while true; do
-    local key; key="$(ssh-keyscan "$ip" 2>/dev/null)" # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
-    if [ ! -z "$key" ]; then
-      return
-    else
-      echo "Waiting for SSH to become available on host '$ip'..."
-      sleep 1 || fail
-    fi
-  done
-}
-
-ssh::refresh-host-in-known-hosts() {
-  local hostName="$1"
-  ssh::remove-host-from-known-hosts "$hostName" || fail
-  ssh::wait-for-host-ssh-to-become-available "$hostName" || fail
-  ssh::add-host-to-known-hosts "$hostName" || fail
-}
-
-ssh::add-host-to-known-hosts() {
-  local hostName="$1"
-  local sshPort="${2:-"22"}"
-  local knownHosts="${HOME}/.ssh/known_hosts"
-
-  if ! command -v ssh-keygen >/dev/null; then
-    fail "ssh-keygen not found"
-  fi
-
-  if [ ! -f "${knownHosts}" ]; then
-    local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
-
-    mkdir -p "${knownHostsDirname}" || fail
-    chmod 700 "${knownHostsDirname}" || fail
-
-    touch "${knownHosts}" || fail
-    chmod 644 "${knownHosts}" || fail
-  fi
-
-  if ! ssh-keygen -F "[${hostName}]:${sshPort}" >/dev/null; then
-    ssh-keyscan -p "${sshPort}" -T 60 "${hostName}" >> "${knownHosts}" || fail
-  fi
-}
-
-ssh::remove-host-from-known-hosts() {
-  local hostName="$1"
-  ssh-keygen -R "$hostName" || fail
-}
-
 ssh::get-user-public-key() {
   if [ -r "${HOME}/.ssh/id_ed25519.pub" ]; then
     cat "${HOME}/.ssh/id_ed25519.pub" || fail
   else
     fail "Unable to find user public key"
   fi
-}
-
-ssh::call() {
-  local shellOptions="set -o nounset; "
-  if [ "${VERBOSE:-}" = true ]; then
-    shellOptions+="set -o xtrace; "
-  fi
-
-  local i envString=""
-  if [ -n "${SEND_ENV:+x}" ]; then
-    for i in "${SEND_ENV[@]}"; do
-      envString+="export $(printf "%q" "${i}")=$(printf "%q" "${!i}"); "
-    done
-  fi
-
-  local i argString=""
-  for i in "${@}"; do
-    argString+="$(printf "%q" "${i}") "
-  done
-
-   if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -p -m 0700 "${HOME}/.ssh" || fail
-  fi
-
-  ssh \
-    -o ControlMaster=auto \
-    -o ControlPath="$HOME/.ssh/%C.control-socket" \
-    -o ControlPersist=yes \
-    -o ServerAliveInterval=50 \
-    -o ForwardAgent=yes \
-    ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
-    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"} \
-    ${REMOTE_HOST:-} \
-    bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
-    || return $?
 }
 
 ssh::ubuntu::add-key-password-to-keyring() {
@@ -167,4 +83,87 @@ Host *
   AddKeysToAgent yes
 SHELL
   fi
+}
+
+ssh::wait-for-host-ssh-to-become-available() {
+  local ip="$1"
+  while true; do
+    local key; key="$(ssh-keyscan "$ip" 2>/dev/null)" # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
+    if [ ! -z "$key" ]; then
+      return
+    else
+      echo "Waiting for SSH to become available on host '$ip'..."
+      sleep 1 || fail
+    fi
+  done
+}
+
+ssh::refresh-host-in-known-hosts() {
+  local hostName="$1"
+  ssh::remove-host-from-known-hosts "$hostName" || fail
+  ssh::wait-for-host-ssh-to-become-available "$hostName" || fail
+  ssh::add-host-to-known-hosts "$hostName" || fail
+}
+
+ssh::add-host-to-known-hosts() {
+  local hostName="$1"
+  local sshPort="${2:-"22"}"
+  local knownHosts="${HOME}/.ssh/known_hosts"
+
+  if ! command -v ssh-keygen >/dev/null; then
+    fail "ssh-keygen not found"
+  fi
+
+  if [ ! -f "${knownHosts}" ]; then
+    local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
+
+    mkdir -p "${knownHostsDirname}" || fail
+    chmod 700 "${knownHostsDirname}" || fail
+
+    touch "${knownHosts}" || fail
+    chmod 644 "${knownHosts}" || fail
+  fi
+
+  if ! ssh-keygen -F "[${hostName}]:${sshPort}" >/dev/null; then
+    ssh-keyscan -p "${sshPort}" -T 60 "${hostName}" >> "${knownHosts}" || fail
+  fi
+}
+
+ssh::remove-host-from-known-hosts() {
+  local hostName="$1"
+  ssh-keygen -R "$hostName" || fail
+}
+
+ssh::call() {
+  local shellOptions="set -o nounset; "
+  if [ "${VERBOSE:-}" = true ]; then
+    shellOptions+="set -o xtrace; "
+  fi
+
+  local i envString=""
+  if [ -n "${SEND_ENV:+x}" ]; then
+    for i in "${SEND_ENV[@]}"; do
+      envString+="export $(printf "%q" "${i}")=$(printf "%q" "${!i}"); "
+    done
+  fi
+
+  local i argString=""
+  for i in "${@}"; do
+    argString+="$(printf "%q" "${i}") "
+  done
+
+  if [ ! -d "${HOME}/.ssh" ]; then
+    mkdir -p -m 0700 "${HOME}/.ssh" || fail
+  fi
+
+  ssh \
+    -o ControlMaster=auto \
+    -o ControlPath="$HOME/.ssh/%C.control-socket" \
+    -o ControlPersist=yes \
+    -o ServerAliveInterval=25 \
+    ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
+    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"} \
+    ${REMOTE_HOST:-} \
+    bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
+    || return $?
 }
