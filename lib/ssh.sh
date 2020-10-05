@@ -15,8 +15,9 @@
 #  limitations under the License.
 
 ssh::install-keys() {
-  local privateKeyName="${1:-"my current ssh private key"}"
-  local publicKeyName="${2:-"my current ssh public key"}"
+  # BITWARDEN-OBJECT: "? ssh private key", "? ssh public key"
+  local privateKeyName="$1 ssh private key"
+  local publicKeyName="$1 ssh public key"
 
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir "${HOME}/.ssh" || fail
@@ -36,13 +37,15 @@ ssh::get-user-public-key() {
 }
 
 ssh::ubuntu::add-key-password-to-keyring() {
+  local bwItem="$1"
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_ed25519" >/dev/null; then
       bitwarden::unlock || fail
-      bw get password "my current password for ssh private key" \
+      # BITWARDEN-OBJECT: "? password for ssh private key"
+      bw get password "${bwItem} password for ssh private key" \
         | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_ed25519" unique "ssh-store:${HOME}/.ssh/id_ed25519"
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
     fi
@@ -52,6 +55,7 @@ ssh::ubuntu::add-key-password-to-keyring() {
 }
 
 ssh::macos::add-key-password-to-keychain() {
+  local bwItem="$1"
   local keyFile="${HOME}/.ssh/id_ed25519"
   if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
     echo "${keyFile} is already in the keychain"
@@ -59,7 +63,9 @@ ssh::macos::add-key-password-to-keychain() {
     bitwarden::unlock || fail
 
     # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
-    local password; password="$(bw get password "my current password for ssh private key")" || fail
+    
+    # BITWARDEN-OBJECT: "? password for ssh private key"
+    local password; password="$(bw get password "${bwItem} password for ssh private key")" || fail
     echo "${password}" | SSH_ASKPASS="${SOPKA_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
   fi

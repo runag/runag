@@ -38,6 +38,7 @@ bitwarden::unlock() {
 }
 
 bitwarden::write-notes-to-file-if-not-exists() {
+  # BITWARDEN-OBJECT: "?"
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"
@@ -74,6 +75,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
 }
 
 bitwarden::write-password-to-file-if-not-exists() {
+  # BITWARDEN-OBJECT: "?"
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"

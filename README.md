@@ -2,21 +2,25 @@
 
 ## Bitwarden keys
 
+<!-- # BITWARDEN-OBJECT: see list below -->
+
 ```
-my current ssh private key
-my current ssh public key
-my current password for ssh private key
-my github personal access token
+"? backup passphrase"
+"? backup storage"
+"? github personal access token"
+"? password for ssh private key"
+"? ssh private key"
+"? ssh public key"
 ```
 
 ## Environment variables
 
 ```sh
-VERBOSE
 BITWARDEN_LOGIN
-GIT_USER_NAME
 GIT_USER_EMAIL
+GIT_USER_NAME
 GITHUB_LOGIN
+VERBOSE
 ```
 
 # Contributing

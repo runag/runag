@@ -68,13 +68,16 @@ git::ubuntu::install-credential-libsecret() (
 )
 
 git::ubuntu::add-credentials-to-keyring() {
+  local bwItem="$1"
+
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     if ! secret-tool lookup server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
       bitwarden::unlock || fail
-      bw get password "my github personal access token" \
+      # BITWARDEN-OBJECT: "? github personal access token"
+      bw get password "${bwItem} github personal access token" \
         | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store github personal access token"
     fi

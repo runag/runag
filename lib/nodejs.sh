@@ -14,6 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+nodejs::ubuntu::install() {
+  apt::add-yarn-source || fail
+  apt::add-nodejs-source || fail
+  apt::update || fail
+  apt::install yarn nodejs || fail
+  nodejs::install-nodenv || fail
+  shellrcd::nodenv || fail
+  nodenv rehash || fail
+  sudo npm update -g || fail
+}
+
 nodejs::install-nodenv() {
   local nodenvRoot="${HOME}/.nodenv"
   git::clone-or-pull "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail

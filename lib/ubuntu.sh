@@ -78,6 +78,13 @@ ubuntu::display-if-restart-required() {
   fi
 }
 
+ubuntu::perhaps-display-deploy-footnotes() {
+  if [ -t 1 ]; then
+    ubuntu::display-if-restart-required || fail
+    tools::display-elapsed-time || fail
+  fi
+}
+
 # "hostnamectl status" could also be used to detect that we are running insde the vm
 ubuntu::is-bare-metal() {
   ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo

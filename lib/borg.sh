@@ -41,6 +41,9 @@ borg::menu() {
 borg::configure-backup-credentials() {
   local backupName="$1"
 
+  # BITWARDEN-OBJECT: "? backup storage"
+  # BITWARDEN-OBJECT: "? backup passphrase"
+
   local credentialsFile="${HOME}/.${backupName}.backup-credentials"
   local storageBwItem="${backupName} backup storage"
   local passphraseBwItem="${backupName} backup passphrase"

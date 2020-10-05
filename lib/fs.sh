@@ -55,6 +55,7 @@ fs::remove-dir-if-empty() {
 fs::mount-cifs() {
   local serverPath="$1"
   local mountName="$2"
+  # BITWARDEN-OBJECT: "?"
   local bwItem="$3"
 
   local mountPoint="${HOME}/${mountName}"
