@@ -38,9 +38,9 @@ vscode::list-extensions-to-temp-file() {
 vscode::install-extensions() {
   local extensionsList="$1"
   if [ -f "${extensionsList}" ]; then
-    local extensionsList; extensionsList="$(vscode::list-extensions-to-temp-file)" || fail "Unable get extensions list"
+    local installedExtensionsList; installedExtensionsList="$(vscode::list-extensions-to-temp-file)" || fail "Unable get extensions list"
 
-    if ! diff --strip-trailing-cr "${extensionsList}" "${extensionsList}" >/dev/null 2>&1; then
+    if ! diff --strip-trailing-cr "${extensionsList}" "${installedExtensionsList}" >/dev/null 2>&1; then
       local extension
 
       if [[ "$OSTYPE" =~ ^msys ]]; then
