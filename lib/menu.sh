@@ -37,3 +37,27 @@ menu::select-and-run() {
   ${actionFunction}
   test $? = 0 || fail "Error performing ${actionFunction}"
 }
+
+menu::select-argument() {
+  local list=("${@:2}")
+
+  echo "Please select:"
+  local i
+  for i in "${!list[@]}"; do
+    echo "  $((i+1)): ${list[$i]}"
+  done
+  echo -n "> "
+
+  local action
+  IFS="" read -r action || fail
+
+  if ! [[ "${action}" =~ ^[0-9]+$ ]]; then
+    fail "Please select number"
+  fi
+
+  local selectedArgument="${list[$((action-1))]}" || fail
+
+  # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
+  "$1" "${selectedArgument}"
+  test $? = 0 || fail "Error performing $1 ${selectedArgument}"
+}

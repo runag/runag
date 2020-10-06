@@ -77,7 +77,8 @@ fs::mount-cifs() {
     builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
   fi
 
-  sudo mount -a || fail
+  # other mounts might fail, so we ignore exit status here
+  sudo mount -a
 
   findmnt -M "${mountPoint}" >/dev/null || fail "${mountPoint} is not mounted"
 }

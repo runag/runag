@@ -109,20 +109,32 @@ borg::export-key() {
 }
 
 borg::import-key() {
-  local keyPath="$1"
+  local keyPath="${1:-}"
 
-  if [ "${keyPath}" = "--paper"]; then
+  if [ "${keyPath}" = "--paper" ]; then
     borg key import --paper "${BORG_REPO}" || fail
-  else
-    if [ -z "${keyPath}" ]; then
-      fail "Key path must be specified"
-    fi
+    return
+  fi
 
-    if [ ! -f "${keyPath}" ] 
+  if [ -n "${keyPath}" ]; then
+    if [ ! -f "${keyPath}" ]; then
       fail "Key file must be present: ${keyPath}"
     fi
 
     borg key import "${BORG_REPO}" "${keyPath}" || fail
+    return
+  fi
+
+  if [ -t 1 ]; then
+    local matchPath="${HOME}/${BACKUP_NAME}-"
+    if ls "${matchPath}"*.key >/dev/null 2>&1; then
+      files=("${matchPath}"*.key)
+      menu::select-argument borg::import-key "${files[@]}" || fail
+    else
+      fail "Key path must be specified, or sutable files must be in the home directory"
+    fi
+  else
+    fail "Key path must be specified"
   fi
 }
 
