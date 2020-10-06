@@ -57,6 +57,6 @@ vscode::install-extensions() {
       done
     fi
 
-    rm "${extensionsList}" || fail
+    rm "${installedExtensionsList}" || fail
   fi
 }
