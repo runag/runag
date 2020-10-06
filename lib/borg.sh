@@ -23,6 +23,7 @@ borg::menu() {
   list+=(borg::mount)
   list+=(borg::umount)
   list+=(borg::export-key)
+  list+=(borg::import-key)
   list+=(borg::connect-sftp)
 
   list+=(borg::systemd::init-service)
@@ -99,8 +100,30 @@ borg::umount() {
 borg::export-key() {
   local exportPath; exportPath="${HOME}/${BACKUP_NAME}-$(date +"%Y%m%dT%H%M%SZ")" || fail
 
+  if [ -f "${exportPath}.key" ] || [ -f "${exportPath}.key.html" ]; then
+    fail "Key files are already present: ${exportPath}.*"
+  fi
+
   borg key export "${BORG_REPO}" "${exportPath}.key" || fail
   borg key export --qr-html "${BORG_REPO}" "${exportPath}.key.html" || fail
+}
+
+borg::import-key() {
+  local keyPath="$1"
+
+  if [ "${keyPath}" = "--paper"]; then
+    borg key import --paper "${BORG_REPO}" || fail
+  else
+    if [ -z "${keyPath}" ]; then
+      fail "Key path must be specified"
+    fi
+
+    if [ ! -f "${keyPath}" ] 
+      fail "Key file must be present: ${keyPath}"
+    fi
+
+    borg key import "${BORG_REPO}" "${keyPath}" || fail
+  fi
 }
 
 borg::connect-sftp() {
