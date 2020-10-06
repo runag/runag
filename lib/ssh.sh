@@ -15,7 +15,6 @@
 #  limitations under the License.
 
 ssh::install-keys() {
-  # BITWARDEN-OBJECT: "? ssh private key", "? ssh public key"
   local privateKeyName="$1 ssh private key"
   local publicKeyName="$1 ssh public key"
 
@@ -24,6 +23,7 @@ ssh::install-keys() {
     chmod 0700 "${HOME}/.ssh" || fail
   fi
 
+  # bitwarden-object: "? ssh private key", "? ssh public key"
   bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/id_ed25519" "077" || fail
   bitwarden::write-notes-to-file-if-not-exists "${publicKeyName}" "${HOME}/.ssh/id_ed25519.pub" "077" || fail
 }
@@ -44,9 +44,11 @@ ssh::ubuntu::add-key-password-to-keyring() {
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_ed25519" >/dev/null; then
       bitwarden::unlock || fail
-      # BITWARDEN-OBJECT: "? password for ssh private key"
+
+      # bitwarden-object: "? password for ssh private key"
       bw get password "${bwItem} password for ssh private key" \
         | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_ed25519" unique "ssh-store:${HOME}/.ssh/id_ed25519"
+
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
     fi
   else
@@ -62,11 +64,12 @@ ssh::macos::add-key-password-to-keychain() {
   else
     bitwarden::unlock || fail
 
-    # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
-    
-    # BITWARDEN-OBJECT: "? password for ssh private key"
+    # bitwarden-object: "? password for ssh private key"
     local password; password="$(bw get password "${bwItem} password for ssh private key")" || fail
+
+    # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
     echo "${password}" | SSH_ASKPASS="${SOPKA_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
+
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
   fi
 }

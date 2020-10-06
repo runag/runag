@@ -41,9 +41,6 @@ borg::menu() {
 borg::configure-backup-credentials() {
   local backupName="$1"
 
-  # BITWARDEN-OBJECT: "? backup storage"
-  # BITWARDEN-OBJECT: "? backup passphrase"
-
   local credentialsFile="${HOME}/.${backupName}.backup-credentials"
   local storageBwItem="${backupName} backup storage"
   local passphraseBwItem="${backupName} backup passphrase"
@@ -51,6 +48,9 @@ borg::configure-backup-credentials() {
 
   if [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
+
+    # bitwarden-object: "? backup storage"
+    # bitwarden-object: "? backup passphrase"
 
     local storageUsername; storageUsername="$(bw get username "${storageBwItem}")" || fail
     local storageUri; storageUri="$(bw get uri "${storageBwItem}")" || fail

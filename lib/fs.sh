@@ -55,7 +55,6 @@ fs::remove-dir-if-empty() {
 fs::mount-cifs() {
   local serverPath="$1"
   local mountName="$2"
-  # BITWARDEN-OBJECT: "?"
   local bwItem="$3"
 
   local mountPoint="${HOME}/${mountName}"
@@ -71,6 +70,8 @@ fs::mount-cifs() {
 
   if [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
+
+    # bitwarden-object: "?"
     local cifsUsername; cifsUsername="$(bw get username "${bwItem}")" || fail
     local cifsPassword; cifsPassword="$(bw get password "${bwItem}")" || fail
     builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail

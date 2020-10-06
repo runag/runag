@@ -76,9 +76,11 @@ git::ubuntu::add-credentials-to-keyring() {
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     if ! secret-tool lookup server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
       bitwarden::unlock || fail
-      # BITWARDEN-OBJECT: "? github personal access token"
+
+      # bitwarden-object: "? github personal access token"
       bw get password "${bwItem} github personal access token" \
         | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store github personal access token"
     fi
   else

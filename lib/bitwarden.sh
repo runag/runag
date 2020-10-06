@@ -38,7 +38,6 @@ bitwarden::unlock() {
 }
 
 bitwarden::write-notes-to-file-if-not-exists() {
-  # BITWARDEN-OBJECT: "?"
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"
@@ -47,6 +46,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
   if [ ! -f "${outputFile}" ]; then
     bitwarden::unlock || fail
 
+    # bitwarden-object: "?"
     if bwdata="$(bw get item "${item}")"; then
       local dirName; dirName="$(dirname "${outputFile}")" || fail
 
@@ -75,7 +75,6 @@ bitwarden::write-notes-to-file-if-not-exists() {
 }
 
 bitwarden::write-password-to-file-if-not-exists() {
-  # BITWARDEN-OBJECT: "?"
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"
@@ -84,6 +83,7 @@ bitwarden::write-password-to-file-if-not-exists() {
   if [ ! -f "${outputFile}" ]; then
     bitwarden::unlock || fail
 
+    # bitwarden-object: "?"
     if bwdata="$(bw get password "${item}")"; then
       local dirName; dirName="$(dirname "${outputFile}")" || fail
 

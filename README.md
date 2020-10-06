@@ -2,7 +2,7 @@
 
 ## Bitwarden keys
 
-<!-- # BITWARDEN-OBJECT: see list below -->
+<!-- # bitwarden-object: see list below -->
 
 ```
 "? backup passphrase"
