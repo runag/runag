@@ -1,5 +1,17 @@
 # 🏔️ Sopka
 
+## Sopkafile
+
+Possible sopkafile locations are:
+
+```sh
+./sopkafile
+./sopkafile/index.sh
+
+~/.sopkafile
+~/.sopkafile/index.sh
+```
+
 ## Bitwarden keys
 
 <!-- # bitwarden-object: see list below -->
