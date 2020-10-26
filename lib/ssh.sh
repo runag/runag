@@ -115,8 +115,8 @@ ssh::refresh-host-in-known-hosts() {
 }
 
 ssh::add-host-to-known-hosts() {
-  local hostName="$1"
-  local sshPort="${2:-"22"}"
+  local hostName="${1:-"${REMOTE_HOST}"}"
+  local sshPort="${2:-"${REMOTE_PORT:-"22"}"}"
   local knownHosts="${HOME}/.ssh/known_hosts"
 
   if ! command -v ssh-keygen >/dev/null; then
@@ -133,7 +133,13 @@ ssh::add-host-to-known-hosts() {
     chmod 644 "${knownHosts}" || fail
   fi
 
-  if ! ssh-keygen -F "[${hostName}]:${sshPort}" >/dev/null; then
+  if [ "${sshPort}" = "22" ]; then
+    local keygenHostString="${hostName}"
+  else
+    local keygenHostString="[${hostName}]:${sshPort}"
+  fi
+
+  if ! ssh-keygen -F "${keygenHostString}" >/dev/null; then
     ssh-keyscan -p "${sshPort}" -T 60 "${hostName}" >> "${knownHosts}" || fail
   fi
 }
