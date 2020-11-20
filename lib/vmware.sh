@@ -14,13 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ubuntu::vmware::is-inside-vm() {
+vmware::linux::is-inside-vm() {
   # another method:
   # if sudo dmidecode -t system | grep --quiet "Product\\ Name\\:\\ VMware\\ Virtual\\ Platform"; then
   hostnamectl status | grep --quiet "Virtualization\\:.*vmware"
 }
 
-ubuntu::vmware::add-hgfs-automount() {
+vmware::linux::add-hgfs-automount() {
   # https://askubuntu.com/a/1051620
   # TODO: Do I really need x-systemd.device-timeout here? think it works well even without it.
   if ! grep --quiet --fixed-strings "fuse.vmhgfs-fuse" /etc/fstab; then
@@ -28,7 +28,7 @@ ubuntu::vmware::add-hgfs-automount() {
   fi
 }
 
-ubuntu::vmware::symlink-hgfs-mounts() {
+vmware::linux::symlink-hgfs-mounts() {
   if findmnt -M /mnt/hgfs >/dev/null; then
     local dirPath dirName
     # I use find here because for..in did not work with hgfs

@@ -41,36 +41,44 @@ bitwarden::write-notes-to-file-if-not-exists() {
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"
-  local bwdata
 
   if [ ! -f "${outputFile}" ]; then
-    bitwarden::unlock || fail
+    bitwarden::write-notes-to-file "$1" "$2" "$3" || fail
+  fi
+}
 
-    # bitwarden-object: "?"
-    if bwdata="$(bw get item "${item}")"; then
-      local dirName; dirName="$(dirname "${outputFile}")" || fail
+bitwarden::write-notes-to-file() {
+  local item="$1"
+  local outputFile="$2"
+  local setUmask="${3:-"077"}"
+  local bwdata
 
-      if [ ! -d "${dirName}" ]; then
-        (umask "${setUmask}" && mkdir -p "${dirName}") || fail
-      fi
+  bitwarden::unlock || fail
 
-      builtin echo "${bwdata}" | jq '.notes' --raw-output --exit-status | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
-      local savedPipeStatus="${PIPESTATUS[*]}"
+  # bitwarden-object: "?"
+  if bwdata="$(bw get item "${item}")"; then
+    local dirName; dirName="$(dirname "${outputFile}")" || fail
 
-      if [ "${savedPipeStatus}" = "0 0 0" ]; then
-        if [ ! -s "${outputFile}.tmp" ]; then
-          rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
-          fail "Bitwarden item ${item} expected to have a non-empty note field"
-        fi
-        mv "${outputFile}.tmp" "${outputFile}" || fail "Unable to move temp file to the output file: ${outputFile}.tmp to ${outputFile}"
-      else
-        rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
-        fail "Unable to produce '${outputFile}' (${savedPipeStatus}), bitwarden item '${item}' may not present or have an empty note field"
-      fi
-    else
-      # echo "${bwdata}" >&2
-      fail "Unable to get bitwarden item ${item}"
+    if [ ! -d "${dirName}" ]; then
+      (umask "${setUmask}" && mkdir -p "${dirName}") || fail
     fi
+
+    builtin echo "${bwdata}" | jq '.notes' --raw-output --exit-status | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
+    local savedPipeStatus="${PIPESTATUS[*]}"
+
+    if [ "${savedPipeStatus}" = "0 0 0" ]; then
+      if [ ! -s "${outputFile}.tmp" ]; then
+        rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
+        fail "Bitwarden item ${item} expected to have a non-empty note field"
+      fi
+      mv "${outputFile}.tmp" "${outputFile}" || fail "Unable to move temp file to the output file: ${outputFile}.tmp to ${outputFile}"
+    else
+      rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
+      fail "Unable to produce '${outputFile}' (${savedPipeStatus}), bitwarden item '${item}' may not present or have an empty note field"
+    fi
+  else
+    # echo "${bwdata}" >&2
+    fail "Unable to get bitwarden item ${item}"
   fi
 }
 

@@ -14,12 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ubuntu::set-timezone() {
+linux::set-timezone() {
   local timezone="$1"
   sudo timedatectl set-timezone "$timezone" || fail "Unable to set timezone ($?)"
 }
 
-ubuntu::set-hostname() {
+linux::set-hostname() {
   local hostname="$1"
   local hostnameFile=/etc/hostname
   local hostsFile=/etc/hosts
@@ -37,7 +37,7 @@ ubuntu::set-hostname() {
   fi
 }
 
-ubuntu::set-locale() {
+linux::set-locale() {
   local locale="$1"
 
   sudo locale-gen "$locale" || fail "Unable to run locale-gen ($?)"
@@ -49,7 +49,7 @@ ubuntu::set-locale() {
   export LC_ALL="$locale"
 }
 
-ubuntu::set-inotify-max-user-watches() {
+linux::set-inotify-max-user-watches() {
   local sysctl="/etc/sysctl.conf"
 
   if [ ! -r "$sysctl" ]; then
@@ -68,7 +68,7 @@ ubuntu::set-inotify-max-user-watches() {
   fi
 }
 
-ubuntu::display-if-restart-required() {
+linux::display-if-restart-required() {
   if command -v checkrestart >/dev/null; then
     sudo checkrestart || fail
   fi
@@ -78,21 +78,21 @@ ubuntu::display-if-restart-required() {
   fi
 }
 
-ubuntu::perhaps-display-deploy-footnotes() {
-  if [ -t 1 ]; then
-    ubuntu::display-if-restart-required || fail
-    tools::display-elapsed-time || fail
-  fi
-}
-
-# "hostnamectl status" could also be used to detect that we are running insde the vm
-ubuntu::is-bare-metal() {
+linux::is-bare-metal() {
+  # "hostnamectl status" could also be used to detect that we are running insde the vm
   ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo
 }
 
-ubuntu::add-user() {
+linux::add-user() {
   local user="$1"
-  if ! id -u "${user}" ; then
+  if ! id -u "${user}" >/dev/null 2>&1; then
     sudo adduser --system --group --shell /bin/bash "${user}" || fail
   fi
+}
+
+linux::assign-user-to-group() {
+  local user="$1"
+  local group="$2"
+
+  usermod --append --groups "${group}" "${user}" || fail
 }

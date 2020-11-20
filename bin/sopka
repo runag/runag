@@ -90,7 +90,7 @@ else
   fail "Unable to find sopkafile"
 fi
 
-# run function provided in first argument, or display the menu, if defined
+# run function provided in first argument, or run sopkafile::main, if defined
 #
 # I use "test" instead of "|| fail" here for the case if someone wants to
 # "set -o errexit" in their functions
@@ -100,10 +100,10 @@ if [ "$0" != "-bash" ]; then
     declare -f "$1" >/dev/null || fail "Argument must be a function name: $1"
     "$1" "${@:2}"
     test $? = 0 || fail "Error performing $1"
-  elif declare -f sopkafile::menu >/dev/null; then
-    sopkafile::menu
-    test $? = 0 || fail "Error performing sopkafile::menu"
+  elif declare -f sopkafile::main >/dev/null; then
+    sopkafile::main
+    test $? = 0 || fail "Error performing sopkafile::main"
   else
-    fail "please specify a function name to run, or define a sopkafile::menu to display"
+    fail "please specify a function name to run, or define a sopkafile::main"
   fi
 fi

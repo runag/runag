@@ -14,12 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopka::nothing-deployed() {
+tools::nothing-deployed() {
   test -z "$(find . -maxdepth 1 -name '.sopka.*.deployed' -print -quit)"
 }
 
 tools::display-elapsed-time() {
   echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
+}
+
+tools::perhaps-display-deploy-footnotes() {
+  if [ -t 1 ]; then
+    linux::display-if-restart-required || fail
+    tools::display-elapsed-time || fail
+  fi
 }
 
 tools::once-per-day() {
@@ -39,4 +46,11 @@ tools::once-per-day() {
   "${command}" || fail
 
   echo "${currentDate}" > "${flagFile}" || fail
+}
+
+tools::install-rclone() {
+  if ! command -v rclone >/dev/null; then
+    curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
+    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"
+  fi
 }

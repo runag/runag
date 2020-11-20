@@ -14,11 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ubuntu::nvidia::is-card-present() {
+nvidia::is-card-present() {
   lspci | grep --quiet "VGA.*NVIDIA Corporation"
 }
 
-ubuntu::nvidia::fix-screen-tearing() {
+nvidia::fix-screen-tearing() {
   # based on https://www.reddit.com/r/linuxquestions/comments/8fb9oj/how_to_fix_screen_tearing_ubuntu_1804_nvidia_390/
   local modprobeFile="/etc/modprobe.d/zz-nvidia-modeset.conf"
   if [ ! -f "${modprobeFile}" ]; then
@@ -29,6 +29,6 @@ ubuntu::nvidia::fix-screen-tearing() {
   fi
 }
 
-ubuntu::nvidia::fix-gpu-background-image-glitch() {
+nvidia::fix-gpu-background-image-glitch() {
   sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${SOPKA_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
 }

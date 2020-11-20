@@ -14,33 +14,31 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-rsync::determine-force-option() {
-  if [ -z "${RSYNC_FORCE_OPTION:-}" ]; then
-    rsync --help | grep --quiet "\-\-force\-delete"
-    local savedPipeStatus="${PIPESTATUS[*]}"
-
-    if [ "${savedPipeStatus}" = "0 0" ]; then
-      RSYNC_FORCE_OPTION="--force-delete"
-    elif [ "${savedPipeStatus}" = "0 1" ]; then
-      RSYNC_FORCE_OPTION="--force"
-    else
-      fail "Unable to determine RSYNC_FORCE_OPTION"
-    fi
-
-    export RSYNC_FORCE_OPTION
-  fi
+rsync::upload() {
+  rsync::transfer "$1" "${REMOTE_HOST:-}:$2" || fail
 }
 
-rsync::upload() {
-  rsync::remote "$1" "${REMOTE_HOST:-}:$2" || fail
+rsync::download() {
+  rsync::transfer "${REMOTE_HOST:-}:$1" "$2" || fail
+}
+
+rsync::transfer() {
+  rsync::remote \
+    --checksum \
+    --compress \
+    --delete \
+    --links \
+    --perms \
+    --recursive \
+    --times \
+    --whole-file \
+    "$@" || fail
 }
 
 rsync::remote() {
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir -p -m 0700 "${HOME}/.ssh" || fail
   fi
-
-  rsync::determine-force-option || fail
 
   local rshOption="ssh \
     -o ControlMaster=auto \
@@ -51,15 +49,6 @@ rsync::remote() {
     ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"}"
 
   rsync \
-    --archive \
-    --checksum \
-    --compress \
-    --delete \
-    --no-group \
-    --no-owner \
     --rsh "$rshOption" \
-    --safe-links \
-    --whole-file \
-    "$RSYNC_FORCE_OPTION" \
-    "$1" "$2" || fail
+    "$@" || fail
 }

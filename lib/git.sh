@@ -17,6 +17,39 @@
 # ssh::add-host-to-known-hosts bitbucket.org || fail
 # ssh::add-host-to-known-hosts github.com || fail
 
+git::install-git() {
+  if [[ "$OSTYPE" =~ ^linux ]]; then
+    if ! command -v git >/dev/null; then
+      if command -v apt >/dev/null; then
+        sudo apt update || fail
+        sudo apt install -y git || fail
+      else
+        fail "Unable to install git, apt not found"
+      fi
+    fi
+  fi
+
+  # on macos that will start git install process
+  git --version >/dev/null || fail
+}
+
+git::clone-or-pull() {
+  local url="$1"
+  local dest="$2"
+  local branch="${3:-}"
+
+  if [ -d "$dest" ]; then
+    git -C "$dest" config remote.origin.url "${url}" || fail
+    git -C "$dest" pull || fail
+  else
+    git clone "$url" "$dest" || fail
+  fi
+
+  if [ -n "${branch:-}" ]; then
+    git -C "$dest" checkout "${branch}" || fail "Unable to checkout ${branch}"
+  fi
+}
+
 git::configure() {
   git config --global user.name "${GIT_USER_NAME}" || fail
   git config --global user.email "${GIT_USER_EMAIL}" || fail
@@ -39,23 +72,6 @@ git::cd-to-temp-clone() {
 git::remove-temp-clone() {
   if [ -n "${SOPKA_GIT_TEMP_CLONE_DIR:-}" ]; then
     rm -rf "${SOPKA_GIT_TEMP_CLONE_DIR}" || fail
-  fi
-}
-
-git::clone-or-pull() {
-  local url="$1"
-  local dest="$2"
-  local branch="${3:-}"
-
-  if [ -d "$dest" ]; then
-    git -C "$dest" config remote.origin.url "${url}" || fail
-    git -C "$dest" pull || fail
-  else
-    git clone "$url" "$dest" || fail
-  fi
-
-  if [ -n "${branch:-}" ]; then
-    git -C "$dest" checkout "${branch}" || fail "Unable to checkout ${branch}"
   fi
 }
 

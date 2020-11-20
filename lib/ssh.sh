@@ -14,14 +14,47 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ssh::install-keys() {
-  local privateKeyName="$1 ssh private key"
-  local publicKeyName="$1 ssh public key"
-
+ssh::make-dot-ssh-dir-if-not-exist() {
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir "${HOME}/.ssh" || fail
     chmod 0700 "${HOME}/.ssh" || fail
   fi
+}
+
+ssh::keys-exist() {
+  test -f "${HOME}/.ssh/id_ed25519" && test -f "${HOME}/.ssh/id_ed25519.pub"
+}
+
+ssh::upload-keys-if-not-exists() {
+  # bitwarden-object: "? ssh private key", "? ssh public key"
+  local privateKeyName="$1 ssh private key"
+  local publicKeyName="$1 ssh public key"
+
+  if ! ssh::call ssh::keys-exist; then
+    ssh::upload-key "${privateKeyName}" "id_ed25519" || fail
+    ssh::upload-key "${publicKeyName}" "id_ed25519.pub" || fail
+  fi
+}
+
+ssh::upload-key() {
+  # bitwarden-object: "?"
+  local bwItem="$1"
+  local fileName="$2"
+
+  local tmpFile; tmpFile="$(mktemp)" || fail
+
+  bitwarden::write-notes-to-file "${bwItem}" "${tmpFile}" || fail
+  ssh::call ssh::make-dot-ssh-dir-if-not-exist || fail
+  rsync::upload "${tmpFile}" ".ssh/${fileName}" || fail
+
+  rm "${tmpFile}" || fail
+}
+
+ssh::install-keys() {
+  local privateKeyName="$1 ssh private key"
+  local publicKeyName="$1 ssh public key"
+
+  ssh::make-dot-ssh-dir-if-not-exist || fail
 
   # bitwarden-object: "? ssh private key", "? ssh public key"
   bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/id_ed25519" "077" || fail
@@ -126,8 +159,10 @@ ssh::add-host-to-known-hosts() {
   if [ ! -f "${knownHosts}" ]; then
     local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
 
-    mkdir -p "${knownHostsDirname}" || fail
-    chmod 700 "${knownHostsDirname}" || fail
+    if [ ! -d "${knownHostsDirname}" ]; then
+      mkdir "${knownHostsDirname}" || fail
+      chmod 0700 "${knownHostsDirname}" || fail
+    fi
 
     touch "${knownHosts}" || fail
     chmod 644 "${knownHosts}" || fail
@@ -163,13 +198,11 @@ ssh::call() {
   fi
 
   local i argString=""
-  for i in "${@}"; do
+  for i in "$@"; do
     argString+="$(printf "%q" "${i}") "
   done
 
-  if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -p -m 0700 "${HOME}/.ssh" || fail
-  fi
+  ssh::make-dot-ssh-dir-if-not-exist || fail
 
   ssh \
     -o ControlMaster=auto \

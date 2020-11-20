@@ -43,6 +43,7 @@ fi
 
 
 # load all libraries
+. "${SOPKA_DIR}/lib/apt.sh" || fail
 . "${SOPKA_DIR}/lib/benchmark.sh" || fail
 . "${SOPKA_DIR}/lib/bitwarden.sh" || fail
 . "${SOPKA_DIR}/lib/borg.sh" || fail
@@ -50,9 +51,11 @@ fi
 . "${SOPKA_DIR}/lib/fs.sh" || fail
 . "${SOPKA_DIR}/lib/git.sh" || fail
 . "${SOPKA_DIR}/lib/github.sh" || fail
+. "${SOPKA_DIR}/lib/linux.sh" || fail
 . "${SOPKA_DIR}/lib/macos.sh" || fail
 . "${SOPKA_DIR}/lib/menu.sh" || fail
 . "${SOPKA_DIR}/lib/nodejs.sh" || fail
+. "${SOPKA_DIR}/lib/nvidia.sh" || fail
 . "${SOPKA_DIR}/lib/rsync.sh" || fail
 . "${SOPKA_DIR}/lib/ruby.sh" || fail
 . "${SOPKA_DIR}/lib/shellrcd-files.sh" || fail
@@ -61,9 +64,6 @@ fi
 . "${SOPKA_DIR}/lib/sublime.sh" || fail
 . "${SOPKA_DIR}/lib/tools.sh" || fail
 . "${SOPKA_DIR}/lib/ubuntu-desktop.sh" || fail
-. "${SOPKA_DIR}/lib/ubuntu-nvidia.sh" || fail
-. "${SOPKA_DIR}/lib/ubuntu-packages.sh" || fail
-. "${SOPKA_DIR}/lib/ubuntu-vmware.sh" || fail
-. "${SOPKA_DIR}/lib/ubuntu.sh" || fail
+. "${SOPKA_DIR}/lib/vmware.sh" || fail
 . "${SOPKA_DIR}/lib/vscode.sh" || fail
 . "${SOPKA_DIR}/lib/windows.sh" || fail
