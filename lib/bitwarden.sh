@@ -43,7 +43,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
   local setUmask="${3:-"077"}"
 
   if [ ! -f "${outputFile}" ]; then
-    bitwarden::write-notes-to-file "$1" "$2" "$3" || fail
+    bitwarden::write-notes-to-file "${item}" "${outputFile}" "${setUmask}" || fail
   fi
 }
 
