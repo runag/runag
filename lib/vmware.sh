@@ -40,3 +40,8 @@ vmware::linux::symlink-hgfs-mounts() {
     done
   fi
 }
+
+vmware::linux::get-host-ip-address() {
+  ip route show | grep 'default via' | awk '{print $3}' | sed -e 's/[[:digit:]]\+$/1/'
+  test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
+}

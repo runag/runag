@@ -59,7 +59,7 @@ fs::mount-cifs() {
 
   local mountPoint="${HOME}/${mountName}"
   local credentialsFile="${HOME}/.${mountName}.cifs-credentials"
-  local fstabTag="# ${mountName}"
+  local fstabTag="# ${mountName} cifs mount"
 
   mkdir -p "${mountPoint}" || fail
 

@@ -96,3 +96,8 @@ linux::assign-user-to-group() {
 
   usermod --append --groups "${group}" "${user}" || fail
 }
+
+linux::get-default-route() {
+  ip route show | grep 'default via' | awk '{print $3}'
+  test "${PIPESTATUS[*]}" = "0 0 0" || fail
+}
