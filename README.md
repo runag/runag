@@ -41,3 +41,12 @@ VERBOSE
 ```sh
 test/run-code-checks.sh
 ```
+
+## Style guide
+```sh
+%q
+|| fail
+pipestatus
+errexit
+shellcheck
+```
