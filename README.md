@@ -43,10 +43,13 @@ test/run-code-checks.sh
 ```
 
 ## Style guide
+
 ```sh
 %q
 || fail
 pipestatus
-errexit
-shellcheck
+error handling in loops "for, while"
+error handling in subshells () {}
+error handling in complex commands like ssh "foo" or sudo "foo"
+use shellcheck
 ```
