@@ -52,7 +52,7 @@ SHELL
 }
 
 apt::add-nodejs-source() {
-  local version="${1:-12}"
+  local version="${1:-14}"
   curl --location --fail --silent --show-error "https://deb.nodesource.com/setup_${version}.x" | sudo -E bash -
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to run nodejs install script"
 }
