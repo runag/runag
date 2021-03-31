@@ -14,6 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+sshd::configure() {
+  fs::sudo-write-file "/etc/ssh/sshd_config.d/access.conf" <<SHELL || fail
+PasswordAuthentication no
+PermitEmptyPasswords no
+SHELL
+}
+
 ssh::make-dot-ssh-dir-if-not-exist() {
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir "${HOME}/.ssh" || fail
