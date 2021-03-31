@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+bitwarden::install-cli() {
+  sudo npm install -g @bitwarden/cli || fail
+}
+
 bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     # the absence of error handling is intentional here

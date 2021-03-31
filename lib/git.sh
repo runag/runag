@@ -51,9 +51,12 @@ git::clone-or-pull() {
 }
 
 git::configure() {
+  git config --global core.autocrlf input || fail
+}
+
+git::configure-user() {
   git config --global user.name "${GIT_USER_NAME}" || fail
   git config --global user.email "${GIT_USER_EMAIL}" || fail
-  git config --global core.autocrlf input || fail
 }
 
 git::cd-to-temp-clone() {

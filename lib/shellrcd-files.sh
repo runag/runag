@@ -22,6 +22,14 @@ shellrcd::use-nano-editor() {
 SHELL
 }
 
+shellrcd::sopka-path() {
+  fs::write-file "${HOME}/.shellrc.d/sopka-path.sh" <<SHELL || fail
+    if [ -d "\${HOME}/.sopka" ]; then
+      export PATH="\${HOME}/.sopka/bin:\$PATH"
+    fi
+SHELL
+}
+
 shellrcd::hook-direnv() {
   fs::write-file "${HOME}/.shellrc.d/hook-direnv.sh" <<SHELL || fail
     if command -v direnv >/dev/null; then
