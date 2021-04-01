@@ -24,7 +24,9 @@ tools::display-elapsed-time() {
 
 tools::perhaps-display-deploy-footnotes() {
   if [ -t 1 ]; then
-    linux::display-if-restart-required || fail
+    if [[ "$OSTYPE" =~ ^linux ]]; then
+      linux::display-if-restart-required || fail
+    fi
     tools::display-elapsed-time || fail
   fi
 }

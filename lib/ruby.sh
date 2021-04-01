@@ -56,3 +56,11 @@ SHELL
 
   . "${output}" || fail
 }
+
+ruby::ubuntu::install() {
+  ruby::configure-gemrc || fail
+  ruby::install-rbenv || fail
+  shellrcd::rbenv || fail
+  rbenv rehash || fail
+  sudo gem update || fail
+}

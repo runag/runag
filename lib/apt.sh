@@ -42,11 +42,6 @@ apt::add-key-and-source() {
   echo "${sourceString}" | sudo tee "${sourceFile}" || fail "Unable to write apt source into the ${sourceFile}"
 }
 
-# in accordance with instructions at https://apt.syncthing.net/
-apt::add-syncthing-source() {
-  apt::add-key-and-source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
-}
-
 apt::add-obs-studio-source() {
   sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail "Unable to add-apt-repository ppa:obsproject/obs-studio ($?)"
 }

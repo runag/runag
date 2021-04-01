@@ -14,6 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+sshd::ubuntu::install-and-configure() {
+  # perform apt update
+  apt::update || fail
+
+  # configure
+  sshd::configure || fail # I do it first because ubuntu starts sshd right after install and I want it to be secured already at this point
+
+  # install end run
+  apt::install openssh-server ssh-import-id || fail
+  sudo systemctl --now enable ssh || fail
+  sudo systemctl reload ssh || fail
+}
+
 sshd::configure() {
   fs::sudo-write-file "/etc/ssh/sshd_config.d/access.conf" <<SHELL || fail
 PasswordAuthentication no

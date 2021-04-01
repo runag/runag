@@ -80,3 +80,15 @@ ubuntu::desktop::install-vitals() {
 
   gnome-extensions enable "${extensionUuid}" || fail
 }
+
+ubuntu::desktop::disable-screen-lock() {
+  if gsettings get org.gnome.desktop.session idle-delay >/dev/null; then
+    gsettings set org.gnome.desktop.session idle-delay 0 || fail
+  fi
+}
+
+ubuntu::desktop::enable-fractional-scaling() {
+  if gsettings get org.gnome.mutter experimental-features >/dev/null; then
+    gsettings set org.gnome.mutter experimental-features "['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']" || fail
+  fi
+}

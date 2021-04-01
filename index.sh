@@ -62,9 +62,11 @@ fi
 . "${SOPKA_DIR}/lib/shellrcd.sh" || fail
 . "${SOPKA_DIR}/lib/ssh.sh" || fail
 . "${SOPKA_DIR}/lib/sublime.sh" || fail
+. "${SOPKA_DIR}/lib/syncthing.sh" || fail
 . "${SOPKA_DIR}/lib/systemd.sh" || fail
 . "${SOPKA_DIR}/lib/tools.sh" || fail
 . "${SOPKA_DIR}/lib/ubuntu-desktop.sh" || fail
+. "${SOPKA_DIR}/lib/ubuntu-packages.sh" || fail
 . "${SOPKA_DIR}/lib/vmware.sh" || fail
 . "${SOPKA_DIR}/lib/vscode.sh" || fail
 . "${SOPKA_DIR}/lib/windows.sh" || fail
