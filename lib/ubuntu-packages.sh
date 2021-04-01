@@ -59,3 +59,9 @@ ubuntu::packages::install-devtools() {
     awscli \
       || fail
 }
+
+ubuntu::packages::install-obs-studio() {
+  sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail
+  apt::update || fail
+  apt::install obs-studio guvcview || fail
+}

@@ -14,7 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+apt::lazy-update() {
+  if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
+    SOPKA_APT_LAZY_UPDATE_HAPPENED=1
+    apt::update || fail
+  fi
+}
+
 apt::update() {
+  SOPKA_APT_LAZY_UPDATE_HAPPENED=1
   sudo apt-get -o Acquire::ForceIPv4=true update || fail "Unable to apt-get update ($?)"
 }
 
@@ -40,8 +48,4 @@ apt::add-key-and-source() {
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to get key from ${keyUrl} or import in into apt"
 
   echo "${sourceString}" | sudo tee "${sourceFile}" || fail "Unable to write apt source into the ${sourceFile}"
-}
-
-apt::add-obs-studio-source() {
-  sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail "Unable to add-apt-repository ppa:obsproject/obs-studio ($?)"
 }

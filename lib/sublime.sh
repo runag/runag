@@ -14,6 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+sublime::ubuntu::install-merge-and-text() {
+  sublime::apt::add-sublime-source || fail
+  apt::update || fail
+  sublime::apt::install-sublime-merge || fail
+  sublime::apt::install-sublime-text || fail
+}
+
 sublime::determine-config-path() {
   if [[ "$OSTYPE" =~ ^darwin ]]; then
     export SUBLIME_CONFIG_PATH="${HOME}/Library/Application Support/Sublime Text 3"
