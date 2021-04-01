@@ -20,6 +20,11 @@ vmware::linux::is-inside-vm() {
   hostnamectl status | grep --quiet "Virtualization\\:.*vmware"
 }
 
+vmware::linux::use-hgfs-mounts() {
+  vmware::linux::add-hgfs-automount || fail
+  vmware::linux::symlink-hgfs-mounts || fail
+}
+
 vmware::linux::add-hgfs-automount() {
   # https://askubuntu.com/a/1051620
   # TODO: Do I really need x-systemd.device-timeout here? think it works well even without it.

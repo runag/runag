@@ -16,8 +16,10 @@
 
 shellrcd::use-nano-editor() {
   fs::write-file "${HOME}/.shellrc.d/use-nano-editor.sh" <<SHELL || fail
-    if command -v nano >/dev/null; then
-      export EDITOR="\$(command -v nano)"
+    if [ -z "\${EDITOR:-}" ]; then
+      if command -v nano >/dev/null; then
+        export EDITOR="\$(command -v nano)"
+      fi
     fi
 SHELL
 }
