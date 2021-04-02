@@ -51,11 +51,13 @@ fi
 . "${SOPKA_DIR}/lib/fs.sh" || fail
 . "${SOPKA_DIR}/lib/git.sh" || fail
 . "${SOPKA_DIR}/lib/github.sh" || fail
+. "${SOPKA_DIR}/lib/imagemagick.sh" || fail
 . "${SOPKA_DIR}/lib/linux.sh" || fail
 . "${SOPKA_DIR}/lib/macos.sh" || fail
 . "${SOPKA_DIR}/lib/menu.sh" || fail
 . "${SOPKA_DIR}/lib/nodejs.sh" || fail
 . "${SOPKA_DIR}/lib/nvidia.sh" || fail
+. "${SOPKA_DIR}/lib/postgresql.sh" || fail
 . "${SOPKA_DIR}/lib/rsync.sh" || fail
 . "${SOPKA_DIR}/lib/ruby.sh" || fail
 . "${SOPKA_DIR}/lib/shellrcd-files.sh" || fail
