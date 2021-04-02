@@ -36,7 +36,7 @@ ubuntu::deploy-minimal-application-server() {
   nodejs::ubuntu::install || fail
 
   # deploy sshd
-  ubuntu::deploy-sshd || fail
+  sshd::ubuntu::install-and-configure || fail
 
   # configure git
   git::configure || fail
