@@ -35,7 +35,8 @@ ubuntu::packages::install-basic-tools() {
     git \
     htop \
     jq \
-    mc ncdu \
+    mc \
+    ncdu \
     p7zip-full \
     sysbench \
     tmux \
@@ -44,19 +45,41 @@ ubuntu::packages::install-basic-tools() {
 
 ubuntu::packages::install-devtools() {
   apt::install \
-    build-essential autoconf bison libncurses-dev libffi-dev libgdbm-dev libreadline-dev libssl-dev zlib1g-dev libyaml-dev libxml2-dev libxslt-dev \
-    postgresql libpq-dev postgresql-contrib \
-    sqlite3 libsqlite3-dev \
-    redis-server \
-    memcached \
-    ruby-full \
-    python3 python3-pip python3-psycopg2 \
-    ffmpeg imagemagick ghostscript libgs-dev \
-    graphviz \
-    shellcheck \
     apache2-utils \
-    inotify-tools \
+    autoconf \
     awscli \
+    bison \
+    build-essential \
+    cloud-guest-utils \
+    ffmpeg \
+    ghostscript \
+    graphviz \
+    imagemagick \
+    inotify-tools \
+    letsencrypt \
+    libffi-dev \
+    libgdbm-dev \
+    libgs-dev \
+    libncurses-dev \
+    libpq-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libyaml-dev \
+    memcached \
+    nginx \
+    postgresql \
+    postgresql-contrib \
+    python3 \
+    python3-pip \
+    python3-psycopg2 \
+    redis-server \
+    ruby-full \
+    shellcheck \
+    sqlite3 \
+    zlib1g-dev \
       || fail
 }
 
