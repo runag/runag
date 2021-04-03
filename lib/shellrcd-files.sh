@@ -36,9 +36,9 @@ shellrcd::hook-direnv() {
   fs::write-file "${HOME}/.shellrc.d/hook-direnv.sh" <<SHELL || fail
     if command -v direnv >/dev/null; then
       export DIRENV_LOG_FORMAT=""
-      if [ "\$SHELL" = "/bin/zsh" ]; then
+      if [ -n "\${ZSH_VERSION:-}" ]; then
         eval "\$(direnv hook zsh)" || echo "Unable to hook direnv" >&2
-      elif [ "\$SHELL" = "/bin/bash" ]; then
+      elif [ -n "\${BASH_VERSION:-}" ]; then
         eval "\$(direnv hook bash)" || echo "Unable to hook direnv" >&2
       fi
     fi
