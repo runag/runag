@@ -82,13 +82,19 @@ ubuntu::desktop::install-vitals() {
 }
 
 ubuntu::desktop::disable-screen-lock() {
-  if gsettings get org.gnome.desktop.session idle-delay >/dev/null; then
-    gsettings set org.gnome.desktop.session idle-delay 0 || fail
-  fi
+  gsettings::perhaps-set org.gnome.desktop.session idle-delay 0 || fail
 }
 
 ubuntu::desktop::enable-fractional-scaling() {
-  if gsettings get org.gnome.mutter experimental-features >/dev/null; then
-    gsettings set org.gnome.mutter experimental-features "['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']" || fail
+  gsettings::perhaps-set "['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']" || fail
+}
+
+gsettings::perhaps-set() {
+  local schema="$1"
+  local key="$2"
+  local value="$3"
+
+  if gsettings get "${schema}" "${key}" >/dev/null; then
+    gsettings set "${schema}" "${key}" "${value}" || fail
   fi
 }
