@@ -30,7 +30,7 @@ ruby::install-rbenv() {
 }
 
 shellrcd::rbenv() {
-  local output="${HOME}/.shellrc.d/rbenv.sh"
+  local output="${1:-"${HOME}/.shellrc.d"}/rbenv.sh" 
 
   local opensslLine=""
   if [[ "$OSTYPE" =~ ^darwin ]] && command -v brew >/dev/null; then
@@ -39,19 +39,22 @@ shellrcd::rbenv() {
   fi
 
   fs::write-file "${output}" <<SHELL || fail
-    if [ -d "\$HOME/.rbenv/bin" ]; then
-      if ! [[ ":\$PATH:" == *":\$HOME/.rbenv/bin:"* ]]; then
-        export PATH="\$HOME/.rbenv/bin:\$PATH"
-      fi
-    fi
-    if command -v rbenv >/dev/null; then
-      if [ -z \${RBENV_INITIALIZED+x} ]; then
-        eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
-        export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--disable-install-doc"
-        ${opensslLine}
-        export RBENV_INITIALIZED=true
-      fi
-    fi
+$(tools::licence)
+
+if [ -d "\$HOME/.rbenv/bin" ]; then
+  if ! [[ ":\$PATH:" == *":\$HOME/.rbenv/bin:"* ]]; then
+    export PATH="\$HOME/.rbenv/bin:\$PATH"
+  fi
+fi
+
+if command -v rbenv >/dev/null; then
+  if [ -z \${RBENV_INITIALIZED+x} ]; then
+    eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
+    export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--disable-install-doc"
+    ${opensslLine}
+    export RBENV_INITIALIZED=true
+  fi
+fi
 SHELL
 
   . "${output}" || fail

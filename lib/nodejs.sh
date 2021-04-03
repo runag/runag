@@ -33,19 +33,22 @@ nodejs::install-nodenv() {
 }
 
 shellrcd::nodenv() {
-  local output="${HOME}/.shellrc.d/nodenv.sh"
+  local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh" 
   fs::write-file "${output}" <<SHELL || fail
-    if [ -d "\$HOME/.nodenv/bin" ]; then
-      if ! [[ ":\$PATH:" == *":\$HOME/.nodenv/bin:"* ]]; then
-        export PATH="\$HOME/.nodenv/bin:\$PATH"
-      fi
-    fi
-    if command -v nodenv >/dev/null; then
-      if [ -z \${NODENV_INITIALIZED+x} ]; then
-        eval "\$(nodenv init -)" || { echo "Unable to init nodenv" >&2; return 1; }
-        export NODENV_INITIALIZED=true
-      fi
-    fi
+$(tools::licence)
+
+if [ -d "\$HOME/.nodenv/bin" ]; then
+  if ! [[ ":\$PATH:" == *":\$HOME/.nodenv/bin:"* ]]; then
+    export PATH="\$HOME/.nodenv/bin:\$PATH"
+  fi
+fi
+
+if command -v nodenv >/dev/null; then
+  if [ -z \${NODENV_INITIALIZED+x} ]; then
+    eval "\$(nodenv init -)" || { echo "Unable to init nodenv" >&2; return 1; }
+    export NODENV_INITIALIZED=true
+  fi
+fi
 SHELL
 
   . "${output}" || fail

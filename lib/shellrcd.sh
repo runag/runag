@@ -19,26 +19,25 @@ shellrcd::install() {
     mkdir -p "${HOME}/.shellrc.d" || fail "Unable to create the directory: ${HOME}/.shellrc.d"
   fi
 
-  shellrcd::add-loader "${HOME}/.bashrc" || fail
-  shellrcd::add-loader "${HOME}/.zshrc" || fail
+  shellrcd::integrate-with-shell "${HOME}/.bashrc" || fail
+  shellrcd::integrate-with-shell "${HOME}/.zshrc" || fail
 }
 
-shellrcd::add-loader() {
+shellrcd::integrate-with-shell() {
   local shellrcFile="$1"
 
   if [ ! -f "${shellrcFile}" ]; then
     touch "${shellrcFile}" || fail
   fi
 
-  if grep --quiet "^# shellrc.d loader" "${shellrcFile}"; then
-    echo "shellrc.d loader already present"
-  else
-    tee -a "${shellrcFile}" <<SHELL || fail "Unable to append to the file: ${shellrcFile}"
+  if ! grep --quiet "^# shellrc.d loader" "${shellrcFile}"; then
+    cat <<SHELL >>"${shellrcFile}" || fail "Unable to append to the file: ${shellrcFile}"
+
 # shellrc.d loader
-if [ -d "\${HOME}/.shellrc.d" ]; then
-  for file_bb21go6nkCN82Gk9XeY2 in "\${HOME}/.shellrc.d"/*.sh; do
+if [ -d "\${HOME}"/.shellrc.d ]; then
+  for file_bb21go6nkCN82Gk9XeY2 in "\${HOME}"/.shellrc.d/*.sh; do
     if [ -f "\${file_bb21go6nkCN82Gk9XeY2}" ]; then
-      . "\${file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${file_bb21go6nkCN82Gk9XeY2} (\$?)"; }
+      . "\${file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${file_bb21go6nkCN82Gk9XeY2} (\$?)" >&2; }
     fi
   done
   unset file_bb21go6nkCN82Gk9XeY2
