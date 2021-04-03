@@ -12,6 +12,39 @@ Possible sopkafile locations are:
 ~/.sopkafile/index.sh
 ```
 
+## API docs
+
+* [apt](docs/lib/apt.md)
+* [benchmark](docs/lib/benchmark.md)
+* [bitwarden](docs/lib/bitwarden.md)
+* [borg](docs/lib/borg.md)
+* [config](docs/lib/config.md)
+* [fs](docs/lib/fs.md)
+* [github](docs/lib/github.md)
+* [git](docs/lib/git.md)
+* [imagemagick](docs/lib/imagemagick.md)
+* [linux](docs/lib/linux.md)
+* [macos](docs/lib/macos.md)
+* [menu](docs/lib/menu.md)
+* [nodejs](docs/lib/nodejs.md)
+* [nvidia](docs/lib/nvidia.md)
+* [postgresql](docs/lib/postgresql.md)
+* [rsync](docs/lib/rsync.md)
+* [ruby](docs/lib/ruby.md)
+* [shellrcd-files](docs/lib/shellrcd-files.md)
+* [shellrcd](docs/lib/shellrcd.md)
+* [ssh](docs/lib/ssh.md)
+* [sublime](docs/lib/sublime.md)
+* [syncthing](docs/lib/syncthing.md)
+* [systemd](docs/lib/systemd.md)
+* [tools](docs/lib/tools.md)
+* [ubuntu-desktop](docs/lib/ubuntu-desktop.md)
+* [ubuntu-packages](docs/lib/ubuntu-packages.md)
+* [ubuntu](docs/lib/ubuntu.md)
+* [vmware](docs/lib/vmware.md)
+* [vscode](docs/lib/vscode.md)
+* [windows](docs/lib/windows.md)
+
 ## Bitwarden keys
 
 <!-- # bitwarden-object: see list below -->

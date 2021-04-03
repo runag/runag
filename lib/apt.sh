@@ -14,6 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# @description Perform apt update once
 apt::lazy-update() {
   if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
     SOPKA_APT_LAZY_UPDATE_HAPPENED=1
@@ -21,23 +22,35 @@ apt::lazy-update() {
   fi
 }
 
+# @description Perform apt update
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=1
   sudo apt-get -o Acquire::ForceIPv4=true update || fail "Unable to apt-get update ($?)"
 }
 
+# @description Perform apt dist-upgrade
 apt::dist-upgrade() {
   sudo apt-get -o Acquire::ForceIPv4=true -y dist-upgrade || fail "Unable to apt-get dist-upgrade ($?)"
 }
 
+# @description Install package
 apt::install() {
   sudo apt-get install -o Acquire::ForceIPv4=true -y "$@" || fail "Unable to apt-get install $* ($?)"
 }
 
+# @description Perform apt autoremove
 apt::autoremove() {
   sudo apt-get -o Acquire::ForceIPv4=true -y autoremove || fail "Unable to apt-get autoremove ($?)"
 }
 
+# @description Add apt source and key
+#
+# @example
+#    apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn"
+#
+# @arg $1 string key url
+# @arg $2 string source string
+# @arg $3 string source name
 apt::add-key-and-source() {
   local keyUrl="$1"
   local sourceString="$2"
