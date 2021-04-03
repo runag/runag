@@ -80,6 +80,7 @@ ubuntu::packages::install-devtools() {
     shellcheck \
     sqlite3 \
     zlib1g-dev \
+    zsh \
       || fail
 }
 
