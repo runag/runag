@@ -89,3 +89,9 @@ ubuntu::packages::install-obs-studio() {
   apt::update || fail
   apt::install obs-studio guvcview || fail
 }
+
+ubuntu::packages::install-copyq() {
+  sudo add-apt-repository --yes ppa:hluk/copyq || fail
+  apt::update || fail
+  apt::install copyq || fail
+}
