@@ -39,7 +39,9 @@ sublime::apt::add-sublime-source() {
 }
 
 sublime::apt::install-sublime-merge() {
-  sudo apt-get install -o Acquire::ForceIPv4=true -y sublime-merge || fail "Unable to apt-get install ($?)"
+  # TODO: enable
+  true
+  # sudo apt-get install -o Acquire::ForceIPv4=true -y sublime-merge || fail "Unable to apt-get install ($?)"
 }
 
 sublime::apt::install-sublime-text() {
