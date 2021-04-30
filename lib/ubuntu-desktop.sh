@@ -86,7 +86,7 @@ ubuntu::desktop::disable-screen-lock() {
 }
 
 ubuntu::desktop::enable-fractional-scaling() {
-  gsettings::perhaps-set "['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']" || fail
+  gsettings::perhaps-set org.gnome.mutter experimental-features "['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']" || fail
 }
 
 gsettings::perhaps-set() {
