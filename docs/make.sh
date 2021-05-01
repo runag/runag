@@ -14,23 +14,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# define fail() function
 fail() {
   echo "${BASH_SOURCE[1]}:${BASH_LINENO[0]}: in \`${FUNCNAME[1]}': Error: ${1:-"Abnormal termination"}" >&2
   exit "${2:-1}"
 }
 
 if ! command -v gawk >/dev/null; then
-  sudo apt-get install gawk || fail
+  sudo apt install gawk || fail
 fi
 
+shdoc::install() {
+  local tempDir; tempDir="$(mktemp -d)" || fail
+  git clone --recursive https://github.com/reconquest/shdoc "${tempDir}" || fail
+  (cd "${tempDir}" && make && sudo make install) || fail
+  rm -rf "${tempDir}" || fail
+}
+
 if ! command -v shdoc >/dev/null; then
-  git clone --recursive https://github.com/reconquest/shdoc || fail
-  (cd shdoc && make && sudo make install) || fail
-  rm -rf shdoc || fail
-  rm -rf vendor/github.com/reconquest || fail
-  rm -d vendor/github.com || fail
-  rm -d vendor || fail
+  shdoc::install || fail
 fi
 
 rm docs/lib/*.md || fail
