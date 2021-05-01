@@ -30,5 +30,20 @@ nvidia::fix-screen-tearing() {
 }
 
 nvidia::fix-gpu-background-image-glitch() {
-  sudo install --mode=0755 --owner=root --group=root -D -t /usr/lib/systemd/system-sleep "${SOPKA_DIR}/lib/ubuntu/background-fix.sh" || fail "Unable to install background-fix.sh ($?)"
+  fs::sudo-write-file "/usr/lib/systemd/system-sleep/nvidia--fix-gpu-background-image-glitch.sh" 0755 <<'SHELL' || fail
+#!/bin/bash
+case $1/$2 in
+  pre/*)
+    ;;
+  post/*)
+    if [ -f /var/cache/background-fix-state ]; then
+      rm /var/cache/background-fix-state
+      su - stan bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/warty-final-ubuntu.png'"
+    else
+      touch /var/cache/background-fix-state
+      su - stan bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/Disco_Dingo_Alt_Default_by_Abubakar_NK.png'"
+    fi
+    ;;
+esac
+SHELL
 }
