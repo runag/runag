@@ -8,5 +8,9 @@
   "bin": {
     "sopka": "bin/sopka"
   },
-  "repository": "senotrusov/sopka"
+  "repository": "senotrusov/sopka",
+  "scripts": {
+    "docs": "docs/make.sh",
+    "lint": "lint/lint.sh"
+  }
 }

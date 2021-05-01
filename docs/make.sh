@@ -26,8 +26,11 @@ fi
 
 if ! command -v shdoc >/dev/null; then
   git clone --recursive https://github.com/reconquest/shdoc || fail
-  (cd shdoc && sudo make install) || fail
+  (cd shdoc && make && sudo make install) || fail
   rm -rf shdoc || fail
+  rm -rf vendor/github.com/reconquest || fail
+  rm -d vendor/github.com || fail
+  rm -d vendor || fail
 fi
 
 rm docs/lib/*.md || fail
