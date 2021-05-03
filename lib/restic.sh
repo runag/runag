@@ -83,7 +83,6 @@ ExecStart=${SOPKA_DIR}/bin/sopka backup::${BACKUP_NAME}::create
 SyslogIdentifier=${BACKUP_NAME}
 ProtectSystem=full
 PrivateTmp=true
-NoNewPrivileges=true
 EOF
 
   systemctl --user reenable "${BACKUP_NAME}.service" || fail
