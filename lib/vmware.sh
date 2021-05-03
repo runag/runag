@@ -47,6 +47,11 @@ vmware::linux::symlink-hgfs-mounts() {
 }
 
 vmware::linux::get-host-ip-address() {
-  ip route show | grep 'default via' | awk '{print $3}' | sed -e 's/[[:digit:]]\+$/1/'
+  ip route show | grep 'default via' | awk '{print $3}' | sed 's/[[:digit:]]\+$/1/'
+  test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
+}
+
+vmware::get-machine-uuid() {
+  sudo dmidecode -t system | grep "^[[:blank:]]*Serial Number: VMware-" | sed "s/^[[:blank:]]*Serial Number: VMware-//" | sed "s/ //g"
   test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
 }

@@ -58,6 +58,7 @@ fi
 . "${SOPKA_DIR}/lib/nodejs.sh" || fail
 . "${SOPKA_DIR}/lib/nvidia.sh" || fail
 . "${SOPKA_DIR}/lib/postgresql.sh" || fail
+. "${SOPKA_DIR}/lib/restic.sh" || fail
 . "${SOPKA_DIR}/lib/rsync.sh" || fail
 . "${SOPKA_DIR}/lib/ruby.sh" || fail
 . "${SOPKA_DIR}/lib/shellrcd-files.sh" || fail
