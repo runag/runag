@@ -70,6 +70,12 @@ restic::umount() {
 }
 
 restic::systemd::init-service() {
+  if [ -n "${1:-}" ]; then
+    local -n options=$1
+  else
+    declare -A options
+  fi
+
   local servicesPath="${HOME}/.config/systemd/user"
   mkdir -p "${servicesPath}" || fail
 
@@ -83,13 +89,10 @@ ExecStart=${SOPKA_DIR}/bin/sopka backup::${BACKUP_NAME}::create
 SyslogIdentifier=${BACKUP_NAME}
 ProtectSystem=full
 PrivateTmp=true
+NoNewPrivileges=${options[NoNewPrivileges]:-"true"}
 EOF
 
   systemctl --user reenable "${BACKUP_NAME}.service" || fail
-
-  if systemctl --user is-enabled "${BACKUP_NAME}.timer" >/dev/null 2>&1; then
-    restic::systemd::enable-timer || fail
-  fi
 }
 
 restic::systemd::start-service() {
@@ -101,6 +104,12 @@ restic::systemd::stop-service() {
 }
 
 restic::systemd::enable-timer() {
+  if [ -n "${1:-}" ]; then
+    local -n options=$1
+  else
+    declare -A options
+  fi
+
   local servicesPath="${HOME}/.config/systemd/user"
   mkdir -p "${servicesPath}" || fail
 
@@ -109,8 +118,8 @@ restic::systemd::enable-timer() {
 Description=Backup service timer for ${BACKUP_NAME}
 
 [Timer]
-OnCalendar=*:00/30
-RandomizedDelaySec=120
+OnCalendar=${options[OnCalendar]:-"hourly"}
+RandomizedDelaySec=${options[RandomizedDelaySec]:-"300"}
 
 [Install]
 WantedBy=timers.target
