@@ -73,6 +73,7 @@ ubuntu::packages::install-devtools() {
     postgresql \
     postgresql-contrib \
     python3 \
+    python-is-python3 \
     python3-pip \
     python3-psycopg2 \
     redis-server \
