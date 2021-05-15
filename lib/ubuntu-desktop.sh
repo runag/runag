@@ -72,7 +72,7 @@ ubuntu::desktop::install-vitals() {
   local extensionsDir="${HOME}/.local/share/gnome-shell/extensions"
   local extensionUuid="Vitals@CoreCoding.com"
 
-  apt::install gir1.2-gtop-2.0 lm-sensors || fail
+  apt::install gnome-shell-extensions gir1.2-gtop-2.0 lm-sensors || fail
 
   mkdir -p "${extensionsDir}" || fail
 
