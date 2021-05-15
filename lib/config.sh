@@ -42,7 +42,7 @@ config::merge() {
 
   # TODO: is mtime-based update possible here?
 
-  if [ -t 1 ]; then
+  if [ -t 0 ]; then
     if [ -f "${dst}" ]; then
       if ! diff --strip-trailing-cr "${src}" "${dst}" >/dev/null 2>&1; then
 

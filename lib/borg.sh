@@ -125,7 +125,7 @@ borg::import-key() {
     return
   fi
 
-  if [ -t 1 ]; then
+  if [ -t 0 ]; then
     local matchPath="${HOME}/${BACKUP_NAME}-"
     if ls "${matchPath}"*.key >/dev/null 2>&1; then
       files=("${matchPath}"*.key)
