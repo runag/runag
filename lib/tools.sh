@@ -74,3 +74,11 @@ tools::install-rclone() {
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"
   fi
 }
+
+tools::true() {
+  true
+}
+
+tools::false() {
+  false
+}

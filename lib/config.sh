@@ -40,31 +40,35 @@ config::merge() {
   src="$1"
   dst="$2"
 
-  if [ -f "${dst}" ]; then
-    if ! diff --strip-trailing-cr "${src}" "${dst}" >/dev/null 2>&1; then
+  # TODO: is mtime-based update possible here?
 
-      if command -v git >/dev/null; then
-        git diff --ignore-cr-at-eol --color --unified=6 --no-index "${dst}" "${src}" | tee
-      else
-        diff --strip-trailing-cr --context=6 --color "${dst}" "${src}"
-      fi
+  if [ -t 1 ]; then
+    if [ -f "${dst}" ]; then
+      if ! diff --strip-trailing-cr "${src}" "${dst}" >/dev/null 2>&1; then
 
-      local action
+        if command -v git >/dev/null; then
+          git diff --ignore-cr-at-eol --color --unified=6 --no-index "${dst}" "${src}" | tee
+        else
+          diff --strip-trailing-cr --context=6 --color "${dst}" "${src}"
+        fi
 
-      echo "Files are different:"
-      echo "  ${src}"
-      echo "  ${dst}"
-      echo "Please choose an action to perform:"
-      echo "  1: Use file from the deploy repository to replace file on this machine"
-      echo "  2: Use file from this machine to save it to the deploy repository"
-      echo "  3 (or Enter): Ignore conflict"
+        local action
 
-      IFS="" read -r action || fail
+        echo "Files are different:"
+        echo "  ${src}"
+        echo "  ${dst}"
+        echo "Please choose an action to perform:"
+        echo "  1: Use file from the deploy repository to replace file on this machine"
+        echo "  2: Use file from this machine to save it to the deploy repository"
+        echo "  3 (or Enter): Ignore conflict"
 
-      if [ "${action}" = 1 ]; then
-        cp "${src}" "${dst}" || fail
-      elif [ "${action}" = 2 ]; then
-        cp "${dst}" "${src}" || fail
+        IFS="" read -r action || fail
+
+        if [ "${action}" = 1 ]; then
+          cp "${src}" "${dst}" || fail
+        elif [ "${action}" = 2 ]; then
+          cp "${dst}" "${src}" || fail
+        fi
       fi
     fi
   fi

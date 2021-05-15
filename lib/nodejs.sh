@@ -33,7 +33,7 @@ nodejs::install-nodenv() {
 }
 
 shellrcd::nodenv() {
-  local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh" 
+  local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh"
   fs::write-file "${output}" <<SHELL || fail
 $(tools::licence)
 
