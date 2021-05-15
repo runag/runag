@@ -22,7 +22,7 @@ nodejs::ubuntu::install() {
   nodejs::install-nodenv || fail
   shellrcd::nodenv || fail
   nodenv rehash || fail
-  sudo npm update -g || fail
+  sudo npm update -g --unsafe-perm=true || fail
 }
 
 nodejs::install-nodenv() {
