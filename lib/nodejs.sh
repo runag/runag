@@ -22,7 +22,7 @@ nodejs::ubuntu::install() {
   nodejs::install-nodenv || fail
   shellrcd::nodenv || fail
   nodenv rehash || fail
-  npm config set scripts-prepend-node-path auto || fail
+  npm config set scripts-prepend-node-path auto || fail # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
   sudo npm update -g --unsafe-perm=true || fail
 }
 
