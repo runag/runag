@@ -22,6 +22,7 @@ nodejs::ubuntu::install() {
   nodejs::install-nodenv || fail
   shellrcd::nodenv || fail
   nodenv rehash || fail
+  npm config set scripts-prepend-node-path auto || fail
   sudo npm update -g --unsafe-perm=true || fail
 }
 
