@@ -98,3 +98,20 @@ gsettings::perhaps-set() {
     gsettings set "${schema}" "${key}" "${value}" || fail
   fi
 }
+
+ubuntu::desktop::firefox::set-prefs() {
+  local name="$1"
+  local value="$2"
+  local prefsLine="user_pref(\"${name}\", ${value});"
+  local profileFolder
+  local prefsFile
+
+  for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
+    if [ -d "$profileFolder" ]; then
+      prefsFile="$profileFolder/prefs.js"
+      if ! grep --quiet --fixed-strings --line-regexp "${prefsLine}" "${prefsFile}"; then
+        echo "${prefsLine}" >>"${prefsFile}" || fail
+      fi
+    fi
+  done
+}
