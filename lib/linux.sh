@@ -84,17 +84,17 @@ linux::is-bare-metal() {
 }
 
 linux::add-user() {
-  local user="$1"
-  if ! id -u "${user}" >/dev/null 2>&1; then
-    sudo adduser --system --group --shell /bin/bash "${user}" || fail
+  local userName="$1"
+  if ! id -u "${userName}" >/dev/null 2>&1; then
+    sudo adduser --system --group --shell /bin/bash "${userName}" || fail
   fi
 }
 
 linux::assign-user-to-group() {
-  local user="$1"
-  local group="$2"
+  local userName="$1"
+  local groupName="$2"
 
-  usermod --append --groups "${group}" "${user}" || fail
+  usermod --append --groups "${groupName}" "${userName}" || fail
 }
 
 linux::get-default-route() {
