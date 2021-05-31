@@ -14,6 +14,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+postgresql::su(){
+  local userName
+  if [[ "$OSTYPE" =~ ^darwin ]]; then
+    if [ -n "${SUDO_USER:-}" ]; then
+      userName="${SUDO_USER}"
+    else
+      userName="${USER}"
+    fi
+  else
+    userName=postgres
+  fi
+  echo "sudo -i -u ${userName} psql --username ${userName} --set ON_ERROR_STOP=on"
+}
+
 postgresql::install-dictionaries() {
   local folder="$1"
 
@@ -38,4 +52,19 @@ postgresql::install-dictionaries() {
       fi
     done
   fi
+}
+
+postgresql::create-superuser-for-local-account() {
+  local userName="${USER}"
+  local userExists
+
+  local psqlSu; psqlSu="$(postgresql::su)" || fail
+
+  userExists="$(${psqlSu} --dbname postgres -tA -c "SELECT 1 FROM pg_roles WHERE rolname='${userName}'")" || fail
+
+  if [ "${userExists}" = '1' ]; then
+    return 0
+  fi
+
+  ${psqlSu} --dbname postgres -c "CREATE USER ${userName} WITH SUPERUSER CREATEDB CREATEROLE LOGIN" || fail
 }
