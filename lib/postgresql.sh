@@ -66,5 +66,5 @@ postgresql::create-superuser-for-local-account() {
     return 0
   fi
 
-  ${psqlSu} --dbname postgres -c "CREATE USER ${userName} WITH SUPERUSER CREATEDB CREATEROLE LOGIN" || fail
+  ${psqlSu} --dbname postgres -c "CREATE ROLE ${userName} WITH SUPERUSER CREATEDB CREATEROLE LOGIN" || fail
 }
