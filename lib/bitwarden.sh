@@ -21,12 +21,12 @@ bitwarden::install-cli() {
 bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     # the absence of error handling is intentional here
-    local errorString; errorString="$(bw login "${BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
+    local errorString; errorString="$(NODENV_VERSION=system bw login "${BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
 
     if [ "${errorString}" != "You are already logged in as ${BITWARDEN_LOGIN}." ]; then
       echo "Please enter your bitwarden password to login"
 
-      BW_SESSION="$(bw login "${BITWARDEN_LOGIN}" --raw)" || fail "Unable to login to bitwarden"
+      BW_SESSION="$(NODENV_VERSION=system bw login "${BITWARDEN_LOGIN}" --raw)" || fail "Unable to login to bitwarden"
       export BW_SESSION
     fi
   fi
@@ -34,10 +34,10 @@ bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     echo "Please enter your bitwarden password to unlock the vault"
 
-    BW_SESSION="$(bw unlock --raw)" || fail "Unable to unlock bitwarden database"
+    BW_SESSION="$(NODENV_VERSION=system bw unlock --raw)" || fail "Unable to unlock bitwarden database"
     export BW_SESSION
 
-    bw sync || fail "Unable to sync bitwarden"
+    NODENV_VERSION=system bw sync || fail "Unable to sync bitwarden"
   fi
 }
 
@@ -60,7 +60,7 @@ bitwarden::write-notes-to-file() {
   bitwarden::unlock || fail
 
   # bitwarden-object: "?"
-  if bwdata="$(bw get item "${item}")"; then
+  if bwdata="$(NODENV_VERSION=system bw get item "${item}")"; then
     local dirName; dirName="$(dirname "${outputFile}")" || fail
 
     if [ ! -d "${dirName}" ]; then
@@ -96,14 +96,20 @@ bitwarden::write-password-to-file-if-not-exists() {
     bitwarden::unlock || fail
 
     # bitwarden-object: "?"
-    if bwdata="$(bw get password "${item}")"; then
+    if bwdata="$(NODENV_VERSION=system bw get password "${item}")"; then
       local dirName; dirName="$(dirname "${outputFile}")" || fail
 
       if [ ! -d "${dirName}" ]; then
         (umask "${setUmask}" && mkdir -p "${dirName}") || fail
       fi
 
-      builtin echo "${bwdata}" | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
+      if [ "${NO_NEWLINE:-}" = "true" ]; then
+        local perhapsNoNewline="-n"
+      else
+        local perhapsNoNewline=""
+      fi
+
+      builtin echo ${perhapsNoNewline} "${bwdata}" | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
       local savedPipeStatus="${PIPESTATUS[*]}"
 
       if [ "${savedPipeStatus}" = "0 0" ]; then
