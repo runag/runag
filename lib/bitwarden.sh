@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 bitwarden::install-cli() {
-  sudo npm install -g @bitwarden/cli || fail
+  sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
 }
 
 bitwarden::unlock() {
