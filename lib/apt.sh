@@ -14,12 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# @description Perform apt update once
+# @description Perform apt update once per script run
 apt::lazy-update() {
   if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
     SOPKA_APT_LAZY_UPDATE_HAPPENED=1
     apt::update || fail
   fi
+}
+
+# @description Perform apt update once per script run, and then perform apt dist-upgrade
+apt::lazy-update-and-dist-upgrade() {
+  apt::lazy-update || fail
+  apt::dist-upgrade || fail
 }
 
 # @description Perform apt update
