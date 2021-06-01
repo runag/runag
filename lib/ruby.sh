@@ -67,3 +67,21 @@ ruby::ubuntu::install() {
   rbenv rehash || fail
   sudo gem update || fail
 }
+
+rails::master-key::perhaps-write-from-bitwarden-if-not-exists() {
+  local bwItem="$1"
+
+  if [ ! -f config/master.key ]; then
+    if [ -n "${BITWARDEN_LOGIN:-}" ]; then
+      NO_NEWLINE=true bitwarden::write-password-to-file-if-not-exists "${bwItem}" "config/master.key" || fail
+    else
+      echo "Please set BITWARDEN_LOGIN environment variable to get Rails master key from Bitwarden" >&2
+    fi
+  fi
+}
+
+rails::master-key::should-exists() {
+  if [ ! -f config/master.key ]; then
+    fail "config/master.key should exists"
+  fi
+}
