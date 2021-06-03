@@ -35,7 +35,7 @@ nodejs::install-nodenv() {
 
 shellrcd::nodenv() {
   local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh"
-  fs::file::write "${output}" <<SHELL || fail
+  file::write "${output}" <<SHELL || fail
 $(tools::licence)
 
 if [ -d "\$HOME/.nodenv/bin" ]; then
