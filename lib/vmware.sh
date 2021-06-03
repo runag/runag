@@ -15,9 +15,15 @@
 #  limitations under the License.
 
 vmware::is-inside-vm() {
-  # another method:
-  # if sudo dmidecode -t system | grep --quiet "Product\\ Name\\:\\ VMware\\ Virtual\\ Platform"; then
-  hostnamectl status | grep --quiet "Virtualization\\:.*vmware"
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    hostnamectl status | grep --quiet "Virtualization\\:.*vmware"
+    # another method:
+    # if sudo dmidecode -t system | grep --quiet "Product\\ Name\\:\\ VMware\\ Virtual\\ Platform"; then
+  elif [[ "${OSTYPE}" =~ ^msys ]]; then
+    powershell -Command "Get-WmiObject Win32_computerSystem" | grep --quiet --fixed-strings "VMware"
+  else
+    fail "OSTYPE not supported: ${OSTYPE}"
+  fi
 }
 
 vmware::use-hgfs-mounts() {

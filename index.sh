@@ -73,4 +73,3 @@ fi
 . "${SOPKA_DIR}/lib/ubuntu.sh" || fail
 . "${SOPKA_DIR}/lib/vmware.sh" || fail
 . "${SOPKA_DIR}/lib/vscode.sh" || fail
-. "${SOPKA_DIR}/lib/windows.sh" || fail
