@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+vscode::snap::install() {
+  sudo snap install code --classic || fail "Unable to snap install ($?)"
+}
+
 vscode::determine-config-path() {
   if [[ "$OSTYPE" =~ ^darwin ]]; then
     export VSCODE_CONFIG_PATH="${HOME}/Library/Application Support/Code"
@@ -22,10 +26,6 @@ vscode::determine-config-path() {
   else
     export VSCODE_CONFIG_PATH="${HOME}/.config/Code"
   fi
-}
-
-vscode::snap::install() {
-  sudo snap install code --classic || fail "Unable to snap install ($?)"
 }
 
 vscode::list-extensions-to-temp-file() {
