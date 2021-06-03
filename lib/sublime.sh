@@ -21,16 +21,6 @@ sublime::ubuntu::install-merge-and-text() {
   sublime::apt::install-sublime-text || fail
 }
 
-sublime::determine-config-path() {
-  if [[ "$OSTYPE" =~ ^darwin ]]; then
-    export SUBLIME_CONFIG_PATH="${HOME}/Library/Application Support/Sublime Text 3"
-  elif [[ "$OSTYPE" =~ ^msys ]]; then
-    export SUBLIME_CONFIG_PATH="${APPDATA}/Sublime Text 3"
-  else
-    export SUBLIME_CONFIG_PATH="${HOME}/.config/sublime-text-3"
-  fi
-}
-
 sublime::apt::add-sublime-source() {
   curl --fail --silent --show-error https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to curl https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add"
@@ -44,6 +34,16 @@ sublime::apt::install-sublime-merge() {
 
 sublime::apt::install-sublime-text() {
   sudo apt-get install -o Acquire::ForceIPv4=true -y sublime-text || fail "Unable to apt-get install ($?)"
+}
+
+sublime::determine-config-path() {
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
+    export SUBLIME_CONFIG_PATH="${HOME}/Library/Application Support/Sublime Text 3"
+  elif [[ "${OSTYPE}" =~ ^msys ]]; then
+    export SUBLIME_CONFIG_PATH="${APPDATA}/Sublime Text 3"
+  else
+    export SUBLIME_CONFIG_PATH="${HOME}/.config/sublime-text-3"
+  fi
 }
 
 sublime::install-package-control() {
