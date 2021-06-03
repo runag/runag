@@ -30,7 +30,7 @@ nvidia::fix-screen-tearing() {
 }
 
 nvidia::fix-gpu-background-image-glitch() {
-  fs::sudo-write-file "/usr/lib/systemd/system-sleep/nvidia--fix-gpu-background-image-glitch.sh" 0755 <<'SHELL' || fail
+  fs::file::sudo-write "/usr/lib/systemd/system-sleep/nvidia--fix-gpu-background-image-glitch.sh" 0755 <<'SHELL' || fail
 #!/bin/bash
 case $1/$2 in
   pre/*)

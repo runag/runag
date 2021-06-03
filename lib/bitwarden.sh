@@ -130,7 +130,7 @@ bitwarden::write-password-to-file-if-not-exists() {
 }
 
 bitwarden::shellrcd::set-bitwarden-login() {
-  fs::write-file "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
+  fs::file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
     export BITWARDEN_LOGIN="${BITWARDEN_LOGIN}"
 SHELL
 }

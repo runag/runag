@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-fs::sudo-write-file() {
+fs::file::sudo-write() {
   local dest="$1"
   local mode="${2:-0644}"
   local owner="${3:-root}"
@@ -31,7 +31,7 @@ fs::sudo-write-file() {
   sudo chown "$owner:$group" "$dest" || fail "Unable to chown '${dest}' ($?)"
 }
 
-fs::write-file() {
+fs::file::write() {
   local dest="$1"
   local mode="${2:-0644}"
 
@@ -45,14 +45,14 @@ fs::write-file() {
   chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
 }
 
-fs::remove-dir-if-empty() {
+fs::dir::remove-if-empty() {
   if [ -d "$1" ]; then
     # if directory is not empty then rm exit status will be non-zero
     rm --dir "$1" || true
   fi
 }
 
-fs::mount-cifs() {
+fs::mount::cifs() {
   local serverPath="$1"
   local mountName="$2"
   local bwItem="$3"

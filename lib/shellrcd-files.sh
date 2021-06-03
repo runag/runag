@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 shellrcd::use-nano-editor() {
-  fs::write-file "${HOME}/.shellrc.d/use-nano-editor.sh" <<SHELL || fail
+  fs::file::write "${HOME}/.shellrc.d/use-nano-editor.sh" <<SHELL || fail
     if [ -z "\${EDITOR:-}" ]; then
       if command -v nano >/dev/null; then
         export EDITOR="\$(command -v nano)"
@@ -25,7 +25,7 @@ SHELL
 }
 
 shellrcd::sopka-path() {
-  fs::write-file "${HOME}/.shellrc.d/sopka-path.sh" <<SHELL || fail
+  fs::file::write "${HOME}/.shellrc.d/sopka-path.sh" <<SHELL || fail
     if [ -d "\${HOME}/.sopka" ]; then
       export PATH="\${HOME}/.sopka/bin:\$PATH"
     fi
@@ -33,7 +33,7 @@ SHELL
 }
 
 shellrcd::hook-direnv() {
-  fs::write-file "${HOME}/.shellrc.d/hook-direnv.sh" <<SHELL || fail
+  fs::file::write "${HOME}/.shellrc.d/hook-direnv.sh" <<SHELL || fail
     if command -v direnv >/dev/null; then
       export DIRENV_LOG_FORMAT=""
       if [ -n "\${ZSH_VERSION:-}" ]; then

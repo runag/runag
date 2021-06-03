@@ -38,7 +38,7 @@ shellrcd::rbenv() {
     opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
 
-  fs::write-file "${output}" <<SHELL || fail
+  fs::file::write "${output}" <<SHELL || fail
 $(tools::licence)
 
 if [ -d "\$HOME/.rbenv/bin" ]; then

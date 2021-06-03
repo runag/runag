@@ -28,7 +28,7 @@ sshd::ubuntu::install-and-configure() {
 }
 
 sshd::configure() {
-  fs::sudo-write-file "/etc/ssh/sshd_config.d/access.conf" <<SHELL || fail
+  fs::file::sudo-write "/etc/ssh/sshd_config.d/access.conf" <<SHELL || fail
 PasswordAuthentication no
 PermitEmptyPasswords no
 SHELL

@@ -105,7 +105,7 @@ linux::get-default-route() {
 linux::enable-nonrestricted-sudo() {
   local userName="${1:-"${USER}"}"
 
-  fs::sudo-write-file "/etc/sudoers.d/${userName}-nonrestricted-sudo" 0440 root <<SHELL || fail
+  fs::file::sudo-write "/etc/sudoers.d/${userName}-nonrestricted-sudo" 0440 root <<SHELL || fail
 ${userName} ALL=(ALL) NOPASSWD: ALL
 SHELL
 }
