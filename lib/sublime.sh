@@ -14,26 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sublime::ubuntu::install-merge-and-text() {
-  sublime::apt::add-sublime-source || fail
+sublime::apt::install-merge-and-text() {
+  apt::add-key-and-source "https://download.sublimetext.com/sublimehq-pub.gpg" "deb https://download.sublimetext.com/ apt/stable/" "sublime-text" || fail
   apt::update || fail
-  sublime::apt::install-sublime-merge || fail
-  sublime::apt::install-sublime-text || fail
-}
-
-sublime::apt::add-sublime-source() {
-  curl --fail --silent --show-error https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to curl https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add"
-
-  echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list || fail "Unable to write to /etc/apt/sources.list.d/sublime-text.list"
-}
-
-sublime::apt::install-sublime-merge() {
-  sudo apt-get install -o Acquire::ForceIPv4=true -y sublime-merge || fail "Unable to apt-get install ($?)"
-}
-
-sublime::apt::install-sublime-text() {
-  sudo apt-get install -o Acquire::ForceIPv4=true -y sublime-text || fail "Unable to apt-get install ($?)"
+  apt::install sublime-merge || fail
+  apt::install sublime-text || fail
 }
 
 sublime::determine-config-path() {
