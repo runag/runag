@@ -52,7 +52,7 @@ apt::autoremove() {
 # @description Add apt source and key
 #
 # @example
-#    apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn"
+#    apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" | fail
 #
 # @arg $1 string key url
 # @arg $2 string source string
