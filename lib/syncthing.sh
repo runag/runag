@@ -19,7 +19,7 @@ syncthing::macos::install() {
   brew services start syncthing || fail
 }
 
-syncthing::ubuntu::install() {
+syncthing::apt::install() {
   # in accordance with instructions at https://apt.syncthing.net/
   apt::add-key-and-source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
   apt::update || fail
