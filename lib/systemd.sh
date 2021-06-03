@@ -14,7 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-
 # enable systemd user instance without the need for the user to login
 systemd::enable-linger() {
   sudo loginctl enable-linger "${USER}" || fail
