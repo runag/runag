@@ -14,6 +14,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+tools::true() {
+  true
+}
+
+tools::false() {
+  false
+}
+
 tools::licence() {
   cat <<EOT
 #  Copyright 2012-2019 Stanislav Senotrusov <stan@senotrusov.com>
@@ -32,14 +40,6 @@ tools::licence() {
 EOT
 }
 
-tools::nothing-deployed() {
-  test -z "$(find . -maxdepth 1 -name '.sopka.*.deployed' -print -quit)"
-}
-
-tools::display-elapsed-time() {
-  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
 tools::perhaps-display-deploy-footnotes() {
   if [ -t 1 ]; then
     if [[ "$OSTYPE" =~ ^linux ]]; then
@@ -49,7 +49,15 @@ tools::perhaps-display-deploy-footnotes() {
   fi
 }
 
-tools::once-per-day() {
+tools::display-elapsed-time() {
+  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
+}
+
+tools::is-nothing-deployed() {
+  test -z "$(find . -maxdepth 1 -name '.sopka.*.deployed' -print -quit)"
+}
+
+tools::do-once-per-day() {
   local command="$1"
   local flagFile="${HOME}/.cache/sopka.once-per-day.${command}"
   local currentDate; currentDate="$(date +"%Y%m%d")" || fail
@@ -66,19 +74,4 @@ tools::once-per-day() {
   "${command}" || fail
 
   echo "${currentDate}" > "${flagFile}" || fail
-}
-
-tools::install-rclone() {
-  if ! command -v rclone >/dev/null; then
-    curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
-    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"
-  fi
-}
-
-tools::true() {
-  true
-}
-
-tools::false() {
-  false
 }
