@@ -96,3 +96,10 @@ ubuntu::packages::install-copyq() {
   apt::update || fail
   apt::install copyq || fail
 }
+
+ubuntu::packages::install-rclone() {
+  if ! command -v rclone >/dev/null; then
+    curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
+    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"
+  fi
+}
