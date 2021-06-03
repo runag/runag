@@ -18,6 +18,12 @@ bitwarden::install-cli() {
   sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
 }
 
+bitwarden::shellrcd::set-bitwarden-login() {
+  file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
+    export BITWARDEN_LOGIN="${BITWARDEN_LOGIN}"
+SHELL
+}
+
 bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     # the absence of error handling is intentional here
@@ -127,10 +133,4 @@ bitwarden::write-password-to-file-if-not-exists() {
       fail "Unable to get bitwarden password ${item}"
     fi
   fi
-}
-
-bitwarden::shellrcd::set-bitwarden-login() {
-  file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
-    export BITWARDEN_LOGIN="${BITWARDEN_LOGIN}"
-SHELL
 }
