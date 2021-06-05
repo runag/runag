@@ -45,6 +45,22 @@ file::write() {
   chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
 }
 
+file::append-string-if-its-not-in-file() {
+  local string="$1"
+  local file="$2"
+  if ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
+    echo "${string}" | tee --append "${file}" >/dev/null || fail
+  fi
+}
+
+file::sudo-append-string-if-its-not-in-file() {
+  local string="$1"
+  local file="$2"
+  if ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
+    echo "${string}" | sudo tee --append "${file}" >/dev/null || fail
+  fi
+}
+
 dir::remove-if-empty() {
   if [ -d "$1" ]; then
     # if directory is not empty then rm exit status will be non-zero

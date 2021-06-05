@@ -33,7 +33,7 @@ linux::set-hostname() {
   fi
 
   if ! grep --quiet --fixed-strings --line-regexp "${hostsString}" "${hostsFile}"; then
-    echo "${hostsString}" | sudo tee --append "$hostsFile" || fail
+    echo "${hostsString}" | sudo tee --append "${hostsFile}" || fail
   fi
 }
 
