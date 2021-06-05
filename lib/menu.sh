@@ -17,6 +17,10 @@
 menu::select-and-run() {
   local list=("$@")
 
+  if ! [ -t 0 ]; then
+    fail "Menu was called while not in terminal"
+  fi
+
   echo "Please select:"
   local i
   for i in "${!list[@]}"; do
@@ -40,6 +44,10 @@ menu::select-and-run() {
 
 menu::select-argument() {
   local list=("${@:2}")
+
+  if ! [ -t 0 ]; then
+    fail "Menu was called while not in terminal"
+  fi
 
   echo "Please select:"
   local i
