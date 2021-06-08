@@ -75,3 +75,7 @@ tools::do-once-per-day() {
 
   echo "${currentDate}" > "${flagFile}" || fail
 }
+
+tools::command-should-be-available() {
+  command -v "$1" >/dev/null || fail "$1 command should be available"
+}
