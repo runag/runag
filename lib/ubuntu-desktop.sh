@@ -54,9 +54,11 @@ ubuntu::desktop::hide-folder() {
 
   touch "${hiddenFile}" || fail
 
-  if ! grep --quiet "^$1\$" "${hiddenFile}"; then
-    echo "$1" >>"${hiddenFile}" || fail
-  fi
+  for folder in "$@"; do
+    if ! grep --quiet "^${folder}\$" "${hiddenFile}"; then
+      echo "${folder}" >>"${hiddenFile}" || fail
+    fi
+  done
 }
 
 ubuntu::desktop::install-vitals() {
