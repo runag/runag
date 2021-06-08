@@ -59,15 +59,6 @@ ubuntu::desktop::hide-folder() {
   fi
 }
 
-ubuntu::desktop::moz-enable-wayland() {
-  local pamFile="${HOME}/.pam_environment"
-  touch "${pamFile}" || fail
-
-  if ! grep --quiet "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
-    echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || fail
-  fi
-}
-
 ubuntu::desktop::install-vitals() {
   local extensionsDir="${HOME}/.local/share/gnome-shell/extensions"
   local extensionUuid="Vitals@CoreCoding.com"
@@ -97,21 +88,4 @@ gsettings::perhaps-set() {
   if gsettings get "${schema}" "${key}" >/dev/null; then
     gsettings set "${schema}" "${key}" "${value}" || fail
   fi
-}
-
-ubuntu::desktop::firefox::set-prefs() {
-  local name="$1"
-  local value="$2"
-  local prefsLine="user_pref(\"${name}\", ${value});"
-  local profileFolder
-  local prefsFile
-
-  for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
-    if [ -d "$profileFolder" ]; then
-      prefsFile="$profileFolder/prefs.js"
-      if ! grep --quiet --fixed-strings --line-regexp "${prefsLine}" "${prefsFile}"; then
-        echo "${prefsLine}" >>"${prefsFile}" || fail
-      fi
-    fi
-  done
 }

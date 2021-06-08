@@ -58,6 +58,7 @@ fi
 . "${SOPKA_DIR}/lib/bitwarden.sh" || fail
 . "${SOPKA_DIR}/lib/borg.sh" || fail
 . "${SOPKA_DIR}/lib/config.sh" || fail
+. "${SOPKA_DIR}/lib/firefox.sh" || fail
 . "${SOPKA_DIR}/lib/fs.sh" || fail
 . "${SOPKA_DIR}/lib/git.sh" || fail
 . "${SOPKA_DIR}/lib/github.sh" || fail
