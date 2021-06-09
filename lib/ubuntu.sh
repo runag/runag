@@ -37,7 +37,4 @@ ubuntu::deploy-minimal-application-server() {
 
   # deploy sshd
   sshd::ubuntu::install-and-configure || fail
-
-  # configure git
-  git::configure || fail
 }
