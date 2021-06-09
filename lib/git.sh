@@ -55,15 +55,19 @@ git::configure-user() {
   git config --global user.email "${GIT_USER_EMAIL}" || fail
 }
 
+git::configure-libsecret-credential-helper(){
+  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
+}
+
 # https://wiki.gnome.org/Projects/Libsecret
-git::ubuntu::install-credential-libsecret() (
+git::install-libsecret-credential-helper() (
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
     cd /usr/share/doc/git/contrib/credential/libsecret || fail
     sudo make || fail "Unable to compile libsecret"
   fi
 )
 
-git::ubuntu::add-credentials-to-keyring() {
+git::add-credential-to-keyring() {
   local bwItem="$1"
 
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
@@ -82,6 +86,4 @@ git::ubuntu::add-credentials-to-keyring() {
   else
     echo "Unable to store git credentials into the gnome keyring, DBUS not found" >&2
   fi
-
-  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }

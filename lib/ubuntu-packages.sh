@@ -23,7 +23,7 @@ ubuntu::packages::install-gnome-keyring-and-libsecret() {
     libsecret-1-dev \
       || fail
 
-  git::ubuntu::install-credential-libsecret || fail
+  git::install-libsecret-credential-helper || fail
 }
 
 ubuntu::packages::install-basic-tools() {
