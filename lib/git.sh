@@ -55,25 +55,6 @@ git::configure-user() {
   git config --global user.email "${GIT_USER_EMAIL}" || fail
 }
 
-git::cd-to-temp-clone() {
-  local url="$1"
-  local branch="${2:-}"
-
-  local tempDir; tempDir="$(mktemp -d)" || fail "Unable to create temp dir"
-
-  git::clone-or-pull "${url}" "${tempDir}" "${branch}" || fail
-
-  cd "${tempDir}" || fail
-
-  SOPKA_GIT_TEMP_CLONE_DIR="${tempDir}" || fail
-}
-
-git::remove-temp-clone() {
-  if [ -n "${SOPKA_GIT_TEMP_CLONE_DIR:-}" ]; then
-    rm -rf "${SOPKA_GIT_TEMP_CLONE_DIR}" || fail
-  fi
-}
-
 # https://wiki.gnome.org/Projects/Libsecret
 git::ubuntu::install-credential-libsecret() (
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
