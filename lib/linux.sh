@@ -57,7 +57,7 @@ linux::configure-inotify() {
     exit 1
   fi
 
-  if grep --quiet "^fs.inotify.max_user_watches" "$sysctl" && grep --quiet "^fs.inotify.max_user_instances" "$sysctl"; then
+  if grep --quiet "^fs\\.inotify\\.max_user_watches" "$sysctl" && grep --quiet "^fs\\.inotify\\.max_user_instances" "$sysctl"; then
     echo "fs.inotify.max_user_watches and fs.inotify.max_user_instances are already set" >&2
   else
     echo "fs.inotify.max_user_watches=1000000" | sudo tee -a "$sysctl" || fail "Unable to write to $sysctl ($?)"

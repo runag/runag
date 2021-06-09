@@ -16,9 +16,9 @@
 
 vmware::is-inside-vm() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
-    hostnamectl status | grep --quiet "Virtualization\\:.*vmware"
+    hostnamectl status | grep --quiet "Virtualization:.*vmware"
     # another method:
-    # if sudo dmidecode -t system | grep --quiet "Product\\ Name\\:\\ VMware\\ Virtual\\ Platform"; then
+    # if sudo dmidecode -t system | grep --quiet "Product Name: VMware Virtual Platform"; then
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
     powershell -Command "Get-WmiObject Win32_computerSystem" | grep --quiet --fixed-strings "VMware"
   else

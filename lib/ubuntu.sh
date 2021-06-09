@@ -25,9 +25,9 @@ ubuntu::deploy-minimal-application-server() {
   ubuntu::packages::install-devtools || fail
 
   # shellrcd
-  shellrcd::install || fail
-  shellrcd::use-nano-editor || fail
-  shellrcd::hook-direnv || fail
+  shell::install-shellrc-directory-loader "${HOME}/.bashrc" || fail
+  shell::install-nano-editor-shellrc || fail
+  shell::install-direnv-loader-shellrc || fail
 
   # install ruby
   ruby::ubuntu::install || fail

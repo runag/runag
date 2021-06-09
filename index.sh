@@ -73,8 +73,6 @@ fi
 . "${SOPKA_DIR}/lib/rsync.sh" || fail
 . "${SOPKA_DIR}/lib/ruby.sh" || fail
 . "${SOPKA_DIR}/lib/shell.sh" || fail
-. "${SOPKA_DIR}/lib/shellrcd-files.sh" || fail
-. "${SOPKA_DIR}/lib/shellrcd.sh" || fail
 . "${SOPKA_DIR}/lib/ssh.sh" || fail
 . "${SOPKA_DIR}/lib/sublime.sh" || fail
 . "${SOPKA_DIR}/lib/syncthing.sh" || fail

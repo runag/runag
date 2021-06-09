@@ -55,7 +55,7 @@ ubuntu::desktop::hide-folder() {
   touch "${hiddenFile}" || fail
 
   for folder in "$@"; do
-    if ! grep --quiet "^${folder}\$" "${hiddenFile}"; then
+    if ! grep --quiet --fixed-strings --line-regexp "${folder}" "${hiddenFile}"; then
       echo "${folder}" >>"${hiddenFile}" || fail
     fi
   done
