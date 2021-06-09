@@ -55,7 +55,7 @@ git::configure-user() {
   git config --global user.email "${GIT_USER_EMAIL}" || fail
 }
 
-git::configure-libsecret-credential-helper(){
+git::use-libsecret-credential-helper(){
   git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }
 
@@ -67,7 +67,7 @@ git::install-libsecret-credential-helper() (
   fi
 )
 
-git::add-credential-to-keyring() {
+git::add-credentials-to-keyring() {
   local bwItem="$1"
 
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then

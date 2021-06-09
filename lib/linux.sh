@@ -49,7 +49,7 @@ linux::set-locale() {
   export LC_ALL="$locale"
 }
 
-linux::set-inotify-max-user-watches() {
+linux::configure-inotify() {
   local sysctl="/etc/sysctl.conf"
 
   if [ ! -r "$sysctl" ]; then
