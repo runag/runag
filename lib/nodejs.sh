@@ -14,15 +14,29 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-nodejs::ubuntu::install() {
+apt::add-nodejs-source() {
+  local version="${1:-14}"
+  curl --location --fail --silent --show-error "https://deb.nodesource.com/setup_${version}.x" | sudo -E bash -
+  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to run nodejs install script"
+}
+
+apt::add-yarn-source() {
+  apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
+}
+
+apt::install-nodejs() {
   apt::add-yarn-source || fail
   apt::add-nodejs-source || fail
   apt::update || fail
   apt::install yarn nodejs || fail
+
   nodejs::install-nodenv || fail
-  shellrcd::nodenv || fail
+  nodejs::install-nodenv-shellrc || fail
   nodenv rehash || fail
   NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
+}
+
+nodejs::update-globally-installed-packages() {
   sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || fail
 }
 
@@ -33,7 +47,7 @@ nodejs::install-nodenv() {
   git::clone-or-pull "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
 }
 
-shellrcd::nodenv() {
+nodejs::install-nodenv-shellrc() {
   local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh"
   file::write "${output}" <<SHELL || fail
 $(tools::licence)
@@ -53,14 +67,4 @@ fi
 SHELL
 
   . "${output}" || fail
-}
-
-apt::add-nodejs-source() {
-  local version="${1:-14}"
-  curl --location --fail --silent --show-error "https://deb.nodesource.com/setup_${version}.x" | sudo -E bash -
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to run nodejs install script"
-}
-
-apt::add-yarn-source() {
-  apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
 }
