@@ -14,13 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-
-# set shell options
-if [ "${VERBOSE:-}" = true ]; then
-  set -o xtrace
+if [ "${0:0:1}" != "-" ]; then
+  # set shell options
+  if [ "${VERBOSE:-}" = true ]; then
+    set -o xtrace
+  fi
+  set -o nounset
 fi
-
-set -o nounset
 
 # define fail() function
 fail() {
