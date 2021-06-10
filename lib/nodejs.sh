@@ -32,7 +32,8 @@ apt::install-nodejs() {
 
   nodejs::install-nodenv || fail
   nodejs::install-nodenv-shellrc || fail
-  nodenv rehash || fail
+  nodejs::load-nodenv || fail
+
   NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
 }
 
@@ -49,6 +50,7 @@ nodejs::install-nodenv() {
 
 nodejs::install-nodenv-shellrc() {
   local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh"
+
   file::write "${output}" <<SHELL || fail
 $(tools::licence)
 
@@ -65,6 +67,11 @@ if command -v nodenv >/dev/null; then
   fi
 fi
 SHELL
+}
 
-  . "${output}" || fail
+nodejs::load-nodenv() {
+  local nodenvShellrc="${HOME}/.shellrc.d/nodenv.sh"
+
+  . "${nodenvShellrc}" || fail
+  nodenv rehash || fail
 }
