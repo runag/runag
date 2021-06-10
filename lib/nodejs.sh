@@ -14,25 +14,30 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-apt::add-nodejs-source() {
+nodejs::apt::add-source() {
   local version="${1:-14}"
   curl --location --fail --silent --show-error "https://deb.nodesource.com/setup_${version}.x" | sudo -E bash -
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to run nodejs install script"
 }
 
-apt::add-yarn-source() {
-  apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
-}
-
-apt::install-nodejs() {
-  apt::add-yarn-source || fail
-  apt::add-nodejs-source || fail
+nodejs::apt::install() {
+  nodejs::apt::add-source || fail
   apt::update || fail
-  apt::install yarn nodejs || fail
+  apt::install nodejs || fail
 
   nodejs::install-nodenv || fail
   nodejs::install-nodenv-shellrc || fail
   nodejs::load-nodenv || fail
+}
+
+nodejs::apt::add-yarn-source() {
+  apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
+}
+
+nodejs::apt::install-yarn() {
+  nodejs::apt::add-yarn-source || fail
+  apt::update || fail
+  apt::install yarn || fail
 }
 
 nodejs::install-nodenv() {

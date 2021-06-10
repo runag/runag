@@ -33,7 +33,7 @@ ubuntu::deploy-minimal-application-server() {
   ruby::ubuntu::install || fail
 
   # install nodejs
-  apt::install-nodejs || fail
+  nodejs::apt::install || fail
 
   # deploy sshd
   sshd::ubuntu::install-and-configure || fail
