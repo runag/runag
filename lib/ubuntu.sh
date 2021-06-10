@@ -34,6 +34,7 @@ ubuntu::deploy-minimal-application-server() {
 
   # install nodejs
   nodejs::apt::install || fail
+  nodejs::install-and-load-nodenv || fail
 
   # deploy sshd
   sshd::ubuntu::install-and-configure || fail

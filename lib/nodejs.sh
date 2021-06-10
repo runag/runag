@@ -24,10 +24,6 @@ nodejs::apt::install() {
   nodejs::apt::add-source || fail
   apt::update || fail
   apt::install nodejs || fail
-
-  nodejs::install-nodenv || fail
-  nodejs::install-nodenv-shellrc || fail
-  nodejs::load-nodenv || fail
 }
 
 nodejs::apt::add-yarn-source() {
@@ -40,16 +36,29 @@ nodejs::apt::install-yarn() {
   apt::install yarn || fail
 }
 
+nodejs::install-and-load-nodenv() {
+  nodejs::install-nodenv || fail
+  nodejs::load-nodenv || fail
+}
+
 nodejs::install-nodenv() {
+  nodejs::install-nodenv-repositories || fail
+  nodejs::install-nodenv-shellrc || fail
+  nodejs::configure-mismatched-binaries-workaround || fail
+}
+
+nodejs::configure-mismatched-binaries-workaround() {
+  # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
+  NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail
+}
+
+nodejs::install-nodenv-repositories() {
   local nodenvRoot="${HOME}/.nodenv"
 
   git::clone-or-pull "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
 
   mkdir -p "${nodenvRoot}/plugins" || fail
   git::clone-or-pull "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
-
-  # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
-  NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail
 }
 
 nodejs::install-nodenv-shellrc() {
