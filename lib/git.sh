@@ -67,7 +67,7 @@ git::install-libsecret-credential-helper() (
   fi
 )
 
-git::add-credentials-to-keyring() {
+git::add-credentials-to-gnome-keyring() {
   local bwItem="$1"
 
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
