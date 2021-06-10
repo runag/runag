@@ -46,7 +46,6 @@ nodejs::install-nodenv() {
   git::clone-or-pull "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
 
   mkdir -p "${nodenvRoot}/plugins" || fail
-
   git::clone-or-pull "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
 
   # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
