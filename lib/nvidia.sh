@@ -25,7 +25,7 @@ nvidia::fix-screen-tearing() {
     echo "options nvidia_drm modeset=1" | sudo tee "${modprobeFile}"
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to write to ${modprobeFile}"
     sudo update-initramfs -u || fail
-    echo "Please reboot to activate screen tearing fix (ubuntu::fix-nvidia-screen-tearing)" >&2
+    echo "Please reboot to activate screen tearing fix" >&2
   fi
 }
 
