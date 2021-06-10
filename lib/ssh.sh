@@ -14,67 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sshd::ubuntu::install-and-configure() {
-  # perform apt update
-  apt::lazy-update || fail
-
-  # configure
-  sshd::configure || fail # I do it first because ubuntu starts sshd right after install and I want it to be secured already at this point
-
-  # install end run
-  apt::install openssh-server ssh-import-id || fail
-  sudo systemctl --now enable ssh || fail
-  sudo systemctl reload ssh || fail
-}
-
-sshd::configure() {
-  file::sudo-write "/etc/ssh/sshd_config.d/access.conf" <<SHELL || fail
-PasswordAuthentication no
-PermitEmptyPasswords no
-SHELL
-}
-
-ssh::make-dot-ssh-dir-if-not-exist() {
+ssh::make-home-dot-ssh-dir-if-not-exist() {
   if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir "${HOME}/.ssh" || fail
-    chmod 0700 "${HOME}/.ssh" || fail
+    mkdir -m 0700 "${HOME}/.ssh" || fail
   fi
-}
-
-ssh::keys-exist() {
-  test -f "${HOME}/.ssh/id_ed25519" && test -f "${HOME}/.ssh/id_ed25519.pub"
-}
-
-ssh::upload-keys-if-not-exists() {
-  # bitwarden-object: "? ssh private key", "? ssh public key"
-  local privateKeyName="$1 ssh private key"
-  local publicKeyName="$1 ssh public key"
-
-  if ! ssh::call ssh::keys-exist; then
-    ssh::upload-key "${privateKeyName}" "id_ed25519" || fail
-    ssh::upload-key "${publicKeyName}" "id_ed25519.pub" || fail
-  fi
-}
-
-ssh::upload-key() {
-  # bitwarden-object: "?"
-  local bwItem="$1"
-  local fileName="$2"
-
-  local tmpFile; tmpFile="$(mktemp)" || fail
-
-  bitwarden::write-notes-to-file "${bwItem}" "${tmpFile}" || fail
-  ssh::call ssh::make-dot-ssh-dir-if-not-exist || fail
-  rsync::upload "${tmpFile}" ".ssh/${fileName}" || fail
-
-  rm "${tmpFile}" || fail
 }
 
 ssh::install-keys() {
   local privateKeyName="$1 ssh private key"
   local publicKeyName="$1 ssh public key"
 
-  ssh::make-dot-ssh-dir-if-not-exist || fail
+  ssh::make-home-dot-ssh-dir-if-not-exist || fail
 
   # bitwarden-object: "? ssh private key", "? ssh public key"
   bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/id_ed25519" "077" || fail
@@ -89,7 +39,7 @@ ssh::get-user-public-key() {
   fi
 }
 
-ssh::ubuntu::add-key-password-to-keyring() {
+ssh::add-key-password-to-gnome-keyring() {
   local bwItem="$1"
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
   # the login keyring is also available and already initialized properly
@@ -109,7 +59,7 @@ ssh::ubuntu::add-key-password-to-keyring() {
   fi
 }
 
-ssh::macos::add-key-password-to-keychain() {
+ssh::add-key-password-to-macos-keychain() {
   local bwItem="$1"
   local keyFile="${HOME}/.ssh/id_ed25519"
   if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
@@ -127,16 +77,14 @@ ssh::macos::add-key-password-to-keychain() {
   fi
 }
 
-ssh::macos::add-use-keychain-to-config() {
+ssh::add-use-macos-keychain-to-config() {
   local sshConfigFile="${HOME}/.ssh/config"
 
   if [ ! -f "${sshConfigFile}" ]; then
     touch "${sshConfigFile}" || fail
   fi
 
-  if grep --quiet "^# Use keychain" "${sshConfigFile}"; then
-    echo "Use keychain config already present"
-  else
+  if ! grep --quiet "^# Use keychain" "${sshConfigFile}"; then
 tee -a "${sshConfigFile}" <<SHELL || fail "Unable to append to the file: ${sshConfigFile}"
 
 # Use keychain
@@ -150,11 +98,14 @@ SHELL
 ssh::wait-for-host-ssh-to-become-available() {
   local ip="$1"
   while true; do
-    local key; key="$(ssh-keyscan "$ip" 2>/dev/null)" # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
+    # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
+    local key; key="$(ssh-keyscan "$ip" 2>/dev/null)"
     if [ ! -z "$key" ]; then
       return
     else
-      echo "Waiting for SSH to become available on host '$ip'..."
+      if [ -t 1 ]; then
+        echo "Waiting for SSH to become available on host '$ip'..." >&2
+      fi
       sleep 1 || fail
     fi
   done
@@ -222,7 +173,7 @@ ssh::call() {
     argString+="$(printf "%q" "${i}") "
   done
 
-  ssh::make-dot-ssh-dir-if-not-exist || fail
+  ssh::make-home-dot-ssh-dir-if-not-exist || fail
 
   ssh \
     -o ControlMaster=auto \
