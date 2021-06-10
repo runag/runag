@@ -48,9 +48,9 @@ restic::check-and-read-data() {
 restic::forget-and-prune() {
   restic forget \
     --prune \
-    --keep-within 7d \
-    --keep-daily 14 \
-    --keep-weekly 8 \
+    --keep-within 10d \
+    --keep-daily 30 \
+    --keep-weekly 14 \
     --keep-monthly 24 || fail
 }
 
