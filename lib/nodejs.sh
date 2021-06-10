@@ -33,19 +33,19 @@ apt::install-nodejs() {
   nodejs::install-nodenv || fail
   nodejs::install-nodenv-shellrc || fail
   nodejs::load-nodenv || fail
-
-  NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
-}
-
-nodejs::update-globally-installed-packages() {
-  sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || fail
 }
 
 nodejs::install-nodenv() {
   local nodenvRoot="${HOME}/.nodenv"
+
   git::clone-or-pull "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
+
   mkdir -p "${nodenvRoot}/plugins" || fail
+
   git::clone-or-pull "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
+
+  # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
+  NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail
 }
 
 nodejs::install-nodenv-shellrc() {
@@ -74,4 +74,8 @@ nodejs::load-nodenv() {
 
   . "${nodenvShellrc}" || fail
   nodenv rehash || fail
+}
+
+nodejs::update-globally-installed-packages() {
+  sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || fail
 }
