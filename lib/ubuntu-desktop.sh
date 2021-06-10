@@ -73,21 +73,3 @@ ubuntu::desktop::install-vitals() {
 
   gnome-extensions enable "${extensionUuid}" || fail
 }
-
-ubuntu::desktop::disable-screen-lock() {
-  gsettings::perhaps-set org.gnome.desktop.session idle-delay 0 || fail
-}
-
-ubuntu::desktop::enable-fractional-scaling() {
-  gsettings::perhaps-set org.gnome.mutter experimental-features "['scale-monitor-framebuffer', 'x11-randr-fractional-scaling']" || fail
-}
-
-gsettings::perhaps-set() {
-  local schema="$1"
-  local key="$2"
-  local value="$3"
-
-  if gsettings get "${schema}" "${key}" >/dev/null; then
-    gsettings set "${schema}" "${key}" "${value}" || fail
-  fi
-}
