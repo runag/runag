@@ -49,7 +49,7 @@ file::append-string-if-its-not-in-file() {
   local string="$1"
   local file="$2"
   if test ! -f "${file}" || ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
-    echo "${string}" | tee --append "${file}" >/dev/null || fail
+    echo "${string}" | tee -a "${file}" >/dev/null || fail
   fi
 }
 
@@ -57,7 +57,7 @@ file::sudo-append-string-if-its-not-in-file() {
   local string="$1"
   local file="$2"
   if sudo test ! -f "${file}" || ! sudo grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
-    echo "${string}" | sudo tee --append "${file}" >/dev/null || fail
+    echo "${string}" | sudo tee -a "${file}" >/dev/null || fail
   fi
 }
 
