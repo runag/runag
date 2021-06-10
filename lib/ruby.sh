@@ -14,17 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ruby::configure-gemrc() {
-  local output="${HOME}/.gemrc"
-  tee "${output}" <<SHELL || fail "Unable to write file: ${output} ($?)"
-install: --no-document
-update: --no-document
-SHELL
+ruby::install-and-load-rbenv() {
+  ruby::install-rbenv || fail
+  ruby::load-rbenv || fail
 }
 
 ruby::install-rbenv() {
+  ruby::install-rbenv-repositories || fail
+  ruby::install-rbenv-shellrc || fail
+}
+
+ruby::install-rbenv-repositories() {
   local rbenvRoot="${HOME}/.rbenv"
+
   git::clone-or-pull "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
+
   mkdir -p "${rbenvRoot}/plugins" || fail
   git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
@@ -56,14 +60,19 @@ if command -v rbenv >/dev/null; then
   fi
 fi
 SHELL
-
-  . "${output}" || fail
 }
 
-ruby::ubuntu::install() {
-  ruby::configure-gemrc || fail
-  ruby::install-rbenv || fail
-  ruby::install-rbenv-shellrc || fail
+ruby::load-rbenv() {
+  local rbenvShellrc="${HOME}/.shellrc.d/rbenv.sh"
+
+  . "${rbenvShellrc}" || fail
   rbenv rehash || fail
+}
+
+ruby::dangerously-append-nodocument-to-gemrc() {
+  file::append-string-if-its-not-in-file "gem: --no-document" "${HOME}/.gemrc"
+}
+
+ruby::update-globally-installed-gems() {
   sudo gem update || fail
 }

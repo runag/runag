@@ -29,8 +29,9 @@ ubuntu::deploy-minimal-application-server() {
   shell::install-nano-editor-shellrc || fail
   shell::install-direnv-loader-shellrc || fail
 
-  # install ruby
-  ruby::ubuntu::install || fail
+  # install rbenv, configure ruby
+  ruby::install-and-load-rbenv || fail
+  ruby::dangerously-append-nodocument-to-gemrc || fail
 
   # install nodejs
   nodejs::apt::install || fail
