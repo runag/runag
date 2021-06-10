@@ -45,7 +45,7 @@ file::write() {
   chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
 }
 
-file::append-string-if-its-not-in-file() {
+file::append-line-unless-present() {
   local string="$1"
   local file="$2"
   if test ! -f "${file}" || ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
@@ -53,7 +53,7 @@ file::append-string-if-its-not-in-file() {
   fi
 }
 
-file::sudo-append-string-if-its-not-in-file() {
+file::sudo-append-line-unless-present() {
   local string="$1"
   local file="$2"
   if sudo test ! -f "${file}" || ! sudo grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then

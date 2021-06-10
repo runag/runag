@@ -70,7 +70,7 @@ ruby::load-rbenv() {
 }
 
 ruby::dangerously-append-nodocument-to-gemrc() {
-  file::append-string-if-its-not-in-file "gem: --no-document" "${HOME}/.gemrc"
+  file::append-line-unless-present "gem: --no-document" "${HOME}/.gemrc"
 }
 
 ruby::update-globally-installed-gems() {
