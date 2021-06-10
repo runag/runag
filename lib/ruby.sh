@@ -29,7 +29,7 @@ ruby::install-rbenv() {
   git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
 
-shellrcd::rbenv() {
+ruby::install-rbenv-shellrc() {
   local output="${1:-"${HOME}/.shellrc.d"}/rbenv.sh" 
 
   local opensslLine=""
@@ -63,7 +63,7 @@ SHELL
 ruby::ubuntu::install() {
   ruby::configure-gemrc || fail
   ruby::install-rbenv || fail
-  shellrcd::rbenv || fail
+  ruby::install-rbenv-shellrc || fail
   rbenv rehash || fail
   sudo gem update || fail
 }

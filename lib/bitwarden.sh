@@ -18,7 +18,7 @@ bitwarden::install-cli() {
   sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
 }
 
-bitwarden::shellrcd::set-bitwarden-login() {
+bitwarden::install-bitwarden-login-shellrc() {
   file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
     export BITWARDEN_LOGIN="${BITWARDEN_LOGIN}"
 SHELL
