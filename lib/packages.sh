@@ -82,10 +82,3 @@ packages::install-developer-tools() {
     zsh \
       || fail
 }
-
-packages::install-rclone() {
-  if ! command -v rclone >/dev/null; then
-    curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
-    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"
-  fi
-}
