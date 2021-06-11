@@ -1,6 +1,7 @@
 ## Index
 
 * [apt::lazy-update()](#aptlazy-update)
+* [apt::lazy-update-and-dist-upgrade()](#aptlazy-update-and-dist-upgrade)
 * [apt::update()](#aptupdate)
 * [apt::dist-upgrade()](#aptdist-upgrade)
 * [apt::install()](#aptinstall)
@@ -9,7 +10,11 @@
 
 ### apt::lazy-update()
 
-Perform apt update once
+Perform apt update once per script run
+
+### apt::lazy-update-and-dist-upgrade()
+
+Perform apt update once per script run, and then perform apt dist-upgrade
 
 ### apt::update()
 
@@ -34,7 +39,7 @@ Add apt source and key
 #### Example
 
 ```bash
-apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn"
+apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" | fail
 ```
 
 #### Arguments
