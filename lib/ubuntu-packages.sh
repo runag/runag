@@ -85,18 +85,6 @@ ubuntu::packages::install-devtools() {
       || fail
 }
 
-ubuntu::packages::install-obs-studio() {
-  sudo add-apt-repository --yes ppa:obsproject/obs-studio || fail
-  apt::update || fail
-  apt::install obs-studio guvcview || fail
-}
-
-ubuntu::packages::install-copyq() {
-  sudo add-apt-repository --yes ppa:hluk/copyq || fail
-  apt::update || fail
-  apt::install copyq || fail
-}
-
 ubuntu::packages::install-rclone() {
   if ! command -v rclone >/dev/null; then
     curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
