@@ -68,3 +68,24 @@ apt::add-key-and-source() {
 
   echo "${sourceString}" | sudo tee "${sourceFile}" || fail "Unable to write apt source into the ${sourceFile}"
 }
+
+# gnome-keyring and libsecret (for git and ssh)
+apt::install-gnome-keyring-and-libsecret() {
+  apt::install \
+    gnome-keyring \
+    libsecret-tools \
+    libsecret-1-0 \
+    libsecret-1-dev \
+      || fail
+}
+
+apt::install-tools() {
+  apt::install \
+    curl \
+    debian-goodies `# checkrestart is in there` \
+    direnv \
+    git \
+    jq `# for use with bitwarden` \
+    sysbench \
+      || fail
+}

@@ -14,6 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+ruby::apt::install() {
+  apt::install \
+    build-essential `# new rails project requires some gems to be compiled` \
+    libsqlite3-dev `# new rails project uses sqlite` \
+    ruby-full \
+      || fail
+  # rails also requires 'nodejs' and 'npm' apt packages, but I guess I better not to install them here
+}
+
 ruby::install-and-load-rbenv() {
   ruby::install-rbenv || fail
   ruby::load-rbenv || fail

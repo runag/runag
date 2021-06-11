@@ -67,7 +67,6 @@ fi
 . "${SOPKA_DIR}/lib/macos.sh" || fail
 . "${SOPKA_DIR}/lib/menu.sh" || fail
 . "${SOPKA_DIR}/lib/nodejs.sh" || fail
-. "${SOPKA_DIR}/lib/packages.sh" || fail
 . "${SOPKA_DIR}/lib/postgresql.sh" || fail
 . "${SOPKA_DIR}/lib/rails.sh" || fail
 . "${SOPKA_DIR}/lib/restic.sh" || fail
@@ -79,6 +78,5 @@ fi
 . "${SOPKA_DIR}/lib/syncthing.sh" || fail
 . "${SOPKA_DIR}/lib/systemd.sh" || fail
 . "${SOPKA_DIR}/lib/tools.sh" || fail
-. "${SOPKA_DIR}/lib/ubuntu.sh" || fail
 . "${SOPKA_DIR}/lib/vmware.sh" || fail
 . "${SOPKA_DIR}/lib/vscode.sh" || fail
