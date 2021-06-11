@@ -62,10 +62,13 @@ file::sudo-append-line-unless-present() {
 }
 
 dir::remove-if-empty() {
-  if [ -d "$1" ]; then
-    # if directory is not empty then rm exit status will be non-zero
-    rm --dir "$1" || true
-  fi
+  local folder
+  for folder in "$@"; do
+    if [ -d "${folder}" ]; then
+      # if directory is not empty then rm exit status will be non-zero
+      rm --dir "${folder}" || true
+    fi
+  done
 }
 
 mount::cifs() {
