@@ -67,7 +67,6 @@ fi
 . "${SOPKA_DIR}/lib/macos.sh" || fail
 . "${SOPKA_DIR}/lib/menu.sh" || fail
 . "${SOPKA_DIR}/lib/nodejs.sh" || fail
-. "${SOPKA_DIR}/lib/nvidia.sh" || fail
 . "${SOPKA_DIR}/lib/postgresql.sh" || fail
 . "${SOPKA_DIR}/lib/rails.sh" || fail
 . "${SOPKA_DIR}/lib/restic.sh" || fail
