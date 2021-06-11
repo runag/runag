@@ -43,7 +43,7 @@ ubuntu::packages::install-basic-tools() {
       || fail
 }
 
-ubuntu::packages::install-devtools() {
+ubuntu::packages::install-developer-tools() {
   apt::install \
     apache2-utils \
     autoconf \

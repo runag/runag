@@ -22,7 +22,7 @@ ubuntu::deploy-minimal-application-server() {
   ubuntu::packages::install-basic-tools || fail
 
   # devtools
-  ubuntu::packages::install-devtools || fail
+  ubuntu::packages::install-developer-tools || fail
 
   # shellrcd
   shell::install-shellrc-directory-loader "${HOME}/.bashrc" || fail
