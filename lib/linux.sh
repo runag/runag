@@ -52,18 +52,13 @@ linux::set-locale() {
 linux::configure-inotify() {
   local sysctl="/etc/sysctl.conf"
 
-  if [ ! -r "$sysctl" ]; then
-    echo "Unable to find file: $sysctl" >&2
-    exit 1
+  if [ ! -r "${sysctl}" ]; then
+    fail "Unable to find file: ${sysctl}"
   fi
 
-  if grep --quiet "^fs\\.inotify\\.max_user_watches" "$sysctl" && grep --quiet "^fs\\.inotify\\.max_user_instances" "$sysctl"; then
-    echo "fs.inotify.max_user_watches and fs.inotify.max_user_instances are already set" >&2
-  else
-    echo "fs.inotify.max_user_watches=1000000" | sudo tee -a "$sysctl" || fail "Unable to write to $sysctl ($?)"
-
-    echo "fs.inotify.max_user_instances=2048" | sudo tee -a "$sysctl" || fail "Unable to write to $sysctl ($?)"
-
+  if ! grep --quiet "^fs\\.inotify\\.max_user_watches" "${sysctl}" || ! grep --quiet "^fs\\.inotify\\.max_user_instances" "${sysctl}"; then
+    echo "fs.inotify.max_user_watches=1000000" | sudo tee -a "${sysctl}" || fail "Unable to write to ${sysctl} ($?)"
+    echo "fs.inotify.max_user_instances=2048" | sudo tee -a "${sysctl}" || fail "Unable to write to ${sysctl} ($?)"
     sudo sysctl -p || fail "Unable to update sysctl config ($?)"
   fi
 }
