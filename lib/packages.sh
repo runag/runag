@@ -14,19 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ubuntu::packages::install-gnome-keyring-and-libsecret() {
-  # gnome-keyring and libsecret (for git and ssh)
+# gnome-keyring and libsecret (for git and ssh)
+packages::install-gnome-keyring-and-libsecret() {
   apt::install \
     gnome-keyring \
     libsecret-tools \
     libsecret-1-0 \
     libsecret-1-dev \
       || fail
-
-  git::install-libsecret-credential-helper || fail
 }
 
-ubuntu::packages::install-basic-tools() {
+packages::install-basic-tools() {
   # debian-goodies is here for checkrestart
   apt::install \
     curl \
@@ -43,7 +41,7 @@ ubuntu::packages::install-basic-tools() {
       || fail
 }
 
-ubuntu::packages::install-developer-tools() {
+packages::install-developer-tools() {
   apt::install \
     apache2-utils \
     autoconf \
@@ -85,7 +83,7 @@ ubuntu::packages::install-developer-tools() {
       || fail
 }
 
-ubuntu::packages::install-rclone() {
+packages::install-rclone() {
   if ! command -v rclone >/dev/null; then
     curl --fail --silent --show-error https://rclone.org/install.sh | sudo bash
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to install rclone"

@@ -19,10 +19,10 @@ ubuntu::deploy-minimal-application-server() {
   apt::lazy-update || fail
 
   # basic tools, contains curl so it have to be first
-  ubuntu::packages::install-basic-tools || fail
+  packages::install-basic-tools || fail
 
   # devtools
-  ubuntu::packages::install-developer-tools || fail
+  packages::install-developer-tools || fail
 
   # shellrcd
   shell::install-shellrc-directory-loader "${HOME}/.bashrc" || fail
