@@ -99,5 +99,5 @@ mount::cifs() {
   # other mounts might fail, so we ignore exit status here
   sudo mount -a
 
-  findmnt -M "${mountPoint}" >/dev/null || fail "${mountPoint} is not mounted"
+  findmnt --mountpoint "${mountPoint}" >/dev/null || fail "${mountPoint} is not mounted"
 }

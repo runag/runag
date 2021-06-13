@@ -40,7 +40,7 @@ vmware::add-hgfs-automount() {
 }
 
 vmware::symlink-hgfs-mounts() {
-  if findmnt -M /mnt/hgfs >/dev/null; then
+  if findmnt --mountpoint /mnt/hgfs >/dev/null; then
     local dirPath dirName
     # I use find here because for..in did not work with hgfs
     find /mnt/hgfs -maxdepth 1 -mindepth 1 -type d | while IFS="" read -r dirPath; do
