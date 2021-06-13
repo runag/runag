@@ -17,22 +17,27 @@
 restic::menu() {
   local list=()
 
-  list+=(restic::init)
+  if [ ! -n "${RESTIC_REPOSITORY:-}" ] || [ ! -f "${RESTIC_REPOSITORY}/config" ]; then
+    list+=(restic::init)
+  fi
+
   list+=(restic::check-and-read-data)
   list+=(restic::forget-and-prune)
   list+=(restic::view)
   list+=(restic::mount)
   list+=(restic::umount)
 
-  list+=(restic::systemd::init-service)
-  list+=(restic::systemd::start-service)
-  list+=(restic::systemd::stop-service)
+  if [ "${1:-}" = "with-systemd" ]; then
+    list+=(restic::systemd::init-service)
+    list+=(restic::systemd::start-service)
+    list+=(restic::systemd::stop-service)
 
-  list+=(restic::systemd::enable-timer)
-  list+=(restic::systemd::disable-timer)
+    list+=(restic::systemd::enable-timer)
+    list+=(restic::systemd::disable-timer)
 
-  list+=(restic::systemd::status)
-  list+=(restic::systemd::log)
+    list+=(restic::systemd::status)
+    list+=(restic::systemd::log)
+  fi
 
   menu::select-and-run "${list[@]}" || fail
 }
@@ -59,14 +64,17 @@ restic::view() {
 }
 
 restic::mount() {
-  local mountPoint="${HOME}/${BACKUP_NAME}.archive"
+  local mountPoint="${HOME}/mounted-backups/${BACKUP_NAME}"
+  if findmnt --mountpoint "${mountPoint}" >/dev/null; then
+    fusermount -u "${mountPoint}" || fail
+  fi
   mkdir -p "${mountPoint}" || fail
   restic mount "${mountPoint}" || fail
 }
 
 restic::umount() {
-  local mountPoint="${HOME}/${BACKUP_NAME}.archive"
-  umount "${mountPoint}" || fail
+  local mountPoint="${HOME}/mounted-backups/${BACKUP_NAME}"
+  fusermount -u -z "${mountPoint}" || fail
 }
 
 restic::systemd::init-service() {
