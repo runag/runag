@@ -110,3 +110,8 @@ linux::disable-nonrestricted-sudo() {
 
   sudo rm -f "/etc/sudoers.d/${userName}-nonrestricted-sudo" || fail
 }
+
+linux::get-distributor-id-lowercase() {
+  lsb_release --id --short | tr '[:upper:]' '[:lower:]'
+  test "${PIPESTATUS[*]}" = "0 0" || fail
+}
