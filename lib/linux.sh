@@ -21,19 +21,14 @@ linux::set-timezone() {
 
 linux::set-hostname() {
   local hostname="$1"
-  local hostnameFile=/etc/hostname
+
   local hostsFile=/etc/hosts
-  local hostsString="127.0.1.1 $hostname"
+  local hostsString="127.0.1.1 $hostname # hostname"
 
-  echo "$hostname" | sudo tee "$hostnameFile" || fail "Unable to write to $hostnameFile ($?)"
-  sudo hostname --file "$hostnameFile" || fail "Unable to load hostname from $hostnameFile ($?)"
-
-  if [ ! -f "${hostsFile}" ]; then
-    fail "File not found: ${hostsFile}"
-  fi
+  sudo hostnamectl set-hostname "$hostname" || fail
 
   if ! grep --quiet --fixed-strings --line-regexp "${hostsString}" "${hostsFile}"; then
-    echo "${hostsString}" | sudo tee --append "${hostsFile}" || fail
+    echo "${hostsString}" | sudo tee --append "${hostsFile}" >/dev/null || fail
   fi
 }
 
