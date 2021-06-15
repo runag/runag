@@ -17,22 +17,6 @@
 # ssh::add-host-to-known-hosts bitbucket.org || fail
 # ssh::add-host-to-known-hosts github.com || fail
 
-git::install-git() {
-  if [[ "$OSTYPE" =~ ^linux ]]; then
-    if ! command -v git >/dev/null; then
-      if command -v apt >/dev/null; then
-        sudo apt update || fail
-        sudo apt install -y git || fail
-      else
-        fail "Unable to install git, apt not found"
-      fi
-    fi
-  fi
-
-  # on macos that will start git install process
-  git --version >/dev/null || fail
-}
-
 git::clone-or-pull() {
   local url="$1"
   local dest="$2"
