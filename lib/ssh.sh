@@ -100,7 +100,7 @@ ssh::wait-for-host-ssh-to-become-available() {
   while true; do
     # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
     local key; key="$(ssh-keyscan "$ip" 2>/dev/null)"
-    if [ ! -z "$key" ]; then
+    if [ -n "$key" ]; then
       return
     else
       if [ -t 1 ]; then

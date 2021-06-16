@@ -36,17 +36,19 @@ rsync::transfer() {
 }
 
 rsync::remote() {
+  local rshOption
+
   if [ ! -d "${HOME}/.ssh" ]; then
     mkdir -p -m 0700 "${HOME}/.ssh" || fail
   fi
 
-  local rshOption="ssh \
+  rshOption="ssh \
     -o ControlMaster=auto \
     -o ControlPath=$(printf "%q" "$HOME/.ssh/%C.control-socket") \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
     ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
-    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"}"
+    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"}" || fail
 
   rsync \
     --rsh "$rshOption" \

@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/sopka
+. bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
 
 shdoc::install() {
   local tempDir; tempDir="$(mktemp -d)" || fail
@@ -35,7 +35,7 @@ rm docs/lib/*.md || fail
 
 for file in lib/*.sh; do
   output="docs/${file%.*}.md"
-  file_basename="$(basename "${file}")"
+  file_basename="$(basename "${file}")" || fail
 
   shdoc <"${file}" > "${output}" || fail
   echo "* [${file_basename%%.*}](${output})"

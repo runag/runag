@@ -21,7 +21,7 @@ nodejs::apt::add-source() {
 }
 
 nodejs::apt::install() {
-  nodejs::apt::add-source || fail
+  nodejs::apt::add-source "$@" || fail
   apt::update || fail
   apt::install nodejs || fail
 }

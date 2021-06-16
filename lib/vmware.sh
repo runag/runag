@@ -17,10 +17,33 @@
 vmware::is-inside-vm() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     hostnamectl status | grep --quiet "Virtualization:.*vmware"
+
+    local savedPipeStatus="${PIPESTATUS[*]}"
+
+    if [ "${savedPipeStatus}" = "0 0" ]; then
+      return 0
+    elif [ "${savedPipeStatus}" = "0 1" ]; then
+      return 1
+    else
+      fail "Error calling hostnamectl status"
+    fi
+
     # another method:
     # if sudo dmidecode -t system | grep --quiet "Product Name: VMware Virtual Platform"; then
+  
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
     powershell -Command "Get-WmiObject Win32_computerSystem" | grep --quiet --fixed-strings "VMware"
+
+    local savedPipeStatus="${PIPESTATUS[*]}"
+
+    if [ "${savedPipeStatus}" = "0 0" ]; then
+      return 0
+    elif [ "${savedPipeStatus}" = "0 1" ]; then
+      return 1
+    else
+      fail "Error calling Get-WmiObject"
+    fi
+
   else
     fail "OSTYPE not supported: ${OSTYPE}"
   fi

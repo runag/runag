@@ -17,7 +17,7 @@
 restic::menu() {
   local list=()
 
-  if [ ! -n "${RESTIC_REPOSITORY:-}" ] || [ ! -f "${RESTIC_REPOSITORY}/config" ]; then
+  if [ -z "${RESTIC_REPOSITORY:-}" ] || [ ! -f "${RESTIC_REPOSITORY}/config" ]; then
     list+=(restic::init)
   fi
 
