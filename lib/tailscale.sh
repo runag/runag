@@ -31,3 +31,15 @@ tailscale::install() {
   apt::update || fail
   apt::install tailscale || fail
 }
+
+tailscale::is-logged-out() {
+  local status
+  status="$(tailscale status)"
+  if [ $? != 1 ]; then
+    return 1
+  elif [ "${status}" = "Logged out." ]; then
+    return 0
+  else
+    return 1
+  fi
+}
