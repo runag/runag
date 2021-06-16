@@ -14,25 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# define fail() function
-fail() {
-  local i perhapsDelimiter="" startFrom=$((${#BASH_LINENO[@]}-1))
-  for ((i=${startFrom}; i>=1; i--)); do
-    if [ ${i} != ${startFrom} ]; then
-      printf "\n" >&2
-    fi
-    if [ ${i} = 1 ]; then
-      perhapsDelimiter=": "
-    fi
-    echo -n "${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${perhapsDelimiter}" >&2
-  done
-  echo "${1:-"Abnormal termination"}" >&2
-  exit "${2:-1}"
-}
-
-if ! command -v gawk >/dev/null; then
-  sudo apt install gawk || fail
-fi
+. bin/sopka
 
 shdoc::install() {
   local tempDir; tempDir="$(mktemp -d)" || fail
@@ -40,6 +22,10 @@ shdoc::install() {
   (cd "${tempDir}" && make && sudo make install) || fail
   rm -rf "${tempDir}" || fail
 }
+
+if ! command -v gawk >/dev/null; then
+  sudo apt install gawk || fail
+fi
 
 if ! command -v shdoc >/dev/null; then
   shdoc::install || fail
