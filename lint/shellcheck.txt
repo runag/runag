@@ -1,12 +1,61 @@
 
-In bin/sopka line 38:
-  . "./sopka.sh" || fail
-    ^----------^ SC1091: Not following: ./sopka.sh was not specified as input (see shellcheck -x).
+In bin/sopka line 28:
+  for ((i=${startFrom}; i>=1; i--)); do
+          ^----------^ SC2004: $/${} is unnecessary on arithmetic variables.
 
 
-In ./lib/ubuntu.sh line 250:
-  sudo checkrestart >"$tmpFile" || fail
-                    ^-- SC2024: sudo doesn't affect redirects. Use ..| sudo tee file
+In ./lib/nodejs.sh line 46:
+  nodejs::install-nodenv-shellrc || fail
+  ^----------------------------^ SC2119: Use nodejs::install-nodenv-shellrc "$@" if function's $1 should mean script's $1.
+
+
+In ./lib/nodejs.sh line 64:
+nodejs::install-nodenv-shellrc() {
+^-- SC2120: nodejs::install-nodenv-shellrc references arguments, but none are ever passed.
+
+
+In ./lib/ssh.sh line 185:
+    ${REMOTE_HOST:-} \
+    ^--------------^ SC2086: Double quote to prevent globbing and word splitting.
+
+Did you mean: 
+    "${REMOTE_HOST:-}" \
+
+
+In ./lib/restic.sh line 116:
+    local -n options=$1
+             ^-----^ SC2178: Variable was used as an array but is now assigned a string.
+
+
+In ./lib/vscode.sh line 53:
+      cat "${extensionsList}" | while IFS="${ifs_value}" read -r extension; do
+          ^-----------------^ SC2002: Useless cat. Consider 'cmd < file | ..' or 'cmd file | ..' instead.
+
+
+In ./lib/rsync.sh line 42:
+    mkdir -p -m 0700 "${HOME}/.ssh" || fail
+             ^-- SC2174: When used with -p, -m only applies to the deepest directory.
+
+
+In ./lib/ruby.sh line 37:
+  ruby::install-rbenv-shellrc || fail
+  ^-------------------------^ SC2119: Use ruby::install-rbenv-shellrc "$@" if function's $1 should mean script's $1.
+
+
+In ./lib/ruby.sh line 49:
+ruby::install-rbenv-shellrc() {
+^-- SC2120: ruby::install-rbenv-shellrc references arguments, but none are ever passed.
+
+
+In ./lib/ruby.sh line 55:
+    opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
+                                               ^-- SC1083: This { is literal. Check expression (missing ;/\n?) or quote it.
+                                                                                               ^-- SC1083: This } is literal. Check expression (missing ;/\n?) or quote it.
+
+
+In ./lib/linux.sh line 35:
+  previousNameEscaped="$(echo "${previousName}" | sed 's/\./\\./g')" || fail
+                         ^-- SC2001: See if you can use ${variable//search/replace} instead.
 
 
 In ./lib/benchmark.sh line 46:
@@ -65,34 +114,21 @@ Did you mean:
   sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on "${1:-}" || fail
 
 
-In ./lib/ssh.sh line 30:
-    if [ ! -z "$key" ]; then
-         ^-- SC2236: Use -n instead of ! -z.
-
-
-In ./lib/ssh.sh line 101:
-    mkdir -p -m 0700 "${HOME}/.ssh" || fail
-             ^-- SC2174: When used with -p, -m only applies to the deepest directory.
-
-
-In ./lib/ssh.sh line 112:
-    ${REMOTE_HOST:-} \
-    ^--------------^ SC2086: Double quote to prevent globbing and word splitting.
-
-Did you mean: 
-    "${REMOTE_HOST:-}" \
-
-
-In ./test/run-code-checks.sh line 19:
-ruby test/check-shell-error-handling.rb bin/* $(find . -name '*.sh') | tee test/check-shell-error-handling.txt
+In ./lint/lint.sh line 19:
+ruby lint/check-shell-error-handling.rb bin/* $(find . -name '*.sh') | tee lint/check-shell-error-handling.txt
                                               ^--------------------^ SC2046: Quote this to prevent word splitting.
 
 
-In ./test/run-code-checks.sh line 21:
-shellcheck bin/* $(find . -name '*.sh') -e SC1090 | tee test/shellcheck.txt
+In ./lint/lint.sh line 21:
+shellcheck bin/* $(find . -name '*.sh') -e SC1090 | tee lint/shellcheck.txt
                  ^--------------------^ SC2046: Quote this to prevent word splitting.
 
+
+In ./index.sh line 22:
+    for ((i=${startFrom}; i>=1; i--)); do
+            ^----------^ SC2004: $/${} is unnecessary on arithmetic variables.
+
 For more information:
-  https://www.shellcheck.net/wiki/SC2024 -- sudo doesn't affect redirects. Us...
+  https://www.shellcheck.net/wiki/SC1083 -- This { is literal. Check expressi...
   https://www.shellcheck.net/wiki/SC2046 -- Quote this to prevent word splitt...
-  https://www.shellcheck.net/wiki/SC2174 -- When used with -p, -m only applie...
+  https://www.shellcheck.net/wiki/SC2120 -- nodejs::install-nodenv-shellrc re...
