@@ -21,15 +21,28 @@ linux::set-timezone() {
 
 linux::set-hostname() {
   local hostname="$1"
+  sudo hostnamectl set-hostname "${hostname}" || fail
+  file::sudo-append-line-unless-present "127.0.1.1	${hostname}" /etc/hosts || fail
+}
 
+linux::dangerously-set-hostname() {
+  local hostname="$1"
   local hostsFile=/etc/hosts
-  local hostsString="127.0.1.1 $hostname # hostname"
+  local previousName
+  local previousNameEscaped
+  
+  previousName="$(hostnamectl --static status)" || fail
+  previousNameEscaped="$(echo "${previousName}" | sed 's/\./\\./g')" || fail
 
-  sudo hostnamectl set-hostname "$hostname" || fail
+  sudo hostnamectl set-hostname "${hostname}" || fail
 
-  if ! grep --quiet --fixed-strings --line-regexp "${hostsString}" "${hostsFile}"; then
-    echo "${hostsString}" | sudo tee --append "${hostsFile}" >/dev/null || fail
+  if [ -f "${hostsFile}" ]; then
+    grep --invert-match --line-regexp --extended-regexp "[[:blank:]]*127.0.1.1[[:blank:]]+${previousNameEscaped}[[:blank:]]*" "${hostsFile}" | sudo tee "${hostsFile}.sopka-new" >/dev/null
+    test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
+
+  file::sudo-append-line-unless-present "127.0.1.1	${hostname}" "${hostsFile}.sopka-new" || fail
+  sudo mv "${hostsFile}.sopka-new" "${hostsFile}" || fail
 }
 
 linux::set-locale() {
