@@ -18,6 +18,7 @@ ruby::apt::install() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
     libedit-dev `# dependency to install ruby 2.7.3 using rbenv` \
+    libffi-dev `# some gems require libffi, like fiddle-1.0.8.gem` \
     libsqlite3-dev `# new rails project uses sqlite` \
     libssl-dev `# dependency to install ruby 2.7.3 using rbenv` \
     ruby-full `# ruby from system packages` \
