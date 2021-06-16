@@ -17,8 +17,11 @@
 ruby::apt::install() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
+    libedit-dev `# dependency to install ruby 2.7.3 using rbenv` \
     libsqlite3-dev `# new rails project uses sqlite` \
-    ruby-full \
+    libssl-dev `# dependency to install ruby 2.7.3 using rbenv` \
+    ruby-full `# ruby from system packages` \
+    zlib1g-dev `# dependency to install ruby 2.7.3 using rbenv` \
       || fail
   # rails also requires 'nodejs' and 'npm' apt packages, but I guess I better not to install them here
 }
