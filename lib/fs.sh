@@ -91,8 +91,8 @@ mount::cifs() {
     bitwarden::unlock || fail
 
     # bitwarden-object: "?"
-    local cifsUsername; cifsUsername="$(bw get username "${bwItem}")" || fail
-    local cifsPassword; cifsPassword="$(bw get password "${bwItem}")" || fail
+    local cifsUsername; cifsUsername="$(NODENV_VERSION=system bw get username "${bwItem}")" || fail
+    local cifsPassword; cifsPassword="$(NODENV_VERSION=system bw get password "${bwItem}")" || fail
     builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
   fi
 

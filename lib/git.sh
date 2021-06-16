@@ -62,7 +62,7 @@ git::add-credentials-to-gnome-keyring() {
       bitwarden::unlock || fail
 
       # bitwarden-object: "? github personal access token"
-      bw get password "${bwItem} github personal access token" \
+      NODENV_VERSION=system bw get password "${bwItem} github personal access token" \
         | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
 
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store github personal access token"

@@ -49,7 +49,7 @@ ssh::add-key-password-to-gnome-keyring() {
       bitwarden::unlock || fail
 
       # bitwarden-object: "? password for ssh private key"
-      bw get password "${bwItem} password for ssh private key" \
+      NODENV_VERSION=system bw get password "${bwItem} password for ssh private key" \
         | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_ed25519" unique "ssh-store:${HOME}/.ssh/id_ed25519"
 
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
@@ -68,7 +68,7 @@ ssh::add-key-password-to-macos-keychain() {
     bitwarden::unlock || fail
 
     # bitwarden-object: "? password for ssh private key"
-    local password; password="$(bw get password "${bwItem} password for ssh private key")" || fail
+    local password; password="$(NODENV_VERSION=system bw get password "${bwItem} password for ssh private key")" || fail
 
     # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
     echo "${password}" | SSH_ASKPASS="${SOPKA_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"

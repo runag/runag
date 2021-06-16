@@ -53,11 +53,11 @@ borg::configure-backup-credentials() {
     # bitwarden-object: "? backup storage"
     # bitwarden-object: "? backup passphrase"
 
-    local storageUsername; storageUsername="$(bw get username "${storageBwItem}")" || fail
-    local storageUri; storageUri="$(bw get uri "${storageBwItem}")" || fail
+    local storageUsername; storageUsername="$(NODENV_VERSION=system bw get username "${storageBwItem}")" || fail
+    local storageUri; storageUri="$(NODENV_VERSION=system bw get uri "${storageBwItem}")" || fail
     local storageHost; storageHost="$(echo "${storageUri}" | cut -d ":" -f 1)" || fail
     local storagePort; storagePort="$(echo "${storageUri}" | cut -d ":" -f 2)" || fail
-    local passphrase; passphrase="$(bw get password "${passphraseBwItem}")" || fail
+    local passphrase; passphrase="$(NODENV_VERSION=system bw get password "${passphraseBwItem}")" || fail
 
     ssh::add-host-to-known-hosts "${storageHost}" "${storagePort}" || fail
 
