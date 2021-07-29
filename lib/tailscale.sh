@@ -43,3 +43,49 @@ tailscale::is-logged-out() {
     return 1
   fi
 }
+
+tailscale::issue-2541-workaround() {
+  if ip address show tailscale0; then
+    if ! ip address show tailscale0 | grep --quiet --fixed-strings "inet"; then
+      echo "tailscale::issue-2541-workaround: about to restart tailscaled"
+      sudo systemctl restart tailscaled || fail
+    fi
+  fi
+}
+
+tailscale::install-issue-2541-workaround() {
+  file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround <<EOF || fail
+#!/usr/bin/env bash
+$(tools::show-license)
+$(declare -f fail)
+$(declare -f tailscale::issue-2541-workaround)
+tailscale::issue-2541-workaround || fail
+EOF
+
+  sudo chmod 755 /usr/local/bin/tailscale-issue-2541-workaround || fail
+
+  file::sudo-write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || fail
+[Unit]
+Description=tailscale-issue-2541-workaround
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tailscale-issue-2541-workaround
+WorkingDirectory=/
+EOF
+
+  file::sudo-write /etc/systemd/system/tailscale-issue-2541-workaround.timer <<EOF || fail
+[Unit]
+Description=tailscale-issue-2541-workaround
+
+[Timer]
+OnCalendar=minutely
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+  sudo systemctl reenable tailscale-issue-2541-workaround.timer || fail
+  sudo systemctl start tailscale-issue-2541-workaround.timer || fail
+}
