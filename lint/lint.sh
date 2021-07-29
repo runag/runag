@@ -16,6 +16,6 @@
 
 set -o nounset
 
-ruby lint/check-shell-error-handling.rb bin/* $(find . -name '*.sh') | tee lint/check-shell-error-handling.txt
+ruby lint/check-shell-error-handling.rb bin/* $(find . -name '*.sh') > lint/check-shell-error-handling.txt
 
-shellcheck bin/* $(find . -name '*.sh') -e SC1090 | tee lint/shellcheck.txt
+shellcheck bin/* $(find . -name '*.sh') -e SC1090 > lint/shellcheck.txt

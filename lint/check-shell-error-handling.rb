@@ -108,6 +108,12 @@ def check_file file_name
     # false
     next if line =~ /\A\s*false\s*\z/
 
+    # array add
+    next if line =~ /\A\s*\w+\+\=\(.*\)\s*\z/
+
+    # opening bracket
+    next if line =~ /\A\s*\(\s*\z/
+
     # PIPESTATUS check
     next if line =~ /\s+\|\s+/ && lines[index+1] =~ /PIPESTATUS/
 
