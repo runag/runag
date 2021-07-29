@@ -22,7 +22,7 @@ tools::false() {
   false
 }
 
-tools::licence() {
+tools::show-license() {
   cat <<EOT
 #  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
 #

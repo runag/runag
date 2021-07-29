@@ -56,7 +56,7 @@ ruby::install-rbenv-shellrc() {
   fi
 
   file::write "${output}" <<SHELL || fail
-$(tools::licence)
+$(tools::show-license)
 
 if [ -d "\$HOME/.rbenv/bin" ]; then
   if ! [[ ":\$PATH:" == *":\$HOME/.rbenv/bin:"* ]]; then
