@@ -19,7 +19,7 @@
 if ! declare -f fail > /dev/null; then
   fail() {
     local i perhapsDelimiter="" startFrom=$((${#BASH_LINENO[@]}-1))
-    for ((i=${startFrom}; i>=1; i--)); do
+    for ((i=startFrom; i>=1; i--)); do
       if [ ${i} != ${startFrom} ]; then
         printf "\n" >&2
       fi
