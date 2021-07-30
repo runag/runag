@@ -40,6 +40,7 @@ tools::show-license() {
 EOT
 }
 
+# display footnotes if running on interactive terminal
 tools::perhaps-display-deploy-footnotes() {
   if [ -t 1 ]; then
     if [[ "$OSTYPE" =~ ^linux ]]; then
