@@ -36,7 +36,7 @@ jobs:
       run: bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopkafile/main/deploy.sh) macos-workstation::deploy
 
   ubuntu-vm-server:
-    name: ubuntu-vm-server::deploy
+    name: ubuntu-vm-server::deploy-base
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -47,7 +47,7 @@ jobs:
       run: sleep 30
 
     - name: Run deploy script
-      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopkafile/main/deploy.sh) ubuntu-vm-server::deploy
+      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopkafile/main/deploy.sh) ubuntu-vm-server::deploy-base
 
   ubuntu-workstation:
     name: ubuntu-workstation::deploy-workstation-base
