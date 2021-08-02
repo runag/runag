@@ -58,8 +58,8 @@ config::merge() {
         echo "  ${src}"
         echo "  ${dst}"
         echo "Please choose an action to perform:"
-        echo "  1: Use file from the deploy repository to replace file on this machine"
-        echo "  2: Use file from this machine to save it to the deploy repository"
+        echo "  1: Use file from the repository to replace file on this machine"
+        echo "  2: Use file from this machine to save it to the repository"
         echo "  3 (or Enter): Ignore conflict"
 
         IFS="" read -r action || fail

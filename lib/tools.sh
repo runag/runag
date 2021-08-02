@@ -40,22 +40,8 @@ tools::show-license() {
 EOT
 }
 
-# display footnotes if running on interactive terminal
-tools::perhaps-display-deploy-footnotes() {
-  if [ -t 1 ]; then
-    if [[ "$OSTYPE" =~ ^linux ]]; then
-      linux::display-if-restart-required || fail
-    fi
-    tools::display-elapsed-time || fail
-  fi
-}
-
 tools::display-elapsed-time() {
   echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
-tools::is-nothing-deployed() {
-  test -z "$(find . -maxdepth 1 -name '.sopka.*.deployed' -print -quit)"
 }
 
 tools::do-once-per-day() {
