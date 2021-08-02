@@ -58,13 +58,12 @@ git::add-credentials-to-gnome-keyring() {
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if ! secret-tool lookup server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
+    if [ "${UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
       bitwarden::unlock || fail
 
       # bitwarden-object: "? github personal access token"
       NODENV_VERSION=system bw get password "${bwItem} github personal access token" \
         | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
-
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store github personal access token"
     fi
   else

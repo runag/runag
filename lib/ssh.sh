@@ -45,13 +45,12 @@ ssh::add-key-password-to-gnome-keyring() {
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_ed25519" >/dev/null; then
+    if [ "${UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_ed25519" >/dev/null; then
       bitwarden::unlock || fail
 
       # bitwarden-object: "? password for ssh private key"
       NODENV_VERSION=system bw get password "${bwItem} password for ssh private key" \
         | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_ed25519" unique "ssh-store:${HOME}/.ssh/id_ed25519"
-
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
     fi
   else
@@ -62,9 +61,8 @@ ssh::add-key-password-to-gnome-keyring() {
 ssh::add-key-password-to-macos-keychain() {
   local bwItem="$1"
   local keyFile="${HOME}/.ssh/id_ed25519"
-  if ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
-    echo "${keyFile} is already in the keychain"
-  else
+
+  if [ "${UPDATE_SECRETS:-}" = "true" ] || ! ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "? password for ssh private key"
@@ -72,8 +70,9 @@ ssh::add-key-password-to-macos-keychain() {
 
     # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
     echo "${password}" | SSH_ASKPASS="${SOPKA_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
-
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
+  else
+    echo "${keyFile} is already in the keychain"
   fi
 }
 

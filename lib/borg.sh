@@ -47,7 +47,7 @@ borg::configure-backup-credentials() {
   local passphraseBwItem="${backupName} backup passphrase"
   local backupPath="borg-backups/${backupName}"
 
-  if [ ! -f "${credentialsFile}" ]; then
+  if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "? backup storage"

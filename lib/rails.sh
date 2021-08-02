@@ -17,7 +17,7 @@
 rails::perhaps-write-master-key-from-bitwarden-if-not-exists() {
   local bwItem="$1"
 
-  if [ ! -f config/master.key ]; then
+  if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f config/master.key ]; then
     if [ -n "${BITWARDEN_LOGIN:-}" ]; then
       NO_NEWLINE=true bitwarden::write-password-to-file-if-not-exists "${bwItem}" "config/master.key" || fail
     else

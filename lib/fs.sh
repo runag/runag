@@ -87,7 +87,7 @@ mount::cifs() {
     echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0644,dir_mode=0755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee --append /etc/fstab || fail
   fi
 
-  if [ ! -f "${credentialsFile}" ]; then
+  if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "?"
