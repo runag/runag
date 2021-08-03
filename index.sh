@@ -18,17 +18,25 @@
 # maybe define fail() function
 if ! declare -f fail > /dev/null; then
   fail() {
-    local i perhapsDelimiter="" startFrom=$((${#BASH_LINENO[@]}-1))
-    for ((i=startFrom; i>=1; i--)); do
-      if [ ${i} != ${startFrom} ]; then
-        printf "\n" >&2
+    local errorColor=""
+    local normalColor=""
+
+    if [ -t 2 ]; then
+      local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
+
+      if [ $? = 0 ] && [ "${colorsAmount}" -ge 2 ]; then
+        errorColor="$(tput setaf 1)"
+        normalColor="$(tput sgr 0)"
       fi
-      if [ ${i} = 1 ]; then
-        perhapsDelimiter=": "
-      fi
-      echo -n "${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${perhapsDelimiter}" >&2
+    fi
+
+    echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" >&2
+
+    local i endAt=$((${#BASH_LINENO[@]}-1))
+    for ((i=1; i<=endAt; i++)); do
+      echo "  ${errorColor}${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${normalColor}" >&2
     done
-    echo "${1:-"Abnormal termination"}" >&2
+
     exit "${2:-1}"
   }
 fi
