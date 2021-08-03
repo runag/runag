@@ -77,10 +77,11 @@ mount::cifs() {
   local bwItem="$3"
 
   local mountPoint="${HOME}/${mountName}"
-  local credentialsFile="${HOME}/.${mountName}.cifs-credentials"
+  local credentialsFile="${HOME}/.keys/${mountName}.cifs-credentials"
   local fstabTag="# ${mountName} cifs mount"
 
   mkdir -p "${mountPoint}" || fail
+  keys::mkdir || fail
 
   if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
     echo "${fstabTag}" | sudo tee --append /etc/fstab || fail

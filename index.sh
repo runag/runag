@@ -63,6 +63,7 @@ fi
 . "${SOPKA_DIR}/lib/git.sh" || fail
 . "${SOPKA_DIR}/lib/github.sh" || fail
 . "${SOPKA_DIR}/lib/imagemagick.sh" || fail
+. "${SOPKA_DIR}/lib/keys.sh" || fail
 . "${SOPKA_DIR}/lib/linux.sh" || fail
 . "${SOPKA_DIR}/lib/macos.sh" || fail
 . "${SOPKA_DIR}/lib/menu.sh" || fail
