@@ -158,3 +158,39 @@ keys::for-all-mounted-media() {
 keys::create-update-or-verify-key-checksums-on-all-mounted-media() {
   keys::for-all-mounted-media keys::create-update-or-verify-key-checksums || fail
 }
+
+keys::make-backup-copies() {
+  local src="$1"
+  local media="$2"
+  local dest="copies/${src}/${CURRENT_TIMESTAMP}"
+  
+  if [ -d "${dest}" ]; then
+    fail "${media}/${dest}: copy already exists"
+  fi
+
+  mkdir -p "copies/${src}" || fail
+
+  cp -R "${src}" "${dest}" || fail
+  
+  sync || fail
+
+  echo "${media}/${dest}: copy was made"
+}
+
+keys::make-backup-copies-for-all-keys() (
+  local media="$1"
+  local dir
+
+  cd "${media}" || fail
+
+  for dir in *keys* ; do
+    if [ -d "${dir}" ]; then
+      keys::make-backup-copies "${dir}" "${media}" || fail
+    fi
+  done
+)
+
+keys::make-backup-copies-on-all-mounted-media() {
+  local CURRENT_TIMESTAMP; CURRENT_TIMESTAMP="$(date --utc +"%Y%m%dT%H%M%SZ")" || fail
+  CURRENT_TIMESTAMP="${CURRENT_TIMESTAMP}" keys::for-all-mounted-media keys::make-backup-copies-for-all-keys || fail
+}
