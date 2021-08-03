@@ -50,7 +50,7 @@ ruby::install-rbenv-shellrc() {
   local output="${1:-"${HOME}/.shellrc.d"}/rbenv.sh" 
 
   local opensslLine=""
-  if [[ "$OSTYPE" =~ ^darwin ]] && command -v brew >/dev/null; then
+  if [[ "${OSTYPE}" =~ ^darwin ]] && command -v brew >/dev/null; then
     local opensslDir; opensslDir="$(brew --prefix openssl@1.1)" || fail
     opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
@@ -58,9 +58,9 @@ ruby::install-rbenv-shellrc() {
   file::write "${output}" <<SHELL || fail
 $(tools::show-license)
 
-if [ -d "\$HOME/.rbenv/bin" ]; then
-  if ! [[ ":\$PATH:" == *":\$HOME/.rbenv/bin:"* ]]; then
-    export PATH="\$HOME/.rbenv/bin:\$PATH"
+if [ -d "\${HOME}/.rbenv/bin" ]; then
+  if ! [[ ":\${PATH}:" == *":\${HOME}/.rbenv/bin:"* ]]; then
+    export PATH="\${HOME}/.rbenv/bin:\${PATH}"
   fi
 fi
 

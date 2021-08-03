@@ -67,7 +67,7 @@ vmware::symlink-hgfs-mounts() {
     local dirPath dirName
     # I use find here because for..in did not work with hgfs
     find /mnt/hgfs -maxdepth 1 -mindepth 1 -type d | while IFS="" read -r dirPath; do
-      dirName="$(basename "$dirPath")" || fail
+      dirName="$(basename "${dirPath}")" || fail
       if [ ! -e "${HOME}/${dirName}" ]; then
         ln --symbolic "${dirPath}" "${HOME}/${dirName}" || fail "unable to create symlink to ${dirPath}"
       fi

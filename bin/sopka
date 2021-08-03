@@ -72,7 +72,7 @@ sopka::load-sopkafile() {
   SOPKAFILE_DIR="$(cd "${targetDir}" >/dev/null 2>&1 && pwd)" || fail "Unable to get sopkafile directory ($?)"
   export SOPKAFILE_DIR
 
-  if [[ "$OSTYPE" =~ ^msys ]]; then
+  if [[ "${OSTYPE}" =~ ^msys ]]; then
     if [ -z "${SOPKAFILE_WIN_DIR:-}" ]; then
       SOPKAFILE_WIN_DIR="$(echo "${SOPKAFILE_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
       export SOPKAFILE_WIN_DIR

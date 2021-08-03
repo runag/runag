@@ -19,9 +19,9 @@ vscode::snap::install() {
 }
 
 vscode::determine-config-path() {
-  if [[ "$OSTYPE" =~ ^darwin ]]; then
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
     export VSCODE_CONFIG_PATH="${HOME}/Library/Application Support/Code"
-  elif [[ "$OSTYPE" =~ ^msys ]]; then
+  elif [[ "${OSTYPE}" =~ ^msys ]]; then
     export VSCODE_CONFIG_PATH="${APPDATA}/Code"
   else
     export VSCODE_CONFIG_PATH="${HOME}/.config/Code"
@@ -43,7 +43,7 @@ vscode::install-extensions() {
     if ! diff --strip-trailing-cr "${extensionsList}" "${installedExtensionsList}" >/dev/null 2>&1; then
       local extension
 
-      if [[ "$OSTYPE" =~ ^msys ]]; then
+      if [[ "${OSTYPE}" =~ ^msys ]]; then
         local ifs_value=$'\r'
       else
         export ifs_value=""

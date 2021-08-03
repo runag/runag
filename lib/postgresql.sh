@@ -16,7 +16,7 @@
 
 postgresql::su(){
   local userName
-  if [[ "$OSTYPE" =~ ^darwin ]]; then
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
     if [ -n "${SUDO_USER:-}" ]; then
       userName="${SUDO_USER}"
     else
@@ -31,22 +31,22 @@ postgresql::su(){
 postgresql::install-dictionaries() {
   local folder="$1"
 
-  if [[ "$OSTYPE" =~ ^darwin ]]; then
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
     for dest in /usr/local/Cellar/postgresql/*; do
-      if [ -d "$dest" ]; then
+      if [ -d "${dest}" ]; then
         for file in "${folder}"/*; do
-          if [ -f "$file" ]; then
-            cp "$file" "$dest/share/postgresql/tsearch_data" || fail
+          if [ -f "${file}" ]; then
+            cp "${file}" "${dest}/share/postgresql/tsearch_data" || fail
           fi
         done
       fi
     done
   else
     for dest in /usr/share/postgresql/*; do
-      if [ -d "$dest" ]; then
+      if [ -d "${dest}" ]; then
         for file in "${folder}"/*; do
-          if [ -f "$file" ]; then
-            sudo install --owner=root --group=root --mode=0644 "$file" -D "$dest/tsearch_data" || fail
+          if [ -f "${file}" ]; then
+            sudo install --owner=root --group=root --mode=0644 "${file}" -D "${dest}/tsearch_data" || fail
           fi
         done
       fi

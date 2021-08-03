@@ -51,7 +51,7 @@ SHELL
 shell::install-sopka-path-shellrc() {
   file::write "${HOME}/.shellrc.d/sopka-path.sh" <<SHELL || fail
     if [ -d "\${HOME}/.sopka" ]; then
-      export PATH="\${HOME}/.sopka/bin:\$PATH"
+      export PATH="\${HOME}/.sopka/bin:\${PATH}"
     fi
 SHELL
 }

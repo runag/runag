@@ -32,8 +32,8 @@ firefox::set-pref() {
   local prefsFile
 
   for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
-    if [ -d "$profileFolder" ]; then
-      prefsFile="$profileFolder/prefs.js"
+    if [ -d "${profileFolder}" ]; then
+      prefsFile="${profileFolder}/prefs.js"
       if ! grep --quiet --fixed-strings --line-regexp "${prefsLine}" "${prefsFile}"; then
         echo "${prefsLine}" >>"${prefsFile}" || fail
       fi

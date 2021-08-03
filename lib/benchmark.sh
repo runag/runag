@@ -48,7 +48,7 @@ benchmark::fileio() (
   echo "### RANDOM READ QD1 ${1:-} ###"
   sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${1:-} || fail
 
-  if ! [[ "$OSTYPE" =~ ^darwin ]]; then
+  if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
     echo "### RANDOM READ QD32 ${1:-} ###"
     sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
   fi
@@ -56,7 +56,7 @@ benchmark::fileio() (
   echo "### RANDOM WRITE QD1 ${1:-} ###"
   sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
-  if ! [[ "$OSTYPE" =~ ^darwin ]]; then
+  if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
     echo "### RANDOM WRITE QD32 ${1:-} ###"
     sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
   fi

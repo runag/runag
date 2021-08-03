@@ -24,7 +24,7 @@ menu::select-and-run() {
   echo "Please select:"
   local i
   for i in "${!list[@]}"; do
-    echo "  $((i+1)): ${list[$i]}"
+    echo "  $((i+1)): ${list[${i}]}"
   done
   echo -n "> "
 
@@ -52,7 +52,7 @@ menu::select-argument() {
   echo "Please select:"
   local i
   for i in "${!list[@]}"; do
-    echo "  $((i+1)): ${list[$i]}"
+    echo "  $((i+1)): ${list[${i}]}"
   done
   echo -n "> "
 

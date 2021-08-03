@@ -22,15 +22,15 @@ git::clone-or-pull() {
   local dest="$2"
   local branch="${3:-}"
 
-  if [ -d "$dest" ]; then
-    git -C "$dest" config remote.origin.url "${url}" || fail
-    git -C "$dest" pull || fail
+  if [ -d "${dest}" ]; then
+    git -C "${dest}" config remote.origin.url "${url}" || fail
+    git -C "${dest}" pull || fail
   else
-    git clone "$url" "$dest" || fail
+    git clone "${url}" "${dest}" || fail
   fi
 
   if [ -n "${branch:-}" ]; then
-    git -C "$dest" checkout "${branch}" || fail "Unable to checkout ${branch}"
+    git -C "${dest}" checkout "${branch}" || fail "Unable to checkout ${branch}"
   fi
 }
 

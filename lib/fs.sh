@@ -18,17 +18,17 @@ file::sudo-write() {
   local dest="$1"
   local mode="${2:-0644}"
   local owner="${3:-root}"
-  local group="${4:-$owner}"
+  local group="${4:-${owner}}"
 
   local dirName; dirName="$(dirname "${dest}")" || fail "Unable to get dirName of '${dest}' ($?)"
 
   sudo mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
-  cat | sudo tee "$dest" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '$dest'"
+  cat | sudo tee "${dest}" >/dev/null
+  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '${dest}'"
 
-  sudo chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
-  sudo chown "$owner:$group" "$dest" || fail "Unable to chown '${dest}' ($?)"
+  sudo chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
+  sudo chown "${owner}:${group}" "${dest}" || fail "Unable to chown '${dest}' ($?)"
 }
 
 file::write() {
@@ -39,10 +39,10 @@ file::write() {
 
   mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
-  cat | tee "$dest" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '$dest'"
+  cat | tee "${dest}" >/dev/null
+  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '${dest}'"
 
-  chmod "$mode" "$dest" || fail "Unable to chmod '${dest}' ($?)"
+  chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
 }
 
 file::append-line-unless-present() {

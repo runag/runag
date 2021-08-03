@@ -98,12 +98,12 @@ ssh::wait-for-host-ssh-to-become-available() {
   local ip="$1"
   while true; do
     # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
-    local key; key="$(ssh-keyscan "$ip" 2>/dev/null)"
-    if [ -n "$key" ]; then
+    local key; key="$(ssh-keyscan "${ip}" 2>/dev/null)"
+    if [ -n "${key}" ]; then
       return
     else
       if [ -t 1 ]; then
-        echo "Waiting for SSH to become available on host '$ip'..." >&2
+        echo "Waiting for SSH to become available on host '${ip}'..." >&2
       fi
       sleep 1 || fail
     fi
@@ -112,9 +112,9 @@ ssh::wait-for-host-ssh-to-become-available() {
 
 ssh::refresh-host-in-known-hosts() {
   local hostName="$1"
-  ssh::remove-host-from-known-hosts "$hostName" || fail
-  ssh::wait-for-host-ssh-to-become-available "$hostName" || fail
-  ssh::add-host-to-known-hosts "$hostName" || fail
+  ssh::remove-host-from-known-hosts "${hostName}" || fail
+  ssh::wait-for-host-ssh-to-become-available "${hostName}" || fail
+  ssh::add-host-to-known-hosts "${hostName}" || fail
 }
 
 ssh::add-host-to-known-hosts() {
@@ -151,7 +151,7 @@ ssh::add-host-to-known-hosts() {
 
 ssh::remove-host-from-known-hosts() {
   local hostName="$1"
-  ssh-keygen -R "$hostName" || fail
+  ssh-keygen -R "${hostName}" || fail
 }
 
 ssh::call() {
@@ -176,7 +176,7 @@ ssh::call() {
 
   ssh \
     -o ControlMaster=auto \
-    -o ControlPath="$HOME/.ssh/%C.control-socket" \
+    -o ControlPath="${HOME}/.ssh/%C.control-socket" \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
     ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \

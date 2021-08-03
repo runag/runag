@@ -67,9 +67,9 @@ nodejs::install-nodenv-shellrc() {
   file::write "${output}" <<SHELL || fail
 $(tools::show-license)
 
-if [ -d "\$HOME/.nodenv/bin" ]; then
-  if ! [[ ":\$PATH:" == *":\$HOME/.nodenv/bin:"* ]]; then
-    export PATH="\$HOME/.nodenv/bin:\$PATH"
+if [ -d "\${HOME}/.nodenv/bin" ]; then
+  if ! [[ ":\${PATH}:" == *":\${HOME}/.nodenv/bin:"* ]]; then
+    export PATH="\${HOME}/.nodenv/bin:\${PATH}"
   fi
 fi
 

@@ -16,7 +16,7 @@
 
 linux::set-timezone() {
   local timezone="$1"
-  sudo timedatectl set-timezone "$timezone" || fail "Unable to set timezone ($?)"
+  sudo timedatectl set-timezone "${timezone}" || fail "Unable to set timezone ($?)"
 }
 
 linux::set-hostname() {
@@ -50,13 +50,13 @@ linux::dangerously-set-hostname() {
 linux::set-locale() {
   local locale="$1"
 
-  sudo locale-gen "$locale" || fail "Unable to run locale-gen ($?)"
-  sudo update-locale "LANG=$locale" "LANGUAGE=$locale" "LC_CTYPE=$locale" "LC_ALL=$locale" || fail "Unable to run update-locale ($?)"
+  sudo locale-gen "${locale}" || fail "Unable to run locale-gen ($?)"
+  sudo update-locale "LANG=${locale}" "LANGUAGE=${locale}" "LC_CTYPE=${locale}" "LC_ALL=${locale}" || fail "Unable to run update-locale ($?)"
 
-  export LANG="$locale"
-  export LANGUAGE="$locale"
-  export LC_CTYPE="$locale"
-  export LC_ALL="$locale"
+  export LANG="${locale}"
+  export LANGUAGE="${locale}"
+  export LC_CTYPE="${locale}"
+  export LC_ALL="${locale}"
 }
 
 linux::configure-inotify() {

@@ -44,13 +44,13 @@ rsync::remote() {
 
   rshOption="ssh \
     -o ControlMaster=auto \
-    -o ControlPath=$(printf "%q" "$HOME/.ssh/%C.control-socket") \
+    -o ControlPath=$(printf "%q" "${HOME}/.ssh/%C.control-socket") \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
     ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
     ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"}" || fail
 
   rsync \
-    --rsh "$rshOption" \
+    --rsh "${rshOption}" \
     "$@" || fail
 }

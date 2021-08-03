@@ -30,9 +30,9 @@ config::install() {
 
     cp "${src}" "${dst}" || fail "Unable to copy config from '${src}' to '${dst}' ($?)"
 
-    chmod 0644 "$dst" || fail "Unable to chmod '${dst}' ($?)"
+    chmod 0644 "${dst}" || fail "Unable to chmod '${dst}' ($?)"
 
-    chown "$currentUserId:$currentGroupId" "$dst" || fail "Unable to chown $USER:$USER '${dst}' ($?)"
+    chown "${currentUserId}:${currentGroupId}" "${dst}" || fail "Unable to chown ${currentUserId}:${currentGroupId} ${dst} ($?)"
   fi
 }
 

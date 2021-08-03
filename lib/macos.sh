@@ -20,7 +20,7 @@ macos::increase-maxfiles-limit() {
   local dst="/Library/LaunchDaemons/limit.maxfiles.plist"
 
   if [ ! -f "${dst}" ]; then
-    sudo cp "${SOPKA_DIR}/lib/macos/limit.maxfiles.plist" "${dst}" || fail "Unable to copy to $dst ($?)"
+    sudo cp "${SOPKA_DIR}/lib/macos/limit.maxfiles.plist" "${dst}" || fail "Unable to copy to ${dst} ($?)"
 
     sudo chmod 0644 "${dst}" || fail "Unable to chmod ${dst} ($?)"
 

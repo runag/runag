@@ -50,8 +50,8 @@ github::get-release() {
     --fail \
     --silent \
     --show-error \
-    --output "$tempFile" \
-    "$fileUrl" >/dev/null || fail "Unable to download ${fileUrl}"
+    --output "${tempFile}" \
+    "${fileUrl}" >/dev/null || fail "Unable to download ${fileUrl}"
 
   echo "${tempFile}"
 }

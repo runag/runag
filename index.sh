@@ -44,7 +44,7 @@ fi
 
 
 # determine SOPKA_WIN_DIR, if not defined previously
-if [[ "$OSTYPE" =~ ^msys ]]; then
+if [[ "${OSTYPE}" =~ ^msys ]]; then
   if [ -z "${SOPKA_WIN_DIR:-}" ]; then
     SOPKA_WIN_DIR="$(echo "${SOPKA_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
     export SOPKA_WIN_DIR
