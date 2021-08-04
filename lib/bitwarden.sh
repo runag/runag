@@ -30,6 +30,11 @@ bitwarden::unlock() {
     local errorString; errorString="$(NODENV_VERSION=system bw login "${BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
 
     if [ "${errorString}" != "You are already logged in as ${BITWARDEN_LOGIN}." ]; then
+      # Check if we have terminal
+      if [ ! -t 0 ]; then
+        fail "Terminal input should be available"
+      fi
+
       echo "Please enter your bitwarden password to login"
 
       BW_SESSION="$(NODENV_VERSION=system bw login "${BITWARDEN_LOGIN}" --raw)" || fail "Unable to login to bitwarden"
@@ -38,6 +43,11 @@ bitwarden::unlock() {
   fi
 
   if [ -z "${BW_SESSION:-}" ]; then
+    # Check if we have terminal
+    if [ ! -t 0 ]; then
+      fail "Terminal input should be available"
+    fi
+
     echo "Please enter your bitwarden password to unlock the vault"
 
     BW_SESSION="$(NODENV_VERSION=system bw unlock --raw)" || fail "Unable to unlock bitwarden database"
