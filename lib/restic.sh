@@ -164,3 +164,8 @@ restic::write-key() {
 
   (umask 077 && tee "${HOME}/.keys/restic/${key}.txt" >/dev/null) || fail
 }
+
+restic::key-exists() {
+  local key="$1"
+  test -f "${HOME}/.keys/restic/${key}.txt"
+}
