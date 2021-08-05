@@ -39,6 +39,12 @@ git::configure-user() {
   git config --global user.email "${GIT_USER_EMAIL}" || fail
 }
 
+git::configure-signingkey() {
+  local key="$1"
+  git config --global commit.gpgsign true || fail
+  git config --global user.signingkey "${key}" || fail
+}
+
 git::use-libsecret-credential-helper(){
   git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }

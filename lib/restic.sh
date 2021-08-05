@@ -152,3 +152,15 @@ restic::systemd::status() {
 restic::systemd::log() {
   journalctl --user -u "${BACKUP_NAME}.service" --since today || fail
 }
+
+restic::write-key() {
+  local key="$1"
+
+  keys::mkdir || fail
+
+  if [ ! -d "${HOME}/.keys/restic" ]; then
+    mkdir -p -m 0700 "${HOME}/.keys/restic" || fail
+  fi
+
+  (umask 077 && tee "${HOME}/.keys/restic/${key}.txt" >/dev/null) || fail
+}

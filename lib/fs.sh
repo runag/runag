@@ -102,3 +102,14 @@ mount::cifs() {
 
   findmnt --mountpoint "${mountPoint}" >/dev/null || fail "${mountPoint} is not mounted"
 }
+
+mount::ask-for-mount() {
+  local mountpoint="$1"
+
+  if ! findmnt --mountpoint "${mountpoint}" >/dev/null; then
+    echo "Please attach filesystem to ${mountpoint} and press ENTER"
+    read -s || fail
+  fi
+
+  findmnt --mountpoint "${mountpoint}" >/dev/null || fail "Unable to find filesystem at ${mountpoint}"
+}
