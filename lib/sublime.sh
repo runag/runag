@@ -23,11 +23,11 @@ sublime::apt::install-merge-and-text() {
 
 sublime::config-path() {
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    "${HOME}/Library/Application Support/Sublime Text 3"
+    echo "${HOME}/Library/Application Support/Sublime Text 3"
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    "${APPDATA}/Sublime Text 3"
+    echo "${APPDATA}/Sublime Text 3"
   else
-    "${HOME}/.config/sublime-text-3"
+    echo "${HOME}/.config/sublime-text-3"
   fi
 }
 
