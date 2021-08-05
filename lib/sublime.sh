@@ -21,18 +21,19 @@ sublime::apt::install-merge-and-text() {
   apt::install sublime-text || fail
 }
 
-sublime::determine-config-path() {
+sublime::config-path() {
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    export SUBLIME_CONFIG_PATH="${HOME}/Library/Application Support/Sublime Text 3"
+    "${HOME}/Library/Application Support/Sublime Text 3"
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    export SUBLIME_CONFIG_PATH="${APPDATA}/Sublime Text 3"
+    "${APPDATA}/Sublime Text 3"
   else
-    export SUBLIME_CONFIG_PATH="${HOME}/.config/sublime-text-3"
+    "${HOME}/.config/sublime-text-3"
   fi
 }
 
 sublime::install-package-control() {
-  local installedPackages="${SUBLIME_CONFIG_PATH}/Installed Packages"
+  local configPath; configPath="$(sublime::config-path)" || fail
+  local installedPackages="${configPath}/Installed Packages"
   local packageControlPackage="${installedPackages}/Package Control.sublime-package"
 
   if [ ! -f "${packageControlPackage}" ]; then
@@ -45,11 +46,11 @@ sublime::install-package-control() {
 }
 
 sublime::install-config-file() {
-  sublime::determine-config-path || fail
-  config::install "$1/$2" "${SUBLIME_CONFIG_PATH}/Packages/User/$2" || fail "Unable to install $1 ($?)"
+  local configPath; configPath="$(sublime::config-path)" || fail
+  config::install "$1/$2" "${configPath}/Packages/User/$2" || fail "Unable to install $1 ($?)"
 }
 
 sublime::merge-config-file() {
-  sublime::determine-config-path || fail
-  config::merge "$1/$2" "${SUBLIME_CONFIG_PATH}/Packages/User/$2" || fail "Unable to merge $1 ($?)"
+  local configPath; configPath="$(sublime::config-path)" || fail
+  config::merge "$1/$2" "${configPath}/Packages/User/$2" || fail "Unable to merge $1 ($?)"
 }
