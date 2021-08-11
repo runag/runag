@@ -55,10 +55,10 @@ nodejs::configure-mismatched-binaries-workaround() {
 nodejs::install-nodenv-repositories() {
   local nodenvRoot="${HOME}/.nodenv"
 
-  git::clone-or-pull "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
+  git::place-up-to-date-clone "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
 
   mkdir -p "${nodenvRoot}/plugins" || fail
-  git::clone-or-pull "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
+  git::place-up-to-date-clone "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
 }
 
 nodejs::install-nodenv-shellrc() {

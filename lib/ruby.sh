@@ -40,10 +40,10 @@ ruby::install-rbenv() {
 ruby::install-rbenv-repositories() {
   local rbenvRoot="${HOME}/.rbenv"
 
-  git::clone-or-pull "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
+  git::place-up-to-date-clone "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
 
   mkdir -p "${rbenvRoot}/plugins" || fail
-  git::clone-or-pull "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
+  git::place-up-to-date-clone "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
 
 ruby::install-rbenv-shellrc() {
