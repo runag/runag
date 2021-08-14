@@ -29,3 +29,26 @@ sopka::update-sopka-and-sopkafile() {
     git -C "${HOME}/.sopkafile" pull || fail
   fi
 }
+
+sopka::add-menu-item() {
+  if [ -z ${SOPKA_MENU+x} ]; then
+    SOPKA_MENU=()
+  fi
+  SOPKA_MENU+=("$@")
+}
+
+sopka::display-menu() {
+  if [ -z ${SOPKA_MENU+x} ]; then
+    fail "Menu is empty"
+  fi
+  menu::select-and-run "${SOPKA_MENU[@]}"
+  test $? = 0 || fail "Error performing menu::select-and-run"
+}
+
+sopka::is-menu-present() {
+  test -n "${SOPKA_MENU+x}"
+}
+
+sopka::clear-menu() {
+  SOPKA_MENU=()
+}

@@ -14,35 +14,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# I use "test $? = 0" instead of "|| fail" for the case if someone wants to "set -o errexit" in their functions
+
+# Select-based implementation
+# menu::select-and-run() {
+#   test -t 0 || fail "Menu was called with the STDIN which is not a terminal"
+#   local action
+#   select action in "$@"; do 
+#     test -n "${action}" || fail "Please select something"
+#     ${action} # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
+#     test $? = 0 || fail "Error performing ${action}"
+#     break
+#   done
+# }
+
 menu::select-and-run() {
-  local list=("$@")
-
-  if ! [ -t 0 ]; then
-    fail "Menu was called while not in terminal"
-  fi
-
-  echo "Please select:"
-  local i
-  for i in "${!list[@]}"; do
-    echo "  $((i+1)): ${list[${i}]}"
-  done
-  echo -n "> "
-
-  local action
-  IFS="" read -r action || fail
-
-  if ! [[ "${action}" =~ ^[0-9]+$ ]]; then
-    fail "Please select number"
-  fi
-
-  local actionFunction="${list[$((action-1))]}" || fail
-
-  # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
-  ${actionFunction}
-  test $? = 0 || fail "Error performing ${actionFunction}"
+  menu::select-argument-and-run menu::just-run "$@"
+  test $? = 0 || fail "Error performing $@"
 }
 
-menu::select-argument() {
+menu::select-argument-and-run() {
   local list=("${@:2}")
 
   if ! [ -t 0 ]; then
@@ -50,22 +41,46 @@ menu::select-argument() {
   fi
 
   echo "Please select:"
-  local i
-  for i in "${!list[@]}"; do
-    echo "  $((i+1)): ${list[${i}]}"
+  echo ""
+  local index item nextItem group nextGroup lastGroup="" lastGroupIsBig=false
+  for index in "${!list[@]}"; do
+    item="${list[${index}]}"
+    nextItem="${list[$((index+1))]:-}"
+
+    group="$(echo "${item}" | sed 's/^\([^:]*\).*/\1/')" || fail
+    nextGroup="$(echo "${nextItem}" | sed 's/^\([^:]*\).*/\1/')" || fail
+
+    if [ "${lastGroup}" = "${group}" ]; then
+      lastGroupIsBig=true
+    else    
+      if [ "${lastGroup}" != "" ]; then
+        if [ "${lastGroupIsBig}" = true ] || [ "${nextGroup}" = "${group}" ]; then
+          echo ""
+        fi
+      fi
+      lastGroup="${group}"
+      lastGroupIsBig=false
+    fi
+
+    echo "  $((index+1))) ${item}"
   done
-  echo -n "> "
+  echo ""
+  echo -n "${PS3:-"#? "}"
 
-  local action
-  IFS="" read -r action || fail
+  local inputText
+  IFS="" read -r inputText || fail
 
-  if ! [[ "${action}" =~ ^[0-9]+$ ]]; then
+  if ! [[ "${inputText}" =~ ^[0-9]+$ ]]; then
     fail "Please select number"
   fi
 
-  local selectedArgument="${list[$((action-1))]}" || fail
+  local selectedItem="${list[$((inputText-1))]}" || fail
 
-  # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
-  "$1" "${selectedArgument}"
-  test $? = 0 || fail "Error performing $1 ${selectedArgument}"
+  $1 ${selectedItem}
+  test $? = 0 || fail "Error performing $1 ${selectedItem}"
+}
+
+menu::just-run() {
+  "$@"
+  test $? = 0 || fail "Error performing $@"
 }

@@ -129,7 +129,7 @@ borg::import-key() {
     local matchPath="${HOME}/${BACKUP_NAME}-"
     if ls "${matchPath}"*.key >/dev/null 2>&1; then
       files=("${matchPath}"*.key)
-      menu::select-argument borg::import-key "${files[@]}" || fail
+      menu::select-argument-and-run borg::import-key "${files[@]}" || fail
     else
       fail "Key path must be specified, or sutable files must be in the home directory"
     fi
