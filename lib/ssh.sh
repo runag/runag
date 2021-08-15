@@ -68,9 +68,15 @@ ssh::add-key-password-to-macos-keychain() {
     # bitwarden-object: "? password for ssh private key"
     local password; password="$(NODENV_VERSION=system bw get password "${bwItem} password for ssh private key")" || fail
 
+    local tmpFile; tmpFile="$(mktemp)" || fail
+    chmod 755 "${tmpFile}" || fail
+    builtin printf "#!/usr/bin/env bash\nexec cat\n" >"${tmpFile}" || fail
+
     # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
-    echo "${password}" | SSH_ASKPASS="${SOPKA_DIR}/lib/macos/exec-cat.sh" DISPLAY=1 ssh-add -K "${keyFile}"
+    echo "${password}" | SSH_ASKPASS="${tmpFile}" DISPLAY=1 ssh-add -K "${keyFile}"
     test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
+
+    rm "${tmpFile}" || fail
   else
     echo "${keyFile} is already in the keychain"
   fi
