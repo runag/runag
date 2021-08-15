@@ -14,6 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# TODO: chown/chmod first and then write
+
 file::sudo-write() {
   local dest="$1"
   local mode="${2:-0644}"
