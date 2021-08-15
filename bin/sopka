@@ -22,7 +22,7 @@ if [ "${0:0:1}" != "-" ]; then
   set -o nounset
 fi
 
-# define fail() function
+# define fail() function early
 fail() {
   local errorColor=""
   local normalColor=""
