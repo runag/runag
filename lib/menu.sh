@@ -73,7 +73,7 @@ menu::select-argument-and-run() {
 
   if [ ${readStatus} != 0 ]; then
     if [ ${readStatus} = 1 ] && [ -z "${inputText}" ]; then
-      echo "cancelled"
+      echo "cancelled" >&2
       exit 0
     else
       fail "Read failed (${readStatus})"
