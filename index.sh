@@ -41,54 +41,41 @@ if ! declare -f fail > /dev/null; then
   }
 fi
 
+sopka::load-lib() {
+  local selfDir; selfDir="$(dirname "${BASH_SOURCE[0]}")" || fail
 
-# determine SOPKA_DIR, if not defined previously
-if [ -z "${SOPKA_DIR:-}" ]; then
-  SOPKA_DIR="$(dirname "${BASH_SOURCE[0]}")" || fail "Unable to determine SOPKA_DIR ($?)"
-  SOPKA_DIR="$(cd "${SOPKA_DIR}" >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_DIR ($?)"
+  # load all libraries
+  . "${selfDir}/lib/apt.sh" || fail
+  . "${selfDir}/lib/benchmark.sh" || fail
+  . "${selfDir}/lib/bitwarden.sh" || fail
+  . "${selfDir}/lib/borg.sh" || fail
+  . "${selfDir}/lib/config.sh" || fail
+  . "${selfDir}/lib/firefox.sh" || fail
+  . "${selfDir}/lib/fs.sh" || fail
+  . "${selfDir}/lib/git.sh" || fail
+  . "${selfDir}/lib/github.sh" || fail
+  . "${selfDir}/lib/imagemagick.sh" || fail
+  . "${selfDir}/lib/keys.sh" || fail
+  . "${selfDir}/lib/linux.sh" || fail
+  . "${selfDir}/lib/macos.sh" || fail
+  . "${selfDir}/lib/menu.sh" || fail
+  . "${selfDir}/lib/nodejs.sh" || fail
+  . "${selfDir}/lib/postgresql.sh" || fail
+  . "${selfDir}/lib/rails.sh" || fail
+  . "${selfDir}/lib/rclone.sh" || fail
+  . "${selfDir}/lib/restic.sh" || fail
+  . "${selfDir}/lib/rsync.sh" || fail
+  . "${selfDir}/lib/ruby.sh" || fail
+  . "${selfDir}/lib/shell.sh" || fail
+  . "${selfDir}/lib/sopka.sh" || fail
+  . "${selfDir}/lib/ssh.sh" || fail
+  . "${selfDir}/lib/sublime.sh" || fail
+  . "${selfDir}/lib/syncthing.sh" || fail
+  . "${selfDir}/lib/systemd.sh" || fail
+  . "${selfDir}/lib/tailscale.sh" || fail
+  . "${selfDir}/lib/tools.sh" || fail
+  . "${selfDir}/lib/vmware.sh" || fail
+  . "${selfDir}/lib/vscode.sh" || fail
+}
 
-  export SOPKA_DIR
-fi
-
-
-# determine SOPKA_WIN_DIR, if not defined previously
-if [[ "${OSTYPE}" =~ ^msys ]]; then
-  if [ -z "${SOPKA_WIN_DIR:-}" ]; then
-    SOPKA_WIN_DIR="$(echo "${SOPKA_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
-    export SOPKA_WIN_DIR
-  fi
-fi
-
-
-# load all libraries
-. "${SOPKA_DIR}/lib/apt.sh" || fail
-. "${SOPKA_DIR}/lib/benchmark.sh" || fail
-. "${SOPKA_DIR}/lib/bitwarden.sh" || fail
-. "${SOPKA_DIR}/lib/borg.sh" || fail
-. "${SOPKA_DIR}/lib/config.sh" || fail
-. "${SOPKA_DIR}/lib/firefox.sh" || fail
-. "${SOPKA_DIR}/lib/fs.sh" || fail
-. "${SOPKA_DIR}/lib/git.sh" || fail
-. "${SOPKA_DIR}/lib/github.sh" || fail
-. "${SOPKA_DIR}/lib/imagemagick.sh" || fail
-. "${SOPKA_DIR}/lib/keys.sh" || fail
-. "${SOPKA_DIR}/lib/linux.sh" || fail
-. "${SOPKA_DIR}/lib/macos.sh" || fail
-. "${SOPKA_DIR}/lib/menu.sh" || fail
-. "${SOPKA_DIR}/lib/nodejs.sh" || fail
-. "${SOPKA_DIR}/lib/postgresql.sh" || fail
-. "${SOPKA_DIR}/lib/rails.sh" || fail
-. "${SOPKA_DIR}/lib/rclone.sh" || fail
-. "${SOPKA_DIR}/lib/restic.sh" || fail
-. "${SOPKA_DIR}/lib/rsync.sh" || fail
-. "${SOPKA_DIR}/lib/ruby.sh" || fail
-. "${SOPKA_DIR}/lib/shell.sh" || fail
-. "${SOPKA_DIR}/lib/sopka.sh" || fail
-. "${SOPKA_DIR}/lib/ssh.sh" || fail
-. "${SOPKA_DIR}/lib/sublime.sh" || fail
-. "${SOPKA_DIR}/lib/syncthing.sh" || fail
-. "${SOPKA_DIR}/lib/systemd.sh" || fail
-. "${SOPKA_DIR}/lib/tailscale.sh" || fail
-. "${SOPKA_DIR}/lib/tools.sh" || fail
-. "${SOPKA_DIR}/lib/vmware.sh" || fail
-. "${SOPKA_DIR}/lib/vscode.sh" || fail
+sopka::load-lib || fail

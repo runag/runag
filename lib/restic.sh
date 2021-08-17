@@ -93,7 +93,7 @@ Description=Backup service for ${BACKUP_NAME}
 
 [Service]
 Type=oneshot
-ExecStart=${SOPKA_DIR}/bin/sopka backup::${BACKUP_NAME}::create
+ExecStart=${SOPKA_BIN_PATH} backup::${BACKUP_NAME}::create
 SyslogIdentifier=${BACKUP_NAME}
 ProtectSystem=full
 PrivateTmp=true

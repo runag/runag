@@ -46,26 +46,27 @@ fail() {
   exit "${2:-1}"
 }
 
-# determine SOPKA_DIR
-if [ -L "${BASH_SOURCE[0]}" ]; then
-  SOPKA_DIR="$(readlink -f "${BASH_SOURCE[0]}")" || fail "Unable to readlink ${BASH_SOURCE[0]} ($?)"
-else
-  SOPKA_DIR="${BASH_SOURCE[0]}"
-fi
+export SOPKA_BIN_PATH="${BASH_SOURCE[0]}"
 
-SOPKA_DIR="$(dirname "${SOPKA_DIR}")" || fail "Unable to get a dirname of ${SOPKA_DIR} ($?)"
-SOPKA_DIR="$(cd "${SOPKA_DIR}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for SOPKA_DIR ($?)"
+sopka::load-index() {
+  local sopkaBinRealPath sopkaBinRealDirPath sopkaIndexDir
 
-export SOPKA_DIR
+  if [ -L "${SOPKA_BIN_PATH}" ]; then
+    sopkaBinRealPath="$(readlink -f "${SOPKA_BIN_PATH}")" || fail "Unable to readlink ${SOPKA_BIN_PATH} ($?)"
+  else
+    sopkaBinRealPath="${SOPKA_BIN_PATH}"
+  fi
+ 
+  sopkaBinRealDirPath="$(dirname "${sopkaBinRealPath}")" || fail "Unable to get a dirname of ${sopkaBinRealPath} ($?)"
+  sopkaIndexDir="$(cd "${sopkaBinRealDirPath}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for ${sopkaBinRealDirPath}/.. ($?)"
 
+  . "${sopkaIndexDir}/index.sh" || fail
+}
 
-# load all libraries (also determine SOPKA_WIN_DIR)
-. "${SOPKA_DIR}/index.sh" || fail
+sopka::load-index || fail
 
-
-# find sopkafile, set SOPKAFILE_DIR and SOPKAFILE_WIN_DIR, load sopkafile
-#
-# possible sopkafile locations are:
+# find and load sopkafile
+# possible locations are:
 #
 # ./sopkafile
 # ./sopkafile/index.sh
@@ -73,35 +74,14 @@ export SOPKA_DIR
 # ~/.sopkafile
 # ~/.sopkafile/index.sh
 
-sopka::load-sopkafile() {
-  local targetDir="$1"
-  local targetFile="$2"
-
-  SOPKAFILE_DIR="$(cd "${targetDir}" >/dev/null 2>&1 && pwd)" || fail "Unable to get sopkafile directory ($?)"
-  export SOPKAFILE_DIR
-
-  if [[ "${OSTYPE}" =~ ^msys ]]; then
-    if [ -z "${SOPKAFILE_WIN_DIR:-}" ]; then
-      SOPKAFILE_WIN_DIR="$(echo "${SOPKAFILE_DIR}" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"; test "${PIPESTATUS[*]}" = "0 0 0" )" || fail
-      export SOPKAFILE_WIN_DIR
-    fi
-  fi
-
-  . "${targetDir}/${targetFile}" || fail
-}
-
 if [ -f "./sopkafile" ]; then
-  sopka::load-sopkafile "." "sopkafile" || fail
-
+  . "./sopkafile" || fail
 elif [ -f "./sopkafile/index.sh" ]; then
-  sopka::load-sopkafile "./sopkafile" "index.sh" || fail
-
+  . "./sopkafile/index.sh" || fail
 elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile" ]; then
-  sopka::load-sopkafile "${HOME}" ".sopkafile" || fail
-
+  . "${HOME:-}/.sopkafile" || fail
 elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile/index.sh" ]; then
-  sopka::load-sopkafile "${HOME}/.sopkafile" "index.sh" || fail
-
+  . "${HOME:-}/.sopkafile/index.sh" || fail
 else
   fail "Unable to find sopkafile"
 fi

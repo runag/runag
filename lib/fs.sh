@@ -115,3 +115,8 @@ mount::ask-for-mount() {
 
   findmnt --mountpoint "${mountpoint}" >/dev/null || fail "Unable to find filesystem at ${mountpoint}"
 }
+
+path::convert-msys-to-windows() {
+  echo "$1" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
+  test "${PIPESTATUS[*]}" = "0 0 0" || fail
+}  
