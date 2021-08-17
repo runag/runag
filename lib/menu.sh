@@ -17,16 +17,16 @@
 # I use "test $? = 0" instead of "|| fail" for the case if someone wants to "set -o errexit" in their functions
 
 # Select-based implementation
-# menu::select-and-run() {
-#   test -t 0 || fail "Menu was called with the STDIN which is not a terminal"
-#   local action
-#   select action in "$@"; do 
-#     test -n "${action}" || fail "Please select something"
-#     ${action} # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
-#     test $? = 0 || fail "Error performing ${action}"
-#     break
-#   done
-# }
+menu::builtin-select-and-run() {
+  test -t 0 || fail "Menu was called with the STDIN which is not a terminal"
+  local action
+  select action in "$@"; do 
+    test -n "${action}" || fail "Please select something"
+    ${action} # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
+    test $? = 0 || fail "Error performing ${action}"
+    break
+  done
+}
 
 menu::select-and-run() {
   menu::select-argument-and-run menu::just-run "$@"
@@ -67,8 +67,17 @@ menu::select-argument-and-run() {
   echo ""
   echo -n "${PS3:-"#? "}"
 
-  local inputText
-  IFS="" read -r inputText || fail
+  local inputText readStatus
+  IFS="" read -r inputText
+  readStatus=$?
+
+  if [ ${readStatus} != 0 ]; then
+    if [ ${readStatus} = 1 ] && [ -z "${inputText}" ]; then
+      exit 0
+    else
+      fail "Read failed (${readStatus})"
+    fi
+  fi
 
   if ! [[ "${inputText}" =~ ^[0-9]+$ ]]; then
     fail "Please select number"
