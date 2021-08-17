@@ -54,6 +54,13 @@ git::configure-signingkey() {
   git config --global user.signingkey "${key}" || fail
 }
 
+git::install-with-libsecret-credential-helper() {
+  apt::install git || fail
+  apt::install-gnome-keyring-and-libsecret || fail
+  git::install-libsecret-credential-helper || fail
+  git::use-libsecret-credential-helper || fail
+}
+
 git::use-libsecret-credential-helper(){
   git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }
