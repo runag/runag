@@ -14,6 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+benchmark::is-available() {
+  if [[ "${OSTYPE}" =~ ^linux ]] || [[ "${OSTYPE}" =~ ^darwin ]]; then
+    if command -v sysbench >/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
 benchmark::run() {
   local current_date; current_date="$(date +"%Y-%m-%d %H-%M-%S")" || fail
   local hostname_string; hostname_string="$(hostname)" || fail
