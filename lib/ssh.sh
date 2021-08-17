@@ -191,3 +191,7 @@ ssh::call() {
     bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
     || return $?
 }
+
+ssh::disable-password-authentication() {
+  echo "PasswordAuthentication no" | file::sudo-write "/etc/ssh/sshd_config.d/disable-password-authentication.conf" || fail
+}
