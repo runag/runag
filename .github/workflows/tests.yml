@@ -33,7 +33,7 @@ jobs:
       run: sleep 30
 
     - name: Run deploy script
-      run: bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopkafile/main/deploy.sh) macos-workstation::deploy
+      run: bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) senotrusov/sopkafile macos-workstation::deploy
 
   ubuntu-vm-server:
     name: ubuntu-workstation::deploy-vm-server
@@ -47,7 +47,7 @@ jobs:
       run: sleep 30
 
     - name: Run deploy script
-      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopkafile/main/deploy.sh) ubuntu-workstation::deploy-vm-server
+      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) senotrusov/sopkafile ubuntu-workstation::deploy-vm-server
 
   ubuntu-workstation:
     name: ubuntu-workstation::deploy-workstation-base
@@ -61,7 +61,7 @@ jobs:
       run: sleep 30
 
     - name: Run deploy script
-      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopkafile/main/deploy.sh) ubuntu-workstation::deploy-workstation-base
+      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) senotrusov/sopkafile ubuntu-workstation::deploy-workstation-base
 
   windows-workstation:
     name: windows-workstation::deploy

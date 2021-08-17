@@ -1,5 +1,19 @@
 # 🏔️ Sopka
 
+## Linux
+
+```sh
+bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [user/repo] [function-name [function-arguments]]
+bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) -- [function-name [function-arguments]]
+```
+
+## MacOS
+
+```sh
+bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [user/repo] [function-name [function-arguments]]
+bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) -- [function-name [function-arguments]]
+```
+
 ## Sopkafile
 
 Possible sopkafile locations are:
@@ -10,6 +24,8 @@ Possible sopkafile locations are:
 
 ~/.sopkafile
 ~/.sopkafile/index.sh
+
+~/.sopka/files/*/index.sh
 ```
 
 ## API docs
