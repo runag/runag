@@ -155,7 +155,7 @@ keys::for-all-mounted-media() {
   done
 }
 
-keys::create-update-or-verify-key-checksums-on-all-mounted-media() {
+keys::maintain-checksums() {
   keys::for-all-mounted-media keys::create-update-or-verify-key-checksums || fail
 }
 
@@ -190,7 +190,7 @@ keys::make-backup-copies-for-all-keys() (
   done
 )
 
-keys::make-backup-copies-on-all-mounted-media() {
+keys::make-backups() {
   local CURRENT_TIMESTAMP; CURRENT_TIMESTAMP="$(date --utc +"%Y%m%dT%H%M%SZ")" || fail
   CURRENT_TIMESTAMP="${CURRENT_TIMESTAMP}" keys::for-all-mounted-media keys::make-backup-copies-for-all-keys || fail
 }
