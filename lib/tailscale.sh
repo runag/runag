@@ -33,11 +33,10 @@ tailscale::install() {
 }
 
 tailscale::is-logged-out() {
-  local status
-  status="$(tailscale status)"
-  if [ $? != 1 ]; then
-    return 1
-  elif [ "${status}" = "Logged out." ]; then
+  local statusString; statusString="$(tailscale status)"
+  local statusCode=$?
+
+  if [ "${statusCode}" = 1 ] && [ "${statusString}" = "Logged out." ]; then
     return 0
   else
     return 1
