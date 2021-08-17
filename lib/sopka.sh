@@ -33,6 +33,12 @@ sopka::update() {
   fi
 }
 
+sopka::add() {
+  local packageName="$1"
+  local dest; dest="$(echo "${packageName}" | tr "/" "-")" || fail
+  git::place-up-to-date-clone "https://github.com/${packageName}.git" "${HOME}/.sopka/files/github-${dest}" || fail
+}
+
 sopka::add-menu-item() {
   if [ -z ${SOPKA_MENU+x} ]; then
     SOPKA_MENU=()

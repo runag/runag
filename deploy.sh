@@ -87,20 +87,26 @@ __xVhMyefCbBnZFUQtwqCs() {
     fi
   }
 
+  sopka::add() {
+    local packageName="$1"
+    local dest; dest="$(echo "${packageName}" | tr "/" "-")" || fail
+    git::place-up-to-date-clone "https://github.com/${packageName}.git" "${HOME}/.sopka/files/github-${dest}" || fail
+  }
+
   git::install-git || fail
 
   git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || fail
 
   if [ -n "${1:-}" ] && [ "$1" != "--" ]; then
-    local dest; dest="$(echo "$1" | tr "/" "-")" || fail
-    git::place-up-to-date-clone "https://github.com/${1}.git" "${HOME}/.sopka/files/github-${dest}" || fail
+    sopka::add "$1" || fail
   fi
 
-  cd "${HOME}/.sopka" || fail
-
-  bin/sopka "${@:2}" || fail
+  if [ -n "${@:2}" ]; then
+    "${HOME}/.sopka/bin/sopka" "${@:2}" || fail
+  fi
 }
 
-# I'm wrapping the script in the function with the random name, to ensure that in case if download fails in the middle,
-# then "curl | bash" will most likely not run some unexpected commands
+# Script is wrapped inside a function with a random name in hopes that
+# "curl | bash" will not run some unexpected commands if download fails in the middle.
+
 __xVhMyefCbBnZFUQtwqCs "$@" || return $?
