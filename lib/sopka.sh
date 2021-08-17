@@ -20,13 +20,16 @@ sopka::with-update-secrets() {
   test $? = 0 || fail "Error performing $@"
 }
 
-sopka::update-sopka-and-sopkafile() {
+sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || fail
-  fi
 
-  if [ -d "${HOME}/.sopkafile/.git" ]; then
-    git -C "${HOME}/.sopkafile" pull || fail
+    local fileFolder
+    for fileFolder in "${HOME}"/.sopka/files/*; do
+      if [ -d "${fileFolder}/.git" ]; then
+        git -C "${fileFolder}" pull || fail
+      fi
+    done
   fi
 }
 
