@@ -34,9 +34,11 @@ fi
 rm docs/lib/*.md || fail
 
 for file in lib/*.sh; do
-  output="docs/${file%.*}.md"
-  file_basename="$(basename "${file}")" || fail
+  if [ -f "${file}" ]; then
+    output="docs/${file%.*}.md"
+    file_basename="$(basename "${file}")" || fail
 
-  shdoc <"${file}" > "${output}" || fail
-  echo "* [${file_basename%%.*}](${output})"
+    shdoc <"${file}" > "${output}" || fail
+    echo "* [${file_basename%%.*}](${output})"
+  fi
 done

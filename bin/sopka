@@ -63,28 +63,44 @@ sopka::load-index() {
   . "${sopkaIndexDir}/index.sh" || fail
 }
 
-sopka::load-index || fail
 
-# find and load sopkafile
-# possible locations are:
+# Find and load sopkafile.
+#
+# Possible locations are:
 #
 # ./sopkafile
 # ./sopkafile/index.sh
 #
 # ~/.sopkafile
 # ~/.sopkafile/index.sh
+#
+# ~/.sopka/files/*/index.sh
+#
+sopka::load-sopkafile() {
+  if [ -f "./sopkafile" ]; then
+    . "./sopkafile" || fail
+  elif [ -f "./sopkafile/index.sh" ]; then
+    . "./sopkafile/index.sh" || fail
+  elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile" ]; then
+    . "${HOME:-}/.sopkafile" || fail
+  elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile/index.sh" ]; then
+    . "${HOME:-}/.sopkafile/index.sh" || fail
+  else
+    local filePath fileFound=false
+    for filePath in "${HOME}"/.sopka/files/*/index.sh; do
+      if [ -f "${filePath}" ]; then
+        . "${filePath}" || fail
+        fileFound=true
+      fi
+    done
+    if [ "${fileFound}" = false ]; then
+      fail "Unable to find sopkafile"
+    fi
+  fi
+}
 
-if [ -f "./sopkafile" ]; then
-  . "./sopkafile" || fail
-elif [ -f "./sopkafile/index.sh" ]; then
-  . "./sopkafile/index.sh" || fail
-elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile" ]; then
-  . "${HOME:-}/.sopkafile" || fail
-elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile/index.sh" ]; then
-  . "${HOME:-}/.sopkafile/index.sh" || fail
-else
-  fail "Unable to find sopkafile"
-fi
+sopka::load-index || fail
+sopka::load-sopkafile || fail
 
 # run function provided in first argument, or run sopkafile::main, if defined
 # I use "test" instead of "|| fail" here for the case if someone wants to
