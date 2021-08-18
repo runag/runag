@@ -23,17 +23,19 @@ ssh::make-home-dot-ssh-dir-if-not-exist() {
 ssh::install-keys() {
   local privateKeyName="$1 ssh private key"
   local publicKeyName="$1 ssh public key"
+  local fileName="${2:-"id_ed25519"}"
 
   ssh::make-home-dot-ssh-dir-if-not-exist || fail
 
   # bitwarden-object: "? ssh private key", "? ssh public key"
-  bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/id_ed25519" "077" || fail
-  bitwarden::write-notes-to-file-if-not-exists "${publicKeyName}" "${HOME}/.ssh/id_ed25519.pub" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/${fileName}" "077" || fail
+  bitwarden::write-notes-to-file-if-not-exists "${publicKeyName}" "${HOME}/.ssh/${fileName}.pub" "077" || fail
 }
 
 ssh::get-user-public-key() {
-  if [ -r "${HOME}/.ssh/id_ed25519.pub" ]; then
-    cat "${HOME}/.ssh/id_ed25519.pub" || fail
+  local fileName="${1:-"id_ed25519"}"
+  if [ -r "${HOME}/.ssh/${fileName}.pub" ]; then
+    cat "${HOME}/.ssh/${fileName}.pub" || fail
   else
     fail "Unable to find user public key"
   fi
@@ -41,16 +43,17 @@ ssh::get-user-public-key() {
 
 ssh::add-key-password-to-gnome-keyring() {
   local bwItem="$1"
+  local fileName="${2:-"id_ed25519"}"
   # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if [ "${UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/id_ed25519" >/dev/null; then
+    if [ "${UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/${fileName}" >/dev/null; then
       bitwarden::unlock || fail
 
       # bitwarden-object: "? password for ssh private key"
       NODENV_VERSION=system bw get password "${bwItem} password for ssh private key" \
-        | secret-tool store --label="Unlock password for: ${HOME}/.ssh/id_ed25519" unique "ssh-store:${HOME}/.ssh/id_ed25519"
+        | secret-tool store --label="Unlock password for: ${HOME}/.ssh/${fileName}" unique "ssh-store:${HOME}/.ssh/${fileName}"
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
     fi
   else
@@ -60,7 +63,9 @@ ssh::add-key-password-to-gnome-keyring() {
 
 ssh::add-key-password-to-macos-keychain() {
   local bwItem="$1"
-  local keyFile="${HOME}/.ssh/id_ed25519"
+  local fileName="${1:-"id_ed25519"}"
+
+  local keyFile="${HOME}/.ssh/${fileName}"
 
   if [ "${UPDATE_SECRETS:-}" = "true" ] || ! ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
     bitwarden::unlock || fail
