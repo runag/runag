@@ -153,7 +153,7 @@ restic::systemd::log() {
   journalctl --user -u "${BACKUP_NAME}.service" --since today || fail
 }
 
-restic::write-key() {
+restic::write-password-file() {
   local key="$1"
 
   keys::mkdir || fail
@@ -162,10 +162,10 @@ restic::write-key() {
     mkdir -p -m 0700 "${HOME}/.keys/restic" || fail
   fi
 
-  (umask 077 && tee "${HOME}/.keys/restic/${key}.txt" >/dev/null) || fail
+  (umask 077 && tee "${HOME}/.keys/restic/${key}.restic-password" >/dev/null) || fail
 }
 
-restic::key-exists() {
+restic::password-file-exists() {
   local key="$1"
-  test -f "${HOME}/.keys/restic/${key}.txt"
+  test -f "${HOME}/.keys/restic/${key}.restic-password"
 }

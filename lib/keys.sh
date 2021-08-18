@@ -207,15 +207,15 @@ keys::install-gpg-key() {
   fi
 }
 
-keys::install-restic-key() {
+keys::install-restic-password-file() {
   local key="$1"
   local mountpoint="$2"
   local path="$3"
 
-  if ! restic::key-exists "${key}"; then
+  if ! restic::password-file-exists "${key}"; then
     mount::ask-for-mount "${mountpoint}" || fail
     
-    gpg --decrypt "${mountpoint}/${path}" | restic::write-key "${key}"
+    gpg --decrypt "${mountpoint}/${path}" | restic::write-password-file "${key}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
 }
