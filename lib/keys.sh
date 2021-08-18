@@ -194,3 +194,28 @@ keys::make-backups() {
   local CURRENT_TIMESTAMP; CURRENT_TIMESTAMP="$(date --utc +"%Y%m%dT%H%M%SZ")" || fail
   CURRENT_TIMESTAMP="${CURRENT_TIMESTAMP}" keys::for-all-mounted-media keys::make-backup-copies-for-all-keys || fail
 }
+
+keys::install-gpg-key() {
+  local key="$1"
+  local mountpoint="$2"
+  local path="$3"
+
+  if ! gpg --list-keys "${key}" >/dev/null 2>&1; then
+    mount::ask-for-mount "${mountpoint}" || fail
+    gpg --import "${mountpoint}/${path}" || fail
+    echo "${key}:6:" | gpg --import-ownertrust || fail
+  fi
+}
+
+keys::install-restic-key() {
+  local key="$1"
+  local mountpoint="$2"
+  local path="$3"
+
+  if ! restic::key-exists "${key}"; then
+    mount::ask-for-mount "${mountpoint}" || fail
+    
+    gpg --decrypt "${mountpoint}/${path}" | restic::write-key "${key}"
+    test "${PIPESTATUS[*]}" = "0 0" || fail
+  fi
+}
