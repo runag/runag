@@ -195,18 +195,23 @@ keys::make-backups() {
   CURRENT_TIMESTAMP="${CURRENT_TIMESTAMP}" keys::for-all-mounted-media keys::make-backup-copies-for-all-keys || fail
 }
 
+keys::ensure-key-is-available() {
+  local keyPath="$1"
+  if [ ! -f "${keyPath}" ]; then
+    echo "File not found: '${keyPath}'. Please connect external media if necessary and press ENTER" >&2
+    read -s || fail
+  fi
+  if [ ! -f "${keyPath}" ]; then
+    fail "File still not found: ${keyPath}"
+  fi
+}
+
 keys::install-gpg-key() {
   local key="$1"
   local sourcePath="$2"
 
   if ! gpg --list-keys "${key}" >/dev/null 2>&1; then
-    if [ ! -f "${sourcePath}" ]; then
-      echo "File not found ${sourcePath}, please connect external media if necessary and press ENTER" >&2
-      read -s || fail
-    fi
-    if [ ! -f "${sourcePath}" ]; then
-      fail "File still not found: ${sourcePath}"
-    fi
+    keys::ensure-key-is-available "${sourcePath}" || fail
     gpg --import "${sourcePath}" || fail
     echo "${key}:6:" | gpg --import-ownertrust || fail
   fi
@@ -218,13 +223,7 @@ keys::install-decrypted-file() {
   local destMode="${3:-}"
 
   if [ ! -f "${destPath}" ]; then
-    if [ ! -f "${sourcePath}" ]; then
-      echo "File not found ${sourcePath}, please connect external media if necessary and press ENTER" >&2
-      read -s || fail
-    fi
-    if [ ! -f "${sourcePath}" ]; then
-      fail "File still not found: ${sourcePath}"
-    fi
+    keys::ensure-key-is-available "${sourcePath}" || fail
     gpg --decrypt "${sourcePath}" | file::write "${destPath}" "${destMode}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
