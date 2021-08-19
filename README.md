@@ -33,7 +33,6 @@ Possible sopkafile locations are:
 * [apt](docs/lib/apt.md)
 * [benchmark](docs/lib/benchmark.md)
 * [bitwarden](docs/lib/bitwarden.md)
-* [borg](docs/lib/borg.md)
 * [config](docs/lib/config.md)
 * [firefox](docs/lib/firefox.md)
 * [fs](docs/lib/fs.md)
