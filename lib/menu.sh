@@ -47,8 +47,8 @@ menu::select-argument-and-run() {
     item="${list[${index}]}"
     nextItem="${list[$((index+1))]:-}"
 
-    group="$(echo "${item}" | sed 's/^\([^:]*\).*/\1/')" || fail
-    nextGroup="$(echo "${nextItem}" | sed 's/^\([^:]*\).*/\1/')" || fail
+    group="$(echo "${item}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || fail
+    nextGroup="$(echo "${nextItem}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || fail
 
     if [ "${lastGroup}" = "${group}" ]; then
       lastGroupIsBig=true
