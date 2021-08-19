@@ -55,21 +55,26 @@ vmware::use-hgfs-mounts() {
 }
 
 vmware::add-hgfs-automount() {
+  local mountPoint="${1:-"/mnt/hgfs"}"
+
   # https://askubuntu.com/a/1051620
   # TODO: Do I really need x-systemd.device-timeout here? think it works well even without it.
   if ! grep --quiet --fixed-strings "fuse.vmhgfs-fuse" /etc/fstab; then
-    echo ".host:/  /mnt/hgfs  fuse.vmhgfs-fuse  defaults,allow_other,uid=1000,nofail,x-systemd.device-timeout=1s  0  0" | sudo tee -a /etc/fstab || fail "Unable to write to /etc/fstab ($?)"
+    echo ".host:/  ${mountPoint}  fuse.vmhgfs-fuse  defaults,allow_other,uid=1000,nofail,x-systemd.device-timeout=1s  0  0" | sudo tee -a /etc/fstab >/dev/null || fail "Unable to write to /etc/fstab ($?)"
   fi
 }
 
 vmware::symlink-hgfs-mounts() {
-  if findmnt --mountpoint /mnt/hgfs >/dev/null; then
+  local mountPoint="${1:-"/mnt/hgfs"}"
+  local symlinksDirectory="${1:-"${HOME}"}"
+
+  if findmnt --mountpoint "${mountPoint}" >/dev/null; then
     local dirPath dirName
     # I use find here because for..in did not work with hgfs
-    find /mnt/hgfs -maxdepth 1 -mindepth 1 -type d | while IFS="" read -r dirPath; do
+    find "${mountPoint}" -maxdepth 1 -mindepth 1 -type d | while IFS="" read -r dirPath; do
       dirName="$(basename "${dirPath}")" || fail
-      if [ ! -e "${HOME}/${dirName}" ]; then
-        ln --symbolic "${dirPath}" "${HOME}/${dirName}" || fail "unable to create symlink to ${dirPath}"
+      if [ ! -e "${symlinksDirectory}/${dirName}" ]; then
+        ln --symbolic "${dirPath}" "${symlinksDirectory}/${dirName}" || fail "unable to create symlink to ${dirPath}"
       fi
     done
   fi
