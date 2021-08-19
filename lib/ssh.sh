@@ -63,7 +63,7 @@ ssh::add-key-password-to-gnome-keyring() {
 
 ssh::add-key-password-to-macos-keychain() {
   local bwItem="$1"
-  local fileName="${1:-"id_ed25519"}"
+  local fileName="${2:-"id_ed25519"}"
 
   local keyFile="${HOME}/.ssh/${fileName}"
 

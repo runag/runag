@@ -16,7 +16,7 @@
 
 keys::mkdir() {
   if [ ! -d "${HOME}/.keys" ]; then
-    mkdir -p -m 700 "${HOME}/.keys" || fail
+    mkdir -m 700 "${HOME}/.keys" || fail
   fi
 }
 
