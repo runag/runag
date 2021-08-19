@@ -16,7 +16,7 @@
 
 keys::mkdir() {
   if [ ! -d "${HOME}/.keys" ]; then
-    mkdir -p -m 0700 "${HOME}/.keys" || fail
+    mkdir -p -m 700 "${HOME}/.keys" || fail
   fi
 }
 
@@ -197,25 +197,35 @@ keys::make-backups() {
 
 keys::install-gpg-key() {
   local key="$1"
-  local mountpoint="$2"
-  local path="$3"
+  local sourcePath="$2"
 
   if ! gpg --list-keys "${key}" >/dev/null 2>&1; then
-    mount::ask-for-mount "${mountpoint}" || fail
-    gpg --import "${mountpoint}/${path}" || fail
+    if [ ! -f "${sourcePath}" ]; then
+      echo "File not found ${sourcePath}, please connect external media if necessary and press ENTER" >&2
+      read -s || fail
+    fi
+    if [ ! -f "${sourcePath}" ]; then
+      fail "File still not found: ${sourcePath}"
+    fi
+    gpg --import "${sourcePath}" || fail
     echo "${key}:6:" | gpg --import-ownertrust || fail
   fi
 }
 
-keys::install-restic-password-file() {
-  local key="$1"
-  local mountpoint="$2"
-  local path="$3"
+keys::install-decrypted-file() {
+  local sourcePath="$1"
+  local destPath="$2"
+  local destMode="${3:-}"
 
-  if ! restic::password-file-exists "${key}"; then
-    mount::ask-for-mount "${mountpoint}" || fail
-    
-    gpg --decrypt "${mountpoint}/${path}" | restic::write-password-file "${key}"
+  if [ ! -f "${destPath}" ]; then
+    if [ ! -f "${sourcePath}" ]; then
+      echo "File not found ${sourcePath}, please connect external media if necessary and press ENTER" >&2
+      read -s || fail
+    fi
+    if [ ! -f "${sourcePath}" ]; then
+      fail "File still not found: ${sourcePath}"
+    fi
+    gpg --decrypt "${sourcePath}" | file::write "${destPath}" "${destMode}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
 }
