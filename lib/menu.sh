@@ -40,9 +40,21 @@ menu::select-argument-and-run() {
     fail "Menu was called while not in terminal"
   fi
 
+  local colorA="" colorB="" normalColor=""
+
+  if [ -t 1 ]; then
+    local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
+
+    if [ $? = 0 ] && [ "${colorsAmount}" -ge 16 ]; then
+      colorA="$(tput setaf 14)"
+      colorB="$(tput setaf 15)"
+      normalColor="$(tput sgr 0)"
+    fi
+  fi
+
   echo "Please select:"
   echo ""
-  local index item nextItem group nextGroup lastGroup="" lastGroupIsBig=false
+  local index item nextItem group nextGroup lastGroup="" lastGroupIsBig=false currentColor=""
   for index in "${!list[@]}"; do
     item="${list[${index}]}"
     nextItem="${list[$((index+1))]:-}"
@@ -62,8 +74,15 @@ menu::select-argument-and-run() {
       lastGroupIsBig=false
     fi
 
-    echo "  $((index+1))) ${item}"
+    if [ "${currentColor}" = "${colorA}" ]; then
+      currentColor="${colorB}"
+    else
+      currentColor="${colorA}"
+    fi
+
+    echo "  ${currentColor}$((index+1))) ${item}${normalColor}"
   done
+
   echo ""
   echo -n "${PS3:-"#? "}"
 
