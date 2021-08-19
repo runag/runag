@@ -25,12 +25,12 @@ file::sudo-write() {
 
   sudo mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
-  sudo touch "${dest}" || fail
+  sudo touch "${dest}" || fail "Unable to touch '${dest}' ($?)"
 
   if [ -n "${mode}" ]; then
     sudo chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
   fi
-  
+
   if [ -n "${ownerAndGroup}" ]; then
     sudo chown "${ownerAndGroup}" "${dest}" || fail "Unable to chown '${dest}' ($?)"
   fi
@@ -47,7 +47,7 @@ file::write() {
 
   mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
-  touch "${dest}" || fail
+  touch "${dest}" || fail "Unable to touch '${dest}' ($?)"
 
   if [ -n "${mode}" ]; then
     chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
@@ -95,11 +95,6 @@ mount::cifs() {
   mkdir -p "${mountPoint}" || fail
   keys::mkdir || fail
 
-  if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
-    echo "${fstabTag}" | sudo tee --append /etc/fstab || fail
-    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0644,dir_mode=0755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee --append /etc/fstab || fail
-  fi
-
   if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
 
@@ -107,6 +102,11 @@ mount::cifs() {
     local cifsUsername; cifsUsername="$(NODENV_VERSION=system bw get username "${bwItem}")" || fail
     local cifsPassword; cifsPassword="$(NODENV_VERSION=system bw get password "${bwItem}")" || fail
     builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
+  fi
+
+  if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
+    echo "${fstabTag}" | sudo tee --append /etc/fstab || fail
+    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0644,dir_mode=0755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee --append /etc/fstab || fail
   fi
 
   # other mounts might fail, so we ignore exit status here
