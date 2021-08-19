@@ -20,7 +20,7 @@ macos::increase-maxfiles-limit() {
   local dst="/Library/LaunchDaemons/limit.maxfiles.plist"
 
   if [ ! -f "${dst}" ]; then
-    file::sudo-write "${dst}" 0644 root wheel <<EOF || fail
+    file::sudo-write "${dst}" 644 root:wheel <<EOF || fail
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
         "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

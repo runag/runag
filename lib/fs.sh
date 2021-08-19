@@ -18,33 +18,43 @@
 
 file::sudo-write() {
   local dest="$1"
-  local mode="${2:-0644}"
-  local owner="${3:-root}"
-  local group="${4:-${owner}}"
+  local mode="${2:-}"
+  local ownerAndGroup="${3:-}"
 
   local dirName; dirName="$(dirname "${dest}")" || fail "Unable to get dirName of '${dest}' ($?)"
 
   sudo mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
+  sudo touch "${dest}" || fail
+
+  if [ -n "${mode}" ]; then
+    sudo chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
+  fi
+  
+  if [ -n "${ownerAndGroup}" ]; then
+    sudo chown "${ownerAndGroup}" "${dest}" || fail "Unable to chown '${dest}' ($?)"
+  fi
+
   cat | sudo tee "${dest}" >/dev/null
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '${dest}'"
-
-  sudo chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
-  sudo chown "${owner}:${group}" "${dest}" || fail "Unable to chown '${dest}' ($?)"
 }
 
 file::write() {
   local dest="$1"
-  local mode="${2:-0644}"
+  local mode="${2:-}"
 
   local dirName; dirName="$(dirname "${dest}")" || fail "Unable to get dirName of '${dest}' ($?)"
 
   mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
 
+  touch "${dest}" || fail
+
+  if [ -n "${mode}" ]; then
+    chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
+  fi
+
   cat | tee "${dest}" >/dev/null
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '${dest}'"
-
-  chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
 }
 
 file::append-line-unless-present() {
