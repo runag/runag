@@ -55,7 +55,7 @@ tailscale::issue-2541-workaround() {
 tailscale::install-issue-2541-workaround() {
   file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround <<EOF || fail
 #!/usr/bin/env bash
-$(tools::show-license)
+$(tools::print-license)
 $(declare -f fail)
 $(declare -f tailscale::issue-2541-workaround)
 tailscale::issue-2541-workaround || fail
