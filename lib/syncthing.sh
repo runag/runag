@@ -24,5 +24,5 @@ syncthing::apt::install() {
   apt::add-key-and-source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
   apt::update || fail
   apt::install syncthing || fail
-  sudo systemctl enable --now "syncthing@${SUDO_USER}.service" || fail
+  sudo systemctl --now enable "syncthing@${SUDO_USER}.service" || fail
 }

@@ -85,6 +85,7 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
+  sudo systemctl daemon-reload || fail
   sudo systemctl reenable tailscale-issue-2541-workaround.timer || fail
   sudo systemctl start tailscale-issue-2541-workaround.timer || fail
 }
