@@ -69,7 +69,6 @@ sopka::load-lib() {
   . "${selfDir}/lib/ssh.sh" || fail
   . "${selfDir}/lib/sublime.sh" || fail
   . "${selfDir}/lib/syncthing.sh" || fail
-  . "${selfDir}/lib/systemd.sh" || fail
   . "${selfDir}/lib/tailscale.sh" || fail
   . "${selfDir}/lib/tools.sh" || fail
   . "${selfDir}/lib/vmware.sh" || fail
