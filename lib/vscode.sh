@@ -18,13 +18,13 @@ vscode::snap::install() {
   sudo snap install code --classic || fail "Unable to snap install ($?)"
 }
 
-vscode::determine-config-path() {
+vscode::config-path() {
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    export VSCODE_CONFIG_PATH="${HOME}/Library/Application Support/Code"
+    echo "${HOME}/Library/Application Support/Code"
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    export VSCODE_CONFIG_PATH="${APPDATA}/Code"
+    echo "${APPDATA}/Code"
   else
-    export VSCODE_CONFIG_PATH="${HOME}/.config/Code"
+    echo "${HOME}/.config/Code"
   fi
 }
 
