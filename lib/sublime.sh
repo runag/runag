@@ -46,11 +46,17 @@ sublime::install-package-control() {
 }
 
 sublime::install-config-file() {
+  local srcPath="$1"
+  local fileName; fileName="$(basename "${srcPath}")" || fail
   local configPath; configPath="$(sublime::get-config-path)" || fail
-  config::install "$1/$2" "${configPath}/Packages/User/$2" || fail "Unable to install $1 ($?)"
+
+  config::install "$1" "${configPath}/Packages/User/${fileName}" || fail
 }
 
 sublime::merge-config-file() {
+  local srcPath="$1"
+  local fileName; fileName="$(basename "${srcPath}")" || fail
   local configPath; configPath="$(sublime::get-config-path)" || fail
-  config::merge "$1/$2" "${configPath}/Packages/User/$2" || fail "Unable to merge $1 ($?)"
+
+  config::merge "$1" "${configPath}/Packages/User/${fileName}" || fail
 }
