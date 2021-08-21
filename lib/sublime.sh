@@ -21,7 +21,7 @@ sublime::apt::install-merge-and-text() {
   apt::install sublime-text || fail
 }
 
-sublime::config-path() {
+sublime::get-config-path() {
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
     echo "${HOME}/Library/Application Support/Sublime Text 3"
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
@@ -32,7 +32,7 @@ sublime::config-path() {
 }
 
 sublime::install-package-control() {
-  local configPath; configPath="$(sublime::config-path)" || fail
+  local configPath; configPath="$(sublime::get-config-path)" || fail
   local installedPackages="${configPath}/Installed Packages"
   local packageControlPackage="${installedPackages}/Package Control.sublime-package"
 
@@ -46,11 +46,11 @@ sublime::install-package-control() {
 }
 
 sublime::install-config-file() {
-  local configPath; configPath="$(sublime::config-path)" || fail
+  local configPath; configPath="$(sublime::get-config-path)" || fail
   config::install "$1/$2" "${configPath}/Packages/User/$2" || fail "Unable to install $1 ($?)"
 }
 
 sublime::merge-config-file() {
-  local configPath; configPath="$(sublime::config-path)" || fail
+  local configPath; configPath="$(sublime::get-config-path)" || fail
   config::merge "$1/$2" "${configPath}/Packages/User/$2" || fail "Unable to merge $1 ($?)"
 }

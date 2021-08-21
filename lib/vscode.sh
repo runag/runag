@@ -18,7 +18,7 @@ vscode::snap::install() {
   sudo snap install code --classic || fail "Unable to snap install ($?)"
 }
 
-vscode::config-path() {
+vscode::get-config-path() {
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
     echo "${HOME}/Library/Application Support/Code"
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
@@ -30,13 +30,16 @@ vscode::config-path() {
 
 vscode::list-extensions-to-temp-file() {
   local tmpFile; tmpFile="$(mktemp)" || fail "Unable to create temp file"
+
   code --list-extensions | sort > "${tmpFile}"
+
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to list extensions"
   echo "${tmpFile}"
 }
 
 vscode::install-extensions() {
   local extensionsList="$1"
+
   if [ -f "${extensionsList}" ]; then
     local installedExtensionsList; installedExtensionsList="$(vscode::list-extensions-to-temp-file)" || fail "Unable get extensions list"
 
