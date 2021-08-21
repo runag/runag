@@ -41,7 +41,7 @@ sublime::install-package-control() {
 
     curl --fail --silent --show-error "https://packagecontrol.io/Package%20Control.sublime-package" --output "${packageControlPackage}.tmp" || fail "Unable to download https://packagecontrol.io/Package%20Control.sublime-package ($?)"
 
-    mv "${packageControlPackage}.tmp" "${packageControlPackage}" || fail "Unable to rename temp file to${packageControlPackage}"
+    mv "${packageControlPackage}.tmp" "${packageControlPackage}" || fail "Unable to rename temp file to ${packageControlPackage}"
   fi
 }
 
