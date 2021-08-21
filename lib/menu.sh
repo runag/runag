@@ -16,18 +16,6 @@
 
 # I use "test $? = 0" instead of "|| fail" for the case if someone wants to "set -o errexit" in their functions
 
-# Select-based implementation
-menu::builtin-select-and-run() {
-  test -t 0 || fail "Menu was called with the STDIN which is not a terminal"
-  local action
-  select action in "$@"; do 
-    test -n "${action}" || fail "Please select something"
-    ${action} # I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
-    test $? = 0 || fail "Error performing ${action}"
-    break
-  done
-}
-
 menu::select-and-run() {
   menu::select-argument-and-run menu::just-run "$@"
   test $? = 0 || fail "Error performing $@"
