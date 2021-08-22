@@ -17,7 +17,7 @@
 # @description Perform apt update once per script run
 apt::lazy-update() {
   if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
-    SOPKA_APT_LAZY_UPDATE_HAPPENED=1
+    SOPKA_APT_LAZY_UPDATE_HAPPENED=true
     apt::update || fail
   fi
 }
@@ -30,7 +30,7 @@ apt::lazy-update-and-dist-upgrade() {
 
 # @description Perform apt update
 apt::update() {
-  SOPKA_APT_LAZY_UPDATE_HAPPENED=1
+  SOPKA_APT_LAZY_UPDATE_HAPPENED=true
   sudo apt-get -o Acquire::ForceIPv4=true update || fail "Unable to apt-get update ($?)"
 }
 
