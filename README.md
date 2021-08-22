@@ -75,16 +75,26 @@ Possible sopkafile locations are:
 ## Environment variables
 
 ```sh
+# set by bin/sopka for use in scripts
+SOPKA_BIN_PATH="${HOME}/.sopka/bin"
+
+# configuration
 SOPKA_BITWARDEN_LOGIN="hello@example.com"
 SOPKA_GIT_USER_EMAIL="hello@example.com"
 SOPKA_GIT_USER_NAME="Hello Emma"
 SOPKA_GITHUB_LOGIN="hello@example.com"
-SOPKA_NODENV_INITIALIZED=true # internal
-SOPKA_RBENV_INITIALIZED=true # internal
+
+# internal
+SOPKA_NODENV_INITIALIZED=true
+SOPKA_RBENV_INITIALIZED=true
+
+# ssh-related
 SOPKA_REMOTE_HOST="example.com"
 SOPKA_REMOTE_PORT="22"
 SOPKA_REMOTE_USER="hello"
 SOPKA_SEND_ENV=()
+
+# runtime flags
 SOPKA_UPDATE_SECRETS=true
 SOPKA_VERBOSE=true
 ```
