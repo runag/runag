@@ -34,9 +34,9 @@ sopka::update() {
 }
 
 sopka::add() {
-  local packageName="$1"
-  local dest; dest="$(echo "${packageName}" | tr "/" "-")" || fail
-  git::place-up-to-date-clone "https://github.com/${packageName}.git" "${HOME}/.sopka/files/github-${dest}" || fail
+  local packageId="$1"
+  local dest; dest="$(echo "${packageId}" | tr "/" "-")" || fail
+  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/files/github-${dest}" || fail
 }
 
 sopka::add-menu-item() {
