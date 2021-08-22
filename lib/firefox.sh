@@ -27,6 +27,7 @@ firefox::enable-wayland() {
 firefox::set-pref() {
   local name="$1"
   local value="$2"
+  
   local prefsLine="user_pref(\"${name}\", ${value});"
   local profileFolder
   local prefsFile
