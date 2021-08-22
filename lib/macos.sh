@@ -14,10 +14,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# TODO: Check if its working after recent changes
+# based on https://unix.stackexchange.com/questions/108174/how-to-persistently-control-maximum-system-resource-consumption-on-mac
 macos::increase-maxfiles-limit() {
-  # based on https://unix.stackexchange.com/questions/108174/how-to-persistently-control-maximum-system-resource-consumption-on-mac
+  local softLimit="${1:-"262144"}"
+  local hardLimit="${2:-"524288"}"
 
-  local dst="/Library/LaunchDaemons/limit.maxfiles.plist"
+  local label="sopka.limit.maxfiles"
+  local dst="/Library/LaunchDaemons/${label}.plist"
 
   if [ ! -f "${dst}" ]; then
     file::sudo-write "${dst}" 644 root:wheel <<EOF || fail
@@ -27,14 +31,14 @@ macos::increase-maxfiles-limit() {
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>limit.maxfiles</string>
+    <string>${label}</string>
     <key>ProgramArguments</key>
     <array>
       <string>launchctl</string>
       <string>limit</string>
       <string>maxfiles</string>
-      <string>262144</string>
-      <string>524288</string>
+      <string>${softLimit}</string>
+      <string>${hardLimit}</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
