@@ -107,20 +107,6 @@ linux::get-default-route() {
   test "${PIPESTATUS[*]}" = "0 0 0" || fail
 }
 
-linux::enable-nonrestricted-sudo() {
-  local userName="${1:-"${USER}"}"
-
-  file::sudo-write "/etc/sudoers.d/${userName}-nonrestricted-sudo" 440 <<SHELL || fail
-${userName} ALL=(ALL) NOPASSWD: ALL
-SHELL
-}
-
-linux::disable-nonrestricted-sudo() {
-  local userName="${1:-"${USER}"}"
-
-  sudo rm -f "/etc/sudoers.d/${userName}-nonrestricted-sudo" || fail
-}
-
 linux::get-distributor-id-lowercase() {
   lsb_release --id --short | tr '[:upper:]' '[:lower:]'
   test "${PIPESTATUS[*]}" = "0 0" || fail
