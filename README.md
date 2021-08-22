@@ -75,12 +75,18 @@ Possible sopkafile locations are:
 ## Environment variables
 
 ```sh
-BITWARDEN_LOGIN
-GIT_USER_EMAIL
-GIT_USER_NAME
-GITHUB_LOGIN
-VERBOSE=true
-UPDATE_SECRETS=true
+SOPKA_BITWARDEN_LOGIN="hello@example.com"
+SOPKA_GIT_USER_EMAIL="hello@example.com"
+SOPKA_GIT_USER_NAME="Hello Emma"
+SOPKA_GITHUB_LOGIN="hello@example.com"
+SOPKA_NODENV_INITIALIZED=true # internal
+SOPKA_RBENV_INITIALIZED=true # internal
+SOPKA_REMOTE_HOST="example.com"
+SOPKA_REMOTE_PORT="22"
+SOPKA_REMOTE_USER="hello"
+SOPKA_SEND_ENV=()
+SOPKA_UPDATE_SECRETS=true
+SOPKA_VERBOSE=true
 ```
 
 # Contributing

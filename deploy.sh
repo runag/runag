@@ -16,7 +16,7 @@
 
 __xVhMyefCbBnZFUQtwqCs() {
   # set shell options
-  if [ "${VERBOSE:-}" = true ]; then
+  if [ "${SOPKA_VERBOSE:-}" = true ]; then
     set -o xtrace
   fi
   set -o nounset

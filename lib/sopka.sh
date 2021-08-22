@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 sopka::with-update-secrets() {
-  export UPDATE_SECRETS=true
+  export SOPKA_UPDATE_SECRETS=true
   "$@"
   test $? = 0 || fail "Error performing $@"
 }

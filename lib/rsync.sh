@@ -15,11 +15,11 @@
 #  limitations under the License.
 
 rsync::upload() {
-  rsync::transfer "$1" "${REMOTE_HOST:-}:$2" || fail
+  rsync::transfer "$1" "${SOPKA_REMOTE_HOST:-}:$2" || fail
 }
 
 rsync::download() {
-  rsync::transfer "${REMOTE_HOST:-}:$1" "$2" || fail
+  rsync::transfer "${SOPKA_REMOTE_HOST:-}:$1" "$2" || fail
 }
 
 rsync::transfer() {
@@ -47,8 +47,8 @@ rsync::remote() {
     -o ControlPath=$(printf "%q" "${HOME}/.ssh/%C.control-socket") \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
-    ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
-    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"}" || fail
+    ${SOPKA_REMOTE_PORT:+-p} ${SOPKA_REMOTE_PORT:+"${SOPKA_REMOTE_PORT}"} \
+    ${SOPKA_REMOTE_USER:+-l} ${SOPKA_REMOTE_USER:+"${SOPKA_REMOTE_USER}"}" || fail
 
   rsync \
     --rsh "${rshOption}" \

@@ -33,16 +33,16 @@ bitwarden::install-cli() {
 
 bitwarden::install-bitwarden-login-shellrc() {
   file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
-    export BITWARDEN_LOGIN="${BITWARDEN_LOGIN}"
+    export SOPKA_BITWARDEN_LOGIN="${SOPKA_BITWARDEN_LOGIN}"
 SHELL
 }
 
 bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     # the absence of error handling is intentional here
-    local errorString; errorString="$(NODENV_VERSION=system bw login "${BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
+    local errorString; errorString="$(NODENV_VERSION=system bw login "${SOPKA_BITWARDEN_LOGIN}" --raw 2>&1 </dev/null)"
 
-    if [ "${errorString}" != "You are already logged in as ${BITWARDEN_LOGIN}." ]; then
+    if [ "${errorString}" != "You are already logged in as ${SOPKA_BITWARDEN_LOGIN}." ]; then
       # Check if we have terminal
       if [ ! -t 0 ]; then
         fail "Terminal input should be available"
@@ -50,7 +50,7 @@ bitwarden::unlock() {
 
       echo "Please enter your bitwarden password to login"
 
-      BW_SESSION="$(NODENV_VERSION=system bw login "${BITWARDEN_LOGIN}" --raw)" || fail "Unable to login to bitwarden"
+      BW_SESSION="$(NODENV_VERSION=system bw login "${SOPKA_BITWARDEN_LOGIN}" --raw)" || fail "Unable to login to bitwarden"
       export BW_SESSION
     fi
   fi
@@ -75,7 +75,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
   local outputFile="$2"
   local setUmask="${3:-"077"}"
 
-  if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${outputFile}" ]; then
+  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${outputFile}" ]; then
     bitwarden::write-notes-to-file "${item}" "${outputFile}" "${setUmask}" || fail
   fi
 }
@@ -121,7 +121,7 @@ bitwarden::write-password-to-file-if-not-exists() {
   local setUmask="${3:-"077"}"
   local bwdata
 
-  if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${outputFile}" ]; then
+  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${outputFile}" ]; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "?"

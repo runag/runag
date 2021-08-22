@@ -65,11 +65,11 @@ if [ -d "\${HOME}/.rbenv/bin" ]; then
 fi
 
 if command -v rbenv >/dev/null; then
-  if [ -z \${RBENV_INITIALIZED+x} ]; then
+  if [ -z \${SOPKA_RBENV_INITIALIZED+x} ]; then
     eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
     export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--disable-install-doc"
     ${opensslLine}
-    export RBENV_INITIALIZED=true
+    export SOPKA_RBENV_INITIALIZED=true
   fi
 fi
 SHELL

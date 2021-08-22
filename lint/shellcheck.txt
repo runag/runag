@@ -15,11 +15,11 @@ nodejs::install-nodenv-shellrc() {
 
 
 In ./lib/ssh.sh line 185:
-    ${REMOTE_HOST:-} \
+    ${SOPKA_REMOTE_HOST:-} \
     ^--------------^ SC2086: Double quote to prevent globbing and word splitting.
 
 Did you mean: 
-    "${REMOTE_HOST:-}" \
+    "${SOPKA_REMOTE_HOST:-}" \
 
 
 In ./lib/restic.sh line 116:

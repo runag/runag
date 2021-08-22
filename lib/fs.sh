@@ -95,7 +95,7 @@ mount::cifs() {
   mkdir -p "${mountPoint}" || fail
   keys::mkdir || fail
 
-  if [ "${UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
+  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "?"

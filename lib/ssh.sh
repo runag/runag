@@ -48,7 +48,7 @@ ssh::add-key-password-to-gnome-keyring() {
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if [ "${UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/${fileName}" >/dev/null; then
+    if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/${fileName}" >/dev/null; then
       bitwarden::unlock || fail
 
       # bitwarden-object: "? password for ssh private key"
@@ -67,7 +67,7 @@ ssh::add-key-password-to-macos-keychain() {
 
   local keyFile="${HOME}/.ssh/${fileName}"
 
-  if [ "${UPDATE_SECRETS:-}" = "true" ] || ! ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
+  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "? password for ssh private key"
@@ -129,8 +129,8 @@ ssh::refresh-host-in-known-hosts() {
 }
 
 ssh::add-host-to-known-hosts() {
-  local hostName="${1:-"${REMOTE_HOST}"}"
-  local sshPort="${2:-"${REMOTE_PORT:-"22"}"}"
+  local hostName="${1:-"${SOPKA_REMOTE_HOST}"}"
+  local sshPort="${2:-"${SOPKA_REMOTE_PORT:-"22"}"}"
   local knownHosts="${HOME}/.ssh/known_hosts"
 
   if ! command -v ssh-keygen >/dev/null; then
@@ -167,13 +167,13 @@ ssh::remove-host-from-known-hosts() {
 
 ssh::call() {
   local shellOptions="set -o nounset; "
-  if [ "${VERBOSE:-}" = true ]; then
+  if [ "${SOPKA_VERBOSE:-}" = true ]; then
     shellOptions+="set -o xtrace; "
   fi
 
   local i envString=""
-  if [ -n "${SEND_ENV:+x}" ]; then
-    for i in "${SEND_ENV[@]}"; do
+  if [ -n "${SOPKA_SEND_ENV:+x}" ]; then
+    for i in "${SOPKA_SEND_ENV[@]}"; do
       envString+="export $(printf "%q" "${i}")=$(printf "%q" "${!i}"); "
     done
   fi
@@ -190,9 +190,9 @@ ssh::call() {
     -o ControlPath="${HOME}/.ssh/%C.control-socket" \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
-    ${REMOTE_PORT:+-p} ${REMOTE_PORT:+"${REMOTE_PORT}"} \
-    ${REMOTE_USER:+-l} ${REMOTE_USER:+"${REMOTE_USER}"} \
-    ${REMOTE_HOST:-} \
+    ${SOPKA_REMOTE_PORT:+-p} ${SOPKA_REMOTE_PORT:+"${SOPKA_REMOTE_PORT}"} \
+    ${SOPKA_REMOTE_USER:+-l} ${SOPKA_REMOTE_USER:+"${SOPKA_REMOTE_USER}"} \
+    ${SOPKA_REMOTE_HOST:-} \
     bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
     || return $?
 }

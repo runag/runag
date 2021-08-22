@@ -44,8 +44,8 @@ git::place-up-to-date-clone() {
 }
 
 git::configure-user() {
-  git config --global user.name "${GIT_USER_NAME}" || fail
-  git config --global user.email "${GIT_USER_EMAIL}" || fail
+  git config --global user.name "${SOPKA_GIT_USER_NAME}" || fail
+  git config --global user.email "${SOPKA_GIT_USER_EMAIL}" || fail
 }
 
 git::configure-signingkey() {
@@ -81,12 +81,12 @@ git::add-credentials-to-gnome-keyring() {
   # the login keyring is also available and already initialized properly
   # I don't know yet how to check for login keyring specifically
   if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if [ "${UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup server "${server}" user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
+    if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup server "${server}" user "${SOPKA_GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
       bitwarden::unlock || fail
 
       # bitwarden-object: "? ? personal access token"
       NODENV_VERSION=system bw get password "${bwItem} ${server} personal access token" \
-        | secret-tool store --label="Git: https://${server}/" server "${server}" user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+        | secret-tool store --label="Git: https://${server}/" server "${server}" user "${SOPKA_GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
       test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store git credentials"
     fi
   else

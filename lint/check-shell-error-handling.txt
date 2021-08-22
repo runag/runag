@@ -70,7 +70,7 @@ bin/sopka:
   69:   "$1" "${selectedArgument}"
 
 ./lib/git.sh:
-  66:         | secret-tool store --label="Git: https://github.com/" server github.com user "${GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+  66:         | secret-tool store --label="Git: https://github.com/" server github.com user "${SOPKA_GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
 
 ./lib/linux.sh:
   88:   ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo
