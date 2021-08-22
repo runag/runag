@@ -73,7 +73,7 @@ __xVhMyefCbBnZFUQtwqCs() {
         local destFullPath; destFullPath="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail
         local destParentDir; destParentDir="$(dirname "${destFullPath}")" || fail
         local destDirName; destDirName="$(basename "${destFullPath}")" || fail
-        local packupPath; packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXX")" || fail
+        local packupPath; packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail
         mv "${destFullPath}" "${packupPath}" || fail
         git clone "${url}" "${dest}" || fail
       fi

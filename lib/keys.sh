@@ -86,7 +86,7 @@ keys::create-or-update-checksums()(
   keys::check-tmpfs || fail
 
   local current="checksum.txt"
-  local new; new="$(mktemp -p "${XDG_RUNTIME_DIR}")" || fail
+  local new; new="$(mktemp "${XDG_RUNTIME_DIR}/tmp.XXXXXXXXXX")" || fail
   local title="$1"
 
   cd "$1" || fail
@@ -100,7 +100,7 @@ keys::verify-checksums()(
   keys::check-tmpfs || fail
   
   local current="checksum.txt"
-  local new; new="$(mktemp -p "${XDG_RUNTIME_DIR}")" || fail
+  local new; new="$(mktemp "${XDG_RUNTIME_DIR}/tmp.XXXXXXXXXX")" || fail
   local title="$1"
 
   cd "$1" || fail
