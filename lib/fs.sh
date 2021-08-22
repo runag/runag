@@ -83,7 +83,7 @@ mount::cifs() {
     bitwarden::unlock || fail
 
     local credentialsFileDir; credentialsFileDir="$(dirname "${credentialsFile}")" || fail
-    mkdir -p "${credentialsFileDir}" || fail
+    (umask 077 && mkdir -p "${credentialsFileDir}") || fail
 
     # bitwarden-object: "?"
     local cifsUsername; cifsUsername="$(NODENV_VERSION=system bw get username "${bwItem}")" || fail

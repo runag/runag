@@ -16,7 +16,7 @@
 
 ssh::make-home-dot-ssh-dir-if-not-exist() {
   if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -m 0700 "${HOME}/.ssh" || fail
+    mkdir -m 700 "${HOME}/.ssh" || fail
   fi
 }
 
@@ -141,8 +141,7 @@ ssh::add-host-to-known-hosts() {
     local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
 
     if [ ! -d "${knownHostsDirname}" ]; then
-      mkdir "${knownHostsDirname}" || fail
-      chmod 0700 "${knownHostsDirname}" || fail
+      mkdir -m 700 "${knownHostsDirname}" || fail
     fi
 
     touch "${knownHosts}" || fail

@@ -39,7 +39,7 @@ rsync::remote() {
   local rshOption
 
   if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -p -m 0700 "${HOME}/.ssh" || fail
+    mkdir -m 700 "${HOME}/.ssh" || fail
   fi
 
   rshOption="ssh \
