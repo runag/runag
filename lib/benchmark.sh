@@ -24,11 +24,15 @@ benchmark::is-available() {
 }
 
 benchmark::run() {
-  local current_date; current_date="$(date +"%Y-%m-%d %H-%M-%S")" || fail
-  local hostname_string; hostname_string="$(hostname)" || fail
+  local hostnameString; hostnameString="$(hostname)" || fail
+  local currentDate; currentDate="$(date +"%Y-%m-%d %H-%M-%S")" || fail
 
-  benchmark::actually-run | tee "${HOME}/${hostname_string} ${current_date} benchmark.txt"
+  local resultFile; resultFile="$(mktemp -u "${HOME}/sopka-benchmark ${hostnameString} ${currentDate} XXXXXXXXXX")" || fail
+
+  benchmark::actually-run | tee "${resultFile}.txt" >/dev/null
   test "${PIPESTATUS[*]}" = "0 0" || fail
+
+  echo "${resultFile}.txt"
 }
 
 benchmark::actually-run() {
@@ -41,15 +45,17 @@ benchmark::actually-run() {
   echo "### RAM WRITE, 4KiB BLOCKS ###"
   sysbench memory run --memory-block-size=4096 || fail
 
-  benchmark::fileio || fail
-  benchmark::fileio --file-extra-flags=direct || fail
+  (
+    local tempDir; tempDir="$(mktemp -d "${HOME}/sopka-benchmark-XXXXXXXXXX")" || fail
+    cd "${tempDir}" || fail
+    benchmark::fileio || fail
+    benchmark::fileio --file-extra-flags=direct || fail
+    rmdir "${tempDir}" || fail
+  ) || fail
 }
 
 benchmark::fileio() (
-  mkdir -p "${HOME}/.sysbench" || fail
-  cd "${HOME}/.sysbench" || fail
-
-  sysbench fileio prepare --file-extra-flags=direct || fail
+  sysbench fileio prepare ${1:-} >/dev/null || fail
 
   echo "### SEQUENTIAL READ ${1:-} ###"
   sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${1:-} || fail
@@ -77,5 +83,5 @@ benchmark::fileio() (
   echo "### SEQUENTIAL WRITE IN SYNC MODE ${1:-} ###"
   sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
-  sysbench fileio cleanup || fail
+  sysbench fileio cleanup >/dev/null || fail
 )
