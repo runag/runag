@@ -60,17 +60,15 @@ linux::set-locale() {
 }
 
 linux::configure-inotify() {
-  local sysctl="/etc/sysctl.conf"
+  local max_user_watches="${1:-1048576}"
+  local max_user_instances="${2:-2048}"
 
-  if [ ! -r "${sysctl}" ]; then
-    fail "Unable to find file: ${sysctl}"
-  fi
+  file::sudo-write /etc/sysctl.d/sopka-inotify.conf <<EOF || fail
+fs.inotify.max_user_watches=${max_user_watches}
+fs.inotify.max_user_instances=${max_user_instances}
+EOF
 
-  if ! grep --quiet "^fs\\.inotify\\.max_user_watches" "${sysctl}" || ! grep --quiet "^fs\\.inotify\\.max_user_instances" "${sysctl}"; then
-    echo "fs.inotify.max_user_watches=1000000" | sudo tee -a "${sysctl}" || fail "Unable to write to ${sysctl} ($?)"
-    echo "fs.inotify.max_user_instances=2048" | sudo tee -a "${sysctl}" || fail "Unable to write to ${sysctl} ($?)"
-    sudo sysctl -p || fail "Unable to update sysctl config ($?)"
-  fi
+  sudo sysctl --system || fail
 }
 
 linux::display-if-restart-required() {
