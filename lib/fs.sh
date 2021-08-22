@@ -75,18 +75,15 @@ file::sudo-append-line-unless-present() {
 
 mount::cifs() {
   local serverPath="$1"
-  local mountName="$2"
+  local mountPoint="$2"
   local bwItem="$3"
-
-  local mountPoint="${HOME}/${mountName}"
-  local credentialsFile="${HOME}/.keys/${mountName}.cifs-credentials"
-  local fstabTag="# ${mountName} cifs mount"
-
-  mkdir -p "${mountPoint}" || fail
-  keys::mkdir || fail
+  local credentialsFile="$4"
 
   if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
     bitwarden::unlock || fail
+
+    local credentialsFileDir; credentialsFileDir="$(dirname "${credentialsFile}")" || fail
+    mkdir -p "${credentialsFileDir}" || fail
 
     # bitwarden-object: "?"
     local cifsUsername; cifsUsername="$(NODENV_VERSION=system bw get username "${bwItem}")" || fail
@@ -94,9 +91,11 @@ mount::cifs() {
     builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
   fi
 
+  mkdir -p "${mountPoint}" || fail
+  local fstabTag="# cifs mount: ${mountPoint}"
+
   if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
-    echo "${fstabTag}" | sudo tee -a /etc/fstab >/dev/null || fail
-    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0644,dir_mode=0755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee -a /etc/fstab >/dev/null || fail
+    builtin printf "${fstabTag}\n${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0644,dir_mode=0755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee -a /etc/fstab >/dev/null || fail
   fi
 
   # other mounts might fail, so we ignore exit status here
