@@ -82,7 +82,6 @@ SOPKA_BIN_PATH="${HOME}/.sopka/bin"
 SOPKA_BITWARDEN_LOGIN="hello@example.com"
 SOPKA_GIT_USER_EMAIL="hello@example.com"
 SOPKA_GIT_USER_NAME="Hello Emma"
-SOPKA_GITHUB_LOGIN="hello@example.com"
 
 # internal
 SOPKA_APT_LAZY_UPDATE_HAPPENED=true

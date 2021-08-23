@@ -73,22 +73,26 @@ git::install-libsecret-credential-helper() {
 }
 
 git::add-credentials-to-gnome-keyring() {
-  local bwItem="${1:-"my"}"
-  local server="${2:-"github.com"}"
+  local bitwardenId="$1"
+  local login="$2"
+  local server="${3:-"github.com"}"
 
-  # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
-  # the login keyring is also available and already initialized properly
-  # I don't know yet how to check for login keyring specifically
-  if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup server "${server}" user "${SOPKA_GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null; then
-      bitwarden::unlock || fail
-
-      # bitwarden-object: "? ? personal access token"
-      NODENV_VERSION=system bw get password "${bwItem} ${server} personal access token" \
-        | secret-tool store --label="Git: https://${server}/" server "${server}" user "${SOPKA_GITHUB_LOGIN}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
-      test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store git credentials"
-    fi
-  else
-    echo "Unable to store git credentials into the gnome keyring, DBUS not found" >&2
+  # I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then the login keyring
+  # is also available and already initialized properly.
+  # I don't know yet how to specifically check for login keyring
+  if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    fail "Unable to store git credentials into the gnome keyring, DBUS not found"
   fi
+
+  if secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null && [ "${SOPKA_UPDATE_SECRETS:-}" != "true" ]; then
+    return 0
+  fi
+
+  bitwarden::unlock || fail
+
+  # bitwarden-object: "?"
+  NODENV_VERSION=system bw get password "${bitwardenId}" \
+    | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+
+  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain or store git credentials"
 }
