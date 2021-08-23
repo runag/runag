@@ -54,7 +54,7 @@ benchmark::actually-run() {
   ) || fail
 }
 
-benchmark::fileio() (
+benchmark::fileio() {
   sysbench fileio prepare ${1:-} >/dev/null || fail
 
   echo "### SEQUENTIAL READ ${1:-} ###"
@@ -84,4 +84,4 @@ benchmark::fileio() (
   sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
   sysbench fileio cleanup >/dev/null || fail
-)
+}
