@@ -95,7 +95,7 @@ mount::cifs() {
   local fstabTag="# cifs mount: ${mountPoint}"
 
   if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
-    builtin printf "${fstabTag}\n${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=0644,dir_mode=0755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee -a /etc/fstab >/dev/null || fail
+    builtin printf "${fstabTag}\n${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=644,dir_mode=755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee -a /etc/fstab >/dev/null || fail
   fi
 
   # other mounts might fail, so we ignore exit status here
