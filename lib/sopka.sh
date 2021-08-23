@@ -17,7 +17,7 @@
 sopka::with-update-secrets() {
   export SOPKA_UPDATE_SECRETS=true
   "$@"
-  test $? = 0 || fail "Error performing $*"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 sopka::update() {

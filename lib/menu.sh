@@ -18,7 +18,7 @@
 
 menu::select-and-run() {
   menu::select-argument-and-run menu::just-run "$@"
-  test $? = 0 || fail "Error performing $*"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 menu::select-argument-and-run() {
@@ -99,5 +99,5 @@ menu::select-argument-and-run() {
 
 menu::just-run() {
   "$@"
-  test $? = 0 || fail "Error performing $*"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }

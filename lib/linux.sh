@@ -130,6 +130,6 @@ linux::with-secure-tmpdir() {
   rmdir "${secureTmpDir}" || fail
 
   if [ "${result}" != 0 ]; then
-    fail "Error performing $* (${result})"
+    fail "Error performing ${1:-"(argument is empty)"} (${result})"
   fi
 }
