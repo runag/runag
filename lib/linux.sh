@@ -109,3 +109,27 @@ linux::get-distributor-id-lowercase() {
   lsb_release --id --short | tr '[:upper:]' '[:lower:]'
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
+
+linux::with-secure-tmpdir() {
+  local secureTmpDir
+  
+  secureTmpDir="$(mktemp -d)" || fail
+
+  # ramfs can't hit on-disk swap, but tmpfs can!
+  sudo mount -t ramfs -o mode=700 ramfs "${secureTmpDir}" || fail
+  sudo chown "${USER}.${USER}" "${secureTmpDir}" || fail
+
+  (
+    export TMPDIR="${secureTmpDir}"
+    "$@"
+  )
+
+  local result=$?
+
+  sudo umount "${secureTmpDir}" || fail
+  rmdir "${secureTmpDir}" || fail
+
+  if [ "${result}" != 0 ]; then
+    fail "Error performing $* (${result})"
+  fi
+}
