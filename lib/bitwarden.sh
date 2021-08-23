@@ -75,7 +75,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
   local outputFile="$2"
   local setUmask="${3:-"077"}"
 
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${outputFile}" ]; then
+  if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
     bitwarden::write-notes-to-file "${item}" "${outputFile}" "${setUmask}" || fail
   fi
 }
@@ -121,7 +121,7 @@ bitwarden::write-password-to-file-if-not-exists() {
   local setUmask="${3:-"077"}"
   local bwdata
 
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${outputFile}" ]; then
+  if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
     bitwarden::unlock || fail
 
     # bitwarden-object: "?"
