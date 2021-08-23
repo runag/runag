@@ -115,7 +115,7 @@ linux::with-secure-tmpdir() {
   
   secureTmpDir="$(mktemp -d)" || fail
 
-  # ramfs can't hit on-disk swap, but tmpfs can!
+  # data in tmpfs can be swapped to disk, data in ramfs can't be swapped so we are using ramfs here
   sudo mount -t ramfs -o mode=700 ramfs "${secureTmpDir}" || fail
   sudo chown "${USER}.${USER}" "${secureTmpDir}" || fail
 
