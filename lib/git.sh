@@ -66,12 +66,11 @@ git::use-libsecret-credential-helper(){
 }
 
 # https://wiki.gnome.org/Projects/Libsecret
-git::install-libsecret-credential-helper() (
+git::install-libsecret-credential-helper() {
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
-    cd /usr/share/doc/git/contrib/credential/libsecret || fail
-    sudo make || fail "Unable to compile libsecret"
+    (cd /usr/share/doc/git/contrib/credential/libsecret && sudo make) || fail "Unable to compile libsecret"
   fi
-)
+}
 
 git::add-credentials-to-gnome-keyring() {
   local bwItem="${1:-"my"}"
