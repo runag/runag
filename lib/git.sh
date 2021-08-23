@@ -43,11 +43,6 @@ git::place-up-to-date-clone() {
   fi
 }
 
-git::configure-user() {
-  git config --global user.name "${SOPKA_GIT_USER_NAME}" || fail
-  git config --global user.email "${SOPKA_GIT_USER_EMAIL}" || fail
-}
-
 git::configure-signingkey() {
   local key="$1"
   git config --global commit.gpgsign true || fail
