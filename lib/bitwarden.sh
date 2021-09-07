@@ -14,6 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+bitwarden::install-cli-via-apt-and-npm() (
+  unset BW_SESSION
+  if ! NODENV_VERSION=system bw --version >/dev/null 2>&1; then
+    apt::lazy-update || fail
+    nodejs::apt::install || fail
+    apt::install jq || fail
+    sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
+  fi
+)
+
 bitwarden::install-cli-with-nodejs() {
   if ! command -v bw >/dev/null; then
     ( 
