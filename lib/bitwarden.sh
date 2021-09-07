@@ -14,32 +14,29 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-bitwarden::install-cli-via-apt-and-npm() (
+bitwarden::snap::install-cli() (
   unset BW_SESSION
-  if ! NODENV_VERSION=system bw --version >/dev/null 2>&1; then
+
+  if ! snap list bw >/dev/null 2>&1; then
+    sudo snap install bw || fail
+  fi
+
+  if ! command -v jq >/dev/null; then
     apt::lazy-update || fail
-    nodejs::apt::install || fail
     apt::install jq || fail
-    sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
   fi
 )
 
-bitwarden::install-cli-with-nodejs() {
-  if ! command -v bw >/dev/null; then
-    ( 
-      unset BW_SESSION
+bitwarden::apt-and-npm::install-cli() (
+  unset BW_SESSION
 
-      # install nodejs & bitwarden
-      apt::lazy-update || fail
-      nodejs::apt::install || fail
-      bitwarden::install-cli || fail
-    ) || fail
+  if ! NODENV_VERSION=system bw --version >/dev/null 2>&1; then
+    apt::lazy-update || fail
+    apt::install jq || fail
+    nodejs::apt::install || fail
+    sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
   fi
-}
-
-bitwarden::install-cli() {
-  sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
-}
+)
 
 bitwarden::install-bitwarden-login-shellrc() {
   file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
