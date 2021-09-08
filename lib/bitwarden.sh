@@ -83,7 +83,7 @@ bitwarden::write-notes-to-file() {
 
   # bitwarden-object: "?"
   bitwarden::unlock || fail
-  local bwdata; bwdata="$(bw get item "${item}")" || fail
+  local bwdata; bwdata="$(bw --nointeraction get item "${item}")" || fail
 
   (
     unset BW_SESSION
@@ -112,7 +112,7 @@ bitwarden::write-password-to-file() {
 
   # bitwarden-object: "?"
   bitwarden::unlock || fail
-  local bwdata; bwdata="$(bw get password "${item}")" || fail
+  local bwdata; bwdata="$(bw --nointeraction get password "${item}")" || fail
 
   (
     unset BW_SESSION
