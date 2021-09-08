@@ -83,9 +83,7 @@ bitwarden::write-notes-to-file() {
     unset BW_SESSION
     umask "${setUmask}" || fail
     builtin printf "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}"
-
-    local savedPipeStatus="${PIPESTATUS[*]}"
-    test "${savedPipeStatus}" = "0 0 0" || fail "bitwarden::write-notes-to-file error ${savedPipeStatus}"
+    test "${PIPESTATUS[*]}" = "0 0 0" || fail
   ) || fail
 }
 
@@ -112,8 +110,6 @@ bitwarden::write-password-to-file() {
     unset BW_SESSION
     umask "${setUmask}" || fail
     builtin printf "${bwdata}" | file::write "${outputFile}"
-
-    local savedPipeStatus="${PIPESTATUS[*]}"
-    test "${savedPipeStatus}" = "0 0" || fail "bitwarden::write-password-to-file error ${savedPipeStatus}"
+    test "${PIPESTATUS[*]}" = "0 0" || fail
   ) || fail
 }
