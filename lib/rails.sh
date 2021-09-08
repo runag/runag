@@ -19,7 +19,7 @@ rails::perhaps-write-master-key-from-bitwarden-if-not-exists() {
 
   if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f config/master.key ]; then
     if [ -n "${SOPKA_BITWARDEN_LOGIN:-}" ]; then
-      NO_NEWLINE=true bitwarden::write-password-to-file-if-not-exists "${bwItem}" "config/master.key" || fail
+      bitwarden::write-password-to-file-if-not-exists "${bwItem}" "config/master.key" || fail
     else
       echo "Please set SOPKA_BITWARDEN_LOGIN environment variable to get Rails master key from Bitwarden" >&2
     fi

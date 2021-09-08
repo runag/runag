@@ -27,17 +27,6 @@ bitwarden::snap::install-cli() (
   fi
 )
 
-bitwarden::apt-and-npm::install-cli() (
-  unset BW_SESSION
-
-  if ! NODENV_VERSION=system bw --version >/dev/null 2>&1; then
-    apt::lazy-update || fail
-    apt::install jq || fail
-    nodejs::apt::install || fail
-    sudo NODENV_VERSION=system npm install -g @bitwarden/cli || fail
-  fi
-)
-
 bitwarden::install-bitwarden-login-shellrc() {
   file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
     export SOPKA_BITWARDEN_LOGIN="${SOPKA_BITWARDEN_LOGIN}"
@@ -91,76 +80,46 @@ bitwarden::write-notes-to-file() {
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"
-  local bwdata
-
-  bitwarden::unlock || fail
 
   # bitwarden-object: "?"
-  if bwdata="$(NODENV_VERSION=system bw get item "${item}")"; then
-    local dirName; dirName="$(dirname "${outputFile}")" || fail
+  bitwarden::unlock || fail
+  local bwdata; bwdata="$(bw get item "${item}")" || fail
 
-    if [ ! -d "${dirName}" ]; then
-      (umask "${setUmask}" && mkdir -p "${dirName}") || fail
-    fi
+  (
+    unset BW_SESSION
+    umask "${setUmask}" || fail
+    builtin printf "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}"
 
-    builtin echo "${bwdata}" | jq '.notes' --raw-output --exit-status | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
     local savedPipeStatus="${PIPESTATUS[*]}"
-
-    if [ "${savedPipeStatus}" = "0 0 0" ]; then
-      if [ ! -s "${outputFile}.tmp" ]; then
-        rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
-        fail "Bitwarden item ${item} expected to have a non-empty note field"
-      fi
-      mv "${outputFile}.tmp" "${outputFile}" || fail "Unable to move temp file to the output file: ${outputFile}.tmp to ${outputFile}"
-    else
-      rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
-      fail "Unable to produce '${outputFile}' (${savedPipeStatus}), bitwarden item '${item}' may not present or have an empty note field"
-    fi
-  else
-    # echo "${bwdata}" >&2
-    fail "Unable to get bitwarden item ${item}"
-  fi
+    test "${savedPipeStatus}" = "0 0 0" || fail "bitwarden::write-notes-to-file error ${savedPipeStatus}"
+  ) || fail
 }
 
 bitwarden::write-password-to-file-if-not-exists() {
   local item="$1"
   local outputFile="$2"
   local setUmask="${3:-"077"}"
-  local bwdata
 
   if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
-    bitwarden::unlock || fail
-
-    # bitwarden-object: "?"
-    if bwdata="$(NODENV_VERSION=system bw get password "${item}")"; then
-      local dirName; dirName="$(dirname "${outputFile}")" || fail
-
-      if [ ! -d "${dirName}" ]; then
-        (umask "${setUmask}" && mkdir -p "${dirName}") || fail
-      fi
-
-      if [ "${NO_NEWLINE:-}" = "true" ]; then
-        local perhapsNoNewline="-n"
-      else
-        local perhapsNoNewline=""
-      fi
-
-      builtin echo ${perhapsNoNewline} "${bwdata}" | (umask "${setUmask}" && tee "${outputFile}.tmp" >/dev/null)
-      local savedPipeStatus="${PIPESTATUS[*]}"
-
-      if [ "${savedPipeStatus}" = "0 0" ]; then
-        if [ ! -s "${outputFile}.tmp" ]; then
-          rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
-          fail "Bitwarden item ${item} expected to have a non-empty note field"
-        fi
-        mv "${outputFile}.tmp" "${outputFile}" || fail "Unable to move temp file to the output file: ${outputFile}.tmp to ${outputFile}"
-      else
-        rm "${outputFile}.tmp" || fail "Unable to remove temp file: ${outputFile}.tmp"
-        fail "Unable to produce '${outputFile}' (${savedPipeStatus}), bitwarden item '${item}' may not present or have an empty note field"
-      fi
-    else
-      # echo "${bwdata}" >&2
-      fail "Unable to get bitwarden password ${item}"
-    fi
+    bitwarden::write-password-to-file "${item}" "${outputFile}" "${setUmask}" || fail
   fi
+}
+
+bitwarden::write-password-to-file() {
+  local item="$1"
+  local outputFile="$2"
+  local setUmask="${3:-"077"}"
+
+  # bitwarden-object: "?"
+  bitwarden::unlock || fail
+  local bwdata; bwdata="$(bw get password "${item}")" || fail
+
+  (
+    unset BW_SESSION
+    umask "${setUmask}" || fail
+    builtin printf "${bwdata}" | file::write "${outputFile}"
+
+    local savedPipeStatus="${PIPESTATUS[*]}"
+    test "${savedPipeStatus}" = "0 0" || fail "bitwarden::write-password-to-file error ${savedPipeStatus}"
+  ) || fail
 }
