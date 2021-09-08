@@ -27,12 +27,6 @@ bitwarden::snap::install-cli() (
   fi
 )
 
-bitwarden::install-bitwarden-login-shellrc() {
-  file::write "${HOME}/.shellrc.d/set-bitwarden-login.sh" <<SHELL || fail
-    export SOPKA_BITWARDEN_LOGIN="${SOPKA_BITWARDEN_LOGIN}"
-SHELL
-}
-
 bitwarden::unlock() {
   if [ -z "${BW_SESSION:-}" ]; then
     # the absence of error handling is intentional here
