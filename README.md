@@ -59,27 +59,11 @@ Possible sopkafile locations are:
 * [vmware](docs/lib/vmware.md)
 * [vscode](docs/lib/vscode.md)
 
-## Bitwarden keys
-
-<!-- # bitwarden-object: see list below -->
-
-```
-"? backup passphrase"
-"? backup storage"
-"? github personal access token"
-"? password for ssh private key"
-"? ssh private key"
-"? ssh public key"
-```
-
 ## Environment variables
 
 ```sh
 # set by bin/sopka for use in scripts
 SOPKA_BIN_PATH="${HOME}/.sopka/bin"
-
-# configuration
-SOPKA_BITWARDEN_LOGIN="hello@example.com"
 
 # internal
 SOPKA_APT_LAZY_UPDATE_HAPPENED=true

@@ -14,24 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ssh::make-home-dot-ssh-dir-if-not-exist() {
-  if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -m 700 "${HOME}/.ssh" || fail
-  fi
-}
-
-ssh::install-keys() {
-  local privateKeyName="$1 ssh private key"
-  local publicKeyName="$1 ssh public key"
-  local fileName="${2:-"id_ed25519"}"
-
-  ssh::make-home-dot-ssh-dir-if-not-exist || fail
-
-  # bitwarden-object: "? ssh private key", "? ssh public key"
-  bitwarden::write-notes-to-file-if-not-exists "${privateKeyName}" "${HOME}/.ssh/${fileName}" "077" || fail
-  bitwarden::write-notes-to-file-if-not-exists "${publicKeyName}" "${HOME}/.ssh/${fileName}.pub" "077" || fail
-}
-
 ssh::get-user-public-key() {
   local fileName="${1:-"id_ed25519"}"
   if [ -r "${HOME}/.ssh/${fileName}.pub" ]; then
@@ -41,53 +23,49 @@ ssh::get-user-public-key() {
   fi
 }
 
-ssh::add-key-password-to-gnome-keyring() {
-  local bwItem="$1"
-  local fileName="${2:-"id_ed25519"}"
-  # There is an indirection here. I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then
-  # the login keyring is also available and already initialized properly
-  # I don't know yet how to check for login keyring specifically
-  if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! secret-tool lookup unique "ssh-store:${HOME}/.ssh/${fileName}" >/dev/null; then
-      bitwarden::unlock || fail
+ssh::gnome-keyring-credentials::exists() {
+  local keyFile="${1:-"id_ed25519"}"
 
-      # bitwarden-object: "? password for ssh private key"
-      NODENV_VERSION=system bw get password "${bwItem} password for ssh private key" \
-        | secret-tool store --label="Unlock password for: ${HOME}/.ssh/${fileName}" unique "ssh-store:${HOME}/.ssh/${fileName}"
-      test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
-    fi
-  else
-    echo "Unable to store ssh key password into the gnome keyring, DBUS not found" >&2
-  fi
+  local keyFilePath="${HOME}/.ssh/${keyFile}"
+
+  secret-tool lookup unique "ssh-store:${keyFilePath}" >/dev/null
 }
 
-ssh::add-key-password-to-macos-keychain() {
-  local bwItem="$1"
-  local fileName="${2:-"id_ed25519"}"
+ssh::gnome-keyring-credentials::save() {
+  local password="$1"
+  local keyFile="${2:-"id_ed25519"}"
 
-  local keyFile="${HOME}/.ssh/${fileName}"
+  local keyFilePath="${HOME}/.ssh/${keyFile}"
 
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! ssh-add -L | grep --quiet --fixed-strings "${keyFile}"; then
-    bitwarden::unlock || fail
-
-    # bitwarden-object: "? password for ssh private key"
-    local password; password="$(NODENV_VERSION=system bw get password "${bwItem} password for ssh private key")" || fail
-
-    local tmpFile; tmpFile="$(mktemp)" || fail
-    chmod 755 "${tmpFile}" || fail
-    builtin printf "#!/usr/bin/env bash\nexec cat\n" >"${tmpFile}" || fail
-
-    # I could not pipe output directly to ssh-add because "bw get password" throws a pipe error in that case
-    echo "${password}" | SSH_ASKPASS="${tmpFile}" DISPLAY=1 ssh-add -K "${keyFile}"
-    test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain and store ssh key password"
-
-    rm "${tmpFile}" || fail
-  else
-    echo "${keyFile} is already in the keychain"
-  fi
+  builtin printf "${password}" | secret-tool store --label="Unlock password for: ${keyFilePath}" unique "ssh-store:${keyFilePath}"
+  test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
-ssh::add-use-macos-keychain-to-config() {
+ssh::macos-keychain::exists() {
+  local keyFile="${1:-"id_ed25519"}"
+
+  local keyFilePath="${HOME}/.ssh/${keyFile}"
+
+  ssh-add -L | grep --quiet --fixed-strings "${keyFilePath}"
+}
+
+ssh::macos-keychain::save() {
+  local password="$1"
+  local keyFile="${2:-"id_ed25519"}"
+
+  local keyFilePath="${HOME}/.ssh/${keyFile}"
+
+  local tmpFile; tmpFile="$(mktemp)" || fail
+  chmod 755 "${tmpFile}" || fail
+  builtin printf "#!/usr/bin/env bash\nexec cat\n" >"${tmpFile}" || fail
+
+  builtin printf "${password}" | SSH_ASKPASS="${tmpFile}" DISPLAY=1 ssh-add -K "${keyFilePath}"
+  test "${PIPESTATUS[*]}" = "0 0" || fail
+
+  rm "${tmpFile}" || fail
+}
+
+ssh::macos-keychain::configure-use-on-all-hosts() {
   local sshConfigFile="${HOME}/.ssh/config"
 
   if [ ! -f "${sshConfigFile}" ]; then
@@ -182,11 +160,13 @@ ssh::call() {
     argString+="$(printf "%q" "${i}") "
   done
 
-  ssh::make-home-dot-ssh-dir-if-not-exist || fail
+  if [ ! -d "${HOME}/.ssh" ]; then
+    mkdir -m 700 "${HOME}/.ssh" || fail
+  fi
 
   ssh \
     -o ControlMaster=auto \
-    -o ControlPath="${HOME}/.ssh/%C.control-socket" \
+    -o ControlPath="${HOME}/.ssh/control-socket-%C" \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
     ${SOPKA_REMOTE_PORT:+-p} ${SOPKA_REMOTE_PORT:+"${SOPKA_REMOTE_PORT}"} \

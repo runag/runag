@@ -13,21 +13,3 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
-rails::perhaps-write-master-key-from-bitwarden-if-not-exists() {
-  local bwItem="$1"
-
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f config/master.key ]; then
-    if [ -n "${SOPKA_BITWARDEN_LOGIN:-}" ]; then
-      bitwarden::write-password-to-file-if-not-exists "${bwItem}" "config/master.key" || fail
-    else
-      echo "Please set SOPKA_BITWARDEN_LOGIN environment variable to get Rails master key from Bitwarden" >&2
-    fi
-  fi
-}
-
-rails::master-key-should-exists() {
-  if [ ! -f config/master.key ]; then
-    fail "config/master.key should exists"
-  fi
-}

@@ -41,20 +41,20 @@ file::sudo-write() {
 
 file::write() {
   local dest="$1"
-  local mode="${2:-}"
+  local setUmask="${2:-}"
 
-  local dirName; dirName="$(dirname "${dest}")" || fail "Unable to get dirName of '${dest}' ($?)"
+  local dirName; dirName="$(dirname "${dest}")" || fail
+  
+  (
+    if [ -n "${setUmask}" ]; then
+      umask "${setUmask}" || fail
+    fi
 
-  mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
+    mkdir -p "${dirName}" || fail
 
-  touch "${dest}" || fail "Unable to touch '${dest}' ($?)"
-
-  if [ -n "${mode}" ]; then
-    chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
-  fi
-
-  cat | tee "${dest}" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '${dest}'"
+    cat | tee "${dest}" >/dev/null
+    test "${PIPESTATUS[*]}" = "0 0" || fail
+  ) || fail
 }
 
 file::append-line-unless-present() {
@@ -73,23 +73,25 @@ file::sudo-append-line-unless-present() {
   fi
 }
 
+mount::cifs::credentials::exists() {
+  local credentialsFile="$1"
+  test -f "${credentialsFile}"
+}
+
+mount::cifs::credentials::save() {
+  local cifsUsername="$1"
+  local cifsPassword="$2"
+  local credentialsFile="$3"
+  local setUmask="${4:-"077"}"
+
+  builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | file::write "${credentialsFile}" "${setUmask}"
+  test "${PIPESTATUS[*]}" = "0 0" || fail
+}
+
 mount::cifs() {
   local serverPath="$1"
   local mountPoint="$2"
-  local bwItem="$3"
   local credentialsFile="$4"
-
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ ! -f "${credentialsFile}" ]; then
-    bitwarden::unlock || fail
-
-    local credentialsFileDir; credentialsFileDir="$(dirname "${credentialsFile}")" || fail
-    (umask 077 && mkdir -p "${credentialsFileDir}") || fail
-
-    # bitwarden-object: "?"
-    local cifsUsername; cifsUsername="$(NODENV_VERSION=system bw get username "${bwItem}")" || fail
-    local cifsPassword; cifsPassword="$(NODENV_VERSION=system bw get password "${bwItem}")" || fail
-    builtin printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | (umask 077 && tee "${credentialsFile}" >/dev/null) || fail
-  fi
 
   mkdir -p "${mountPoint}" || fail
   local fstabTag="# cifs mount: ${mountPoint}"

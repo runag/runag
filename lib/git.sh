@@ -49,17 +49,6 @@ git::configure-signingkey() {
   git config --global user.signingkey "${key}" || fail
 }
 
-git::install-with-libsecret-credential-helper() {
-  apt::install git || fail
-  apt::install-gnome-keyring-and-libsecret || fail
-  git::install-libsecret-credential-helper || fail
-  git::use-libsecret-credential-helper || fail
-}
-
-git::use-libsecret-credential-helper(){
-  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
-}
-
 # https://wiki.gnome.org/Projects/Libsecret
 git::install-libsecret-credential-helper() {
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
@@ -67,27 +56,22 @@ git::install-libsecret-credential-helper() {
   fi
 }
 
-git::add-credentials-to-gnome-keyring() {
-  local bitwardenId="$1"
+git::use-libsecret-credential-helper(){
+  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
+}
+
+git::gnome-keyring-credentials::exists() {
+  local login="$1"
+  local server="${2:-"github.com"}"
+
+  secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null
+}
+
+git::gnome-keyring-credentials::save() {
+  local password="$1"
   local login="$2"
   local server="${3:-"github.com"}"
 
-  # I assume that if there is a DBUS_SESSION_BUS_ADDRESS available then the login keyring
-  # is also available and already initialized properly.
-  # I don't know yet how to specifically check for login keyring
-  if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    fail "Unable to store git credentials into the gnome keyring, DBUS not found"
-  fi
-
-  if secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null && [ "${SOPKA_UPDATE_SECRETS:-}" != "true" ]; then
-    return 0
-  fi
-
-  bitwarden::unlock || fail
-
-  # bitwarden-object: "?"
-  NODENV_VERSION=system bw get password "${bitwardenId}" \
-    | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
-
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to obtain or store git credentials"
+  builtin printf "${password}" | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+  test "${PIPESTATUS[*]}" = "0 0" || fail
 }
