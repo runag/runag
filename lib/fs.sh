@@ -68,7 +68,12 @@ file::append-line-unless-present() {
 file::sudo-append-line-unless-present() {
   local string="$1"
   local file="$2"
-  if sudo test ! -f "${file}" || ! sudo grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
+
+  if ! sudo test -f "${file}"; then
+    fail "File not found: ${file}"
+  fi
+    
+  if ! sudo grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
     echo "${string}" | sudo tee -a "${file}" >/dev/null || fail
   fi
 }
