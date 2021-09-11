@@ -119,7 +119,7 @@ ssh::add-host-to-known-hosts() {
     local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
 
     if [ ! -d "${knownHostsDirname}" ]; then
-      mkdir -m 700 "${knownHostsDirname}" || fail
+      ( umask 077 && mkdir -p "${knownHostsDirname}" ) || fail
     fi
 
     touch "${knownHosts}" || fail
