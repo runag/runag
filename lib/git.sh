@@ -72,6 +72,6 @@ git::gnome-keyring-credentials::save() {
   local login="$2"
   local server="${3:-"github.com"}"
 
-  builtin printf "${password}" | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
+  printf "${password}" | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
