@@ -98,7 +98,7 @@ bitwarden::write-notes-to-file() {
 
   (
     unset BW_SESSION
-    printf "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}" "${setUmask}"
+    echo "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}" "${setUmask}"
     test "${PIPESTATUS[*]}" = "0 0 0" || fail
   ) || fail
 }
@@ -123,7 +123,7 @@ bitwarden::write-password-to-file() {
 
   (
     unset BW_SESSION
-    printf "${bwdata}" | file::write "${outputFile}" "${setUmask}"
+    echo -n "${bwdata}" | file::write "${outputFile}" "${setUmask}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   ) || fail
 }

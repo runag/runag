@@ -37,7 +37,7 @@ ssh::gnome-keyring-credentials::save() {
 
   local keyFilePath="${HOME}/.ssh/${keyFile}"
 
-  printf "${password}" | secret-tool store --label="Unlock password for: ${keyFilePath}" unique "ssh-store:${keyFilePath}"
+  echo -n "${password}" | secret-tool store --label="Unlock password for: ${keyFilePath}" unique "ssh-store:${keyFilePath}"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
@@ -57,9 +57,9 @@ ssh::macos-keychain::save() {
 
   local tmpFile; tmpFile="$(mktemp)" || fail
   chmod 755 "${tmpFile}" || fail
-  printf "#!/usr/bin/env bash\nexec cat\n" >"${tmpFile}" || fail
+  printf "#!/bin/sh\nexec cat\n" >"${tmpFile}" || fail
 
-  printf "${password}" | SSH_ASKPASS="${tmpFile}" DISPLAY=1 ssh-add -K "${keyFilePath}"
+  echo "${password}" | SSH_ASKPASS="${tmpFile}" DISPLAY=1 ssh-add -K "${keyFilePath}"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 
   rm "${tmpFile}" || fail

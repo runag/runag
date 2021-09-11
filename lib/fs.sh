@@ -89,7 +89,7 @@ mount::cifs::credentials::save() {
   local credentialsFile="$3"
   local setUmask="${4:-"077"}"
 
-  printf "username=${cifsUsername}\npassword=${cifsPassword}\n" | file::write "${credentialsFile}" "${setUmask}"
+  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${setUmask}"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
@@ -102,7 +102,8 @@ mount::cifs() {
   local fstabTag="# cifs mount: ${mountPoint}"
 
   if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
-    printf "${fstabTag}\n${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=644,dir_mode=755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10 0 0" | sudo tee -a /etc/fstab >/dev/null || fail
+    echo "${fstabTag}" | sudo tee -a /etc/fstab >/dev/null || fail
+    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=644,dir_mode=755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
   fi
 
   # other mounts might fail, so we ignore exit status here
