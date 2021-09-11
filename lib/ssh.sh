@@ -155,9 +155,9 @@ ssh::call() {
     done
   fi
 
-  local i argString=""
+  local i commandString=""
   for i in "$@"; do
-    argString+="$(printf "%q" "${i}") "
+    commandString+="$(printf "%q" "${i}") "
   done
 
   if [ ! -d "${HOME}/.ssh" ]; then
@@ -172,7 +172,7 @@ ssh::call() {
     ${SOPKA_REMOTE_PORT:+-p} ${SOPKA_REMOTE_PORT:+"${SOPKA_REMOTE_PORT}"} \
     ${SOPKA_REMOTE_USER:+-l} ${SOPKA_REMOTE_USER:+"${SOPKA_REMOTE_USER}"} \
     ${SOPKA_REMOTE_HOST:-} \
-    bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${argString}")" \
+    bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${commandString}")" \
     || return $?
 }
 
