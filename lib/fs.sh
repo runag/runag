@@ -60,7 +60,12 @@ file::write() {
 file::append-line-unless-present() {
   local string="$1"
   local file="$2"
-  if test ! -f "${file}" || ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
+
+  if ! test -f "${file}"; then
+    fail "File not found: ${file}"
+  fi
+
+  if ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
     echo "${string}" | tee -a "${file}" >/dev/null || fail
   fi
 }
