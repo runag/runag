@@ -62,7 +62,7 @@ Possible sopkafile locations are:
 ## Environment variables
 
 ```sh
-# set by bin/sopka for use in scripts
+# set by bin/sopka for use in scripts that you might want to generate
 SOPKA_BIN_PATH="${HOME}/.sopka/bin"
 
 # internal
