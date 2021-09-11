@@ -90,7 +90,7 @@ __xVhMyefCbBnZFUQtwqCs() {
   sopka::add() {
     local packageName="$1"
     local dest; dest="$(echo "${packageName}" | tr "/" "-")" || fail
-    git::place-up-to-date-clone "https://github.com/${packageName}.git" "${HOME}/.sopka/files/github-${dest}" || fail
+    git::place-up-to-date-clone "https://github.com/${packageName}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
   }
 
   git::install-git || fail

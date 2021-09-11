@@ -25,7 +25,7 @@ sopka::update() {
     git -C "${HOME}/.sopka" pull || fail
 
     local fileFolder
-    for fileFolder in "${HOME}"/.sopka/files/*; do
+    for fileFolder in "${HOME}"/.sopka/sopkafiles/*; do
       if [ -d "${fileFolder}/.git" ]; then
         git -C "${fileFolder}" pull || fail
       fi
@@ -36,7 +36,7 @@ sopka::update() {
 sopka::add() {
   local packageId="$1"
   local dest; dest="$(echo "${packageId}" | tr "/" "-")" || fail
-  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/files/github-${dest}" || fail
+  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
 }
 
 sopka::add-menu-item() {

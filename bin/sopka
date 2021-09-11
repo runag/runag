@@ -74,7 +74,7 @@ sopka::load-index() {
 # ~/.sopkafile
 # ~/.sopkafile/index.sh
 #
-# ~/.sopka/files/*/index.sh
+# ~/.sopka/sopkafiles/*/index.sh
 #
 sopka::load-sopkafile() {
   if [ -f "./sopkafile" ]; then
@@ -87,7 +87,7 @@ sopka::load-sopkafile() {
     . "${HOME:-}/.sopkafile/index.sh" || fail
   else
     local filePath fileFound=false
-    for filePath in "${HOME}"/.sopka/files/*/index.sh; do
+    for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
       if [ -f "${filePath}" ]; then
         . "${filePath}" || fail
         fileFound=true

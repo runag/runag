@@ -25,7 +25,7 @@ Possible sopkafile locations are:
 ~/.sopkafile
 ~/.sopkafile/index.sh
 
-~/.sopka/files/*/index.sh
+~/.sopka/sopkafiles/*/index.sh
 ```
 
 ## API docs
