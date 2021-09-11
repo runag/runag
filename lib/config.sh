@@ -21,18 +21,10 @@ config::install() {
   if [ -f "${dst}" ]; then
     config::merge "${src}" "${dst}" || fail
   else
-    local currentUserId; currentUserId="$(id -u)" || fail
-    local currentGroupId; currentGroupId="$(id -g)" || fail
+    local dirName; dirName="$(dirname "${dst}")" || fail
+    mkdir -p "${dirName}" || fail
 
-    local dirName; dirName="$(dirname "${dst}")" || fail "Unable to get dirName of '${dst}' ($?)"
-
-    mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
-
-    cp "${src}" "${dst}" || fail "Unable to copy config from '${src}' to '${dst}' ($?)"
-
-    chmod 0644 "${dst}" || fail "Unable to chmod '${dst}' ($?)"
-
-    chown "${currentUserId}:${currentGroupId}" "${dst}" || fail "Unable to chown ${currentUserId}:${currentGroupId} ${dst} ($?)"
+    cp "${src}" "${dst}" || fail
   fi
 }
 
