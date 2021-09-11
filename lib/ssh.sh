@@ -176,6 +176,6 @@ ssh::call() {
     || return $?
 }
 
-ssh::disable-password-authentication() {
+sshd::disable-password-authentication() {
   echo "PasswordAuthentication no" | file::sudo-write "/etc/ssh/sshd_config.d/disable-password-authentication.conf" || fail
 }
