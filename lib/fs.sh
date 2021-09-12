@@ -14,40 +14,37 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# TODO: chown/chmod first and then write
-
 file::sudo-write() {
   local dest="$1"
-  local mode="${2:-}"
+  local umaskValue="${2:-}"
   local ownerAndGroup="${3:-}"
 
-  local dirName; dirName="$(dirname "${dest}")" || fail "Unable to get dirName of '${dest}' ($?)"
+  local dirName; dirName="$(dirname "${dest}")" || fail
 
-  sudo mkdir -p "${dirName}" || fail "Unable to mkdir -p '${dirName}' ($?)"
-
-  sudo touch "${dest}" || fail "Unable to touch '${dest}' ($?)"
-
-  if [ -n "${mode}" ]; then
-    sudo chmod "${mode}" "${dest}" || fail "Unable to chmod '${dest}' ($?)"
+  if [ -n "${umaskValue}" ]; then
+    sudo sh -c "$(printf "umask %q && mkdir -p %q && touch %q" "${umaskValue}" "${dirName}" "${dest}")" || fail
+  else
+    sudo mkdir -p "${dirName}" || fail
+    sudo touch "${dest}" || fail
   fi
 
   if [ -n "${ownerAndGroup}" ]; then
-    sudo chown "${ownerAndGroup}" "${dest}" || fail "Unable to chown '${dest}' ($?)"
+    sudo chown "${ownerAndGroup}" "${dest}" || fail
   fi
 
   cat | sudo tee "${dest}" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to cat or write to '${dest}'"
+  test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
 file::write() {
   local dest="$1"
-  local setUmask="${2:-}"
+  local umaskValue="${2:-}"
 
   local dirName; dirName="$(dirname "${dest}")" || fail
   
   (
-    if [ -n "${setUmask}" ]; then
-      umask "${setUmask}" || fail
+    if [ -n "${umaskValue}" ]; then
+      umask "${umaskValue}" || fail
     fi
 
     mkdir -p "${dirName}" || fail
@@ -92,9 +89,9 @@ mount::cifs::credentials::save() {
   local cifsUsername="$1"
   local cifsPassword="$2"
   local credentialsFile="$3"
-  local setUmask="${4:-"077"}"
+  local umaskValue="${4:-"077"}"
 
-  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${setUmask}"
+  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${umaskValue}"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 

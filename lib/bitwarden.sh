@@ -81,24 +81,24 @@ bitwarden::unlock-and-sync() {
 bitwarden::write-notes-to-file-if-not-exists() {
   local bitwardenObjectId="$1"
   local outputFile="$2"
-  local setUmask="${3:-"077"}"
+  local umaskValue="${3:-"077"}"
 
   if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
-    bitwarden::write-notes-to-file "${bitwardenObjectId}" "${outputFile}" "${setUmask}" || fail
+    bitwarden::write-notes-to-file "${bitwardenObjectId}" "${outputFile}" "${umaskValue}" || fail
   fi
 }
 
 bitwarden::write-notes-to-file() {
   local bitwardenObjectId="$1"
   local outputFile="$2"
-  local setUmask="${3:-"077"}"
+  local umaskValue="${3:-"077"}"
 
   bitwarden::unlock-and-sync || fail
   local bwdata; bwdata="$(bw --nointeraction get item "${bitwardenObjectId}")" || fail
 
   (
     unset BW_SESSION
-    echo "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}" "${setUmask}"
+    echo "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}" "${umaskValue}"
     test "${PIPESTATUS[*]}" = "0 0 0" || fail
   ) || fail
 }
@@ -106,24 +106,24 @@ bitwarden::write-notes-to-file() {
 bitwarden::write-password-to-file-if-not-exists() {
   local bitwardenObjectId="$1"
   local outputFile="$2"
-  local setUmask="${3:-"077"}"
+  local umaskValue="${3:-"077"}"
 
   if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
-    bitwarden::write-password-to-file "${bitwardenObjectId}" "${outputFile}" "${setUmask}" || fail
+    bitwarden::write-password-to-file "${bitwardenObjectId}" "${outputFile}" "${umaskValue}" || fail
   fi
 }
 
 bitwarden::write-password-to-file() {
   local bitwardenObjectId="$1"
   local outputFile="$2"
-  local setUmask="${3:-"077"}"
+  local umaskValue="${3:-"077"}"
 
   bitwarden::unlock-and-sync || fail
   local bwdata; bwdata="$(bw --nointeraction get password "${bitwardenObjectId}")" || fail
 
   (
     unset BW_SESSION
-    echo -n "${bwdata}" | file::write "${outputFile}" "${setUmask}"
+    echo -n "${bwdata}" | file::write "${outputFile}" "${umaskValue}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   ) || fail
 }
