@@ -20,6 +20,10 @@ shell::fail-unless-command-is-found() {
   done
 }
 
+shell::display-elapsed-time() {
+  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
+}
+
 shell::install-shellrc-directory-loader() {
   local shellrcFile="$1"
   local rcDir="${HOME}/.shellrc.d"
