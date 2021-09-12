@@ -16,20 +16,17 @@
 
 file::sudo-write() {
   local dest="$1"
-  local umaskValue="${2:-}"
-  local ownerAndGroup="${3:-}"
+  local mode="${2:-}"
+  local ownerAndMaybeGroup="${3:-}"
 
-  local dirName; dirName="$(dirname "${dest}")" || fail
+  sudo touch "${dest}" || fail
 
-  if [ -n "${umaskValue}" ]; then
-    sudo sh -c "$(printf "umask %q && mkdir -p %q && touch %q" "${umaskValue}" "${dirName}" "${dest}")" || fail
-  else
-    sudo mkdir -p "${dirName}" || fail
-    sudo touch "${dest}" || fail
+  if [ -n "${mode}" ]; then
+    sudo chmod "${mode}" "${dest}" || fail
   fi
 
-  if [ -n "${ownerAndGroup}" ]; then
-    sudo chown "${ownerAndGroup}" "${dest}" || fail
+  if [ -n "${ownerAndMaybeGroup}" ]; then
+    sudo chown "${ownerAndMaybeGroup}" "${dest}" || fail
   fi
 
   cat | sudo tee "${dest}" >/dev/null
