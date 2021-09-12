@@ -53,15 +53,13 @@ tailscale::issue-2541-workaround() {
 }
 
 tailscale::install-issue-2541-workaround() {
-  file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround <<EOF || fail
+  file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround 755 <<EOF || fail
 #!/usr/bin/env bash
 $(sopka::print-license)
 $(declare -f fail)
 $(declare -f tailscale::issue-2541-workaround)
 tailscale::issue-2541-workaround || fail
 EOF
-
-  sudo chmod 755 /usr/local/bin/tailscale-issue-2541-workaround || fail
 
   file::sudo-write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || fail
 [Unit]
