@@ -43,7 +43,7 @@ linux::dangerously-set-hostname() {
 
   file::sudo-append-line-unless-present "127.0.1.1	${hostname}" "${hostsFile}.sopka-new" || fail
 
-  sudo cp "${hostsFile}" "${hostsFile}.sopka-backup" || fail
+  sudo cp "${hostsFile}" "${hostsFile}.before-sopka-changes" || fail
   sudo mv "${hostsFile}.sopka-new" "${hostsFile}" || fail
 }
 
