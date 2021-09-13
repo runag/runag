@@ -72,7 +72,7 @@ file::append-line-unless-present() {
     fail "File not found: ${file}"
   fi
 
-  if ! grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
+  if ! grep -qFx "${string}" "${file}"; then
     echo "${string}" | tee -a "${file}" >/dev/null || fail
   fi
 }
@@ -85,7 +85,7 @@ file::sudo-append-line-unless-present() {
     fail "File not found: ${file}"
   fi
     
-  if ! sudo grep --quiet --fixed-strings --line-regexp "${string}" "${file}"; then
+  if ! sudo grep -qFx "${string}" "${file}"; then
     echo "${string}" | sudo tee -a "${file}" >/dev/null || fail
   fi
 }
@@ -113,7 +113,7 @@ mount::cifs() {
   mkdir -p "${mountPoint}" || fail
   local fstabTag="# cifs mount: ${mountPoint}"
 
-  if ! grep --quiet --fixed-strings --line-regexp "${fstabTag}" /etc/fstab; then
+  if ! grep -qFx "${fstabTag}" /etc/fstab; then
     echo "${fstabTag}" | sudo tee -a /etc/fstab >/dev/null || fail
     echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=644,dir_mode=755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
   fi

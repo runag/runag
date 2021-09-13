@@ -37,7 +37,7 @@ linux::dangerously-set-hostname() {
   sudo hostnamectl set-hostname "${hostname}" || fail
 
   if [ -f "${hostsFile}" ]; then
-    grep --invert-match --line-regexp --extended-regexp "[[:blank:]]*127.0.1.1[[:blank:]]+${previousNameEscaped}[[:blank:]]*" "${hostsFile}" | sudo tee "${hostsFile}.sopka-new" >/dev/null
+    grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previousNameEscaped}[[:blank:]]*" "${hostsFile}" | sudo tee "${hostsFile}.sopka-new" >/dev/null
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
 
@@ -83,7 +83,7 @@ linux::display-if-restart-required() {
 
 linux::is-bare-metal() {
   # "hostnamectl status" could also be used to detect that we are running insde the vm
-  ! grep --quiet "^flags.*:.*hypervisor" /proc/cpuinfo
+  ! grep -q "^flags.*:.*hypervisor" /proc/cpuinfo
 }
 
 linux::add-user() {

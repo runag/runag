@@ -45,7 +45,7 @@ tailscale::is-logged-out() {
 
 tailscale::issue-2541-workaround() {
   if ip address show tailscale0; then
-    if ! ip address show tailscale0 | grep --quiet --fixed-strings "inet"; then
+    if ! ip address show tailscale0 | grep -qF "inet"; then
       echo "tailscale::issue-2541-workaround: about to restart tailscaled"
       sudo systemctl restart tailscaled || fail
     fi

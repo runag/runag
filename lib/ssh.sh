@@ -46,7 +46,7 @@ ssh::macos-keychain::exists() {
 
   local keyFilePath="${HOME}/.ssh/${keyFile}"
 
-  ssh-add -L | grep --quiet --fixed-strings "${keyFilePath}"
+  ssh-add -L | grep -qF "${keyFilePath}"
 }
 
 ssh::macos-keychain::save() {
@@ -72,7 +72,7 @@ ssh::macos-keychain::configure-use-on-all-hosts() {
     touch "${sshConfigFile}" || fail
   fi
 
-  if ! grep --quiet "^# Use keychain" "${sshConfigFile}"; then
+  if ! grep -q "^# Use keychain" "${sshConfigFile}"; then
 tee -a "${sshConfigFile}" <<SHELL || fail "Unable to append to the file: ${sshConfigFile}"
 
 # Use keychain

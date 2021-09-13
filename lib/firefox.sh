@@ -19,7 +19,7 @@ firefox::enable-wayland() {
 
   touch "${pamFile}" || fail
 
-  if ! grep --quiet "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
+  if ! grep -q "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
     echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || fail
   fi
 }
@@ -35,7 +35,7 @@ firefox::set-pref() {
   for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
     if [ -d "${profileFolder}" ]; then
       prefsFile="${profileFolder}/prefs.js"
-      if ! grep --quiet --fixed-strings --line-regexp "${prefsLine}" "${prefsFile}"; then
+      if ! grep -qFx "${prefsLine}" "${prefsFile}"; then
         echo "${prefsLine}" >>"${prefsFile}" || fail
       fi
     fi
