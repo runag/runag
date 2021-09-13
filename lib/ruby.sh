@@ -47,7 +47,11 @@ ruby::install-rbenv-repositories() {
 }
 
 ruby::install-rbenv-shellrc() {
-  local output="${1:-"${HOME}/.shellrc.d"}/rbenv.sh" 
+  if [ -n "${1:-}" ]; then
+    local output="$1"
+  else
+    local output; output="$(shell::get-shellrc-filename "rbenv")" || fail
+  fi
 
   local opensslLine=""
   if [[ "${OSTYPE}" =~ ^darwin ]] && command -v brew >/dev/null; then
@@ -55,7 +59,7 @@ ruby::install-rbenv-shellrc() {
     opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
 
-  file::write "${output}" <<SHELL || fail
+  cat <<SHELL >"${output}" || fail
 $(sopka::print-license)
 
 if [ -d "\${HOME}/.rbenv/bin" ]; then
@@ -76,9 +80,7 @@ SHELL
 }
 
 ruby::load-rbenv() {
-  local rbenvShellrc="${HOME}/.shellrc.d/rbenv.sh"
-
-  . "${rbenvShellrc}" || fail
+  shell::load-shellrc "rbenv" || fail
   rbenv rehash || fail
 }
 

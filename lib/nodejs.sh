@@ -62,9 +62,13 @@ nodejs::install-nodenv-repositories() {
 }
 
 nodejs::install-nodenv-shellrc() {
-  local output="${1:-"${HOME}/.shellrc.d"}/nodenv.sh"
+  if [ -n "${1:-}" ]; then
+    local output="$1"
+  else
+    local output; output="$(shell::get-shellrc-filename "nodenv")" || fail
+  fi
 
-  file::write "${output}" <<SHELL || fail
+  cat <<SHELL >"${output}" || fail
 $(sopka::print-license)
 
 if [ -d "\${HOME}/.nodenv/bin" ]; then
@@ -83,9 +87,7 @@ SHELL
 }
 
 nodejs::load-nodenv() {
-  local nodenvShellrc="${HOME}/.shellrc.d/nodenv.sh"
-
-  . "${nodenvShellrc}" || fail
+  shell::load-shellrc "nodenv" || fail
   nodenv rehash || fail
 }
 

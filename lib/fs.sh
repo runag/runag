@@ -14,6 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+dir::make-if-not-exists() {
+  local dirPath="$1"
+  local mode="${2:-}"
+
+  if [ ! -d "${dirPath}" ]; then
+    mkdir "${dirPath}" || fail
+  fi
+
+  if [ -n "${mode}" ]; then
+    chmod "${mode}" "${dirPath}" || fail
+  fi
+}
+
 file::sudo-write() {
   local dest="$1"
   local mode="${2:-}"

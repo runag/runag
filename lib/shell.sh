@@ -14,30 +14,29 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+shell::display-elapsed-time() {
+  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
+}
+
 shell::fail-unless-command-is-found() {
   for cmd in "$@"; do
     command -v "${cmd}" >/dev/null || fail "${cmd} command is not found"
   done
 }
 
-shell::display-elapsed-time() {
-  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
 shell::install-shellrc-directory-loader() {
   local shellrcFile="$1"
-  local rcDir="${HOME}/.shellrc.d"
 
-  if [ ! -d "${rcDir}" ]; then
-    mkdir -p "${rcDir}" || fail "Unable to create the directory: ${rcDir}"
-  fi
+  local shellrcDir="${HOME}/.shellrc.d"
+
+  dir::make-if-not-exists "${shellrcDir}" || fail
 
   if [ ! -f "${shellrcFile}" ]; then
     touch "${shellrcFile}" || fail
   fi
 
-  if ! grep --quiet "^# shellrc\\.d loader" "${shellrcFile}"; then
-    cat <<SHELL >>"${shellrcFile}" || fail "Unable to append to the file: ${shellrcFile}"
+  if ! grep -Fxq "# shellrc.d loader" "${shellrcFile}"; then
+    cat <<SHELL >>"${shellrcFile}" || fail
 
 # shellrc.d loader
 if [ -d "\${HOME}"/.shellrc.d ]; then
@@ -52,8 +51,34 @@ SHELL
   fi
 }
 
+shell::get-shellrc-filename() {
+  local name="$1"
+
+  local shellrcDir="${HOME}/.shellrc.d"
+
+  dir::make-if-not-exists "${shellrcDir}" || fail
+  echo "${shellrcDir}/${name}.sh" || fail
+}
+
+shell::write-shellrc() {
+  local name="$1"
+
+  local shellrcDir="${HOME}/.shellrc.d"
+
+  dir::make-if-not-exists "${shellrcDir}" || fail
+  cat >"${shellrcDir}/${name}.sh" || fail
+}
+
+shell::load-shellrc() {
+  local name="$1"
+
+  local shellrcDir="${HOME}/.shellrc.d"
+
+  . "${shellrcDir}/${name}.sh" || fail
+}
+
 shell::install-sopka-path-shellrc() {
-  file::write "${HOME}/.shellrc.d/sopka-path.sh" <<SHELL || fail
+  shell::write-shellrc "sopka-path" <<SHELL || fail
     if [ -d "\${HOME}/.sopka/bin" ]; then
       export PATH="\${HOME}/.sopka/bin:\${PATH}"
     fi
@@ -61,7 +86,7 @@ SHELL
 }
 
 shell::install-direnv-loader-shellrc() {
-  file::write "${HOME}/.shellrc.d/hook-direnv.sh" <<SHELL || fail
+  shell::write-shellrc "hook-direnv" <<SHELL || fail
     if command -v direnv >/dev/null; then
       export DIRENV_LOG_FORMAT=""
       if [ -n "\${ZSH_VERSION:-}" ]; then
@@ -74,7 +99,7 @@ SHELL
 }
 
 shell::install-nano-editor-shellrc() {
-  file::write "${HOME}/.shellrc.d/use-nano-editor.sh" <<SHELL || fail
+  shell::write-shellrc "use-nano-editor" <<SHELL || fail
     if [ -z "\${EDITOR:-}" ]; then
       if command -v nano >/dev/null; then
         export EDITOR="\$(command -v nano)"
