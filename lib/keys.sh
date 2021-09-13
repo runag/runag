@@ -39,11 +39,11 @@ keys::install-gpg-key() {
 keys::install-decrypted-file() {
   local sourcePath="$1"
   local destPath="$2"
-  local umaskValue="${3:-}"
+  local mode="${3:-"600"}"
 
   if [ ! -f "${destPath}" ]; then
     keys::ensure-key-is-available "${sourcePath}" || fail
-    gpg --decrypt "${sourcePath}" | file::write "${destPath}" "${umaskValue}"
+    gpg --decrypt "${sourcePath}" | file::write "${destPath}" "${mode}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
 }

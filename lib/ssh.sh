@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+ssh::make-user-config-directory-if-not-exists() {
+  dir::make-if-not-exists "${HOME}/.ssh" 700 || fail
+}
+
 ssh::get-user-public-key() {
   local fileName="${1:-"id_ed25519"}"
   if [ -r "${HOME}/.ssh/${fileName}.pub" ]; then
@@ -159,9 +163,7 @@ ssh::call() {
     commandString+="$(printf "%q" "${i}") "
   done
 
-  if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -m 700 "${HOME}/.ssh" || fail
-  fi
+  ssh::make-user-config-directory-if-not-exists || fail
 
   ssh \
     -o ControlMaster=auto \

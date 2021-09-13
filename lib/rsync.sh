@@ -38,9 +38,7 @@ rsync::transfer() {
 rsync::remote() {
   local rshOption
 
-  if [ ! -d "${HOME}/.ssh" ]; then
-    mkdir -m 700 "${HOME}/.ssh" || fail
-  fi
+  ssh::make-user-config-directory-if-not-exists || fail
 
   rshOption="ssh \
     -o ControlMaster=auto \

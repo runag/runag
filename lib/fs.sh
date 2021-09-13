@@ -19,10 +19,13 @@ dir::make-if-not-exists() {
   local mode="${2:-}"
 
   if [ ! -d "${dirPath}" ]; then
-    mkdir "${dirPath}" || fail
-  fi
-
-  if [ -n "${mode}" ]; then
+    # hello, race condition! I dont want to use "mkdir -p" nor "install -d" here cause parent directories they create will lack proper mode
+    if [ -n "${mode}" ]; then
+      mkdir -m "${mode}" "${dirPath}" || fail
+    else
+      mkdir "${dirPath}" || fail
+    fi
+  elif [ -n "${mode}" ]; then
     chmod "${mode}" "${dirPath}" || fail
   fi
 }
@@ -48,20 +51,17 @@ file::sudo-write() {
 
 file::write() {
   local dest="$1"
-  local umaskValue="${2:-}"
+  local mode="${2:-}"
 
-  local dirName; dirName="$(dirname "${dest}")" || fail
-  
-  (
-    if [ -n "${umaskValue}" ]; then
-      umask "${umaskValue}" || fail
-    fi
+  if [ -n "${mode}" ]; then
+    # I want to create a file with the right mode right away
+    # the use of "install" command performs that, at least on linux and macos
+    # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
+    # it's probably better to make it different, like calculate umask and then touch, but I don't have time to think about that right now
+    install -m "${mode}" /dev/null "${dest}" || fail
+  fi
 
-    mkdir -p "${dirName}" || fail
-
-    cat | tee "${dest}" >/dev/null
-    test "${PIPESTATUS[*]}" = "0 0" || fail
-  ) || fail
+  cat >"${dest}" || fail
 }
 
 file::append-line-unless-present() {
@@ -99,9 +99,9 @@ mount::cifs::credentials::save() {
   local cifsUsername="$1"
   local cifsPassword="$2"
   local credentialsFile="$3"
-  local umaskValue="${4:-"077"}"
-
-  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${umaskValue}"
+  local mode="${4:-"600"}"
+  
+  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${mode}"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
