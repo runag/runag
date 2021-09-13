@@ -119,11 +119,10 @@ ssh::add-host-to-known-hosts() {
     local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
 
     if [ ! -d "${knownHostsDirname}" ]; then
-      ( umask 077 && mkdir -p "${knownHostsDirname}" ) || fail
+      (umask 077 && mkdir "${knownHostsDirname}") || fail
     fi
 
-    touch "${knownHosts}" || fail
-    chmod 644 "${knownHosts}" || fail
+    (umask 133 && touch "${knownHosts}") || fail
   fi
 
   if [ "${sshPort}" = "22" ]; then
