@@ -25,6 +25,20 @@ dir::make-if-not-exists() {
     else
       mkdir "${dirPath}" || fail
     fi
+  fi
+}
+
+dir::make-if-not-exists-but-chmod-anyway() {
+  local dirPath="$1"
+  local mode="${2:-}"
+
+  if [ ! -d "${dirPath}" ]; then
+    # hello, race condition! I dont want to use "mkdir -p" nor "install -d" here cause parent directories they create will lack proper mode
+    if [ -n "${mode}" ]; then
+      mkdir -m "${mode}" "${dirPath}" || fail
+    else
+      mkdir "${dirPath}" || fail
+    fi
   elif [ -n "${mode}" ]; then
     chmod "${mode}" "${dirPath}" || fail
   fi
