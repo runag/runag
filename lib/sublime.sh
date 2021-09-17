@@ -22,13 +22,21 @@ sublime::apt::install-merge-and-text() {
 }
 
 sublime::get-config-path() {
+  local configPath
+
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    echo "${HOME}/Library/Application Support/Sublime Text 3"
+    configPath="${HOME}/Library/Application Support/Sublime Text 3"
+
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    echo "${APPDATA}/Sublime Text 3"
+    configPath="${APPDATA}/Sublime Text 3"
+
   else
-    echo "${HOME}/.config/sublime-text-3"
+    dir::make-if-not-exists "${HOME}/.config" 755 || fail
+    configPath="${HOME}/.config/sublime-text-3"
   fi
+
+  dir::make-if-not-exists "${configPath}" 755 || fail
+  echo "${configPath}"
 }
 
 sublime::install-package-control() {
@@ -37,26 +45,33 @@ sublime::install-package-control() {
   local packageControlPackage="${installedPackages}/Package Control.sublime-package"
 
   if [ ! -f "${packageControlPackage}" ]; then
-    mkdir -p "${installedPackages}" || fail "Unable to create directory ${installedPackages} ($?)"
+    dir::make-if-not-exists "${installedPackages}" 755 || fail
 
-    curl --fail --silent --show-error "https://packagecontrol.io/Package%20Control.sublime-package" --output "${packageControlPackage}.tmp" || fail "Unable to download https://packagecontrol.io/Package%20Control.sublime-package ($?)"
+    local url="https://packagecontrol.io/Package%20Control.sublime-package"
 
-    mv "${packageControlPackage}.tmp" "${packageControlPackage}" || fail "Unable to rename temp file to ${packageControlPackage}"
+    curl --fail --silent --show-error "${url}" --output "${packageControlPackage}.download-tmp" || fail "Unable to download ${url} ($?)"
+
+    mv "${packageControlPackage}.download-tmp" "${packageControlPackage}" || fail
   fi
 }
 
 sublime::install-config-file() {
   local srcPath="$1"
+
   local fileName; fileName="$(basename "${srcPath}")" || fail
   local configPath; configPath="$(sublime::get-config-path)" || fail
 
-  config::install "$1" "${configPath}/Packages/User/${fileName}" || fail
+  dir::make-if-not-exists "${configPath}/Packages" 755 || fail
+  dir::make-if-not-exists "${configPath}/Packages/User" 755 || fail
+
+  config::install "${srcPath}" "${configPath}/Packages/User/${fileName}" || fail
 }
 
 sublime::merge-config-file() {
   local srcPath="$1"
+  
   local fileName; fileName="$(basename "${srcPath}")" || fail
   local configPath; configPath="$(sublime::get-config-path)" || fail
 
-  config::merge "$1" "${configPath}/Packages/User/${fileName}" || fail
+  config::merge "${srcPath}" "${configPath}/Packages/User/${fileName}" || fail
 }

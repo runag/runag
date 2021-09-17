@@ -19,13 +19,21 @@ vscode::snap::install() {
 }
 
 vscode::get-config-path() {
+  local configPath
+
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    echo "${HOME}/Library/Application Support/Code"
+    configPath="${HOME}/Library/Application Support/Code"
+
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    echo "${APPDATA}/Code"
+    configPath="${APPDATA}/Code"
+
   else
-    echo "${HOME}/.config/Code"
+    dir::make-if-not-exists "${HOME}/.config" 755 || fail
+    configPath="${HOME}/.config/Code"
   fi
+
+  dir::make-if-not-exists "${configPath}" 755 || fail
+  echo "${configPath}"
 }
 
 vscode::list-extensions-to-temp-file() {

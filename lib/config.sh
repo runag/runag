@@ -21,9 +21,6 @@ config::install() {
   if [ -f "${dst}" ]; then
     config::merge "${src}" "${dst}" || fail
   else
-    local dirName; dirName="$(dirname "${dst}")" || fail
-    mkdir -p "${dirName}" || fail
-
     cp "${src}" "${dst}" || fail
   fi
 }
