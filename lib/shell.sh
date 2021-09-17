@@ -29,7 +29,7 @@ shell::install-shellrc-directory-loader() {
 
   local shellrcDir="${HOME}/.shellrc.d"
 
-  dir::make-if-not-exists "${shellrcDir}" || fail
+  dir::make-if-not-exists "${shellrcDir}" 755 || fail
 
   if [ ! -f "${shellrcFile}" ]; then
     touch "${shellrcFile}" || fail
@@ -56,7 +56,7 @@ shell::get-shellrc-filename() {
 
   local shellrcDir="${HOME}/.shellrc.d"
 
-  dir::make-if-not-exists "${shellrcDir}" || fail
+  dir::make-if-not-exists "${shellrcDir}" 755 || fail
   echo "${shellrcDir}/${name}.sh" || fail
 }
 
@@ -65,7 +65,7 @@ shell::write-shellrc() {
 
   local shellrcDir="${HOME}/.shellrc.d"
 
-  dir::make-if-not-exists "${shellrcDir}" || fail
+  dir::make-if-not-exists "${shellrcDir}" 755 || fail
   cat >"${shellrcDir}/${name}.sh" || fail
 }
 

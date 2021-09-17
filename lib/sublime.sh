@@ -35,7 +35,7 @@ sublime::get-config-path() {
     configPath="${HOME}/.config/sublime-text-3"
   fi
 
-  dir::make-if-not-exists "${configPath}" 755 || fail
+  dir::make-if-not-exists "${configPath}" 700 || fail
   echo "${configPath}"
 }
 
@@ -45,7 +45,7 @@ sublime::install-package-control() {
   local packageControlPackage="${installedPackages}/Package Control.sublime-package"
 
   if [ ! -f "${packageControlPackage}" ]; then
-    dir::make-if-not-exists "${installedPackages}" 755 || fail
+    dir::make-if-not-exists "${installedPackages}" 700 || fail
 
     local url="https://packagecontrol.io/Package%20Control.sublime-package"
 
@@ -61,8 +61,8 @@ sublime::install-config-file() {
   local fileName; fileName="$(basename "${srcPath}")" || fail
   local configPath; configPath="$(sublime::get-config-path)" || fail
 
-  dir::make-if-not-exists "${configPath}/Packages" 755 || fail
-  dir::make-if-not-exists "${configPath}/Packages/User" 755 || fail
+  dir::make-if-not-exists "${configPath}/Packages" 700 || fail
+  dir::make-if-not-exists "${configPath}/Packages/User" 700 || fail
 
   config::install "${srcPath}" "${configPath}/Packages/User/${fileName}" || fail
 }

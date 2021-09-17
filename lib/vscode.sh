@@ -32,7 +32,7 @@ vscode::get-config-path() {
     configPath="${HOME}/.config/Code"
   fi
 
-  dir::make-if-not-exists "${configPath}" 755 || fail
+  dir::make-if-not-exists "${configPath}" 700 || fail
   echo "${configPath}"
 }
 
