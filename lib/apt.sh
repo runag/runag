@@ -31,22 +31,22 @@ apt::lazy-update-and-dist-upgrade() {
 # @description Perform apt update
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get -o Acquire::ForceIPv4=true update || fail "Unable to apt-get update ($?)"
+  sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail "Unable to apt-get update ($?)"
 }
 
 # @description Perform apt dist-upgrade
 apt::dist-upgrade() {
-  sudo apt-get -o Acquire::ForceIPv4=true -y dist-upgrade || fail "Unable to apt-get dist-upgrade ($?)"
+  sudo apt-get -qq -y -o Acquire::ForceIPv4=true dist-upgrade || fail "Unable to apt-get dist-upgrade ($?)"
 }
 
 # @description Install package
 apt::install() {
-  sudo apt-get install -o Acquire::ForceIPv4=true -y "$@" || fail "Unable to apt-get install $* ($?)"
+  sudo apt-get -qq -y -o Acquire::ForceIPv4=true install "$@" || fail "Unable to apt-get install $* ($?)"
 }
 
 # @description Perform apt autoremove
 apt::autoremove() {
-  sudo apt-get -o Acquire::ForceIPv4=true -y autoremove || fail "Unable to apt-get autoremove ($?)"
+  sudo apt-get -qq -y -o Acquire::ForceIPv4=true autoremove || fail "Unable to apt-get autoremove ($?)"
 }
 
 # @description Add apt source and key
@@ -66,7 +66,7 @@ apt::add-key-and-source() {
   curl --fail --silent --show-error "${keyUrl}" | sudo apt-key add -
   test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to get key from ${keyUrl} or import in into apt"
 
-  echo "${sourceString}" | sudo tee "${sourceFile}" || fail "Unable to write apt source into the ${sourceFile}"
+  echo "${sourceString}" | sudo tee "${sourceFile}" >/dev/null || fail "Unable to write apt source into the ${sourceFile}"
 }
 
 # gnome-keyring and libsecret (for git and ssh)
