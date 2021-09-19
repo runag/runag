@@ -57,7 +57,7 @@ nodejs::install-nodenv-repositories() {
 
   git::place-up-to-date-clone "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || fail
 
-  mkdir -p "${nodenvRoot}/plugins" || fail
+  dir::make-if-not-exists "${nodenvRoot}/plugins" || fail
   git::place-up-to-date-clone "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || fail
 }
 

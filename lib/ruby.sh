@@ -42,7 +42,7 @@ ruby::install-rbenv-repositories() {
 
   git::place-up-to-date-clone "https://github.com/sstephenson/rbenv.git" "${rbenvRoot}" || fail
 
-  mkdir -p "${rbenvRoot}/plugins" || fail
+  dir::make-if-not-exists "${rbenvRoot}/plugins" || fail
   git::place-up-to-date-clone "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
 

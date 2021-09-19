@@ -120,12 +120,7 @@ ssh::add-host-to-known-hosts() {
   fi
 
   if [ ! -f "${knownHosts}" ]; then
-    local knownHostsDirname; knownHostsDirname="$(dirname "${knownHosts}")" || fail
-
-    if [ ! -d "${knownHostsDirname}" ]; then
-      (umask 077 && mkdir "${knownHostsDirname}") || fail
-    fi
-
+    ssh::make-user-config-directory-if-not-exists || fail
     (umask 133 && touch "${knownHosts}") || fail
   fi
 
