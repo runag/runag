@@ -49,11 +49,11 @@ __xVhMyefCbBnZFUQtwqCs() {
   git::install-git() {
     if [[ "${OSTYPE}" =~ ^linux ]]; then
       if ! command -v git >/dev/null; then
-        if command -v apt >/dev/null; then
-          sudo apt update || fail
-          sudo apt install -y git || fail
+        if command -v apt-get >/dev/null; then
+          sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail
+          sudo apt-get -qq -y -o Acquire::ForceIPv4=true install git || fail
         else
-          fail "Unable to install git, apt not found"
+          fail "Unable to install git, apt-get not found"
         fi
       fi
     fi
