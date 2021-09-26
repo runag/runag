@@ -18,7 +18,7 @@ keys::ensure-key-is-available() {
   local keyPath="$1"
   if [ ! -f "${keyPath}" ]; then
     echo "File not found: '${keyPath}'. Please connect external media if necessary and press ENTER" >&2
-    read -s || fail
+    read -rs || fail
   fi
   if [ ! -f "${keyPath}" ]; then
     fail "File still not found: ${keyPath}"

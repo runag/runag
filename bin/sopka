@@ -30,6 +30,7 @@ fail() {
   if [ -t 2 ]; then
     local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
 
+    # shellcheck disable=SC2181
     if [ $? = 0 ] && [ "${colorsAmount}" -ge 2 ]; then
       errorColor="$(tput setaf 1)"
       normalColor="$(tput sgr 0)"
@@ -81,9 +82,9 @@ sopka::load-sopkafile() {
     . "./sopkafile" || fail
   elif [ -f "./sopkafile/index.sh" ]; then
     . "./sopkafile/index.sh" || fail
-  elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile" ]; then
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
     . "${HOME:-}/.sopkafile" || fail
-  elif [ -n "${HOME:-}" -a -f "${HOME:-}/.sopkafile/index.sh" ]; then
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
     . "${HOME:-}/.sopkafile/index.sh" || fail
   else
     local filePath fileFound=false

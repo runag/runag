@@ -84,10 +84,7 @@ SOPKA_VERBOSE=true
 
 # Contributing
 
-## Please check shell scripts before commiting any changes
-```sh
-test/run-code-checks.sh
-```
+Please check shell scripts before commiting any changes with `npm run lint`.
 
 ## Style guide
 
@@ -98,5 +95,4 @@ pipestatus
 error handling in loops "for, while"
 error handling in subshells () {}
 error handling in complex commands like ssh "foo" or sudo "foo"
-use shellcheck
 ```

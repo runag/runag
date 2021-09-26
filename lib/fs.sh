@@ -39,7 +39,7 @@ file::sudo-write() {
   local owner="${3:-}"
   local group="${4:-}"
 
-  if [ -n "${mode}" -o -n "${owner}" -o -n "${group}" ]; then
+  if [ -n "${mode}" ] || [ -n "${owner}" ] || [ -n "${group}" ]; then
     # I want to create a file with the right mode right away
     # the use of "install" command performs that, at least on linux and macos
     # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
@@ -134,7 +134,7 @@ mount::ask-for-mount() {
 
   if ! findmnt --mountpoint "${mountpoint}" >/dev/null; then
     echo "Please attach filesystem to ${mountpoint} and press ENTER"
-    read -s || fail
+    read -rs || fail
   fi
 
   findmnt --mountpoint "${mountpoint}" >/dev/null || fail "Unable to find filesystem at ${mountpoint}"

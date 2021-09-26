@@ -167,7 +167,7 @@ ssh::call() {
     -o ServerAliveInterval=25 \
     ${SOPKA_REMOTE_PORT:+-p "${SOPKA_REMOTE_PORT}"} \
     ${SOPKA_REMOTE_USER:+-l "${SOPKA_REMOTE_USER}"} \
-    ${SOPKA_REMOTE_HOST} \
+    "${SOPKA_REMOTE_HOST}" \
     bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${commandString}")" \
     || return $?
 }

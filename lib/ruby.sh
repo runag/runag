@@ -46,6 +46,7 @@ ruby::install-rbenv-repositories() {
   git::place-up-to-date-clone "https://github.com/sstephenson/ruby-build.git" "${rbenvRoot}/plugins/ruby-build" || fail
 }
 
+# shellcheck disable=SC2120
 ruby::install-rbenv-shellrc() {
   if [ -n "${1:-}" ]; then
     local output="$1"
@@ -56,6 +57,7 @@ ruby::install-rbenv-shellrc() {
   local opensslLine=""
   if [[ "${OSTYPE}" =~ ^darwin ]] && command -v brew >/dev/null; then
     local opensslDir; opensslDir="$(brew --prefix openssl@1.1)" || fail
+    # shellcheck disable=SC1083
     opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
 

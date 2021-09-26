@@ -54,6 +54,7 @@ benchmark::actually-run() {
   ) || fail
 }
 
+# shellcheck disable=SC2086
 benchmark::fileio() {
   sysbench fileio prepare ${1:-} >/dev/null || fail
 

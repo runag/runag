@@ -24,7 +24,7 @@ checksums::create-or-update(){
   (
     cd "${directory}" || fail
 
-    find -type f \( -not -name "${currentChecksumFile}" \) -exec openssl dgst -${checksumAlgo} {} \; | sort >"${newChecksumFile}"
+    find . -type f \( -not -name "${currentChecksumFile}" \) -exec openssl dgst "-${checksumAlgo}" {} \; | sort >"${newChecksumFile}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
 
     local action
@@ -89,7 +89,7 @@ checksums::verify()(
       fail "${directory}: Unable to find checksum file ${currentChecksumFile}"
     fi
 
-    find -type f \( -not -name "${currentChecksumFile}" \) -exec openssl dgst -${checksumAlgo} {} \; | sort >"${newChecksumFile}"
+    find . -type f \( -not -name "${currentChecksumFile}" \) -exec openssl dgst "-${checksumAlgo}" {} \; | sort >"${newChecksumFile}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
 
     if diff --strip-trailing-cr "${currentChecksumFile}" "${newChecksumFile}" >/dev/null 2>&1; then

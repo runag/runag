@@ -24,6 +24,7 @@ if ! declare -f fail >/dev/null; then
     if [ -t 2 ]; then
       local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
 
+      # shellcheck disable=SC2181
       if [ $? = 0 ] && [ "${colorsAmount}" -ge 2 ]; then
         errorColor="$(tput setaf 1)"
         normalColor="$(tput sgr 0)"

@@ -33,6 +33,7 @@ menu::select-argument-and-run() {
   if [ -t 1 ]; then
     local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
 
+    # shellcheck disable=SC2181
     if [ $? = 0 ] && [ "${colorsAmount}" -ge 16 ]; then
       colorA="$(tput setaf 14)"
       colorB="$(tput setaf 15)"
@@ -93,6 +94,7 @@ menu::select-argument-and-run() {
 
   local selectedItem="${list[$((inputText-1))]}" || fail
 
+  # shellcheck disable=SC2086
   $1 ${selectedItem}
   test $? = 0 || fail "Error performing $1 ${selectedItem}"
 }
