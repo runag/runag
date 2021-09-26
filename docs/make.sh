@@ -38,7 +38,7 @@ for file in lib/*.sh; do
     output="docs/${file%.*}.md"
     file_basename="$(basename "${file}")" || fail
 
-    shdoc <"${file}" > "${output}" || fail
+    shdoc <"${file}" >"${output}" || fail
     echo "* [${file_basename%%.*}](${output})"
   fi
 done
