@@ -59,7 +59,7 @@ ruby::install-rbenv-shellrc() {
     opensslLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${opensslDir}")"" || fail
   fi
 
-  cat <<SHELL >"${output}" || fail
+  file::write "${output}" 600 <<SHELL || fail
 $(sopka::print-license)
 
 if [ -d "\${HOME}/.rbenv/bin" ]; then

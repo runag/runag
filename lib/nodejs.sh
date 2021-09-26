@@ -68,7 +68,7 @@ nodejs::install-nodenv-shellrc() {
     local output; output="$(shell::get-shellrc-filename "nodenv")" || fail
   fi
 
-  cat <<SHELL >"${output}" || fail
+  file::write "${output}" 600 <<SHELL || fail
 $(sopka::print-license)
 
 if [ -d "\${HOME}/.nodenv/bin" ]; then
