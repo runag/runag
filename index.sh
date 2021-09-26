@@ -16,7 +16,7 @@
 
 
 # maybe define fail() function
-if ! declare -f fail > /dev/null; then
+if ! declare -f fail >/dev/null; then
   fail() {
     local errorColor=""
     local normalColor=""
