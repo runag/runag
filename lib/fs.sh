@@ -18,13 +18,8 @@ dir::make-if-not-exists() {
   local dirPath="$1"
   local mode="${2:-}"
 
-  if [ ! -d "${dirPath}" ]; then
-    # hello, race condition! I dont want to use "mkdir -p" nor "install -d" here cause parent directories they create will lack proper mode
-    if [ -n "${mode}" ]; then
-      mkdir -m "${mode}" "${dirPath}" || fail
-    else
-      mkdir "${dirPath}" || fail
-    fi
+  if ! mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+    test -d "${dirPath}" || fail "Unable to create directory, maybe file already exists: ${dirPath}"
   fi
 }
 
@@ -32,14 +27,8 @@ dir::make-if-not-exists-but-chmod-anyway() {
   local dirPath="$1"
   local mode="${2:-}"
 
-  if [ ! -d "${dirPath}" ]; then
-    # hello, race condition! I dont want to use "mkdir -p" nor "install -d" here cause parent directories they create will lack proper mode
-    if [ -n "${mode}" ]; then
-      mkdir -m "${mode}" "${dirPath}" || fail
-    else
-      mkdir "${dirPath}" || fail
-    fi
-  elif [ -n "${mode}" ]; then
+  if ! mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+    test -d "${dirPath}" || fail "Unable to create directory, maybe file already exists: ${dirPath}"
     chmod "${mode}" "${dirPath}" || fail
   fi
 }
@@ -47,16 +36,15 @@ dir::make-if-not-exists-but-chmod-anyway() {
 file::sudo-write() {
   local dest="$1"
   local mode="${2:-}"
-  local ownerAndMaybeGroup="${3:-}"
+  local owner="${3:-}"
+  local group="${4:-}"
 
-  sudo touch "${dest}" || fail
-
-  if [ -n "${mode}" ]; then
-    sudo chmod "${mode}" "${dest}" || fail
-  fi
-
-  if [ -n "${ownerAndMaybeGroup}" ]; then
-    sudo chown "${ownerAndMaybeGroup}" "${dest}" || fail
+  if [ -n "${mode}" -o -n "${owner}" -o -n "${group}" ]; then
+    # I want to create a file with the right mode right away
+    # the use of "install" command performs that, at least on linux and macos
+    # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
+    # it's probably better to make it different, like calculate umask and then touch, but I don't have time to think about that right now
+    sudo install ${mode:+-m "${mode}"} ${owner:+-o "${owner}"} ${group:+-g "${group}"} /dev/null "${dest}" || fail
   fi
 
   cat | sudo tee "${dest}" >/dev/null
@@ -122,20 +110,23 @@ mount::cifs::credentials::save() {
 mount::cifs() {
   local serverPath="$1"
   local mountPoint="$2"
-  local credentialsFile="$4"
+  local credentialsFile="$3"
+  local fileMode="${4:-"600"}" 
+  local dirMode="${5:-"700"}" 
 
-  mkdir -p "${mountPoint}" || fail
+  dir::make-if-not-exists "${mountPoint}" "${dirMode}" || fail
+
   local fstabTag="# cifs mount: ${mountPoint}"
 
   if ! grep -qFx "${fstabTag}" /etc/fstab; then
     echo "${fstabTag}" | sudo tee -a /etc/fstab >/dev/null || fail
-    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},file_mode=644,dir_mode=755,uid=${USER},gid=${USER},forceuid,forcegid,nosetuids,noposix,noserverino,echo_interval=10  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
+    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},uid=${USER},forceuid,gid=${USER},forcegid,file_mode=${fileMode},dir_mode=${dirMode},nosetuids,echo_interval=10,noserverino,noposix  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
   fi
 
   # other mounts might fail, so we ignore exit status here
   sudo mount -a
 
-  findmnt --mountpoint "${mountPoint}" >/dev/null || fail "${mountPoint} is not mounted"
+  findmnt --mountpoint "${mountPoint}" >/dev/null || fail "Filesystem is not mounted: ${mountPoint}"
 }
 
 mount::ask-for-mount() {
