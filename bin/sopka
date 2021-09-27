@@ -115,9 +115,9 @@ else
     if declare -f sopkafile::main >/dev/null; then
       sopkafile::main
       test $? = 0 || fail "Error performing sopkafile::main"
-    elif sopka::is-menu-present; then
-      sopka::display-menu
-      test $? = 0 || fail "Error performing sopka::display-menu"
+    elif sopka-menu::is-present; then
+      sopka-menu::display
+      test $? = 0 || fail "Error performing sopka-menu::display"
     else
       fail "please specify a function name to run, define a sopkafile::main, or add items to a menu"
     fi

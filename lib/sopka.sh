@@ -39,14 +39,14 @@ sopka::add() {
   git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
 }
 
-sopka::add-menu-item() {
+sopka-menu::add() {
   if [ -z ${SOPKA_MENU+x} ]; then
     SOPKA_MENU=()
   fi
   SOPKA_MENU+=("$@")
 }
 
-sopka::display-menu() {
+sopka-menu::display() {
   if [ -z ${SOPKA_MENU+x} ]; then
     fail "Menu is empty"
   fi
@@ -54,11 +54,11 @@ sopka::display-menu() {
   test $? = 0 || fail "Error performing menu::select-and-run"
 }
 
-sopka::is-menu-present() {
+sopka-menu::is-present() {
   test -n "${SOPKA_MENU+x}"
 }
 
-sopka::clear-menu() {
+sopka-menu::clear() {
   SOPKA_MENU=()
 }
 
