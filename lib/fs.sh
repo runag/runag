@@ -111,8 +111,8 @@ mount::cifs() {
   local serverPath="$1"
   local mountPoint="$2"
   local credentialsFile="$3"
-  local fileMode="${4:-"600"}" 
-  local dirMode="${5:-"700"}" 
+  local fileMode="${4:-"0600"}" 
+  local dirMode="${5:-"0700"}" 
 
   dir::make-if-not-exists "${mountPoint}" "${dirMode}" || fail
 
