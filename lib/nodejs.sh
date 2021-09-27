@@ -16,8 +16,11 @@
 
 nodejs::apt::add-source() {
   local version="${1:-14}"
-  curl --location --fail --silent --show-error "https://deb.nodesource.com/setup_${version}.x" | sudo -E bash -
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to run nodejs install script"
+
+  local distributionCodename; distributionCodename="$(lsb_release --codename --short)" || fail
+
+  apt::add-key-and-source "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" \
+    "deb https://deb.nodesource.com/node_${version}.x ${distributionCodename} main" "nodesource" || fail
 }
 
 nodejs::apt::install() {
