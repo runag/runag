@@ -52,11 +52,11 @@ fail() {
 # shellcheck disable=SC2034
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get -o Acquire::ForceIPv4=true update || fail
+  sudo apt-get update || fail
 }
 
 apt::install() {
-  sudo apt-get -y -o Acquire::ForceIPv4=true install "$@" || fail
+  sudo apt-get -y install "$@" || fail
 }
 
 git::install-git() {

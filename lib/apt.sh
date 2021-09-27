@@ -31,22 +31,22 @@ apt::lazy-update-and-dist-upgrade() {
 # @description Perform apt update
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get -o Acquire::ForceIPv4=true update || fail
+  sudo apt-get update || fail
 }
 
 # @description Perform apt dist-upgrade
 apt::dist-upgrade() {
-  sudo apt-get -y -o Acquire::ForceIPv4=true dist-upgrade || fail
+  sudo apt-get -y dist-upgrade || fail
 }
 
 # @description Install package
 apt::install() {
-  sudo apt-get -y -o Acquire::ForceIPv4=true install "$@" || fail
+  sudo apt-get -y install "$@" || fail
 }
 
 # @description Perform apt autoremove
 apt::autoremove() {
-  sudo apt-get -y -o Acquire::ForceIPv4=true autoremove || fail
+  sudo apt-get -y autoremove || fail
 }
 
 # @description Add apt source and key
