@@ -102,12 +102,13 @@ nodejs::update-globally-installed-packages() {
 
 nodejs::auth-token::exists(){
   local registry="${1:-"registry.npmjs.org"}"
-  grep -qF "//${registry}/:_authToken"
+  test -f "${HOME}/.npmrc" || return 1
+  grep -qF "//${registry}/:_authToken" "${HOME}/.npmrc"
 }
 
 nodejs::auth-token::save(){
   local token="$1"
   local registry="${2:-"registry.npmjs.org"}"
   
-  npm set "//${registry}/:_authToken" "${token}" || fail
+  NODENV_VERSION=system npm set "//${registry}/:_authToken" "${token}" || fail
 }
