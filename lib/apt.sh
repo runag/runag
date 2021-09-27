@@ -31,22 +31,37 @@ apt::lazy-update-and-dist-upgrade() {
 # @description Perform apt update
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail "Unable to apt-get update ($?)"
+  sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail
 }
 
 # @description Perform apt dist-upgrade
 apt::dist-upgrade() {
-  sudo apt-get -qq -y -o Acquire::ForceIPv4=true dist-upgrade || fail "Unable to apt-get dist-upgrade ($?)"
+  sudo apt-get -qq -y -o Acquire::ForceIPv4=true dist-upgrade | apt::shush-dpkg
+  test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
 # @description Install package
 apt::install() {
-  sudo apt-get -qq -y -o Acquire::ForceIPv4=true install "$@" || fail "Unable to apt-get install $* ($?)"
+  sudo apt-get -qq -y -o Acquire::ForceIPv4=true install "$@" | apt::shush-dpkg
+  test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
 # @description Perform apt autoremove
 apt::autoremove() {
-  sudo apt-get -qq -y -o Acquire::ForceIPv4=true autoremove || fail "Unable to apt-get autoremove ($?)"
+  sudo apt-get -qq -y -o Acquire::ForceIPv4=true autoremove | apt::shush-dpkg
+  test "${PIPESTATUS[*]}" = "0 0" || fail
+}
+
+# @description Shush the dpkg
+apt::shush-dpkg() {
+  if [ "${SOPKA_VERBOSE:-}" = true ]; then
+    tee || fail
+  else
+    grep -vE "^Selecting previously unselected package|^(Reading database \\.\\.\\.|^Preparing to unpack .* \\.\\.\\.$|^Unpacking .* \\.\\.\\.$|^Setting up .* \\.\\.\\.$|^Processing triggers for .* \\.\\.\\.$"
+    if [ "$?" -ge "2" ]; then
+      fail
+    fi
+  fi
 }
 
 # @description Add apt source and key

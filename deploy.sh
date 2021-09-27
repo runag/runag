@@ -50,8 +50,8 @@ __xVhMyefCbBnZFUQtwqCs() {
     if [[ "${OSTYPE}" =~ ^linux ]]; then
       if ! command -v git >/dev/null; then
         if command -v apt-get >/dev/null; then
-          sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail
-          sudo apt-get -qq -y -o Acquire::ForceIPv4=true install git || fail
+          apt::update || fail
+          apt::install git || fail
         else
           fail "Unable to install git, apt-get not found"
         fi
@@ -60,6 +60,28 @@ __xVhMyefCbBnZFUQtwqCs() {
 
     # on macos that will start git install process
     git --version >/dev/null || fail
+  }
+
+  # shellcheck disable=SC2034
+  apt::update() {
+    SOPKA_APT_LAZY_UPDATE_HAPPENED=true
+    sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail
+  }
+
+  apt::install() {
+    sudo apt-get -qq -y -o Acquire::ForceIPv4=true install "$@" | apt::shush-dpkg
+    test "${PIPESTATUS[*]}" = "0 0" || fail
+  }
+
+  apt::shush-dpkg() {
+    if [ "${SOPKA_VERBOSE:-}" = true ]; then
+      tee || fail
+    else
+      grep -vE "^Selecting previously unselected package|^(Reading database \\.\\.\\.|^Preparing to unpack .* \\.\\.\\.$|^Unpacking .* \\.\\.\\.$|^Setting up .* \\.\\.\\.$|^Processing triggers for .* \\.\\.\\.$"
+      if [ "$?" -ge "2" ]; then
+        fail
+      fi
+    fi
   }
 
   git::place-up-to-date-clone() {
@@ -76,15 +98,15 @@ __xVhMyefCbBnZFUQtwqCs() {
         local destDirName; destDirName="$(basename "${destFullPath}")" || fail
         local packupPath; packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail
         mv "${destFullPath}" "${packupPath}" || fail
-        git clone "${url}" "${dest}" || fail
+        git clone --quiet "${url}" "${dest}" || fail
       fi
-      git -C "${dest}" pull || fail
+      git -C "${dest}" pull --quiet || fail
     else
-      git clone "${url}" "${dest}" || fail
+      git clone --quiet "${url}" "${dest}" || fail
     fi
 
     if [ -n "${branch:-}" ]; then
-      git -C "${dest}" checkout "${branch}" || fail "Unable to checkout ${branch}"
+      git -C "${dest}" checkout --quiet "${branch}" || fail "Unable to checkout ${branch}"
     fi
   }
 

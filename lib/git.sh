@@ -31,15 +31,15 @@ git::place-up-to-date-clone() {
       local destDirName; destDirName="$(basename "${destFullPath}")" || fail
       local packupPath; packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail
       mv "${destFullPath}" "${packupPath}" || fail
-      git clone "${url}" "${dest}" || fail
+      git clone --quiet "${url}" "${dest}" || fail
     fi
-    git -C "${dest}" pull || fail
+    git -C "${dest}" pull --quiet || fail
   else
-    git clone "${url}" "${dest}" || fail
+    git clone --quiet "${url}" "${dest}" || fail
   fi
 
   if [ -n "${branch:-}" ]; then
-    git -C "${dest}" checkout "${branch}" || fail "Unable to checkout ${branch}"
+    git -C "${dest}" checkout --quiet "${branch}" || fail "Unable to checkout ${branch}"
   fi
 }
 
