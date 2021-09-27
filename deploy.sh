@@ -77,7 +77,7 @@ __xVhMyefCbBnZFUQtwqCs() {
     if [ "${SOPKA_VERBOSE:-}" = true ]; then
       tee || fail
     else
-      grep -vE "^Selecting previously unselected package|^(Reading database \\.\\.\\.|^Preparing to unpack .* \\.\\.\\.$|^Unpacking .* \\.\\.\\.$|^Setting up .* \\.\\.\\.$|^Processing triggers for .* \\.\\.\\.$"
+      grep -vE "^Selecting previously unselected package|^\\(Reading database \\.\\.\\.|^Preparing to unpack .* \\.\\.\\.$|^Unpacking .* \\.\\.\\.$|^Setting up .* \\.\\.\\.$|^Processing triggers for .* \\.\\.\\.$"
       if [ "$?" -ge "2" ]; then
         fail
       fi
