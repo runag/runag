@@ -41,7 +41,6 @@ menu::select-argument-and-run() {
     fi
   fi
 
-  echo "Please select:"
   echo ""
   local index item nextItem group nextGroup lastGroup="" lastGroupIsBig=false currentColor=""
   for index in "${!list[@]}"; do
@@ -73,7 +72,7 @@ menu::select-argument-and-run() {
   done
 
   echo ""
-  echo -n "${PS3:-"#? "}"
+  echo -n "${PS3:-"Please select number: "}"
 
   local inputText readStatus
   IFS="" read -r inputText
