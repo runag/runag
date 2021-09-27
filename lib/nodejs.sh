@@ -97,3 +97,17 @@ nodejs::load-nodenv() {
 nodejs::update-globally-installed-packages() {
   sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || fail
 }
+
+# bitwarden::use password "test record" nodejs::auth-token registry.npmjs.org
+
+nodejs::auth-token::exists(){
+  local registry="${1:-"registry.npmjs.org"}"
+  grep -qF "//${registry}/:_authToken"
+}
+
+nodejs::auth-token::save(){
+  local token="$1"
+  local registry="${2:-"registry.npmjs.org"}"
+  
+  npm set "//${registry}/:_authToken" "${token}" || fail
+}
