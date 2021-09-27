@@ -87,7 +87,9 @@ ruby::load-rbenv() {
 }
 
 ruby::dangerously-append-nodocument-to-gemrc() {
-  file::append-line-unless-present "gem: --no-document" "${HOME}/.gemrc"
+  local gemrcFile="${HOME}/.gemrc"
+  (umask 177 && touch "${gemrcFile}") || fail
+  file::append-line-unless-present "gem: --no-document" "${gemrcFile}"
 }
 
 ruby::update-globally-installed-gems() {
