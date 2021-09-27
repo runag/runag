@@ -89,11 +89,12 @@ apt::shush() {
 #
 # @arg $1 string key url
 # @arg $2 string source string
-# @arg $3 string source name
+# @arg $3 string source name for sources.list.d
 apt::add-key-and-source() {
   local keyUrl="$1"
   local sourceString="$2"
   local sourceName="$3"
+
   local sourceFile="/etc/apt/sources.list.d/${sourceName}.list"
 
   curl --fail --silent --show-error "${keyUrl}" | sudo apt-key add -
