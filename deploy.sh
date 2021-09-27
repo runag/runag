@@ -52,41 +52,11 @@ fail() {
 # shellcheck disable=SC2034
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get -qq -o Acquire::ForceIPv4=true update || fail
+  sudo apt-get -o Acquire::ForceIPv4=true update || fail
 }
 
 apt::install() {
-  sudo apt-get -qq -y -o Acquire::ForceIPv4=true install "$@" | apt::shush
-  test "${PIPESTATUS[*]}" = "0 0" || fail
-}
-
-apt::shush() {
-  if [ "${SOPKA_VERBOSE:-}" = true ]; then
-    tee || fail
-  else
-    grep -vE "\
-^Selecting previously unselected package|\
-^\\(Reading database \\.\\.\\.|\
-^Preparing to unpack .* \\.\\.\\.|\
-^Unpacking .* \\.\\.\\.|\
-^Setting up .* \\.\\.\\.|\
-^Processing triggers for .* \\.\\.\\.|\
-^Removing .* \\.\\.\\.|\
-^Preconfiguring packages \\.\\.\\.|\
-^Extracting templates from packages: 100%|\
-^update-alternatives: using .* to provide .* in auto mode|\
-^Purging old database entries in .*\\.\\.\\.|\
-^Processing manual pages under .*\\.\\.\\.|\
-^Checking for stray cats under .*\\.\\.\\.|\
-^[[:digit:]]+ man subdirectory contained newer manual pages\\.|\
-^[[:digit:]]+ manual page was added\\.|\
-^[[:digit:]]+ stray cats were added\\.|\
-^[[:digit:]]+ old database entries were purged\\."
-    
-    if [ "$?" -ge "2" ]; then
-      fail
-    fi
-  fi
+  sudo apt-get -y -o Acquire::ForceIPv4=true install "$@" || fail
 }
 
 git::install-git() {
