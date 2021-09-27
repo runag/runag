@@ -15,17 +15,17 @@
 #  limitations under the License.
 
 tailscale::install() {
-  local distributorId codename
+  local distributorId distributionCodename
 
   distributorId="$(linux::get-distributor-id-lowercase)" || fail
-  codename="$(lsb_release --codename --short)" || fail
+  distributionCodename="$(lsb_release --codename --short)" || fail
 
   curl --fail --silent --show-error --location \
-    "https://pkgs.tailscale.com/stable/${distributorId}/${codename}.gpg" | sudo apt-key add -
+    "https://pkgs.tailscale.com/stable/${distributorId}/${distributionCodename}.gpg" | sudo apt-key add -
   test "${PIPESTATUS[*]}" = "0 0" || fail
 
   curl --fail --silent --show-error --location \
-    "https://pkgs.tailscale.com/stable/${distributorId}/${codename}.list" | sudo tee /etc/apt/sources.list.d/tailscale.list
+    "https://pkgs.tailscale.com/stable/${distributorId}/${distributionCodename}.list" | sudo tee /etc/apt/sources.list.d/tailscale.list
   test "${PIPESTATUS[*]}" = "0 0" || fail
 
   apt::update || fail
