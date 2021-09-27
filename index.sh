@@ -63,7 +63,6 @@ sopka::load-lib() {
   . "${selfDir}/lib/nodejs.sh" || fail
   . "${selfDir}/lib/postgresql.sh" || fail
   . "${selfDir}/lib/rails.sh" || fail
-  . "${selfDir}/lib/rclone.sh" || fail
   . "${selfDir}/lib/rsync.sh" || fail
   . "${selfDir}/lib/ruby.sh" || fail
   . "${selfDir}/lib/shell.sh" || fail
