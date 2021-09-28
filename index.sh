@@ -72,6 +72,8 @@ sopka::load-lib() {
   . "${selfDir}/lib/syncthing.sh" || fail
   . "${selfDir}/lib/systemd.sh" || fail
   . "${selfDir}/lib/tailscale.sh" || fail
+  . "${selfDir}/lib/task.sh" || fail
+  . "${selfDir}/lib/terminal.sh" || fail
   . "${selfDir}/lib/vmware.sh" || fail
   . "${selfDir}/lib/vscode.sh" || fail
 }
