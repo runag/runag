@@ -16,14 +16,17 @@
 
 task::run-and-fail-on-errors-in-rubygems() {
   SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS=true task::run "$@"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 task::run-and-omit-title() {
   SOPKA_TASKS_OMIT_TITLES=true task::run "$@"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 task::run-verbose() {
   SOPKA_VERBOSE_TASKS=true task::run "$@"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 task::run() {
