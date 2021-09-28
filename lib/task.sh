@@ -24,6 +24,11 @@ task::run-and-omit-title() {
   test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
+task::run-with-title() {
+  SOPKA_TASK_TITLE="$1" task::run "${@:2}"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
+}
+
 task::run-verbose() {
   SOPKA_VERBOSE_TASKS=true task::run "$@"
   test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
@@ -40,7 +45,7 @@ task::run() {
   local tmpFile; tmpFile="$(mktemp)" || fail
 
   if [ "${SOPKA_TASKS_OMIT_TITLES:-}" != true ]; then
-    echo "${highlightColor}Performing $*...${normalColor}"
+    echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}"
   fi
 
   "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
@@ -52,6 +57,7 @@ task::run() {
 
   if [ $taskResult != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
     cat "${tmpFile}" || fail
+
     echo -n "${errorColor}" >&2
     cat "${tmpFile}.stderr" >&2 || fail
     echo -n "${normalColor}" >&2
