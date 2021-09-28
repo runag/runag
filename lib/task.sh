@@ -14,8 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::run-but-fail-on-rubygems-errors() {
-  SOPKA_FAIL_ON_RUBYGEMS_ERRORS=true task::run "$@"
+task::run-and-fail-on-errors-in-rubygems() {
+  SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS=true task::run "$@"
+}
+
+task::run-and-omit-title() {
+  SOPKA_TASKS_OMIT_TITLES=true task::run "$@"
+}
+
+task::run-verbose() {
+  SOPKA_VERBOSE_TASKS=true task::run "$@"
 }
 
 task::run() {
@@ -28,16 +36,18 @@ task::run() {
 
   local tmpFile; tmpFile="$(mktemp)" || fail
 
-  echo "${highlightColor}Performing $*...${normalColor}"
+  if [ "${SOPKA_TASKS_OMIT_TITLES:-}" != true ]; then
+    echo "${highlightColor}Performing $*...${normalColor}"
+  fi
 
   "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
   local taskResult=$?
 
-  if [ $taskResult = 0 ] && [ "${SOPKA_FAIL_ON_RUBYGEMS_ERRORS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
+  if [ $taskResult = 0 ] && [ "${SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
     taskResult=1
   fi
 
-  if [ $taskResult != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ]; then
+  if [ $taskResult != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
     cat "${tmpFile}" || fail
     echo -n "${errorColor}" >&2
     cat "${tmpFile}.stderr" >&2 || fail

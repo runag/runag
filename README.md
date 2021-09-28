@@ -63,24 +63,26 @@ Possible sopkafile locations are:
 ## Environment variables
 
 ```sh
-# set by bin/sopka for use in scripts that you might want to generate
+# Set by bin/sopka for use in scripts that you might want to generate
 SOPKA_BIN_PATH="${HOME}/.sopka/bin"
 
-# internal
-SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-SOPKA_FAIL_ON_RUBYGEMS_ERRORS=true
-SOPKA_NODENV_INITIALIZED=true
-SOPKA_RBENV_INITIALIZED=true
+# Runtime flags
+SOPKA_UPDATE_SECRETS=true
+SOPKA_VERBOSE_TASKS=true
+SOPKA_VERBOSE=true
 
-# ssh-related
+# SSH-related
 SOPKA_REMOTE_HOST="example.com"
 SOPKA_REMOTE_PORT="22"
 SOPKA_REMOTE_USER="hello"
 SOPKA_SEND_ENV=()
 
-# runtime flags
-SOPKA_UPDATE_SECRETS=true
-SOPKA_VERBOSE=true
+# Internal, not to be used in API, referenced here to avoid possible conflicts
+SOPKA_APT_LAZY_UPDATE_HAPPENED=true
+SOPKA_NODENV_INITIALIZED=true
+SOPKA_RBENV_INITIALIZED=true
+SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS=true
+SOPKA_TASKS_OMIT_TITLES=true
 ```
 
 # Contributing

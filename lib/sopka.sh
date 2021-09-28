@@ -20,6 +20,12 @@ sopka::with-update-secrets() {
   test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
+sopka::with-verbose-tasks() {
+  export SOPKA_VERBOSE_TASKS=true
+  "$@"
+  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
+}
+
 sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || fail

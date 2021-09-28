@@ -56,7 +56,7 @@ benchmark::actually-run() {
 
 # shellcheck disable=SC2086
 benchmark::fileio() {
-  sysbench fileio prepare ${1:-} >/dev/null || fail
+  task::run-and-omit-title sysbench fileio prepare ${1:-} || fail
 
   echo "### SEQUENTIAL READ ${1:-} ###"
   sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${1:-} || fail
@@ -84,5 +84,5 @@ benchmark::fileio() {
   echo "### SEQUENTIAL WRITE IN SYNC MODE ${1:-} ###"
   sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
 
-  sysbench fileio cleanup >/dev/null || fail
+  task::run-and-omit-title sysbench fileio cleanup || fail
 }
