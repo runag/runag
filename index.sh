@@ -14,33 +14,27 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+terminal::have-16-colors(){
+  local amount
+  [ -t 1 ] && command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ] && [ "${amount}" -ge 16 ]
+}
 
-# maybe define fail() function
-if ! declare -f fail >/dev/null; then
-  fail() {
-    local errorColor=""
-    local normalColor=""
+fail() {
+  local errorColor="" normalColor=""
+  if terminal::have-16-colors; then 
+    errorColor="$(tput setaf 1)"
+    normalColor="$(tput sgr 0)"
+  fi
 
-    if [ -t 2 ]; then
-      local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
+  echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" >&2
 
-      # shellcheck disable=SC2181
-      if [ $? = 0 ] && [ "${colorsAmount}" -ge 2 ]; then
-        errorColor="$(tput setaf 1)"
-        normalColor="$(tput sgr 0)"
-      fi
-    fi
+  local i endAt=$((${#BASH_LINENO[@]}-1))
+  for ((i=1; i<=endAt; i++)); do
+    echo "  ${errorColor}${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${normalColor}" >&2
+  done
 
-    echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" >&2
-
-    local i endAt=$((${#BASH_LINENO[@]}-1))
-    for ((i=1; i<=endAt; i++)); do
-      echo "  ${errorColor}${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${normalColor}" >&2
-    done
-
-    exit "${2:-1}"
-  }
-fi
+  exit "${2:-1}"
+}
 
 sopka::load-lib() {
   local selfDir; selfDir="$(dirname "${BASH_SOURCE[0]}")" || fail

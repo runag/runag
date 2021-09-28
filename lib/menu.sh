@@ -29,16 +29,10 @@ menu::select-argument-and-run() {
   fi
 
   local colorA="" colorB="" normalColor=""
-
-  if [ -t 1 ]; then
-    local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
-
-    # shellcheck disable=SC2181
-    if [ $? = 0 ] && [ "${colorsAmount}" -ge 16 ]; then
-      colorA="$(tput setaf 14)"
-      colorB="$(tput setaf 15)"
-      normalColor="$(tput sgr 0)"
-    fi
+  if terminal::have-16-colors; then 
+    colorA="$(tput setaf 14)" || fail
+    colorB="$(tput setaf 15)" || fail
+    normalColor="$(tput sgr 0)" || fail
   fi
 
   echo ""

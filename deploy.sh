@@ -24,19 +24,16 @@ if [ "${SOPKA_VERBOSE:-}" = true ]; then
 fi
 set -o nounset
 
-# define fail() function
+terminal::have-16-colors(){
+  local amount
+  [ -t 1 ] && command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ] && [ "${amount}" -ge 16 ]
+}
+
 fail() {
-  local errorColor=""
-  local normalColor=""
-
-  if [ -t 2 ]; then
-    local colorsAmount; colorsAmount="$(tput colors 2>/dev/null)"
-
-    # shellcheck disable=SC2181
-    if [ $? = 0 ] && [ "${colorsAmount}" -ge 2 ]; then
-      errorColor="$(tput setaf 1)"
-      normalColor="$(tput sgr 0)"
-    fi
+  local errorColor="" normalColor=""
+  if terminal::have-16-colors; then 
+    errorColor="$(tput setaf 1)"
+    normalColor="$(tput sgr 0)"
   fi
 
   echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" >&2
