@@ -105,7 +105,7 @@ sopka::load-sopkafile || fail
 # "set -o errexit" in their functions
 if [ -n "${1:-}" ]; then
   declare -f "$1" >/dev/null || fail "Argument must be a function name: $1"
-  "$1" "${@:2}"
+  "$@"
   test $? = 0 || fail "Error performing $1"
 else
   if [ "${0:0:1}" != "-" ] && [ "$(basename "$0")" = "sopka" ]; then
