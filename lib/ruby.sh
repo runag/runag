@@ -93,5 +93,5 @@ ruby::dangerously-append-nodocument-to-gemrc() {
 }
 
 ruby::update-globally-installed-gems() {
-  sudo gem update || fail
+  task::run-and-fail-on-errors-in-rubygems sudo gem update || fail
 }
