@@ -46,14 +46,47 @@ fail() {
   exit "${2:-1}"
 }
 
+task::run() {
+  local highlightColor="" errorColor="" normalColor=""
+  if terminal::have-16-colors; then 
+    highlightColor="$(tput setaf 11)" || fail
+    errorColor="$(tput setaf 9)" || fail
+    normalColor="$(tput sgr 0)" || fail
+  fi
+
+  local tmpFile; tmpFile="$(mktemp)" || fail
+
+  if [ "${SOPKA_TASKS_OMIT_TITLES:-}" != true ]; then
+    echo "${highlightColor}Performing $*...${normalColor}"
+  fi
+
+  "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
+  local taskResult=$?
+
+  if [ $taskResult = 0 ] && [ "${SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
+    taskResult=1
+  fi
+
+  if [ $taskResult != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+    cat "${tmpFile}" || fail
+    echo -n "${errorColor}" >&2
+    cat "${tmpFile}.stderr" >&2 || fail
+    echo -n "${normalColor}" >&2
+  fi
+
+  rm "${tmpFile}" "${tmpFile}.stderr" || fail
+
+  return $taskResult
+}
+
 # shellcheck disable=SC2034
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get update || fail
+  task::run sudo apt-get update || fail
 }
 
 apt::install() {
-  sudo apt-get -y install "$@" || fail
+  task::run sudo apt-get -y install "$@" || fail
 }
 
 git::install-git() {
