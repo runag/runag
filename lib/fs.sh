@@ -35,7 +35,7 @@ dir::make-if-not-exists-but-chmod-anyway() {
 
 dir::remove-if-exists-and-empty() {
   local dirPath="$1"
-  rmdir "${dirPath}" 2>/dev/null && true
+  rmdir "${dirPath}" 2>/dev/null || true
 }
 
 file::sudo-write() {
