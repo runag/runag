@@ -85,3 +85,38 @@ sopka::print-license() {
 #  limitations under the License.
 EOT
 }
+
+# Find and load sopkafile.
+#
+# Possible locations are:
+#
+# ./sopkafile
+# ./sopkafile/index.sh
+#
+# ~/.sopkafile
+# ~/.sopkafile/index.sh
+#
+# ~/.sopka/sopkafiles/*/index.sh
+#
+sopka::load-sopkafile() {
+  if [ -f "./sopkafile" ]; then
+    . "./sopkafile" || fail
+  elif [ -f "./sopkafile/index.sh" ]; then
+    . "./sopkafile/index.sh" || fail
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
+    . "${HOME:-}/.sopkafile" || fail
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
+    . "${HOME:-}/.sopkafile/index.sh" || fail
+  else
+    local filePath fileFound=false
+    for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
+      if [ -f "${filePath}" ]; then
+        . "${filePath}" || fail
+        fileFound=true
+      fi
+    done
+    if [ "${fileFound}" = false ]; then
+      fail "Unable to find sopkafile"
+    fi
+  fi
+}

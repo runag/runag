@@ -22,101 +22,50 @@ if [ "${0:0:1}" != "-" ]; then
   set -o nounset
 fi
 
-terminal::have-16-colors(){
-  local amount
-  [ -t 1 ] && command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ] && [ "${amount}" -ge 16 ]
-}
-
-fail() {
-  local errorColor="" normalColor=""
-  if terminal::have-16-colors; then 
-    errorColor="$(tput setaf 1)"
-    normalColor="$(tput sgr 0)"
-  fi
-
-  echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" >&2
-
-  local i endAt=$((${#BASH_LINENO[@]}-1))
-  for ((i=1; i<=endAt; i++)); do
-    echo "  ${errorColor}${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${normalColor}" >&2
-  done
-
-  exit "${2:-1}"
-}
-
-export SOPKA_BIN_PATH="${BASH_SOURCE[0]}"
-
 sopka::load-index() {
   local sopkaBinRealPath sopkaBinRealDirPath sopkaIndexDir
 
   if [ -L "${SOPKA_BIN_PATH}" ]; then
-    sopkaBinRealPath="$(readlink -f "${SOPKA_BIN_PATH}")" || fail "Unable to readlink ${SOPKA_BIN_PATH} ($?)"
+    sopkaBinRealPath="$(readlink -f "${SOPKA_BIN_PATH}")" || { echo "Sopka loader: Unable to readlink '${SOPKA_BIN_PATH}' ($?)" >&2; exit 1; }
   else
     sopkaBinRealPath="${SOPKA_BIN_PATH}"
   fi
  
-  sopkaBinRealDirPath="$(dirname "${sopkaBinRealPath}")" || fail "Unable to get a dirname of ${sopkaBinRealPath} ($?)"
-  sopkaIndexDir="$(cd "${sopkaBinRealDirPath}"/.. >/dev/null 2>&1 && pwd)" || fail "Unable to determine full path for ${sopkaBinRealDirPath}/.. ($?)"
+  sopkaBinRealDirPath="$(dirname "${sopkaBinRealPath}")" || { echo "Sopka loader: Unable to get a dirname of '${sopkaBinRealPath}' ($?)" >&2; exit 1; }
+  sopkaIndexDir="$(cd "${sopkaBinRealDirPath}"/.. >/dev/null 2>&1 && pwd)" || { echo "Sopka loader: Unable to determine full path for '${sopkaBinRealDirPath}/..' ($?)" >&2; exit 1; }
 
-  . "${sopkaIndexDir}/index.sh" || fail
+  . "${sopkaIndexDir}/index.sh" || { echo "Sopka loader: Unable to load '${sopkaIndexDir}/index.sh' ($?)" >&2; exit 1; }
 }
 
+export SOPKA_BIN_PATH="${BASH_SOURCE[0]}"
 
-# Find and load sopkafile.
-#
-# Possible locations are:
-#
-# ./sopkafile
-# ./sopkafile/index.sh
-#
-# ~/.sopkafile
-# ~/.sopkafile/index.sh
-#
-# ~/.sopka/sopkafiles/*/index.sh
-#
-sopka::load-sopkafile() {
-  if [ -f "./sopkafile" ]; then
-    . "./sopkafile" || fail
-  elif [ -f "./sopkafile/index.sh" ]; then
-    . "./sopkafile/index.sh" || fail
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
-    . "${HOME:-}/.sopkafile" || fail
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
-    . "${HOME:-}/.sopkafile/index.sh" || fail
-  else
-    local filePath fileFound=false
-    for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
-      if [ -f "${filePath}" ]; then
-        . "${filePath}" || fail
-        fileFound=true
-      fi
-    done
-    if [ "${fileFound}" = false ]; then
-      fail "Unable to find sopkafile"
-    fi
-  fi
-}
+# Load sopka library index file
+sopka::load-index || { echo "Sopka loader: Unable to load sopka library index file ($?)" >&2; exit 1; }
 
-sopka::load-index || fail
-sopka::load-sopkafile || fail
+# == we should have all library functions available by now ==
 
-# run function provided in first argument, or run sopkafile::main, if defined
-# I use "test" instead of "|| fail" here for the case if someone wants to
-# "set -o errexit" in their functions
+# Remove sopka::load-index function
+unset -f sopka::load-index || fail "Sopka loader: Unable to remove sopka::load-index function"
+
+# Load sopkafile
+sopka::load-sopkafile || fail "Sopka loader: Unable to load sopkafile"
+
+# Run function provided in first argument, or run (if defined) sopkafile::main.
+# I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
 if [ -n "${1:-}" ]; then
-  declare -f "$1" >/dev/null || fail "Argument must be a function name: $1"
+  declare -f "$1" >/dev/null || fail "Sopka loader: Argument must be a function name: $1"
   "$@"
-  test $? = 0 || fail "Error performing $1"
+  test $? = 0 || fail "Sopka loader: Error performing $1"
 else
   if [ "${0:0:1}" != "-" ] && [ "$(basename "$0")" = "sopka" ]; then
     if declare -f sopkafile::main >/dev/null; then
       sopkafile::main
-      test $? = 0 || fail "Error performing sopkafile::main"
+      test $? = 0 || fail "Sopka loader: Error performing sopkafile::main"
     elif sopka-menu::is-present; then
       sopka-menu::display
-      test $? = 0 || fail "Error performing sopka-menu::display"
+      test $? = 0 || fail "Sopka loader: Error performing sopka-menu::display"
     else
-      fail "please specify a function name to run, define a sopkafile::main, or add items to a menu"
+      fail "Sopka loader: Please specify a function name to run, define a sopkafile::main, or add items to a menu"
     fi
   fi
 fi
