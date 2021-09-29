@@ -57,7 +57,7 @@ task::run() {
   local tmpFile; tmpFile="$(mktemp)" || fail
 
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-    echo "${highlightColor}Performing $*...${normalColor}"
+    echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}"
   fi
 
   "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
@@ -69,6 +69,7 @@ task::run() {
 
   if [ $taskResult != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
     cat "${tmpFile}" || fail
+
     echo -n "${errorColor}" >&2
     cat "${tmpFile}.stderr" >&2 || fail
     echo -n "${normalColor}" >&2
@@ -137,7 +138,7 @@ sopka::add() {
   git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
 }
 
-
+# == Deploy script ==
 git::install-git || fail
 
 git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || fail
