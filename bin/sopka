@@ -26,46 +26,29 @@ sopka::load-index() {
   local sopkaBinRealPath sopkaBinRealDirPath sopkaIndexDir
 
   if [ -L "${SOPKA_BIN_PATH}" ]; then
-    sopkaBinRealPath="$(readlink -f "${SOPKA_BIN_PATH}")" || { echo "Sopka loader: Unable to readlink '${SOPKA_BIN_PATH}' ($?)" >&2; exit 1; }
+    sopkaBinRealPath="$(readlink -f "${SOPKA_BIN_PATH}")" || { echo "Sopka: Unable to readlink '${SOPKA_BIN_PATH}' ($?)" >&2; exit 1; }
   else
     sopkaBinRealPath="${SOPKA_BIN_PATH}"
   fi
  
-  sopkaBinRealDirPath="$(dirname "${sopkaBinRealPath}")" || { echo "Sopka loader: Unable to get a dirname of '${sopkaBinRealPath}' ($?)" >&2; exit 1; }
-  sopkaIndexDir="$(cd "${sopkaBinRealDirPath}"/.. >/dev/null 2>&1 && pwd)" || { echo "Sopka loader: Unable to determine full path for '${sopkaBinRealDirPath}/..' ($?)" >&2; exit 1; }
+  sopkaBinRealDirPath="$(dirname "${sopkaBinRealPath}")" || { echo "Sopka: Unable to get a dirname of '${sopkaBinRealPath}' ($?)" >&2; exit 1; }
+  sopkaIndexDir="$(cd "${sopkaBinRealDirPath}"/.. >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine full path for '${sopkaBinRealDirPath}/..' ($?)" >&2; exit 1; }
 
-  . "${sopkaIndexDir}/index.sh" || { echo "Sopka loader: Unable to load '${sopkaIndexDir}/index.sh' ($?)" >&2; exit 1; }
+  . "${sopkaIndexDir}/index.sh" || { echo "Sopka: Unable to load '${sopkaIndexDir}/index.sh' ($?)" >&2; exit 1; }
 }
 
 export SOPKA_BIN_PATH="${BASH_SOURCE[0]}"
 
 # Load sopka library index file
-sopka::load-index || { echo "Sopka loader: Unable to load sopka library index file ($?)" >&2; exit 1; }
+sopka::load-index || { echo "Sopka: Unable to load sopka library index file ($?)" >&2; exit 1; }
 
 # == we should have all library functions available by now ==
 
 # Remove sopka::load-index function
-unset -f sopka::load-index || fail "Sopka loader: Unable to remove sopka::load-index function"
+unset -f sopka::load-index || fail "Sopka: Unable to remove sopka::load-index function"
 
 # Load sopkafile
-sopka::load-sopkafile || fail "Sopka loader: Unable to load sopkafile"
+sopka::load-sopkafile || fail "Sopka: Unable to load sopkafile"
 
 # Run function provided in first argument, or run (if defined) sopkafile::main.
-# I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
-if [ -n "${1:-}" ]; then
-  declare -f "$1" >/dev/null || fail "Sopka loader: Argument must be a function name: $1"
-  "$@"
-  test $? = 0 || fail "Sopka loader: Error performing $1"
-else
-  if [ "${0:0:1}" != "-" ] && [ "$(basename "$0")" = "sopka" ]; then
-    if declare -f sopkafile::main >/dev/null; then
-      sopkafile::main
-      test $? = 0 || fail "Sopka loader: Error performing sopkafile::main"
-    elif sopka-menu::is-present; then
-      sopka-menu::display
-      test $? = 0 || fail "Sopka loader: Error performing sopka-menu::display"
-    else
-      fail "Sopka loader: Please specify a function name to run, define a sopkafile::main, or add items to a menu"
-    fi
-  fi
-fi
+sopka::launch "$@"

@@ -120,3 +120,28 @@ sopka::load-sopkafile() {
     fi
   fi
 }
+
+# I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
+sopka::launch() {
+  local statusCode
+  if [ -n "${1:-}" ]; then
+    declare -f "$1" >/dev/null || fail "Sopka: Argument must be a function name: $1"
+    "$@"
+    statusCode=$?
+    test $statusCode = 0 || fail "Sopka: Error performing $1", $statusCode
+  else
+    if [ "${0:0:1}" != "-" ] && [ "$(basename "$0")" = "sopka" ]; then
+      if declare -f sopkafile::main >/dev/null; then
+        sopkafile::main
+        statusCode=$?
+        test $statusCode = 0 || fail "Sopka: Error performing sopkafile::main", $statusCode
+      elif sopka-menu::is-present; then
+        sopka-menu::display
+        statusCode=$?
+        test $statusCode = 0 || fail "Sopka: Error performing sopka-menu::display", $statusCode
+      else
+        fail "Sopka: Please specify a function name to run, define a sopkafile::main, or add items to a menu"
+      fi
+    fi
+  fi
+}
