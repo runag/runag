@@ -10,7 +10,7 @@
   },
   "repository": "senotrusov/sopka",
   "scripts": {
-    "docs": "docs/make.sh",
+    "build": "src/deploy.sh; docs/make.sh",
     "lint": "shellcheck *.sh bin/* $(find lib -name '*.sh')"
   }
 }

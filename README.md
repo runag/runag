@@ -77,13 +77,13 @@ SOPKA_REMOTE_PORT="22"
 SOPKA_REMOTE_USER="hello"
 SOPKA_SEND_ENV=()
 
-# Internal, not to be used in API, referenced here to avoid possible conflicts
+# Internal, not to be used by non-library code, referenced here to avoid possible conflicts
 SOPKA_APT_LAZY_UPDATE_HAPPENED=true
 SOPKA_NODENV_INITIALIZED=true
 SOPKA_RBENV_INITIALIZED=true
 SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS=true
 SOPKA_TASK_OMIT_TITLE=true
-SOPKA_TASK_TITLE="string"
+SOPKA_TASK_TITLE="task title"
 ```
 
 # Contributing

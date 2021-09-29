@@ -75,3 +75,19 @@ git::gnome-keyring-credentials::save() {
   echo -n "${password}" | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
+
+git::install-git() {
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    if ! command -v git >/dev/null; then
+      if command -v apt-get >/dev/null; then
+        apt::update || fail
+        apt::install git || fail
+      else
+        fail "Unable to install git, apt-get not found"
+      fi
+    fi
+  fi
+
+  # on macos that will start git install process
+  git --version >/dev/null || fail
+}

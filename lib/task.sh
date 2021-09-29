@@ -30,7 +30,9 @@ task::run-verbose() {
   SOPKA_VERBOSE_TASKS=true task::run "$@"
 }
 
-task::run() {
+# note the subshell
+# shellcheck disable=SC2030
+task::run() {(
   local highlightColor="" errorColor="" normalColor=""
   if terminal::have-16-colors; then 
     highlightColor="$(tput setaf 11)" || fail
@@ -38,40 +40,52 @@ task::run() {
     normalColor="$(tput sgr 0)" || fail
   fi
 
-  local tmpFile; tmpFile="$(mktemp)" || fail
-
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
     echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}"
   fi
 
-  "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
+  local tmpFile="$(mktemp)" || fail
+
+  trap "task::cleanup" EXIT
+
+  ("$@") </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
   local taskResult=$?
 
   if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
     taskResult=1
   fi
 
-  if [ $taskResult != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+  exit $taskResult
+)}
+
+# shellcheck disable=SC2031
+task::cleanup() {
+  if [ "${taskResult:-1}" != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
     cat "${tmpFile}" || fail
 
-    echo -n "${errorColor}" >&2
-    cat "${tmpFile}.stderr" >&2 || fail
-    echo -n "${normalColor}" >&2
+    if [ -s "${tmpFile}.stderr" ]; then
+      echo -n "${errorColor}" >&2
+      cat "${tmpFile}.stderr" >&2 || fail
+      echo -n "${normalColor}" >&2
+    fi
   fi
-
-  rm "${tmpFile}" "${tmpFile}.stderr" || fail
-
-  return $taskResult
+  rm "${tmpFile}" || fail
+  rm -f "${tmpFile}.stderr" || fail
 }
 
-# sopka task::run-but-fail-on-rubygems-errors task::test gem
-
-# task::test() {
-#   echo hello out1
-#   echo hello err1 >&2
-#   sleep 1
-#   echo hello out2
-#   echo hello err2 >&2
-#   echo "ERROR: foobar" >&2
-#   return 1
+# weird stuff
+# -----------
+# onexit(){
+#   echo hello
+#   cat out
+#   cat err
 # }
+#
+# trap "onexit" EXIT
+#
+# thing(){
+#   echo ok
+#   sleep 30
+# }
+#
+# (thing) </dev/null >out >err
