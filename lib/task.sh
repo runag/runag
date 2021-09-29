@@ -14,13 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::run-and-fail-on-errors-in-rubygems() {
-  SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS=true task::run "$@"
+task::run-and-fail-on-error-in-rubygems() {
+  SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS=true task::run "$@"
   test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 task::run-and-omit-title() {
-  SOPKA_TASKS_OMIT_TITLES=true task::run "$@"
+  SOPKA_TASK_OMIT_TITLE=true task::run "$@"
   test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
@@ -44,14 +44,14 @@ task::run() {
 
   local tmpFile; tmpFile="$(mktemp)" || fail
 
-  if [ "${SOPKA_TASKS_OMIT_TITLES:-}" != true ]; then
+  if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
     echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}"
   fi
 
   "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
   local taskResult=$?
 
-  if [ $taskResult = 0 ] && [ "${SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
+  if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
     taskResult=1
   fi
 

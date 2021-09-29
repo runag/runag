@@ -56,14 +56,14 @@ task::run() {
 
   local tmpFile; tmpFile="$(mktemp)" || fail
 
-  if [ "${SOPKA_TASKS_OMIT_TITLES:-}" != true ]; then
+  if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
     echo "${highlightColor}Performing $*...${normalColor}"
   fi
 
   "$@" </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
   local taskResult=$?
 
-  if [ $taskResult = 0 ] && [ "${SOPKA_TASKS_FAIL_ON_ERRORS_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
+  if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
     taskResult=1
   fi
 
