@@ -43,7 +43,8 @@ fail ()
 # shellcheck disable=SC2030
 task::run () 
 { 
-    ( if terminal::have-16-colors; then
+    ( local highlightColor="" errorColor="" normalColor="";
+    if terminal::have-16-colors; then
         highlightColor="$(tput setaf 11)" || fail;
         errorColor="$(tput setaf 9)" || fail;
         normalColor="$(tput sgr 0)" || fail;
@@ -51,11 +52,10 @@ task::run ()
     if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
         echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}";
     fi;
-    tmpFile="$(mktemp)" || fail;
+    local tmpFile="$(mktemp)" || fail;
     trap "task::cleanup" EXIT;
     ( "$@" ) < /dev/null > "${tmpFile}" 2> "${tmpFile}.stderr";
-    taskResult=$?;
-    echo task ended with $taskResult;
+    local taskResult=$?;
     if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
         taskResult=1;
     fi;
