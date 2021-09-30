@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 nodejs::apt::add-source() {
-  local version="${1:-14}"
+  local version="$1"
 
   local distributionCodename; distributionCodename="$(lsb_release --codename --short)" || fail
 
@@ -24,7 +24,9 @@ nodejs::apt::add-source() {
 }
 
 nodejs::apt::install() {
-  nodejs::apt::add-source "$@" || fail
+  local version="$1"
+
+  nodejs::apt::add-source "${version}" || fail
   apt::update || fail
   apt::install nodejs || fail
 }
