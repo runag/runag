@@ -29,60 +29,65 @@ benchmark::run() {
 
   local resultFile; resultFile="$(mktemp -u "${HOME}/sopka-benchmark ${hostnameString} ${currentDate} XXXXXXXXXX")" || fail
 
-  benchmark::actually-run | tee "${resultFile}.txt" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  benchmark::actually-run "${resultFile}.txt" || fail
 
   echo "${resultFile}.txt"
 }
 
 benchmark::actually-run() {
-  echo "### CPU SPEED ###"
-  sysbench cpu run || fail
+  local resultFile=$1
 
-  echo "### THREADS ###"
-  sysbench threads run || fail
+  echo "### CPU SPEED ###" >> "${resultFile}"
+  sysbench cpu run >> "${resultFile}" || fail
 
-  echo "### RAM WRITE, 4KiB BLOCKS ###"
-  sysbench memory run --memory-block-size=4096 || fail
+  echo "### THREADS ###" >> "${resultFile}"
+  sysbench threads run >> "${resultFile}" || fail
+
+  echo "### RAM WRITE, 4KiB BLOCKS ###" >> "${resultFile}"
+  sysbench memory run --memory-block-size=4096 >> "${resultFile}" || fail
 
   (
     local tempDir; tempDir="$(mktemp -d "${HOME}/sopka-benchmark-XXXXXXXXXX")" || fail
     cd "${tempDir}" || fail
-    benchmark::fileio || fail
-    benchmark::fileio --file-extra-flags=direct || fail
+
+    benchmark::fileio "${resultFile}" || fail
+    benchmark::fileio "${resultFile}" --file-extra-flags=direct || fail
+
     rmdir "${tempDir}" || fail
   ) || fail
 }
 
 # shellcheck disable=SC2086
 benchmark::fileio() {
-  task::run-and-omit-title sysbench fileio prepare ${1:-} || fail
+  local resultFile=$1
 
-  echo "### SEQUENTIAL READ ${1:-} ###"
-  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${1:-} || fail
+  sysbench fileio prepare --verbosity=2 ${2:-} || fail
 
-  echo "### RANDOM READ QD1 ${1:-} ###"
-  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${1:-} || fail
+  echo "### SEQUENTIAL READ ${2:-} ###" >> "${resultFile}"
+  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${2:-} >> "${resultFile}" || fail
+
+  echo "### RANDOM READ QD1 ${2:-} ###" >> "${resultFile}"
+  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${2:-} >> "${resultFile}" || fail
 
   if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
-    echo "### RANDOM READ QD32 ${1:-} ###"
-    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
+    echo "### RANDOM READ QD32 ${2:-} ###" >> "${resultFile}"
+    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${resultFile}" || fail
   fi
 
-  echo "### RANDOM WRITE QD1 ${1:-} ###"
-  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
+  echo "### RANDOM WRITE QD1 ${2:-} ###" >> "${resultFile}"
+  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${resultFile}" || fail
 
   if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
-    echo "### RANDOM WRITE QD32 ${1:-} ###"
-    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${1:-} || fail
+    echo "### RANDOM WRITE QD32 ${2:-} ###" >> "${resultFile}"
+    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${resultFile}" || fail
   fi
 
   # this should be final tests as they truncate files
-  echo "### SEQUENTIAL WRITE ${1:-} ###"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
+  echo "### SEQUENTIAL WRITE ${2:-} ###" >> "${resultFile}"
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${resultFile}" || fail
 
-  echo "### SEQUENTIAL WRITE IN SYNC MODE ${1:-} ###"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${1:-} || fail
+  echo "### SEQUENTIAL WRITE IN SYNC MODE ${2:-} ###" >> "${resultFile}"
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${resultFile}" || fail
 
-  task::run-and-omit-title sysbench fileio cleanup || fail
+  sysbench fileio cleanup --verbosity=2 || fail
 }
