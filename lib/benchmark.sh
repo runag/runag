@@ -35,7 +35,7 @@ benchmark::run() {
 }
 
 benchmark::actually-run() {
-  local resultFile=$1
+  local resultFile="$1"
 
   echo "### CPU SPEED ###" >> "${resultFile}"
   sysbench cpu run >> "${resultFile}" || fail
@@ -59,7 +59,7 @@ benchmark::actually-run() {
 
 # shellcheck disable=SC2086
 benchmark::fileio() {
-  local resultFile=$1
+  local resultFile="$1"
 
   sysbench fileio prepare --verbosity=2 ${2:-} || fail
 
