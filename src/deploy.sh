@@ -31,6 +31,7 @@ $(declare -f fail)
 
 # shellcheck disable=SC2030
 $(declare -f task::run)
+$(declare -f task::stderr-filter)
 # shellcheck disable=SC2031
 $(declare -f task::cleanup)
 

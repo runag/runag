@@ -48,7 +48,7 @@ task::run() {(
     echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}"
   fi
 
-  local tmpFile="$(mktemp)" || fail
+  local tmpFile; tmpFile="$(mktemp)" || fail
 
   trap "task::cleanup" EXIT
 
