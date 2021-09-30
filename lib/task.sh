@@ -26,6 +26,10 @@ task::run-with-title() {
   SOPKA_TASK_TITLE="$1" task::run "${@:2}"
 }
 
+task::run-with-short-title() {
+  SOPKA_TASK_TITLE="$1" task::run "$@"
+}
+
 task::run-verbose() {
   SOPKA_VERBOSE_TASKS=true task::run "$@"
 }
