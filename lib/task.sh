@@ -62,9 +62,32 @@ task::run() {(
   exit $taskResult
 )}
 
+task::stderr-filter() {
+  grep -vFx "Success." |\
+  grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" |\
+  grep -vx "Cloning into '.*'\\.\\.\\." |\
+  grep -vx "Created symlink .* → .*\\."
+  true # TODO: ensure grep exit statuses are good?
+}
+
 # shellcheck disable=SC2031
 task::cleanup() {
-  if [ "${taskResult:-1}" != 0 ] || [ -s "${tmpFile}.stderr" ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+  local stderrPresent=false
+
+  if [ -s "${tmpFile}.stderr" ]; then
+    if declare -f "task::stderr-filter" >/dev/null; then
+      local lineCount; lineCount="$(task::stderr-filter < "${tmpFile}.stderr" | wc -l; test "${PIPESTATUS[*]}" = "0 0")" || fail
+      if [ "${lineCount}" = 0 ]; then
+        stderrPresent=false
+      else
+        stderrPresent=true
+      fi
+    else
+      stderrPresent=true
+    fi
+  fi
+
+  if [ "${taskResult:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
     cat "${tmpFile}" || fail
 
     if [ -s "${tmpFile}.stderr" ]; then
@@ -73,6 +96,7 @@ task::cleanup() {
       echo -n "${normalColor}" >&2
     fi
   fi
+
   rm "${tmpFile}" || fail
   rm -f "${tmpFile}.stderr" || fail
 }
