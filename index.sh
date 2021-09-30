@@ -17,6 +17,7 @@
 sopka::load-lib() {
   local selfDir; selfDir="$(dirname "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to get dirname of index.sh ($?)" >&2; exit 1; }
 
+  . "${selfDir}/lib/terminal.sh" || { echo "Sopka: Unable to load lib/terminal.sh ($?)" >&2; exit 1; }
   . "${selfDir}/lib/fail.sh" || { echo "Sopka: Unable to load lib/fail.sh ($?)" >&2; exit 1; }
 
   . "${selfDir}/lib/apt.sh" || fail
@@ -47,7 +48,6 @@ sopka::load-lib() {
   . "${selfDir}/lib/systemd.sh" || fail
   . "${selfDir}/lib/tailscale.sh" || fail
   . "${selfDir}/lib/task.sh" || fail
-  . "${selfDir}/lib/terminal.sh" || fail
   . "${selfDir}/lib/vmware.sh" || fail
   . "${selfDir}/lib/vscode.sh" || fail
 }
