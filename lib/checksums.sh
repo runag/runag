@@ -75,7 +75,7 @@ checksums::create-or-update(){
   fi
 }
 
-checksums::verify()(
+checksums::verify() {(
   local directory="$1"
   local currentChecksumFile="$2"
   local checksumAlgo="${3:-"sha3-256"}"
@@ -113,4 +113,4 @@ checksums::verify()(
   if [ "${result}" != 0 ]; then
     fail "checksums::verify failed (${result})"
   fi
-)
+)}
