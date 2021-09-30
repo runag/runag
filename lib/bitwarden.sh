@@ -27,12 +27,10 @@ bitwarden::snap::install-cli() (
   fi
 )
 
-# bitwarden::beyond-session() {
-#   (
-#     unset BW_SESSION
-#     "$@"
-#   ) || fail "Error performing ${1:-"(argument is empty)"}" $?
-# }
+bitwarden::beyond-session() {(
+  unset BW_SESSION
+  "$@"
+)}
 
 bitwarden::login() {
   local bitwardenEmail="$1"

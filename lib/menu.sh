@@ -14,11 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# I use "test $? = 0" instead of "|| fail" for the case if someone wants to "set -o errexit" in their functions
-
 menu::select-and-run() {
   menu::select-argument-and-run menu::just-run "$@"
-  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 menu::select-argument-and-run() {
@@ -87,12 +84,19 @@ menu::select-argument-and-run() {
 
   local selectedItem="${list[$((inputText-1))]}" || fail
 
+  # I use "test" instead of "|| fail" here in case if someone wants
+  # to use "set -o errexit" in their functions
+
   # shellcheck disable=SC2086
   $1 ${selectedItem}
-  test $? = 0 || fail "Error performing $1 ${selectedItem}"
+  local statusCode=$?
+  test $statusCode = 0 || fail "Error performing $1 ${selectedItem}" $statusCode
 }
 
 menu::just-run() {
+  # I use "test" instead of "|| fail" here in case if someone wants
+  # to use "set -o errexit" in their functions
   "$@"
-  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
+  local statusCode=$?
+  test $statusCode = 0 || fail "Error performing ${1:-"(argument is empty)"}" $statusCode
 }

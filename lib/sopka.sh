@@ -17,13 +17,11 @@
 sopka::with-update-secrets() {
   export SOPKA_UPDATE_SECRETS=true
   "$@"
-  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 sopka::with-verbose-tasks() {
   export SOPKA_VERBOSE_TASKS=true
   "$@"
-  test $? = 0 || fail "Error performing ${1:-"(argument is empty)"}"
 }
 
 sopka::update() {
@@ -43,29 +41,6 @@ sopka::add() {
   local packageId="$1"
   local dest; dest="$(echo "${packageId}" | tr "/" "-")" || fail
   git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
-}
-
-sopka-menu::add() {
-  if [ -z ${SOPKA_MENU+x} ]; then
-    SOPKA_MENU=()
-  fi
-  SOPKA_MENU+=("$@")
-}
-
-sopka-menu::display() {
-  if [ -z ${SOPKA_MENU+x} ]; then
-    fail "Menu is empty"
-  fi
-  menu::select-and-run "${SOPKA_MENU[@]}"
-  test $? = 0 || fail "Error performing menu::select-and-run"
-}
-
-sopka-menu::is-present() {
-  test -n "${SOPKA_MENU+x}"
-}
-
-sopka-menu::clear() {
-  SOPKA_MENU=()
 }
 
 sopka::print-license() {
@@ -128,17 +103,17 @@ sopka::launch() {
     declare -f "$1" >/dev/null || fail "Sopka: Argument must be a function name: $1"
     "$@"
     statusCode=$?
-    test $statusCode = 0 || fail "Sopka: Error performing $1", $statusCode
+    test $statusCode = 0 || fail "Sopka: Error performing $1" $statusCode
   else
     if [ "${0:0:1}" != "-" ] && [ "$(basename "$0")" = "sopka" ]; then
       if declare -f sopkafile::main >/dev/null; then
         sopkafile::main
         statusCode=$?
-        test $statusCode = 0 || fail "Sopka: Error performing sopkafile::main", $statusCode
+        test $statusCode = 0 || fail "Sopka: Error performing sopkafile::main" $statusCode
       elif sopka-menu::is-present; then
         sopka-menu::display
         statusCode=$?
-        test $statusCode = 0 || fail "Sopka: Error performing sopka-menu::display", $statusCode
+        test $statusCode = 0 || fail "Sopka: Error performing sopka-menu::display" $statusCode
       else
         fail "Sopka: Please specify a function name to run, define a sopkafile::main, or add items to a menu"
       fi

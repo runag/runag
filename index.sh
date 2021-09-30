@@ -60,6 +60,7 @@ sopka::load-lib() {
   . "${selfDir}/lib/rsync.sh" || fail
   . "${selfDir}/lib/ruby.sh" || fail
   . "${selfDir}/lib/shell.sh" || fail
+  . "${selfDir}/lib/sopka-menu.sh" || fail
   . "${selfDir}/lib/sopka.sh" || fail
   . "${selfDir}/lib/ssh.sh" || fail
   . "${selfDir}/lib/sublime.sh" || fail
