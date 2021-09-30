@@ -80,11 +80,11 @@ task::cleanup ()
 apt::update () 
 { 
     SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
-    task::run sudo apt-get update || fail
+    sudo apt-get update || fail
 }
 apt::install () 
 { 
-    task::run sudo apt-get -y install "$@" || fail
+    sudo apt-get -y install "$@" || fail
 }
 
 git::install-git () 
@@ -119,14 +119,14 @@ git::place-up-to-date-clone ()
             local packupPath;
             packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail;
             mv "${destFullPath}" "${packupPath}" || fail;
-            task::run git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
+            git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
         fi;
-        task::run git -C "${dest}" pull || fail "Unable to git pull in ${dest}";
+        git -C "${dest}" pull || fail "Unable to git pull in ${dest}";
     else
-        task::run git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
+        git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
     fi;
     if [ -n "${branch:-}" ]; then
-        task::run git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}";
+        git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}";
     fi
 }
 
@@ -159,12 +159,12 @@ if [ "${SOPKA_VERBOSE:-}" = true ]; then
 fi
 set -o nounset
 
-git::install-git || fail
+task::run git::install-git || fail
 
-git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || fail
+task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || fail
 
 if [ -n "${1:-}" ] && [ "$1" != "--" ]; then
-  sopka::add "$1" || fail
+  task::run sopka::add "$1" || fail
 fi
 
 "${HOME}/.sopka/bin/sopka" "${@:2}" || fail

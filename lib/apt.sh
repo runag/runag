@@ -31,22 +31,22 @@ apt::lazy-update-and-dist-upgrade() {
 # @description Perform apt update
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  task::run sudo apt-get update || fail
+  sudo apt-get update || fail
 }
 
 # @description Perform apt dist-upgrade
 apt::dist-upgrade() {
-  task::run sudo apt-get -y dist-upgrade || fail
+  sudo apt-get -y dist-upgrade || fail
 }
 
 # @description Install package
 apt::install() {
-  task::run sudo apt-get -y install "$@" || fail
+  sudo apt-get -y install "$@" || fail
 }
 
 # @description Perform apt autoremove
 apt::autoremove() {
-  task::run sudo apt-get -y autoremove || fail
+  sudo apt-get -y autoremove || fail
 }
 
 # @description Add apt source and key
