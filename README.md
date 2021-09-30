@@ -77,7 +77,7 @@ SOPKA_REMOTE_PORT="22"
 SOPKA_REMOTE_USER="hello"
 SOPKA_SEND_ENV=()
 
-# Internal, not to be used by non-library code, referenced here to avoid possible conflicts
+# Internal, not to be used by non-library code
 SOPKA_APT_LAZY_UPDATE_HAPPENED=true
 SOPKA_NODENV_INITIALIZED=true
 SOPKA_RBENV_INITIALIZED=true
@@ -89,14 +89,3 @@ SOPKA_TASK_TITLE="task title"
 # Contributing
 
 Please check shell scripts before commiting any changes with `npm run lint`.
-
-## Style guide
-
-```sh
-%q
-|| fail
-pipestatus
-error handling in loops "for, while"
-error handling in subshells () {}
-error handling in complex commands like ssh "foo" or sudo "foo"
-```
