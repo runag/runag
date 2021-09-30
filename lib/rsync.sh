@@ -36,19 +36,15 @@ rsync::transfer() {
 }
 
 rsync::remote() {
-  local rshOption
-
   ssh::make-user-config-directory-if-not-exists || fail
 
-  rshOption="ssh \
+  local rshOption; rshOption="ssh \
     -o ControlMaster=auto \
     -o ControlPath=$(printf "%q" "${HOME}/.ssh/%C.control-socket") \
     -o ControlPersist=yes \
     -o ServerAliveInterval=25 \
-    ${SOPKA_REMOTE_PORT:+-p} ${SOPKA_REMOTE_PORT:+"${SOPKA_REMOTE_PORT}"} \
-    ${SOPKA_REMOTE_USER:+-l} ${SOPKA_REMOTE_USER:+"${SOPKA_REMOTE_USER}"}" || fail
+    ${SOPKA_REMOTE_PORT:+-p "${SOPKA_REMOTE_PORT}"} \
+    ${SOPKA_REMOTE_USER:+-l "${SOPKA_REMOTE_USER}"}" || fail
 
-  rsync \
-    --rsh "${rshOption}" \
-    "$@" || fail
+  rsync --rsh "${rshOption}" "$@" || fail
 }
