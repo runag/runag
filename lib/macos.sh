@@ -59,6 +59,6 @@ macos::hide-folder() {
 
 macos::install-homebrew() {
   if ! command -v brew >/dev/null; then
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" </dev/null || fail "Unable to install homebrew"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null || fail "Unable to install homebrew"
   fi
 }
