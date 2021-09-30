@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-bitwarden::snap::install-cli() (
+bitwarden::snap::install-cli() {(
   unset BW_SESSION
 
   if ! snap list bw >/dev/null 2>&1; then
@@ -25,7 +25,7 @@ bitwarden::snap::install-cli() (
     apt::lazy-update || fail
     apt::install jq || fail
   fi
-)
+)}
 
 bitwarden::beyond-session() {(
   unset BW_SESSION
