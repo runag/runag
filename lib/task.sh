@@ -63,6 +63,11 @@ task::run() {(
 )}
 
 task::stderr-filter() {
+  # Those greps are for:
+  # 1. I have no idea
+  # 2. apt-key
+  # 3. git
+  # 4. systemd
   grep -vFx "Success." |\
   grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" |\
   grep -vx "Cloning into '.*'\\.\\.\\." |\
