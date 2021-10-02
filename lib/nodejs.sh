@@ -88,7 +88,7 @@ nodejs::load-nodenv() {
   nodenv rehash || fail
 }
 
-nodejs::update-systemwide-packages() {
+nodejs::update-system-wide-packages() {
   sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || fail
 }
 

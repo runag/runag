@@ -92,6 +92,6 @@ ruby::dangerously-append-nodocument-to-gemrc() {
   file::append-line-unless-present "gem: --no-document" "${gemrcFile}" || fail
 }
 
-ruby::update-systemwide-packages() {
+ruby::update-system-wide-packages() {
   sudo gem update || fail
 }
