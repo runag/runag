@@ -14,29 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-nodejs::apt::add-source() {
+nodejs::install::apt() {
   local version="$1"
 
   local distributionCodename; distributionCodename="$(lsb_release --codename --short)" || fail
 
   apt::add-key-and-source "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" \
     "deb https://deb.nodesource.com/node_${version}.x ${distributionCodename} main" "nodesource" || fail
-}
 
-nodejs::apt::install() {
-  local version="$1"
-
-  nodejs::apt::add-source "${version}" || fail
   apt::update || fail
   apt::install nodejs || fail
 }
 
-nodejs::apt::add-yarn-source() {
+nodejs::install-yarn::apt() {
   apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" || fail "Unable to add yarn apt source"
-}
 
-nodejs::apt::install-yarn() {
-  nodejs::apt::add-yarn-source || fail
   apt::update || fail
   apt::install yarn || fail
 }

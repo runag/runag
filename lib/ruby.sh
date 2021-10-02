@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ruby::apt::install() {
+ruby::install::apt() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
     libedit-dev `# dependency to install ruby 2.7.3 using rbenv` \

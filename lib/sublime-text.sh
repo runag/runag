@@ -14,14 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sublime::apt::install-merge-and-text() {
+sublime-text::install::apt() {
   apt::add-key-and-source "https://download.sublimetext.com/sublimehq-pub.gpg" "deb https://download.sublimetext.com/ apt/stable/" "sublime-text" || fail
   apt::update || fail
-  apt::install sublime-merge || fail
   apt::install sublime-text || fail
 }
 
-sublime::get-config-path() {
+sublime-text::get-config-path() {
   local configPath
 
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
@@ -39,8 +38,8 @@ sublime::get-config-path() {
   echo "${configPath}"
 }
 
-sublime::install-package-control() {
-  local configPath; configPath="$(sublime::get-config-path)" || fail
+sublime-text::install-package-control() {
+  local configPath; configPath="$(sublime-text::get-config-path)" || fail
   local installedPackages="${configPath}/Installed Packages"
   local packageControlPackage="${installedPackages}/Package Control.sublime-package"
 
@@ -55,11 +54,11 @@ sublime::install-package-control() {
   fi
 }
 
-sublime::install-config-file() {
+sublime-text::install-config-file() {
   local srcPath="$1"
 
   local fileName; fileName="$(basename "${srcPath}")" || fail
-  local configPath; configPath="$(sublime::get-config-path)" || fail
+  local configPath; configPath="$(sublime-text::get-config-path)" || fail
 
   dir::make-if-not-exists "${configPath}/Packages" 700 || fail
   dir::make-if-not-exists "${configPath}/Packages/User" 700 || fail
@@ -67,11 +66,11 @@ sublime::install-config-file() {
   config::install "${srcPath}" "${configPath}/Packages/User/${fileName}" || fail
 }
 
-sublime::merge-config-file() {
+sublime-text::merge-config-file() {
   local srcPath="$1"
   
   local fileName; fileName="$(basename "${srcPath}")" || fail
-  local configPath; configPath="$(sublime::get-config-path)" || fail
+  local configPath; configPath="$(sublime-text::get-config-path)" || fail
 
   config::merge "${srcPath}" "${configPath}/Packages/User/${fileName}" || fail
 }

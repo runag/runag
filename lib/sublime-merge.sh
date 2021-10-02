@@ -14,15 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-syncthing::install::macos() {
-  brew install syncthing || fail
-  brew services start syncthing || fail
-}
-
-syncthing::install::apt() {
-  # in accordance with instructions at https://apt.syncthing.net/
-  apt::add-key-and-source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
+sublime-merge::install::apt() {
+  apt::add-key-and-source "https://download.sublimetext.com/sublimehq-pub.gpg" "deb https://download.sublimetext.com/ apt/stable/" "sublime-text" || fail
   apt::update || fail
-  apt::install syncthing || fail
-  sudo systemctl --now enable "syncthing@${SUDO_USER}.service" || fail
+  apt::install sublime-merge || fail
 }

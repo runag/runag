@@ -43,7 +43,8 @@ sopka::load-lib() {
   . "${selfDir}/lib/sopka-menu.sh" || fail
   . "${selfDir}/lib/sopka.sh" || fail
   . "${selfDir}/lib/ssh.sh" || fail
-  . "${selfDir}/lib/sublime.sh" || fail
+  . "${selfDir}/lib/sublime-merge.sh" || fail
+  . "${selfDir}/lib/sublime-text.sh" || fail
   . "${selfDir}/lib/syncthing.sh" || fail
   . "${selfDir}/lib/systemd.sh" || fail
   . "${selfDir}/lib/tailscale.sh" || fail
