@@ -19,10 +19,25 @@
 
 __xVhMyefCbBnZFUQtwqCs() {
 
-terminal::have-16-colors () 
+terminal::color () 
 { 
+    local foreground="$1";
+    local background="${2:-}";
     local amount;
-    [ -t 1 ] && command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ] && [ "${amount}" -ge 16 ]
+    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ]; then
+        if [ -n "${foreground##*[!0-9]*}" ] && [ "${amount}" -ge "${foreground}" ]; then
+            tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        fi;
+        if [ -n "${background##*[!0-9]*}" ] && [ "${amount}" -ge "${background}" ]; then
+            tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        fi;
+    fi
+}
+terminal::default-color () 
+{ 
+    if command -v tput > /dev/null; then
+        tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    fi
 }
 log::notice () 
 { 
@@ -32,22 +47,19 @@ log::notice ()
 log::error () 
 { 
     local message="$1";
-    log::with-color "${message}" 1 1>&2
+    log::with-color "${message}" 9 1>&2
 }
 log::with-color () 
 { 
     local message="$1";
     local foregroundColor="$2";
     local backgroundColor="${3:-}";
-    local foregroundColorSeq="" backgroundColorSeq="" defaultColorSeq="";
-    if terminal::have-16-colors; then
-        foregroundColorSeq="$(tput setaf "${foregroundColor}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        if [ -n "${backgroundColor:-}" ]; then
-            backgroundColorSeq="$(tput setab "${backgroundColor}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        fi;
-        defaultColorSeq="$(tput sgr 0)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    local colorSeq="" defaultColorSeq="";
+    if [ -t 1 ]; then
+        colorSeq="$(terminal::color "${foregroundColor}" "${backgroundColor:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        defaultColorSeq="$(terminal::default-color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
     fi;
-    echo "${foregroundColorSeq}${backgroundColorSeq}${message}${defaultColorSeq}"
+    echo "${colorSeq}${message}${defaultColorSeq}"
 }
 fail () 
 { 
@@ -84,32 +96,38 @@ task::stderr-filter ()
 # shellcheck disable=SC2031
 task::cleanup () 
 { 
+    local errorState=0;
     local stderrPresent=false;
-    local errorColor="" normalColor="";
-    if terminal::have-16-colors; then
-        errorColor="$(tput setaf 9)" || fail;
-        normalColor="$(tput sgr 0)" || fail;
-    fi;
     if [ -s "${tmpFile}.stderr" ]; then
+        stderrPresent=true;
         if declare -f "task::stderr-filter" > /dev/null; then
             local lineCount;
-            lineCount="$(task::stderr-filter < "${tmpFile}.stderr" | wc -l; test "${PIPESTATUS[*]}" = "0 0")" || fail;
-            if [ "${lineCount}" = 0 ]; then
-                stderrPresent=false;
+            if ! lineCount="$(task::stderr-filter < "${tmpFile}.stderr" | wc -l; test "${PIPESTATUS[*]}" = "0 0")"; then
+                echo "Sopka: Unable to get result from task::stderr-filter" 1>&2;
+                errorState=1;
             else
-                stderrPresent=true;
+                if [ "${lineCount}" = 0 ]; then
+                    stderrPresent=false;
+                fi;
             fi;
-        else
-            stderrPresent=true;
         fi;
     fi;
     if [ "${taskResult:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
-        cat "${tmpFile}" || fail;
+        cat "${tmpFile}" || { 
+            echo "Sopka: Unable to display task stdout ($?)" 1>&2;
+            errorState=2
+        };
         if [ -s "${tmpFile}.stderr" ]; then
-            echo -n "${errorColor}" 1>&2;
-            cat "${tmpFile}.stderr" 1>&2 || fail;
-            echo -n "${normalColor}" 1>&2;
+            test -t 2 && terminal::color 9 1>&2;
+            cat "${tmpFile}.stderr" 1>&2 || { 
+                echo "Sopka: Unable to display task stderr ($?)" 1>&2;
+                errorState=3
+            };
+            test -t 2 && terminal::default-color 1>&2;
         fi;
+    fi;
+    if [ "${errorState}" != 0 ]; then
+        fail "task::cleanup error state ${errorState}";
     fi;
     rm "${tmpFile}" || fail;
     rm -f "${tmpFile}.stderr" || fail

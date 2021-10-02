@@ -30,7 +30,7 @@ log::notice() {
 
 log::error() {
   local message="$1"
-  log::with-color "${message}" 1 >&2
+  log::with-color "${message}" 9 >&2
 }
 
 log::with-color() {
@@ -38,17 +38,11 @@ log::with-color() {
   local foregroundColor="$2"
   local backgroundColor="${3:-}"
 
-  local foregroundColorSeq="" backgroundColorSeq="" defaultColorSeq=""
-
-  if terminal::have-16-colors; then
-    foregroundColorSeq="$(tput setaf "${foregroundColor}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
-
-    if [ -n "${backgroundColor:-}" ]; then
-      backgroundColorSeq="$(tput setab "${backgroundColor}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
-    fi
-    
-    defaultColorSeq="$(tput sgr 0)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
+  local colorSeq="" defaultColorSeq=""
+  if [ -t 1 ]; then
+    colorSeq="$(terminal::color "${foregroundColor}" "${backgroundColor:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
+    defaultColorSeq="$(terminal::default-color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
   fi
 
-  echo "${foregroundColorSeq}${backgroundColorSeq}${message}${defaultColorSeq}"
+  echo "${colorSeq}${message}${defaultColorSeq}"
 }

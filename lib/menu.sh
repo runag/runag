@@ -21,15 +21,13 @@ menu::select-and-run() {
 menu::select-argument-and-run() {
   local list=("${@:2}")
 
-  if ! [ -t 0 ]; then
-    fail "Menu was called while not in terminal"
-  fi
+  test -t 0 || fail "Menu was called while not in terminal"
 
-  local colorA="" colorB="" normalColor=""
-  if terminal::have-16-colors; then 
-    colorA="$(tput setaf 14)" || fail
-    colorB="$(tput setaf 15)" || fail
-    normalColor="$(tput sgr 0)" || fail
+  local colorA="" colorB="" defaultColor=""
+  if [ -t 1 ]; then
+    colorA="$(terminal::color 14)" || fail
+    colorB="$(terminal::color 15)" || fail
+    defaultColor="$(terminal::default-color)" || fail
   fi
 
   echo ""
@@ -59,7 +57,7 @@ menu::select-argument-and-run() {
       currentColor="${colorA}"
     fi
 
-    echo "  ${currentColor}$((index+1))) ${item}${normalColor}"
+    echo "  ${currentColor}$((index+1))) ${item}${defaultColor}"
   done
 
   echo ""

@@ -70,35 +70,34 @@ task::stderr-filter() {
 
 # shellcheck disable=SC2031
 task::cleanup() {
+  local errorState=0
   local stderrPresent=false
 
-  local errorColor="" normalColor=""
-  if terminal::have-16-colors; then 
-    errorColor="$(tput setaf 9)" || fail
-    normalColor="$(tput sgr 0)" || fail
-  fi
-
   if [ -s "${tmpFile}.stderr" ]; then
+    stderrPresent=true
     if declare -f "task::stderr-filter" >/dev/null; then
-      local lineCount; lineCount="$(task::stderr-filter < "${tmpFile}.stderr" | wc -l; test "${PIPESTATUS[*]}" = "0 0")" || fail
-      if [ "${lineCount}" = 0 ]; then
+      local lineCount
+      if ! lineCount="$(task::stderr-filter < "${tmpFile}.stderr" | wc -l; test "${PIPESTATUS[*]}" = "0 0")"; then
+        echo "Sopka: Unable to get result from task::stderr-filter" >&2
+        errorState=1
+      elif [ "${lineCount}" = 0 ]; then
         stderrPresent=false
-      else
-        stderrPresent=true
       fi
-    else
-      stderrPresent=true
     fi
   fi
 
   if [ "${taskResult:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
-    cat "${tmpFile}" || fail
+    cat "${tmpFile}" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=2; }
 
     if [ -s "${tmpFile}.stderr" ]; then
-      echo -n "${errorColor}" >&2
-      cat "${tmpFile}.stderr" >&2 || fail
-      echo -n "${normalColor}" >&2
+      test -t 2 && terminal::color 9 >&2
+      cat "${tmpFile}.stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; errorState=3; }
+      test -t 2 && terminal::default-color >&2
     fi
+  fi
+
+  if [ "${errorState}" != 0 ]; then
+    fail "task::cleanup error state ${errorState}"
   fi
 
   rm "${tmpFile}" || fail
