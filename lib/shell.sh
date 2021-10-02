@@ -17,13 +17,6 @@
 shell::display-elapsed-time() {
   echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
-
-shell::fail-unless-command-is-found() {
-  for cmd in "$@"; do
-    command -v "${cmd}" >/dev/null || fail "${cmd} command is not found"
-  done
-}
-
 shell::install-shellrc-directory-loader() {
   local shellrcFile="$1"
 
