@@ -14,9 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-shell::display-elapsed-time() {
-  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
 shell::install-shellrc-directory-loader() {
   local shellrcFile="$1"
 
