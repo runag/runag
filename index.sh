@@ -33,6 +33,7 @@ sopka::load-lib() {
   . "${selfDir}/lib/imagemagick.sh" || fail
   . "${selfDir}/lib/keys.sh" || fail
   . "${selfDir}/lib/linux.sh" || fail
+  . "${selfDir}/lib/log.sh" || fail
   . "${selfDir}/lib/macos.sh" || fail
   . "${selfDir}/lib/menu.sh" || fail
   . "${selfDir}/lib/nodejs.sh" || fail

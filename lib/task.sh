@@ -37,15 +37,8 @@ task::run-verbose() {
 # note the subshell
 # shellcheck disable=SC2030
 task::run() {(
-  local highlightColor="" errorColor="" normalColor=""
-  if terminal::have-16-colors; then 
-    highlightColor="$(tput setaf 11)" || fail
-    errorColor="$(tput setaf 9)" || fail
-    normalColor="$(tput sgr 0)" || fail
-  fi
-
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-    echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}"
+    log::notice "Performing ${SOPKA_TASK_TITLE:-$*}..." || fail
   fi
 
   local tmpFile; tmpFile="$(mktemp)" || fail
@@ -78,6 +71,12 @@ task::stderr-filter() {
 # shellcheck disable=SC2031
 task::cleanup() {
   local stderrPresent=false
+
+  local errorColor="" normalColor=""
+  if terminal::have-16-colors; then 
+    errorColor="$(tput setaf 9)" || fail
+    normalColor="$(tput sgr 0)" || fail
+  fi
 
   if [ -s "${tmpFile}.stderr" ]; then
     if declare -f "task::stderr-filter" >/dev/null; then

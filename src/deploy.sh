@@ -27,6 +27,9 @@ $(sopka::print-license)
 __xVhMyefCbBnZFUQtwqCs() {
 
 $(declare -f terminal::have-16-colors)
+$(declare -f log::notice)
+$(declare -f log::error)
+$(declare -f log::with-color)
 $(declare -f fail)
 
 # shellcheck disable=SC2030

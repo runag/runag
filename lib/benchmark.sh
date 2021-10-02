@@ -14,10 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-benchmark::display-elapsed-time() {
-  echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
 benchmark::is-available() {
   if [[ "${OSTYPE}" =~ ^linux ]] || [[ "${OSTYPE}" =~ ^darwin ]]; then
     if command -v sysbench >/dev/null; then

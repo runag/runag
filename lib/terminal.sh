@@ -23,4 +23,8 @@ terminal::print-color-table() {
   for i in {0..16..1}; do 
     echo "$(tput setaf "${i}")tput setaf ${i}$(tput sgr 0)"
   done
+
+  for i in {0..16..1}; do 
+    echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)"
+  done
 }

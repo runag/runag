@@ -15,17 +15,11 @@
 #  limitations under the License.
 
 fail() {
-  local errorColor="" normalColor=""
-  if terminal::have-16-colors; then 
-    errorColor="$(tput setaf 1)"
-    normalColor="$(tput sgr 0)"
-  fi
-
-  echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" >&2
+  log::error "${1:-"Abnormal termination"}" || echo "Sopka: Unable to log error" >&2
 
   local i endAt=$((${#BASH_LINENO[@]}-1))
   for ((i=1; i<=endAt; i++)); do
-    echo "  ${errorColor}${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${normalColor}" >&2
+    log::error "  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'" || echo "Sopka: Unable to log error" >&2
   done
 
   exit "${2:-1}"

@@ -24,18 +24,38 @@ terminal::have-16-colors ()
     local amount;
     [ -t 1 ] && command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ] && [ "${amount}" -ge 16 ]
 }
+log::notice () 
+{ 
+    local message="$1";
+    log::with-color "${message}" 11
+}
+log::error () 
+{ 
+    local message="$1";
+    log::with-color "${message}" 1 1>&2
+}
+log::with-color () 
+{ 
+    local message="$1";
+    local foregroundColor="$2";
+    local backgroundColor="${3:-}";
+    local foregroundColorSeq="" backgroundColorSeq="" defaultColorSeq="";
+    if terminal::have-16-colors; then
+        foregroundColorSeq="$(tput setaf "${foregroundColor}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        if [ -n "${backgroundColor:-}" ]; then
+            backgroundColorSeq="$(tput setab "${backgroundColor}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        fi;
+        defaultColorSeq="$(tput sgr 0)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    fi;
+    echo "${foregroundColorSeq}${backgroundColorSeq}${message}${defaultColorSeq}"
+}
 fail () 
 { 
-    local errorColor="" normalColor="";
-    if terminal::have-16-colors; then
-        errorColor="$(tput setaf 1)";
-        normalColor="$(tput sgr 0)";
-    fi;
-    echo "${errorColor}${1:-"Abnormal termination"}${normalColor}" 1>&2;
+    log::error "${1:-"Abnormal termination"}" || echo "Sopka: Unable to log error" 1>&2;
     local i endAt=$((${#BASH_LINENO[@]}-1));
     for ((i=1; i<=endAt; i++))
     do
-        echo "  ${errorColor}${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'${normalColor}" 1>&2;
+        log::error "  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'" || echo "Sopka: Unable to log error" 1>&2;
     done;
     exit "${2:-1}"
 }
@@ -43,14 +63,8 @@ fail ()
 # shellcheck disable=SC2030
 task::run () 
 { 
-    ( local highlightColor="" errorColor="" normalColor="";
-    if terminal::have-16-colors; then
-        highlightColor="$(tput setaf 11)" || fail;
-        errorColor="$(tput setaf 9)" || fail;
-        normalColor="$(tput sgr 0)" || fail;
-    fi;
-    if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-        echo "${highlightColor}Performing ${SOPKA_TASK_TITLE:-$*}...${normalColor}";
+    ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
+        log::notice "Performing ${SOPKA_TASK_TITLE:-$*}..." || fail;
     fi;
     local tmpFile;
     tmpFile="$(mktemp)" || fail;
@@ -71,6 +85,11 @@ task::stderr-filter ()
 task::cleanup () 
 { 
     local stderrPresent=false;
+    local errorColor="" normalColor="";
+    if terminal::have-16-colors; then
+        errorColor="$(tput setaf 9)" || fail;
+        normalColor="$(tput sgr 0)" || fail;
+    fi;
     if [ -s "${tmpFile}.stderr" ]; then
         if declare -f "task::stderr-filter" > /dev/null; then
             local lineCount;
