@@ -14,6 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+path::convert-msys-to-windows() {
+  echo "$1" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
+  test "${PIPESTATUS[*]}" = "0 0 0" || fail
+}  
+
 dir::make-if-not-exists() {
   local dirPath="$1"
   local mode="${2:-}"
@@ -107,8 +112,3 @@ mount::ask-for-mount() {
 
   findmnt --mountpoint "${mountpoint}" >/dev/null || fail "Unable to find filesystem at ${mountpoint}"
 }
-
-path::convert-msys-to-windows() {
-  echo "$1" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
-  test "${PIPESTATUS[*]}" = "0 0 0" || fail
-}  
