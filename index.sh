@@ -24,6 +24,7 @@ sopka::load-lib() {
   . "${selfDir}/lib/benchmark.sh" || fail
   . "${selfDir}/lib/bitwarden.sh" || fail
   . "${selfDir}/lib/checksums.sh" || fail
+  . "${selfDir}/lib/cifs.sh" || fail
   . "${selfDir}/lib/config.sh" || fail
   . "${selfDir}/lib/firefox.sh" || fail
   . "${selfDir}/lib/fs.sh" || fail

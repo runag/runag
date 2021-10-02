@@ -97,43 +97,6 @@ file::sudo-append-line-unless-present() {
   fi
 }
 
-mount::cifs::credentials::exists() {
-  local credentialsFile="$1"
-  test -f "${credentialsFile}"
-}
-
-mount::cifs::credentials::save() {
-  local cifsUsername="$1"
-  local cifsPassword="$2"
-  local credentialsFile="$3"
-  local mode="${4:-"600"}"
-  
-  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${mode}"
-  test "${PIPESTATUS[*]}" = "0 0" || fail
-}
-
-mount::cifs() {
-  local serverPath="$1"
-  local mountPoint="$2"
-  local credentialsFile="$3"
-  local fileMode="${4:-"0600"}" 
-  local dirMode="${5:-"0700"}" 
-
-  dir::make-if-not-exists "${mountPoint}" "${dirMode}" || fail
-
-  local fstabTag="# cifs mount: ${mountPoint}"
-
-  if ! grep -qFx "${fstabTag}" /etc/fstab; then
-    echo "${fstabTag}" | sudo tee -a /etc/fstab >/dev/null || fail
-    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},uid=${USER},forceuid,gid=${USER},forcegid,file_mode=${fileMode},dir_mode=${dirMode},nosetuids,echo_interval=10,noserverino,noposix  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
-  fi
-
-  # other mounts might fail, so we ignore exit status here
-  sudo mount -a
-
-  findmnt --mountpoint "${mountPoint}" >/dev/null || fail "Filesystem is not mounted: ${mountPoint}"
-}
-
 mount::ask-for-mount() {
   local mountpoint="$1"
 
