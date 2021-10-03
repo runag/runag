@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-vscode::snap::install() {
+vscode::install::snap() {
   sudo snap install code --classic || fail "Unable to snap install ($?)"
 }
 
