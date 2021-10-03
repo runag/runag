@@ -30,35 +30,68 @@ Possible sopkafile locations are:
 
 ## API docs
 
-* [apt](docs/lib/apt.md)
-* [benchmark](docs/lib/benchmark.md)
-* [bitwarden](docs/lib/bitwarden.md)
-* [checksums](docs/lib/checksums.md)
+### Sopka core
+
+* [fail](docs/lib/fail.md)
+* [log](docs/lib/log.md)
+* [menu](docs/lib/menu.md)
+* [sopka-menu](docs/lib/sopka-menu.md)
+* [sopka](docs/lib/sopka.md)
+* [terminal](docs/lib/terminal.md)
+
+### General utility
+
 * [config](docs/lib/config.md)
-* [firefox](docs/lib/firefox.md)
 * [fs](docs/lib/fs.md)
-* [github](docs/lib/github.md)
-* [git](docs/lib/git.md)
-* [imagemagick](docs/lib/imagemagick.md)
-* [keys](docs/lib/keys.md)
+* [task](docs/lib/task.md)
+
+### Interfacing with OS anv VMs
+
+* [apt](docs/lib/apt.md)
 * [linux](docs/lib/linux.md)
 * [macos](docs/lib/macos.md)
-* [menu](docs/lib/menu.md)
+* [shell](docs/lib/shell.md)
+* [systemd](docs/lib/systemd.md)
+* [vmware](docs/lib/vmware.md)
+
+### Managment of keys, passwords, and other secrets
+
+* [bitwarden](docs/lib/bitwarden.md)
+* [checksums](docs/lib/checksums.md)
+* [keys](docs/lib/keys.md)
+
+### Development
+
+* [git](docs/lib/git.md)
+* [imagemagick](docs/lib/imagemagick.md)
 * [nodejs](docs/lib/nodejs.md)
 * [postgresql](docs/lib/postgresql.md)
 * [rails](docs/lib/rails.md)
-* [rclone](docs/lib/rclone.md)
-* [rsync](docs/lib/rsync.md)
 * [ruby](docs/lib/ruby.md)
-* [shell](docs/lib/shell.md)
-* [sopka](docs/lib/sopka.md)
+
+### Networking and access to remote systems
+
+* [cifs](docs/lib/cifs.md)
+* [rsync](docs/lib/rsync.md)
 * [ssh](docs/lib/ssh.md)
-* [sublime](docs/lib/sublime.md)
 * [syncthing](docs/lib/syncthing.md)
-* [systemd](docs/lib/systemd.md)
 * [tailscale](docs/lib/tailscale.md)
-* [vmware](docs/lib/vmware.md)
+
+### API access to cloud services
+
+* [github](docs/lib/github.md)
+
+### Desktop applications
+
+* [firefox](docs/lib/firefox.md)
+* [sublime-merge](docs/lib/sublime-merge.md)
+* [sublime-text](docs/lib/sublime-text.md)
 * [vscode](docs/lib/vscode.md)
+
+### Hard to define a category
+
+* [benchmark](docs/lib/benchmark.md)
+
 
 ## Environment variables
 
