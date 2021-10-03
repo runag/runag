@@ -34,7 +34,7 @@ task::run-verbose() {
   SOPKA_VERBOSE_TASKS=true task::run "$@"
 }
 
-# note the subshell
+# note the subshells
 # shellcheck disable=SC2030
 task::run() {(
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
