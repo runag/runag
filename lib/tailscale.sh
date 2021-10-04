@@ -56,7 +56,13 @@ tailscale::install-issue-2541-workaround() {
   file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround 755 <<EOF || fail
 #!/usr/bin/env bash
 $(sopka::print-license)
+
+$(declare -f terminal::color)
+$(declare -f terminal::default-color)
+$(declare -f log::error)
+$(declare -f log::with-color)
 $(declare -f fail)
+
 $(declare -f tailscale::issue-2541-workaround)
 tailscale::issue-2541-workaround || fail
 EOF
