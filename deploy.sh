@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 # Script is wrapped inside a function with a random name to lower the chance
-# of "curl | bash" to run some unexpected command if download fails in the middle.
+# of "curl | bash" to run some unexpected command in case if if download fails in the middle.
 
 __xVhMyefCbBnZFUQtwqCs() {
 
