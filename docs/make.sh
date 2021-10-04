@@ -23,6 +23,41 @@ shdoc::install() {
   rm -rf "${tempDir}" || fail
 }
 
+docs::make() {
+  rm docs/lib/*.md || fail
+
+  local filesList; filesList="$(mktemp)" || fail
+  local readmeContent; readmeContent="$(mktemp)" || fail
+
+  for file in lib/*.sh; do
+    if [ -f "${file}" ]; then
+      local output; output="docs/${file%.*}.md" || fail
+      local file_basename; file_basename="$(basename "${file}")" || fail
+
+      shdoc <"${file}" >"${output}" || fail
+      echo "* [${file_basename%%.*}](${output})" >> "${filesList}" || fail
+    fi
+  done
+
+  sort "${filesList}" > "${filesList}.tmp" || fail
+  mv "${filesList}.tmp" "${filesList}" || fail
+  
+  < README.md awk '/API TOC BEGIN/{ line = 1; next } /API TOC END/{ line = 0 } line' | grep -v "^###" | awk NF | sort > "${readmeContent}"
+  test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
+
+  if ! diff --strip-trailing-cr "${readmeContent}" "${filesList}" >/dev/null 2>&1; then
+    if command -v git >/dev/null; then
+      git diff --ignore-cr-at-eol --color --unified=6 --no-index "${readmeContent}" "${filesList}" | tee
+    else
+      diff --strip-trailing-cr --context=6 --color "${readmeContent}" "${filesList}"
+    fi
+    log::error "Please update API TOC in README.md"
+  fi
+
+  rm "${filesList}" || fail
+  rm "${readmeContent}" || fail
+}
+
 if ! command -v gawk >/dev/null; then
   sudo apt install gawk || fail
 fi
@@ -31,14 +66,4 @@ if ! command -v shdoc >/dev/null; then
   shdoc::install || fail
 fi
 
-rm docs/lib/*.md || fail
-
-for file in lib/*.sh; do
-  if [ -f "${file}" ]; then
-    output="docs/${file%.*}.md"
-    file_basename="$(basename "${file}")" || fail
-
-    shdoc <"${file}" >"${output}" || fail
-    echo "* [${file_basename%%.*}](${output})"
-  fi
-done
+docs::make || fail

@@ -30,6 +30,8 @@ Possible sopkafile locations are:
 
 ## API docs
 
+<!-- API TOC BEGIN -->
+
 ### Sopka core
 
 * [fail](docs/lib/fail.md)
@@ -92,6 +94,7 @@ Possible sopkafile locations are:
 
 * [benchmark](docs/lib/benchmark.md)
 
+<!-- API TOC END -->
 
 ## Environment variables
 
