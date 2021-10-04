@@ -21,8 +21,8 @@ file::write deploy.sh <<EOF || fail
 
 $(sopka::print-license)
 
-# Script is wrapped inside a function with a random name in hopes that
-# "curl | bash" will not run some unexpected commands if download fails in the middle.
+# Script is wrapped inside a function with a random name to lower the chance
+# of "curl | bash" to run some unexpected command if download fails in the middle.
 
 __xVhMyefCbBnZFUQtwqCs() {
 

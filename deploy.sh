@@ -14,8 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# Script is wrapped inside a function with a random name in hopes that
-# "curl | bash" will not run some unexpected commands if download fails in the middle.
+# Script is wrapped inside a function with a random name to lower the chance
+# of "curl | bash" to run some unexpected command if download fails in the middle.
 
 __xVhMyefCbBnZFUQtwqCs() {
 
