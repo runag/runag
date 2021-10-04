@@ -32,9 +32,9 @@ postgresql::install-dictionaries() {
   local folder="$1"
 
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    for dest in /usr/local/Cellar/postgresql/*; do
+    local dest; for dest in /usr/local/Cellar/postgresql/*; do
       if [ -d "${dest}" ]; then
-        for file in "${folder}"/*; do
+        local file; for file in "${folder}"/*; do
           if [ -f "${file}" ]; then
             cp "${file}" "${dest}/share/postgresql/tsearch_data" || fail
           fi
@@ -42,9 +42,9 @@ postgresql::install-dictionaries() {
       fi
     done
   else
-    for dest in /usr/share/postgresql/*; do
+    local dest; for dest in /usr/share/postgresql/*; do
       if [ -d "${dest}" ]; then
-        for file in "${folder}"/*; do
+        local file; for file in "${folder}"/*; do
           if [ -f "${file}" ]; then
             sudo install --owner=root --group=root --mode=0644 "${file}" -D "${dest}/tsearch_data" || fail
           fi

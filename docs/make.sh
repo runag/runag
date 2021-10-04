@@ -29,7 +29,7 @@ docs::make() {
   local filesList; filesList="$(mktemp)" || fail
   local readmeContent; readmeContent="$(mktemp)" || fail
 
-  for file in lib/*.sh; do
+  local file; for file in lib/*.sh; do
     if [ -f "${file}" ]; then
       local output; output="docs/${file%.*}.md" || fail
       local file_basename; file_basename="$(basename "${file}")" || fail

@@ -29,12 +29,10 @@ firefox::set-pref() {
   local value="$2"
   
   local prefsLine="user_pref(\"${name}\", ${value});"
-  local profileFolder
-  local prefsFile
-
-  for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
+  
+  local profileFolder; for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
     if [ -d "${profileFolder}" ]; then
-      prefsFile="${profileFolder}/prefs.js"
+      local prefsFile="${profileFolder}/prefs.js"
       if ! grep -qFx "${prefsLine}" "${prefsFile}"; then
         echo "${prefsLine}" >>"${prefsFile}" || fail
       fi

@@ -28,8 +28,7 @@ sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || fail
 
-    local fileFolder
-    for fileFolder in "${HOME}"/.sopka/sopkafiles/*; do
+    local fileFolder; for fileFolder in "${HOME}"/.sopka/sopkafiles/*; do
       if [ -d "${fileFolder}/.git" ]; then
         git -C "${fileFolder}" pull || fail
       fi
@@ -83,8 +82,8 @@ sopka::load-sopkafile() {
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
     . "${HOME:-}/.sopkafile/index.sh" || fail
   else
-    local filePath fileFound=false
-    for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
+    local fileFound=false
+    local filePath; for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
       if [ -f "${filePath}" ]; then
         . "${filePath}" || fail
         fileFound=true
