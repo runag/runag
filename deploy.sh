@@ -187,7 +187,7 @@ git::place-up-to-date-clone ()
     fi
 }
 
-sopka::add () 
+sopka::add-sopkafile () 
 { 
     local packageId="$1";
     local dest;
@@ -221,7 +221,7 @@ task::run git::install-git || fail
 task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || fail
 
 if [ -n "${1:-}" ] && [ "$1" != "--" ]; then
-  task::run sopka::add "$1" || fail
+  task::run sopka::add-sopkafile "$1" || fail
 fi
 
 "${HOME}/.sopka/bin/sopka" "${@:2}" || fail

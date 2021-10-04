@@ -46,7 +46,7 @@ $(declare -f apt::install)
 $(declare -f git::install-git)
 $(declare -f git::place-up-to-date-clone)
 
-$(declare -f sopka::add)
+$(declare -f sopka::add-sopkafile)
 
 $(cat src/deploy-script.sh)
 

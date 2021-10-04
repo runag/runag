@@ -99,8 +99,8 @@ Possible sopkafile locations are:
 ## Environment variables
 
 ```sh
-# Set by bin/sopka for use in scripts that you might want to generate
-SOPKA_BIN_PATH="${HOME}/.sopka/bin"
+# That variable is here to help you to generate scripts or systemd units that might need to use sopka
+SOPKA_BIN_PATH="${HOME}/.sopka/bin" # if you put sopka somewhere else, then value will be different
 
 # Runtime flags
 SOPKA_UPDATE_SECRETS=true

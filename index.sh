@@ -15,44 +15,33 @@
 #  limitations under the License.
 
 sopka::load-lib() {
-  local selfDir; selfDir="$(dirname "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to get dirname of index.sh ($?)" >&2; exit 1; }
+  # resolve symlink if needed
+  if [ -L "${BASH_SOURCE[0]}" ]; then
+    local indexPath; indexPath="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
+  else
+    local indexPath; indexPath="${BASH_SOURCE[0]}"
+  fi
 
-  . "${selfDir}/lib/terminal.sh" || { echo "Sopka: Unable to load lib/terminal.sh ($?)" >&2; exit 1; }
-  . "${selfDir}/lib/fail.sh" || { echo "Sopka: Unable to load lib/fail.sh ($?)" >&2; exit 1; }
+  # get dirname that yet may result to relative path
+  local unresolvedSopkaDir; unresolvedSopkaDir="$(dirname "${indexPath}")" || { echo "Sopka: Unable to get a dirname of '${indexPath}' ($?)" >&2; return 1; }
 
-  . "${selfDir}/lib/apt.sh" || fail
-  . "${selfDir}/lib/benchmark.sh" || fail
-  . "${selfDir}/lib/bitwarden.sh" || fail
-  . "${selfDir}/lib/checksums.sh" || fail
-  . "${selfDir}/lib/cifs.sh" || fail
-  . "${selfDir}/lib/config.sh" || fail
-  . "${selfDir}/lib/firefox.sh" || fail
-  . "${selfDir}/lib/fs.sh" || fail
-  . "${selfDir}/lib/git.sh" || fail
-  . "${selfDir}/lib/github.sh" || fail
-  . "${selfDir}/lib/imagemagick.sh" || fail
-  . "${selfDir}/lib/keys.sh" || fail
-  . "${selfDir}/lib/linux.sh" || fail
-  . "${selfDir}/lib/log.sh" || fail
-  . "${selfDir}/lib/macos.sh" || fail
-  . "${selfDir}/lib/menu.sh" || fail
-  . "${selfDir}/lib/nodejs.sh" || fail
-  . "${selfDir}/lib/postgresql.sh" || fail
-  . "${selfDir}/lib/rails.sh" || fail
-  . "${selfDir}/lib/rsync.sh" || fail
-  . "${selfDir}/lib/ruby.sh" || fail
-  . "${selfDir}/lib/shell.sh" || fail
-  . "${selfDir}/lib/sopka-menu.sh" || fail
-  . "${selfDir}/lib/sopka.sh" || fail
-  . "${selfDir}/lib/ssh.sh" || fail
-  . "${selfDir}/lib/sublime-merge.sh" || fail
-  . "${selfDir}/lib/sublime-text.sh" || fail
-  . "${selfDir}/lib/syncthing.sh" || fail
-  . "${selfDir}/lib/systemd.sh" || fail
-  . "${selfDir}/lib/tailscale.sh" || fail
-  . "${selfDir}/lib/task.sh" || fail
-  . "${selfDir}/lib/vmware.sh" || fail
-  . "${selfDir}/lib/vscode.sh" || fail
+  # get absolute path to dirname
+  local sopkaDir; sopkaDir="$(cd "${unresolvedSopkaDir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolvedSopkaDir}' ($?)" >&2; return 1; }
+
+  # set SOPKA_BIN_PATH if needed
+  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${sopkaDir}/bin/sopka" ] && [ -x "${sopkaDir}/bin/sopka" ]; then
+    export SOPKA_BIN_PATH="${sopkaDir}/bin/sopka"
+  fi
+
+  # load all lib/*.sh
+  local filePath; for filePath in "${sopkaDir}"/lib/*.sh; do
+    if [ -f "${filePath}" ]; then
+      . "${filePath}" || { echo "Sopka: Unable to load '${filePath}' ($?)" >&2; return 1; }
+    fi
+  done
 }
 
-sopka::load-lib || fail
+sopka::load-lib || {
+  echo "Sopka: Unable to perform sopka::load-lib' ($?)" >&2
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
+}

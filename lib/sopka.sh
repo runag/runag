@@ -36,12 +36,6 @@ sopka::update() {
   fi
 }
 
-sopka::add() {
-  local packageId="$1"
-  local dest; dest="$(echo "${packageId}" | tr "/" "-")" || fail
-  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
-}
-
 sopka::print-license() {
   cat <<EOT
 #  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
@@ -60,6 +54,12 @@ sopka::print-license() {
 EOT
 }
 
+sopka::add-sopkafile() {
+  local packageId="$1"
+  local dest; dest="$(echo "${packageId}" | tr "/" "-")" || fail
+  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
+}
+
 # Find and load sopkafile.
 #
 # Possible locations are:
@@ -74,48 +74,41 @@ EOT
 #
 sopka::load-sopkafile() {
   if [ -f "./sopkafile" ]; then
-    . "./sopkafile" || fail
+    . "./sopkafile"
+    sopka::passthrough-and-log-error "Unable to load './sopkafile' ($?)" $? || return $?
+
   elif [ -f "./sopkafile/index.sh" ]; then
-    . "./sopkafile/index.sh" || fail
+    . "./sopkafile/index.sh"
+    sopka::passthrough-and-log-error "Unable to load './sopkafile/index.sh' ($?)" $? || return $?
+
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
-    . "${HOME:-}/.sopkafile" || fail
+    . "${HOME:-}/.sopkafile"
+    sopka::passthrough-and-log-error "Unable to load '${HOME:-}/.sopkafile' ($?)" $? || return $?
+
+
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
-    . "${HOME:-}/.sopkafile/index.sh" || fail
+    . "${HOME:-}/.sopkafile/index.sh"
+    sopka::passthrough-and-log-error "Unable to load '${HOME:-}/.sopkafile/index.sh' ($?)" $? || return $?
+
   else
     local fileFound=false
     local filePath; for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
       if [ -f "${filePath}" ]; then
-        . "${filePath}" || fail
+        . "${filePath}"
+        sopka::passthrough-and-log-error "Unable to load '${filePath}' ($?)" $? || return $?
         fileFound=true
       fi
     done
     if [ "${fileFound}" = false ]; then
-      fail "Unable to find sopkafile"
+      log::error "Unable to find sopkafile"
+      return 1
     fi
   fi
 }
 
-# I use "test" instead of "|| fail" here for the case if someone wants to "set -o errexit" in their functions
-sopka::launch() {
-  local statusCode
-  if [ -n "${1:-}" ]; then
-    declare -f "$1" >/dev/null || fail "Sopka: Argument must be a function name: $1"
-    "$@"
-    statusCode=$?
-    test $statusCode = 0 || fail "Sopka: Error performing $1" $statusCode
-  else
-    if [ "${0:0:1}" != "-" ] && [ "$(basename "$0")" = "sopka" ]; then
-      if declare -f sopkafile::main >/dev/null; then
-        sopkafile::main
-        statusCode=$?
-        test $statusCode = 0 || fail "Sopka: Error performing sopkafile::main" $statusCode
-      elif sopka-menu::is-present; then
-        sopka-menu::display
-        statusCode=$?
-        test $statusCode = 0 || fail "Sopka: Error performing sopka-menu::display" $statusCode
-      else
-        fail "Sopka: Please specify a function name to run, define a sopkafile::main, or add items to a menu"
-      fi
-    fi
+sopka::passthrough-and-log-error() {
+  if [ "$2" != "0" ]; then
+    log::error "$1"
   fi
+  return "$2"
 }

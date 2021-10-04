@@ -14,8 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-if [ "${0:0:1}" != "-" ]; then
-  # set shell options
+# set shell options if we are not sourced
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if [ "${SOPKA_VERBOSE:-}" = true ]; then
     set -o xtrace
   fi
@@ -23,32 +23,71 @@ if [ "${0:0:1}" != "-" ]; then
 fi
 
 sopka::load-index() {
-  local sopkaBinRealPath sopkaBinRealDirPath sopkaIndexDir
-
-  if [ -L "${SOPKA_BIN_PATH}" ]; then
-    sopkaBinRealPath="$(readlink -f "${SOPKA_BIN_PATH}")" || { echo "Sopka: Unable to readlink '${SOPKA_BIN_PATH}' ($?)" >&2; exit 1; }
+  # resolve symlink if needed
+  if [ -L "${BASH_SOURCE[0]}" ]; then
+    local binPath; binPath="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
   else
-    sopkaBinRealPath="${SOPKA_BIN_PATH}"
+    local binPath; binPath="${BASH_SOURCE[0]}"
   fi
- 
-  sopkaBinRealDirPath="$(dirname "${sopkaBinRealPath}")" || { echo "Sopka: Unable to get a dirname of '${sopkaBinRealPath}' ($?)" >&2; exit 1; }
-  sopkaIndexDir="$(cd "${sopkaBinRealDirPath}"/.. >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine full path for '${sopkaBinRealDirPath}/..' ($?)" >&2; exit 1; }
 
-  . "${sopkaIndexDir}/index.sh" || { echo "Sopka: Unable to load '${sopkaIndexDir}/index.sh' ($?)" >&2; exit 1; }
+  # get basename of binary
+  local binName; binName="$(basename "${binPath}")" || { echo "Sopka: Unable to get a basename of '${binPath}' ($?)" >&2; return 1; }
+
+  # get dirname that yet may result to relative path
+  local unresolvedBinDir; unresolvedBinDir="$(dirname "${binPath}")" || { echo "Sopka: Unable to get a dirname of '${binPath}' ($?)" >&2; return 1; }
+
+  # get absolute path to dirname
+  local binDir; binDir="$(cd "${unresolvedBinDir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolvedBinDir}' ($?)" >&2; return 1; }
+
+  # set SOPKA_BIN_PATH if needed
+  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${binDir}/${binName}" ] && [ -x "${binDir}/${binName}" ]; then
+    export SOPKA_BIN_PATH="${binDir}/${binName}"
+  fi
+
+  . "${binDir}/../index.sh" || { echo "Sopka: Unable to load '${binDir}/../index.sh' ($?)" >&2; return 1; }
 }
 
-export SOPKA_BIN_PATH="${BASH_SOURCE[0]}"
-
 # Load sopka library index file
-sopka::load-index || { echo "Sopka: Unable to load sopka library index file ($?)" >&2; exit 1; }
+sopka::load-index || {
+  echo "Sopka: Unable to load sopka library index file ($?)" >&2
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
+}
 
 # == we should have all library functions available by now ==
 
-# Remove sopka::load-index function
-unset -f sopka::load-index || fail "Sopka: Unable to remove sopka::load-index function"
+# I don't use "|| fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
 
 # Load sopkafile
-sopka::load-sopkafile || fail "Sopka: Unable to load sopkafile"
+sopka::load-sopkafile
+if ! sopka::passthrough-and-log-error "Sopka: Unable to load sopkafile ($?)" $?; then
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
+fi
 
-# Run function provided in first argument, or run (if defined) sopkafile::main.
-sopka::launch "$@"
+# if there is something in the first argument, run it
+if [ -n "${1:-}" ]; then
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
+    "$@"
+    sopka::passthrough-and-log-error "Sopka: Error performing $1 ($?)" $?
+    return
+  else # we are not sourced
+    "$@"
+    sopka::passthrough-and-log-error "Sopka: Error performing $1 ($?)" $?
+    exit
+  fi
+fi
+
+# if we are not sourced, try to run sopkafile::main or display sopka-menu 
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  if declare -f sopkafile::main >/dev/null; then
+    sopkafile::main
+    sopka::passthrough-and-log-error "Sopka: Error performing sopkafile::main ($?)" $?
+    exit
+  elif sopka-menu::is-present; then
+    sopka-menu::display
+    sopka::passthrough-and-log-error "Sopka: Error performing sopka-menu::display ($?)" $?
+    exit
+  fi
+
+  log::error "Sopka: Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu"
+  exit 1
+fi
