@@ -42,15 +42,17 @@ softfail-with() {
 }
 
 softfail::internal() {
+  local message="${1:-"Abnormal termination"}"
   local exitStatus="${2:-0}"
 
-  log::error "${1:-"Abnormal termination"}" || echo "Sopka: Unable to log error" >&2
+  log::error "${message}" || echo "Sopka: Unable to log error: ${message}" >&2
 
   # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
   # so here we start from i=2 (instead of normal i=1) to skip first line of stack trace
-  local i endAt=$((${#BASH_LINENO[@]}-1))
+  local line i endAt=$((${#BASH_LINENO[@]}-1))
   for ((i=2; i<=endAt; i++)); do
-    log::error "  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'" || echo "Sopka: Unable to log stack trace" >&2
+    line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
+    log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" >&2
   done
 
   if [ -n "${exitStatus##*[!0-9]*}" ] && [ "${exitStatus}" != 0 ]; then
