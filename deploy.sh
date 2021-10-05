@@ -63,13 +63,22 @@ log::with-color ()
 }
 fail () 
 { 
+    softfail::internal "$@";
+    exit
+}
+softfail::internal () 
+{ 
+    local exitStatus="${2:-0}";
     log::error "${1:-"Abnormal termination"}" || echo "Sopka: Unable to log error" 1>&2;
     local i endAt=$((${#BASH_LINENO[@]}-1));
-    for ((i=1; i<=endAt; i++))
+    for ((i=2; i<=endAt; i++))
     do
-        log::error "  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'" || echo "Sopka: Unable to log error" 1>&2;
+        log::error "  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'" || echo "Sopka: Unable to log stack trace" 1>&2;
     done;
-    exit "${2:-1}"
+    if [ -n "${exitStatus##*[!0-9]*}" ] && [ "${exitStatus}" != 0 ]; then
+        return "${exitStatus}";
+    fi;
+    return 1
 }
 
 # shellcheck disable=SC2030

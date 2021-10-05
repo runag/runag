@@ -32,6 +32,7 @@ $(declare -f log::notice)
 $(declare -f log::error)
 $(declare -f log::with-color)
 $(declare -f fail)
+$(declare -f softfail::internal)
 
 # shellcheck disable=SC2030
 $(declare -f task::run)
