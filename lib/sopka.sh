@@ -75,20 +75,23 @@ sopka::add-sopkafile() {
 sopka::load-sopkafile() {
   if [ -f "./sopkafile" ]; then
     . "./sopkafile"
-    sopka::passthrough-and-log-error "Unable to load './sopkafile' ($?)" $? || return $?
+    sopka::passthrough-and-log-error "Unable to load './sopkafile' ($?)" $?
+    return
 
   elif [ -f "./sopkafile/index.sh" ]; then
     . "./sopkafile/index.sh"
-    sopka::passthrough-and-log-error "Unable to load './sopkafile/index.sh' ($?)" $? || return $?
+    sopka::passthrough-and-log-error "Unable to load './sopkafile/index.sh' ($?)" $?
+    return
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
     . "${HOME:-}/.sopkafile"
-    sopka::passthrough-and-log-error "Unable to load '${HOME:-}/.sopkafile' ($?)" $? || return $?
-
+    sopka::passthrough-and-log-error "Unable to load '${HOME:-}/.sopkafile' ($?)" $?
+    return
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
     . "${HOME:-}/.sopkafile/index.sh"
-    sopka::passthrough-and-log-error "Unable to load '${HOME:-}/.sopkafile/index.sh' ($?)" $? || return $?
+    sopka::passthrough-and-log-error "Unable to load '${HOME:-}/.sopkafile/index.sh' ($?)" $?
+    return
 
   else
     local fileFound=false
