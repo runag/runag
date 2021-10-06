@@ -36,6 +36,7 @@ Possible sopkafile locations are:
 
 ### Sopka core
 
+* [deploy-script](docs/lib/deploy-script.md)
 * [fail](docs/lib/fail.md)
 * [log](docs/lib/log.md)
 * [menu](docs/lib/menu.md)
