@@ -19,12 +19,27 @@ if [ "${SOPKA_VERBOSE:-}" = true ]; then
 fi
 set -o nounset
 
-task::run git::install-git || fail
+task::run git::install-git || softfail || return
 
-task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || fail
+task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return
 
-if [ -n "${1:-}" ] && [ "$1" != "--" ]; then
-  task::run sopka::add-sopkafile "$1" || fail
-fi
+deploy-script() {
+  if [ -n "${1:-}" ]; then  
+    if declare -f "deploy-script::$1" >/dev/null; then
+      "deploy-script::$1" "${@:2}" || softfail || return
+    else
+      softfail "Sopka deploy-script: command not found: $1" || return
+    fi
+  fi
+}
 
-"${HOME}/.sopka/bin/sopka" "${@:2}" || fail
+deploy-script::add() {
+  task::run sopka::add-sopkafile "$1" || softfail || return
+  deploy-script "${@:2}" || softfail || return
+}
+
+deploy-script::run() {
+  "${HOME}/.sopka/bin/sopka" "$@" || softfail || return
+}
+
+deploy-script "$@" || softfail || return

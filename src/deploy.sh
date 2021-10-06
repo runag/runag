@@ -33,6 +33,7 @@ $(declare -f log::error)
 $(declare -f log::with-color)
 $(declare -f log::error-trace)
 $(declare -f fail)
+$(declare -f softfail)
 $(declare -f softfail::internal)
 
 # shellcheck disable=SC2030
