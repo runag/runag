@@ -50,6 +50,9 @@ $(declare -f git::install-git)
 $(declare -f git::place-up-to-date-clone)
 
 $(declare -f sopka::add-sopkafile)
+$(declare -f deploy-script)
+$(declare -f deploy-script::add)
+$(declare -f deploy-script::run)
 
 $(cat src/deploy-script.sh)
 

@@ -14,13 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-if [ "${SOPKA_VERBOSE:-}" = true ]; then
-  set -o xtrace
-fi
-set -o nounset
+deploy-script() {
+  if [ -n "${1:-}" ]; then  
+    if declare -f "deploy-script::$1" >/dev/null; then
+      "deploy-script::$1" "${@:2}" || softfail || return
+    else
+      softfail "Sopka deploy-script: command not found: $1" || return
+    fi
+  fi
+}
 
-task::run git::install-git || softfail || return
+deploy-script::add() {
+  task::run sopka::add-sopkafile "$1" || softfail || return
+  deploy-script "${@:2}" || softfail || return
+}
 
-task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return
-
-deploy-script "$@" || softfail || return
+deploy-script::run() {
+  "${HOME}/.sopka/bin/sopka" "$@" || softfail || return
+}
