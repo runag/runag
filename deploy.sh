@@ -83,7 +83,7 @@ fail ()
 softfail::internal () 
 { 
     local message="${1:-"Abnormal termination"}";
-    local exitStatus="${2:-0}";
+    local exitStatus="${2:-undefined}";
     if [ -z "${exitStatus##*[!0-9]*}" ]; then
         exitStatus=1;
     fi;

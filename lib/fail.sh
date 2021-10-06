@@ -67,7 +67,7 @@ softfail-unless-good-code() {
 
 softfail::internal() {
   local message="${1:-"Abnormal termination"}"
-  local exitStatus="${2:-0}"
+  local exitStatus="${2:-undefined}"
 
   # make sure we fail if there are some unexpected stuff in exitStatus
   if [ -z "${exitStatus##*[!0-9]*}" ]; then
@@ -87,7 +87,7 @@ softfail::internal() {
 
 softfail-unless-good::internal() {
   local message="${1:-"Abnormal termination"}"
-  local exitStatus="${2:-0}"
+  local exitStatus="${2:-undefined}"
 
   # make sure we fail if there are some unexpected stuff in exitStatus
   if [ -z "${exitStatus##*[!0-9]*}" ]; then
@@ -102,3 +102,33 @@ softfail-unless-good::internal() {
 
   return "${exitStatus}"
 }
+
+# sopka test::fail-foo; echo exit status: $?
+
+# test::fail-foo() {
+#   test::fail-bar
+# }
+
+# test::fail-bar() {
+#   # fail
+#   # fail-with-code 12
+#   # fail "foo" 12
+#   # fail-unless-good
+#   # fail-unless-good "foo"
+#   # fail-unless-good "foo" 12
+#   # fail-unless-good "foo" 0
+#   # fail-unless-good-code 12
+#   # fail-unless-good-code 0
+
+#   # softfail || return
+#   # softfail-with-code 12 || return
+#   # softfail "foo" 12 || return
+#   # softfail-unless-good || return
+#   # softfail-unless-good "foo" || return
+#   # softfail-unless-good "foo" 12 || return
+#   # softfail-unless-good "foo" 0 || return
+#   # softfail-unless-good-code 12 || return
+#   # softfail-unless-good-code 0 || return
+
+#   echo end of function!!!
+# }
