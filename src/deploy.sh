@@ -54,7 +54,16 @@ $(declare -f deploy-script)
 $(declare -f deploy-script::add)
 $(declare -f deploy-script::run)
 
-$(cat src/deploy-script.sh)
+if [ "\${SOPKA_VERBOSE:-}" = true ]; then
+  set -o xtrace
+fi
+set -o nounset
+
+task::run git::install-git || softfail || return
+
+task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "\${HOME}/.sopka" || softfail || return
+
+deploy-script "\$@" || softfail || return
 
 }; __xVhMyefCbBnZFUQtwqCs "\$@"
 EOF
