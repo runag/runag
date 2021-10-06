@@ -213,8 +213,8 @@ sopka::add-sopkafile ()
 { 
     local packageId="$1";
     local dest;
-    dest="$(echo "${packageId}" | tr "/" "-")" || fail;
-    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || fail
+    dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return;
+    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return
 }
 
 #!/usr/bin/env bash
