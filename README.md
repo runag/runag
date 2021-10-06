@@ -1,17 +1,19 @@
 # 🏔️ Sopka
 
-## Linux
-
+### Linux
 ```sh
-bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [user/repo] [function-name [function-arguments]]
-bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) -- [function-name [function-arguments]]
+bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [commands...]
 ```
 
-## MacOS
-
+### MacOS
 ```sh
-bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [user/repo] [function-name [function-arguments]]
-bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) -- [function-name [function-arguments]]
+bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [commands...]
+```
+
+### Commands: 
+```sh
+add user/repo
+run [function-name [function-arguments]]
 ```
 
 ## Sopkafile
