@@ -43,5 +43,9 @@ sopka::load-lib() {
 
 sopka::load-lib || {
   echo "Sopka: Unable to perform sopka::load-lib' ($?)" >&2
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    return 1 # use return if we are sourced
+  else
+    exit 1 # use exit if not
+  fi
 }

@@ -22,7 +22,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   set -o nounset
 fi
 
-sopka::load-index() {
+sopka::load-sopka-library() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
     local binPath; binPath="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
@@ -48,19 +48,26 @@ sopka::load-index() {
 }
 
 # Load sopka library index file
-sopka::load-index || {
+sopka::load-sopka-library || {
   echo "Sopka: Unable to load sopka library index file ($?)" >&2
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    return 1 # use return if we are sourced
+  else
+    exit 1 # use exit if not
+  fi
 }
 
 # == we should have all library functions available by now ==
 
-# I don't use "|| fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
+# I don't use "foo || fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
 
 # Load sopkafile
-sopka::load-sopkafile
-if ! softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $?; then
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
+if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
+  sopka::load-sopkafile
+  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || return
+else # we are not sourced
+  sopka::load-sopkafile
+  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || exit
 fi
 
 # if there is something in the first argument, run it
