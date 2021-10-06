@@ -59,7 +59,7 @@ sopka::load-index || {
 
 # Load sopkafile
 sopka::load-sopkafile
-if ! sopka::passthrough-and-log-error "Sopka: Unable to load sopkafile ($?)" $?; then
+if ! softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $?; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then return 1; else exit 1; fi # use return if we are sourced, use exit if not
 fi
 
@@ -67,11 +67,11 @@ fi
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
-    sopka::passthrough-and-log-error "Sopka: Error performing $1 ($?)" $?
+    softfail-unless-good "Sopka: Error performing $1 ($?)" $?
     return
   else # we are not sourced
     "$@"
-    sopka::passthrough-and-log-error "Sopka: Error performing $1 ($?)" $?
+    softfail-unless-good "Sopka: Error performing $1 ($?)" $?
     exit
   fi
 fi
@@ -80,11 +80,11 @@ fi
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -f sopkafile::main >/dev/null; then
     sopkafile::main
-    sopka::passthrough-and-log-error "Sopka: Error performing sopkafile::main ($?)" $?
+    softfail-unless-good "Sopka: Error performing sopkafile::main ($?)" $?
     exit
   elif sopka-menu::is-present; then
     sopka-menu::display
-    sopka::passthrough-and-log-error "Sopka: Error performing sopka-menu::display ($?)" $?
+    softfail-unless-good "Sopka: Error performing sopka-menu::display ($?)" $?
     exit
   fi
 

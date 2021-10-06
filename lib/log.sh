@@ -46,3 +46,18 @@ log::with-color() {
 
   echo "${colorSeq}${message}${defaultColorSeq}"
 }
+
+log::error-trace() {
+  local message="${1:-""}"
+  local startTraceFrom="${2:-1}"
+
+  if [ -n "${message}" ]; then
+    log::error "${message}" || echo "Sopka: Unable to log error: ${message}" >&2
+  fi
+
+  local line i endAt=$((${#BASH_LINENO[@]}-1))
+  for ((i=startTraceFrom; i<=endAt; i++)); do
+    line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
+    log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" >&2
+  done
+}

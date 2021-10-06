@@ -15,49 +15,90 @@
 #  limitations under the License.
 
 # foo || fail ["error message" [<error code>]]
-# foo || fail-with <error code>
-#
-# foo || return
-# foo || softfail ["error message" [<error code>]] || return
-#
-# foo || softfail || return <error code>
-# foo || softfail-with <error code> || return
-
 fail() {
   softfail::internal "$@"
   exit
 }
 
-fail-with() {
-  softfail::internal "Abnormal termination" "$1"
+# foo || fail-with-code <error code>
+fail-with-code() {
+  softfail::internal "" "$1"
   exit
 }
 
+# foo || fail-unless-good ["error message" [<error code>]]
+fail-unless-good() {
+  softfail-unless-good::internal "$@"
+  local exitStatus=$?
+  if [ "${exitStatus}" != 0 ]; then
+    exit "${exitStatus}"
+  fi
+}
+
+# foo || fail-unless-good-code <error code>
+fail-unless-good-code() {
+  softfail-unless-good::internal "" "$1"
+  local exitStatus=$?
+  if [ "${exitStatus}" != 0 ]; then
+    exit "${exitStatus}"
+  fi
+}
+
+
+# foo || softfail ["error message" [<error code>]] || return
 softfail() {
   softfail::internal "$@"
 }
 
-softfail-with() {
-  softfail::internal "Abnormal termination" "$1"
+# foo || softfail-with-code <error code> || return
+softfail-with-code() {
+  softfail::internal "" "$1"
+}
+
+# foo || softfail-unless-good ["error message" [<error code>]] || return
+softfail-unless-good() {
+  softfail-unless-good::internal "$@"
+}
+
+# foo || softfail-unless-good-code <error code> || return
+softfail-unless-good-code() {
+  softfail-unless-good::internal "" "$1"
 }
 
 softfail::internal() {
   local message="${1:-"Abnormal termination"}"
   local exitStatus="${2:-0}"
 
-  log::error "${message}" || echo "Sopka: Unable to log error: ${message}" >&2
+  # make sure we fail if there are some unexpected stuff in exitStatus
+  if [ -z "${exitStatus##*[!0-9]*}" ]; then
+    exitStatus=1
+  fi
 
   # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
-  # so here we start from i=2 (instead of normal i=1) to skip first line of stack trace
-  local line i endAt=$((${#BASH_LINENO[@]}-1))
-  for ((i=2; i<=endAt; i++)); do
-    line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
-    log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" >&2
-  done
+  # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
+  log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" >&2
 
-  if [ -n "${exitStatus##*[!0-9]*}" ] && [ "${exitStatus}" != 0 ]; then
+  if [ "${exitStatus}" != 0 ]; then
     return "${exitStatus}"
   fi
 
   return 1
+}
+
+softfail-unless-good::internal() {
+  local message="${1:-"Abnormal termination"}"
+  local exitStatus="${2:-0}"
+
+  # make sure we fail if there are some unexpected stuff in exitStatus
+  if [ -z "${exitStatus##*[!0-9]*}" ]; then
+    exitStatus=1
+  fi
+
+  if [ "${exitStatus}" != 0 ]; then
+    # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
+    # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
+    log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" >&2
+  fi
+
+  return "${exitStatus}"
 }

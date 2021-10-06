@@ -61,6 +61,20 @@ log::with-color ()
     fi;
     echo "${colorSeq}${message}${defaultColorSeq}"
 }
+log::error-trace () 
+{ 
+    local message="${1:-""}";
+    local startTraceFrom="${2:-1}";
+    if [ -n "${message}" ]; then
+        log::error "${message}" || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    fi;
+    local line i endAt=$((${#BASH_LINENO[@]}-1));
+    for ((i=startTraceFrom; i<=endAt; i++))
+    do
+        line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
+        log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" 1>&2;
+    done
+}
 fail () 
 { 
     softfail::internal "$@";
@@ -68,14 +82,13 @@ fail ()
 }
 softfail::internal () 
 { 
+    local message="${1:-"Abnormal termination"}";
     local exitStatus="${2:-0}";
-    log::error "${1:-"Abnormal termination"}" || echo "Sopka: Unable to log error" 1>&2;
-    local i endAt=$((${#BASH_LINENO[@]}-1));
-    for ((i=2; i<=endAt; i++))
-    do
-        log::error "  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'" || echo "Sopka: Unable to log stack trace" 1>&2;
-    done;
-    if [ -n "${exitStatus##*[!0-9]*}" ] && [ "${exitStatus}" != 0 ]; then
+    if [ -z "${exitStatus##*[!0-9]*}" ]; then
+        exitStatus=1;
+    fi;
+    log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    if [ "${exitStatus}" != 0 ]; then
         return "${exitStatus}";
     fi;
     return 1

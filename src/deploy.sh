@@ -31,6 +31,7 @@ $(declare -f terminal::default-color)
 $(declare -f log::notice)
 $(declare -f log::error)
 $(declare -f log::with-color)
+$(declare -f log::error-trace)
 $(declare -f fail)
 $(declare -f softfail::internal)
 
