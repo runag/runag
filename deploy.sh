@@ -24,11 +24,11 @@ terminal::color ()
     local foreground="$1";
     local background="${2:-}";
     local amount;
-    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ]; then
-        if [ -n "${foreground##*[!0-9]*}" ] && [ "${amount}" -ge "${foreground}" ]; then
+    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
+        if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
             tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
-        if [ -n "${background##*[!0-9]*}" ] && [ "${amount}" -ge "${background}" ]; then
+        if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
             tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
     fi
@@ -88,7 +88,7 @@ softfail::internal ()
 { 
     local message="${1:-"Abnormal termination"}";
     local exitStatus="${2:-undefined}";
-    if [ -z "${exitStatus##*[!0-9]*}" ]; then
+    if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
         exitStatus=1;
     fi;
     log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;

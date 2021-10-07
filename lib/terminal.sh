@@ -16,7 +16,7 @@
 
 terminal::have-16-colors(){
   local amount
-  command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ] && [ "${amount}" -ge 16 ]
+  command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
 }
 
 terminal::print-color-table() {
@@ -35,12 +35,12 @@ terminal::color() {
 
   local amount
 
-  if command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [ -n "${amount##*[!0-9]*}" ]; then
-    if [ -n "${foreground##*[!0-9]*}" ] && [ "${amount}" -ge "${foreground}" ]; then
+  if command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
+    if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
       tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
     fi
 
-    if [ -n "${background##*[!0-9]*}" ] && [ "${amount}" -ge "${background}" ]; then
+    if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
       tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
     fi
   fi

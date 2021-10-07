@@ -70,7 +70,7 @@ softfail::internal() {
   local exitStatus="${2:-undefined}"
 
   # make sure we fail if there are some unexpected stuff in exitStatus
-  if [ -z "${exitStatus##*[!0-9]*}" ]; then
+  if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
     exitStatus=1
   fi
 
@@ -90,7 +90,7 @@ softfail-unless-good::internal() {
   local exitStatus="${2:-undefined}"
 
   # make sure we fail if there are some unexpected stuff in exitStatus
-  if [ -z "${exitStatus##*[!0-9]*}" ]; then
+  if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
     exitStatus=1
   fi
 
