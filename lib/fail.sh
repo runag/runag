@@ -20,8 +20,8 @@ fail() {
   exit
 }
 
-# foo || fail-with-code <error code>
-fail-with-code() {
+# foo || fail-code <error code>
+fail-code() {
   softfail::internal "" "$1"
   exit
 }
@@ -50,8 +50,8 @@ softfail() {
   softfail::internal "$@"
 }
 
-# foo || softfail-with-code <error code> || return
-softfail-with-code() {
+# foo || softfail-code <error code> || return
+softfail-code() {
   softfail::internal "" "$1"
 }
 
@@ -111,7 +111,7 @@ softfail-unless-good::internal() {
 
 # test::fail-bar() {
 #   # fail
-#   # fail-with-code 12
+#   # fail-code 12
 #   # fail "foo" 12
 #   # fail-unless-good
 #   # fail-unless-good "foo"
@@ -121,7 +121,7 @@ softfail-unless-good::internal() {
 #   # fail-unless-good-code 0
 
 #   # softfail || return
-#   # softfail-with-code 12 || return
+#   # softfail-code 12 || return
 #   # softfail "foo" 12 || return
 #   # softfail-unless-good || return
 #   # softfail-unless-good "foo" || return
