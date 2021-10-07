@@ -16,18 +16,22 @@
 
 menu::select-and-run() {
   menu::select-argument-and-run menu::just-run "$@"
+  softfail-unless-good-code $?
 }
 
 menu::select-argument-and-run() {
   local list=("${@:2}")
 
-  test -t 0 || fail "Menu was called while not in terminal"
+  if ! [ -t 0 ] || ! [ -t 1 ]; then
+    softfail "Menu was called while not in terminal"
+    return
+  fi
 
   local colorA="" colorB="" defaultColor=""
   if [ -t 1 ]; then
-    colorA="$(terminal::color 14)" || fail
-    colorB="$(terminal::color 15)" || fail
-    defaultColor="$(terminal::default-color)" || fail
+    colorA="$(terminal::color 14)" || softfail || return
+    colorB="$(terminal::color 15)" || softfail || return
+    defaultColor="$(terminal::default-color)" || softfail || return
   fi
 
   echo ""
@@ -36,8 +40,8 @@ menu::select-argument-and-run() {
     item="${list[${index}]}"
     nextItem="${list[$((index+1))]:-}"
 
-    group="$(echo "${item}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || fail
-    nextGroup="$(echo "${nextItem}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || fail
+    group="$(echo "${item}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return
+    nextGroup="$(echo "${nextItem}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return
 
     if [ "${lastGroup}" = "${group}" ]; then
       lastGroupIsBig=true
@@ -72,29 +76,34 @@ menu::select-argument-and-run() {
       echo "cancelled" >&2
       exit 0
     else
-      fail "Read failed (${readStatus})"
+      softfail "Read failed (${readStatus})"
+      return
     fi
   fi
 
   if ! [[ "${inputText}" =~ ^[0-9]+$ ]]; then
-    fail "Please select number"
+    softfail "Please select number"
+    return
   fi
 
-  local selectedItem="${list[$((inputText-1))]}" || fail
+  if [ -z "${list[$((inputText-1))]:+x}" ]; then
+    softfail "Selected number is not in the list"
+    return
+  fi
+
+  local selectedItem="${list[$((inputText-1))]}"
 
   # I use "test" instead of "|| fail" here in case if someone wants
   # to use "set -o errexit" in their functions
 
   # shellcheck disable=SC2086
   $1 ${selectedItem}
-  local statusCode=$?
-  test $statusCode = 0 || fail "Error performing $1 ${selectedItem}" $statusCode
+  softfail-unless-good "Error performing $1 ${selectedItem} ($?)" $?
 }
 
 menu::just-run() {
   # I use "test" instead of "|| fail" here in case if someone wants
   # to use "set -o errexit" in their functions
   "$@"
-  local statusCode=$?
-  test $statusCode = 0 || fail "Error performing ${1:-"(argument is empty)"}" $statusCode
+  softfail-unless-good "Error performing '${1:-"(first argument is empty)"}' ($?)" $?
 }

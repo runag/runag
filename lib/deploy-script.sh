@@ -17,18 +17,23 @@
 deploy-script() {
   if [ -n "${1:-}" ]; then  
     if declare -f "deploy-script::$1" >/dev/null; then
-      "deploy-script::$1" "${@:2}" || softfail || return
+      "deploy-script::$1" "${@:2}"
+      softfail-unless-good-code $? || return
     else
-      softfail "Sopka deploy-script: command not found: $1" || return
+      softfail "Sopka deploy-script: command not found: $1"
+      return
     fi
   fi
 }
 
 deploy-script::add() {
   task::run sopka::add-sopkafile "$1" || softfail || return
-  deploy-script "${@:2}" || softfail || return
+
+  deploy-script "${@:2}"
+  softfail-unless-good-code $?
 }
 
 deploy-script::run() {
-  "${HOME}/.sopka/bin/sopka" "$@" || softfail || return
+  "${HOME}/.sopka/bin/sopka" "$@"
+  softfail-unless-good-code $?
 }

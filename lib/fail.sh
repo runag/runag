@@ -28,20 +28,12 @@ fail-code() {
 
 # foo || fail-unless-good ["error message" [<error code>]]
 fail-unless-good() {
-  softfail-unless-good::internal "$@"
-  local exitStatus=$?
-  if [ "${exitStatus}" != 0 ]; then
-    exit "${exitStatus}"
-  fi
+  softfail-unless-good::internal "$@" || exit
 }
 
 # foo || fail-unless-good-code <error code>
 fail-unless-good-code() {
-  softfail-unless-good::internal "" "$1"
-  local exitStatus=$?
-  if [ "${exitStatus}" != 0 ]; then
-    exit "${exitStatus}"
-  fi
+  softfail-unless-good::internal "" "$1" || exit
 }
 
 

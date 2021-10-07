@@ -15,21 +15,23 @@
 #  limitations under the License.
 
 sopka-menu::add() {
-  if [ -z ${SOPKA_MENU+x} ]; then
+  if [ -z ${SOPKA_MENU:+x} ]; then
     SOPKA_MENU=()
   fi
   SOPKA_MENU+=("$@")
 }
 
 sopka-menu::display() {
-  if [ -z ${SOPKA_MENU+x} ]; then
-    fail "Menu is empty"
+  if [ -z ${SOPKA_MENU:+x} ]; then
+    softfail "Menu is empty"
+    return
   fi
   menu::select-and-run "${SOPKA_MENU[@]}"
+  softfail-unless-good-code $?
 }
 
 sopka-menu::is-present() {
-  test -n "${SOPKA_MENU+x}"
+  test -n "${SOPKA_MENU:+x}"
 }
 
 sopka-menu::clear() {

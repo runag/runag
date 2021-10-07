@@ -84,6 +84,10 @@ softfail ()
 { 
     softfail::internal "$@"
 }
+softfail-unless-good-code () 
+{ 
+    softfail-unless-good::internal "" "$1"
+}
 softfail::internal () 
 { 
     local message="${1:-"Abnormal termination"}";
@@ -96,6 +100,18 @@ softfail::internal ()
         return "${exitStatus}";
     fi;
     return 1
+}
+softfail-unless-good::internal () 
+{ 
+    local message="${1:-"Abnormal termination"}";
+    local exitStatus="${2:-undefined}";
+    if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
+        exitStatus=1;
+    fi;
+    if [ "${exitStatus}" != 0 ]; then
+        log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    fi;
+    return "${exitStatus}"
 }
 
 # shellcheck disable=SC2030
@@ -224,20 +240,24 @@ deploy-script ()
 { 
     if [ -n "${1:-}" ]; then
         if declare -f "deploy-script::$1" > /dev/null; then
-            "deploy-script::$1" "${@:2}" || softfail || return;
+            "deploy-script::$1" "${@:2}";
+            softfail-unless-good-code $? || return;
         else
-            softfail "Sopka deploy-script: command not found: $1" || return;
+            softfail "Sopka deploy-script: command not found: $1";
+            return;
         fi;
     fi
 }
 deploy-script::add () 
 { 
     task::run sopka::add-sopkafile "$1" || softfail || return;
-    deploy-script "${@:2}" || softfail || return
+    deploy-script "${@:2}";
+    softfail-unless-good-code $?
 }
 deploy-script::run () 
 { 
-    "${HOME}/.sopka/bin/sopka" "$@" || softfail || return
+    "${HOME}/.sopka/bin/sopka" "$@";
+    softfail-unless-good-code $?
 }
 
 if [ "${SOPKA_VERBOSE:-}" = true ]; then
@@ -249,6 +269,7 @@ task::run git::install-git || softfail || return
 
 task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return
 
-deploy-script "$@" || softfail || return
+deploy-script "$@"
+softfail-unless-good-code $?
 
 }; __xVhMyefCbBnZFUQtwqCs "$@"

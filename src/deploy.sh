@@ -34,7 +34,9 @@ $(declare -f log::with-color)
 $(declare -f log::error-trace)
 $(declare -f fail)
 $(declare -f softfail)
+$(declare -f softfail-unless-good-code)
 $(declare -f softfail::internal)
+$(declare -f softfail-unless-good::internal)
 
 # shellcheck disable=SC2030
 $(declare -f task::run)
@@ -63,7 +65,8 @@ task::run git::install-git || softfail || return
 
 task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "\${HOME}/.sopka" || softfail || return
 
-deploy-script "\$@" || softfail || return
+deploy-script "\$@"
+softfail-unless-good-code \$?
 
 }; __xVhMyefCbBnZFUQtwqCs "\$@"
 EOF
