@@ -45,7 +45,13 @@ task::run() {(
 
   trap "task::cleanup" EXIT
 
-  ("$@") </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
+  # I know I could put /dev/fd/0 in variable, but what if system does not support it?
+  if [ -t 0 ]; then
+    ("$@") </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
+  else
+    ("$@") >"${tmpFile}" 2>"${tmpFile}.stderr"
+  fi
+  
   local taskResult=$?
 
   if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
