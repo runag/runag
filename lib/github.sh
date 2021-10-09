@@ -43,15 +43,15 @@ github::get-release() {
     fail "Can't find release URL for ${repoPath} that matched ${query} and release ${release}"
   fi
 
-  local tempFile; tempFile="$(mktemp "${HOME}/sopka-github-get-release-XXXXXXXXXX")" || fail "Unable to create temp file"
+  local tmpFile; tmpFile="$(mktemp "${HOME}/sopka-github-get-release-XXXXXXXXXX")" || fail "Unable to create temp file"
 
   curl \
     --location \
     --fail \
     --silent \
     --show-error \
-    --output "${tempFile}" \
+    --output "${tmpFile}" \
     "${fileUrl}" >/dev/null || fail "Unable to download ${fileUrl}"
 
-  echo "${tempFile}"
+  echo "${tmpFile}"
 }
