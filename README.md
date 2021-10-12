@@ -1,5 +1,7 @@
 # 🏔️ Sopka
 
+## One-liner to deploy sopka an a new machine
+
 ### Linux
 ```sh
 bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [commands...]
@@ -101,30 +103,114 @@ Possible sopkafile locations are:
 
 ## Environment variables
 
-```sh
-# That variable is here to help you to generate scripts or systemd units that might need to use sopka
-SOPKA_BIN_PATH="${HOME}/.sopka/bin" # if you put sopka somewhere else, then value will be different
 
-# Runtime flags
-SOPKA_UPDATE_SECRETS=true
-SOPKA_VERBOSE_TASKS=true
-SOPKA_VERBOSE=true
+### General
 
-# SSH-related
-SOPKA_REMOTE_HOST="example.com"
-SOPKA_REMOTE_PORT="22"
-SOPKA_REMOTE_USER="hello"
-SOPKA_SEND_ENV=()
+#### `SOPKA_BIN_PATH`
 
-# Internal, not to be used by non-library code
-SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-SOPKA_NODENV_INITIALIZED=true
-SOPKA_RBENV_INITIALIZED=true
-SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS=true
-SOPKA_TASK_OMIT_TITLE=true
-SOPKA_TASK_TITLE="task title"
+That variable is here to help you to generate scripts or systemd units that might need to use sopka.
+Anywhere you put sopka, the variable will reflect it actual location.
+If you put sopka into your home dir them value will be `"${HOME}/.sopka/bin"`.
+You could use that file as an executable or you could source that file in your scripts.
+
+#### `SOPKA_UPDATE_SECRETS`
+
+Could be set to `"true"`
+
+#### `SOPKA_VERBOSE_TASKS`
+
+Could be set to `"true"`
+
+#### `SOPKA_VERBOSE`
+
+Could be set to `"true"`
+
+
+### SSH-related
+
+#### `REMOTE_CONTROL_MASTER`
+
+Session sharing is enabled by default in sopka (except when running on Windows).
+By default ControlMaster will be set to `"auto"`.
+To disable session sharing, set this to `"no"`.
+
+#### `REMOTE_CONTROL_PATH`
+
+Path to the control socket.
+By default sopka will use `"${HOME}/.ssh/control-socket.%C"`.
+
+#### `REMOTE_CONTROL_PERSIST`
+
+To disable `ControlPersist` set this to `"no"`.
+By default sopka will use `600` seconds.
+
+#### `REMOTE_ENV`
+
+Space-separated list of environment variable names, to be set in remote script
+with the values present in the calling sopka instance at the moment of ssh call.
+Example list is: `"FOO BAR QUX"`.
+For any provided names (or for absence of them),
+sopka will internaly add `"SOPKA_UPDATE_SECRETS SOPKA_VERBOSE_TASKS SOPKA_VERBOSE"`.
+
+#### `REMOTE_HOST`
+
+Host name, for example `"example.com"`.
+This variable is required to be set.
+
+#### `REMOTE_IDENTITY_FILE`
+
+Path to identity file, for example `"${HOME}/.ssh/id_ed25519"`.
+By default sopka will not provide any identity file path so ssh could use it's defaults.
+
+#### `REMOTE_PORT`
+
+Port number. 
+By default sopka will not provide any port number so ssh could use it's defaults.
+
+#### `REMOTE_SERVER_ALIVE_INTERVAL`
+
+Will set `ServerAliveInterval`.
+By default sopka will set `"20"` as `ServerAliveInterval`.
+You could set this to `"0"` to tell ssh to disable server alive messages.
+You could set this to `"no"` then sopka will not set that variable at all,
+thus ssh could potentially use a value from your ssh config file.
+
+#### `REMOTE_SSH_ARGS`
+
+Additional SSH arguments, array of strings, for example `("-i" "keyfile")`.
+
+#### `REMOTE_USER`
+
+User name.
+By default sopka will not provide any user name so ssh could use it's defaults.
+
+
+### rsync-related
+
+#### `SOPKA_RSYNC_ARGS`
+
+Array of strings, for example `("--archive")`
+
+#### `SOPKA_RSYNC_DELETE_AND_BACKUP`
+
+Could be set to `"true"`
+
+#### `SOPKA_RSYNC_WITHOUT_CHECKSUMS`
+
+Could be set to `"true"`
+
+
+### Internal variables, not to be used by non-library code
+
+```
+SOPKA_APT_LAZY_UPDATE_HAPPENED
+SOPKA_NODENV_INITIALIZED
+SOPKA_RBENV_INITIALIZED
+SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS
+SOPKA_TASK_OMIT_TITLE
+SOPKA_TASK_TITLE
 ```
 
-# Contributing
+## Contributing
 
 Please check shell scripts before commiting any changes with `npm run lint`.

@@ -14,37 +14,57 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-rsync::upload() {
-  rsync::transfer "$1" "${SOPKA_REMOTE_HOST:-}:$2" || fail
+rsync::sync-to-remote() {
+  rsync::sync "$1" "${REMOTE_HOST:-}:$2" || softfail || return
 }
 
-rsync::download() {
-  rsync::transfer "${SOPKA_REMOTE_HOST:-}:$1" "$2" || fail
+rsync::sync-from-remote() {
+  rsync::sync "${REMOTE_HOST:-}:$1" "$2" || softfail || return
 }
 
-rsync::transfer() {
-  rsync::remote \
-    --checksum \
-    --compress \
-    --delete \
+rsync::set-args() {
+  if [ "${SOPKA_RSYNC_DELETE_AND_BACKUP:-}" = "true" ]; then
+    local timestamp; timestamp="$(date --utc +"%Y%m%dT%H%M%SZ")" || softfail || return
+
+    rsyncArgs+=("--delete")
+    rsyncArgs+=("--backup")
+    rsyncArgs+=("--backup-dir=.sopka-rsync-backups/${timestamp}")
+    rsyncArgs+=("--filter=protect_.sopka-rsync-backups")
+  fi
+
+  if [ "${SOPKA_RSYNC_WITHOUT_CHECKSUMS:-}" != "true" ]; then
+    rsyncArgs+=("--checksum")
+  fi
+
+  if declare -p SOPKA_RSYNC_ARGS >/dev/null 2>&1; then
+    rsyncArgs=("${rsyncArgs[@]}" "${SOPKA_RSYNC_ARGS[@]}")
+  fi
+}
+
+rsync::sync() {
+  local rsyncArgs=()
+
+  rsync::set-args || softfail || return
+
+  rsync::run \
     --links \
     --perms \
     --recursive \
     --times \
-    --whole-file \
-    "$@" || fail
+    "${rsyncArgs[@]}" \
+    "$@" || softfail || return
 }
 
-rsync::remote() {
-  ssh::make-user-config-directory-if-not-exists || fail
+rsync::run() {
+  ssh::make-user-config-directory-if-not-exists || softfail || return
 
-  local rshOption; rshOption="ssh \
-    -o ControlMaster=auto \
-    -o ControlPath=$(printf "%q" "${HOME}/.ssh/%C.control-socket") \
-    -o ControlPersist=yes \
-    -o ServerAliveInterval=25 \
-    ${SOPKA_REMOTE_PORT:+-p "${SOPKA_REMOTE_PORT}"} \
-    ${SOPKA_REMOTE_USER:+-l "${SOPKA_REMOTE_USER}"}" || fail
+  local sshArgs=()
+  ssh::set-args || softfail || return
 
-  rsync --rsh "${rshOption}" "$@" || fail
+  local sshArgsString
+  printf -v sshArgsString "'%s' " "${sshArgs[@]}" || softfail || return
+
+  rsync --rsh "ssh ${sshArgsString}" "$@" || softfail || return
 }
+
+# REMOTE_HOST=example.com sopka rsync::upload ~/.sopka/ .sopka

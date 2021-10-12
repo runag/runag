@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+sshd::disable-password-authentication() {
+  echo "PasswordAuthentication no" | file::sudo-write /etc/ssh/sshd_config.d/disable-password-authentication.conf || fail
+}
+
 ssh::make-user-config-directory-if-not-exists() {
   dir::make-if-not-exists "${HOME}/.ssh" 700 || fail
 }
@@ -111,8 +115,8 @@ ssh::refresh-host-in-known-hosts() {
 }
 
 ssh::add-host-to-known-hosts() {
-  local hostName="${1:-"${SOPKA_REMOTE_HOST}"}"
-  local sshPort="${2:-"${SOPKA_REMOTE_PORT:-"22"}"}"
+  local hostName="${1:-"${REMOTE_HOST}"}"
+  local sshPort="${2:-"${REMOTE_PORT:-"22"}"}"
   local knownHosts="${HOME}/.ssh/known_hosts"
 
   if ! command -v ssh-keygen >/dev/null; then
@@ -131,7 +135,7 @@ ssh::add-host-to-known-hosts() {
   fi
 
   if ! ssh-keygen -F "${keygenHostString}" >/dev/null; then
-    ssh-keyscan -p "${sshPort}" -T 60 "${hostName}" >> "${knownHosts}" || fail
+    ssh-keyscan -p "${sshPort}" -T 120 "${hostName}" >> "${knownHosts}" || fail
   fi
 }
 
@@ -140,37 +144,99 @@ ssh::remove-host-from-known-hosts() {
   ssh-keygen -R "${hostName}" || fail
 }
 
-ssh::call() {
-  local shellOptions="set -o nounset; "
-  if [ "${SOPKA_VERBOSE:-}" = true ]; then
-    shellOptions+="set -o xtrace; "
+ssh::set-args() {
+  if ! [[ "${OSTYPE}" =~ ^msys ]] && [ "${REMOTE_CONTROL_MASTER:-}" != "no" ]; then
+    sshArgs+=("-o" "ControlMaster=${REMOTE_CONTROL_MASTER:-"auto"}")
+    sshArgs+=("-S" "${REMOTE_CONTROL_PATH:-"${HOME}/.ssh/control-socket.%C"}")
+    sshArgs+=("-o" "ControlPersist=${REMOTE_CONTROL_PERSIST:-"600"}")
   fi
 
-  local i envString=""
-  if [ -n "${SOPKA_SEND_ENV:+x}" ]; then
-    for i in "${SOPKA_SEND_ENV[@]}"; do
-      envString+="export $(printf "%q" "${i}")=$(printf "%q" "${!i}"); "
-    done
+  if [ -n "${REMOTE_IDENTITY_FILE:-}" ]; then
+    sshArgs+=("-i" "${REMOTE_IDENTITY_FILE}")
   fi
 
-  local i commandString=""
-  for i in "$@"; do
-    commandString+="$(printf "%q" "${i}") "
-  done
+  if [ -n "${REMOTE_PORT:-}" ]; then
+    sshArgs+=("-p" "${REMOTE_PORT}")
+  fi
 
-  ssh::make-user-config-directory-if-not-exists || fail
+  if [ "${REMOTE_SERVER_ALIVE_INTERVAL:-}" != "no" ]; then
+    # the idea of 20 seconds is from https://datatracker.ietf.org/doc/html/rfc3948
+    sshArgs+=("-o" "ServerAliveInterval=${REMOTE_SERVER_ALIVE_INTERVAL:-"20"}")
+  fi
 
-  ssh \
-    -o ControlMaster=auto \
-    -o ControlPath="${HOME}/.ssh/control-socket-%C" \
-    -o ControlPersist=yes \
-    -o ServerAliveInterval=25 \
-    ${SOPKA_REMOTE_PORT:+-p "${SOPKA_REMOTE_PORT}"} \
-    ${SOPKA_REMOTE_USER:+-l "${SOPKA_REMOTE_USER}"} \
-    "${SOPKA_REMOTE_HOST}" \
-    bash -c "$(printf "%q" "trap \"\" PIPE; $(declare -f); ${shellOptions}${envString}${commandString}")"
+  if [ -n "${REMOTE_USER:-}" ]; then
+    sshArgs+=("-l" "${REMOTE_USER}")
+  fi
+
+  if declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
+    sshArgs=("${sshArgs[@]}" "${REMOTE_SSH_ARGS[@]}")
+  fi
 }
 
-sshd::disable-password-authentication() {
-  echo "PasswordAuthentication no" | file::sudo-write /etc/ssh/sshd_config.d/disable-password-authentication.conf || fail
+ssh::shell-options() {
+  if shopt -o -q xtrace || [ "${SOPKA_VERBOSE:-}" = true ]; then
+    echo "set -o xtrace"
+  fi
+
+  if shopt -o -q nounset; then
+    echo "set -o nounset"
+  fi
+}
+
+ssh::remote-env::base-list() {
+  echo "SOPKA_UPDATE_SECRETS SOPKA_VERBOSE_TASKS SOPKA_VERBOSE"
+}
+
+ssh::remote-env() {
+  local baseList; baseList="$(ssh::remote-env::base-list)" || softfail || return
+
+  local list; IFS=" " read -r -a list <<< "${REMOTE_ENV:-} ${baseList}" || softfail || return
+
+  local item; for item in "${list[@]}"; do
+    if [ -n "${!item:-}" ]; then
+      echo "export $(printf "%q=%q" "${item}" "${!item}")"
+    fi
+  done
+}
+
+ssh::script() {
+  ssh::shell-options || softfail || return
+  ssh::remote-env || softfail || return
+
+  declare -f || softfail || return
+
+  printf "%q " "$@" || softfail || return
+}
+
+ssh::run() {
+  if [ -z "${REMOTE_HOST:-}" ]; then
+    softfail "REMOTE_HOST should be set"
+    return
+  fi
+  
+  local sshArgs=() tmpFile scriptChecksum remoteTmpFile
+
+  ssh::make-user-config-directory-if-not-exists || softfail || return
+
+  ssh::set-args || softfail || return
+
+  tmpFile="$(mktemp)" || softfail || return
+
+  ssh::script "$@" >"${tmpFile}" || softfail || return
+
+  scriptChecksum="$(cksum <"${tmpFile}")" || softfail || return
+
+  remoteTmpFile="$(ssh "${sshArgs[@]}" "${REMOTE_HOST}" 'tmpFile="$(mktemp)" && cat>"$tmpFile" && echo "$tmpFile"' <"$tmpFile")" || softfail || return
+
+  if [ -z "${remoteTmpFile}" ]; then
+    softfail "Unable to get remote temp file name"
+    return
+  fi
+
+  # shellcheck disable=2029,2016
+  ssh "${sshArgs[@]}" "${REMOTE_HOST}" "$(printf 'if [ "$(cksum <%q)" != %q ]; then exit 254; fi; bash %q; scriptStatus=$?; rm -f %q; exit $scriptStatus' \
+    "${remoteTmpFile}" \
+    "${scriptChecksum}" \
+    "${remoteTmpFile}" \
+    "${remoteTmpFile}")"
 }
