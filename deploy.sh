@@ -118,7 +118,7 @@ softfail-unless-good::internal ()
 task::run () 
 { 
     ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-        log::notice "Performing ${SOPKA_TASK_TITLE:-$*}..." || fail;
+        log::notice "Performing ${SOPKA_TASK_TITLE:-"$*"}..." || fail;
     fi;
     local tmpFile;
     tmpFile="$(mktemp)" || fail;
