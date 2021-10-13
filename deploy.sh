@@ -118,7 +118,7 @@ softfail-unless-good::internal ()
 task::run () 
 { 
     ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-        log::notice "Performing ${SOPKA_TASK_TITLE:-"$*"}..." || fail;
+        log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
     fi;
     local tmpFile;
     tmpFile="$(mktemp)" || fail;
@@ -136,8 +136,15 @@ task::run ()
 }
 task::stderr-filter () 
 { 
-    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\.";
+    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\." | awk NF;
     true
+}
+task::is-stderr-empty-after-filtering () 
+{ 
+    if declare -f "task::stderr-filter" > /dev/null; then
+        task::stderr-filter | test "$(wc -c)" = 0;
+        test "${PIPESTATUS[*]}" = "0 0";
+    fi
 }
 # shellcheck disable=SC2031
 task::cleanup () 
@@ -146,28 +153,20 @@ task::cleanup ()
     local stderrPresent=false;
     if [ -s "${tmpFile}.stderr" ]; then
         stderrPresent=true;
-        if declare -f "task::stderr-filter" > /dev/null; then
-            local lineCount;
-            if ! lineCount="$(task::stderr-filter < "${tmpFile}.stderr" | wc -l; test "${PIPESTATUS[*]}" = "0 0")"; then
-                echo "Sopka: Unable to get result from task::stderr-filter" 1>&2;
-                errorState=1;
-            else
-                if [ "${lineCount}" = 0 ]; then
-                    stderrPresent=false;
-                fi;
-            fi;
+        if task::is-stderr-empty-after-filtering < "${tmpFile}.stderr"; then
+            stderrPresent=false;
         fi;
     fi;
     if [ "${taskResult:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
         cat "${tmpFile}" || { 
             echo "Sopka: Unable to display task stdout ($?)" 1>&2;
-            errorState=2
+            errorState=1
         };
         if [ -s "${tmpFile}.stderr" ]; then
             test -t 2 && terminal::color 9 1>&2;
             cat "${tmpFile}.stderr" 1>&2 || { 
                 echo "Sopka: Unable to display task stderr ($?)" 1>&2;
-                errorState=3
+                errorState=2
             };
             test -t 2 && terminal::default-color 1>&2;
         fi;

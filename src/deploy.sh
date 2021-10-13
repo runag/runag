@@ -41,6 +41,7 @@ $(declare -f softfail-unless-good::internal)
 # shellcheck disable=SC2030
 $(declare -f task::run)
 $(declare -f task::stderr-filter)
+$(declare -f task::is-stderr-empty-after-filtering)
 # shellcheck disable=SC2031
 $(declare -f task::cleanup)
 
