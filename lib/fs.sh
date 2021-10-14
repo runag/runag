@@ -102,13 +102,16 @@ file::sudo-append-line-unless-present() {
   fi
 }
 
-mount::ask-for-mount() {
+mount::wait-for-mount-to-be-available() {
   local mountpoint="$1"
 
   if ! findmnt --mountpoint "${mountpoint}" >/dev/null; then
-    echo "Please attach filesystem to ${mountpoint} and press ENTER"
-    read -rs || fail
+    echo "Filesystem is not mounted: '${mountpoint}'" >&2
+    echo "Please connect the external media if the filesystem resides on it" >&2
+    echo "Waiting for the filesystem to be available, press Control-C to interrupt" >&2
   fi
 
-  findmnt --mountpoint "${mountpoint}" >/dev/null || fail "Unable to find filesystem at ${mountpoint}"
+  while ! findmnt --mountpoint "${mountpoint}" >/dev/null; do
+    sleep 0.1
+  done
 }

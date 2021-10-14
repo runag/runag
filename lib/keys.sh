@@ -14,15 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-keys::ensure-key-is-available() {
+keys::wait-for-key-to-be-available() {
   local keyPath="$1"
+
   if [ ! -f "${keyPath}" ]; then
-    echo "File not found: '${keyPath}'. Please connect external media if necessary and press ENTER" >&2
-    read -rs || fail
+    echo "File not found: '${keyPath}'" >&2
+    echo "Please connect the external media if the file resides on it" >&2
+    echo "Waiting for the file to be available, press Control-C to interrupt" >&2
   fi
-  if [ ! -f "${keyPath}" ]; then
-    fail "File still not found: ${keyPath}"
-  fi
+
+  while [ ! -f "${keyPath}" ]; do
+    sleep 0.1
+  done
 }
 
 keys::install-gpg-key() {
@@ -30,7 +33,7 @@ keys::install-gpg-key() {
   local sourcePath="$2"
 
   if ! gpg --list-keys "${key}" >/dev/null 2>&1; then
-    keys::ensure-key-is-available "${sourcePath}" || fail
+    keys::wait-for-key-to-be-available "${sourcePath}" || fail
     gpg --import "${sourcePath}" || fail
     echo "${key}:6:" | gpg --import-ownertrust || fail
   fi
@@ -42,7 +45,7 @@ keys::install-decrypted-file() {
   local mode="${3:-"600"}"
 
   if [ ! -f "${destPath}" ]; then
-    keys::ensure-key-is-available "${sourcePath}" || fail
+    keys::wait-for-key-to-be-available "${sourcePath}" || fail
     gpg --decrypt "${sourcePath}" | file::write "${destPath}" "${mode}"
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
