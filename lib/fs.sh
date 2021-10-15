@@ -102,7 +102,21 @@ file::sudo-append-line-unless-present() {
   fi
 }
 
-mount::wait-for-mount-to-be-available() {
+file::wait-until-available() {
+  local filePath="$1"
+
+  if [ ! -f "${filePath}" ]; then
+    echo "File not found: '${filePath}'" >&2
+    echo "Please connect the external media if the file resides on it" >&2
+    echo "Waiting for the file to be available, press Control-C to interrupt" >&2
+  fi
+
+  while [ ! -f "${filePath}" ]; do
+    sleep 0.1
+  done
+}
+
+mount::wait-until-available() {
   local mountpoint="$1"
 
   if ! findmnt --mountpoint "${mountpoint}" >/dev/null; then
