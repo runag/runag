@@ -25,7 +25,7 @@ gpg::import-key-with-ultimate-ownertrust() {
   fi
 }
 
-gpg::decrypt-and-install() {
+gpg::decrypt-and-install-file() {
   local sourcePath="$1"
   local destPath="$2"
   local mode="${3:-"600"}"
