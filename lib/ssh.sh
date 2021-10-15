@@ -214,19 +214,17 @@ ssh::run() {
     return
   fi
   
-  local sshArgs=() tmpFile scriptChecksum remoteTmpFile
-
   ssh::make-user-config-directory-if-not-exists || softfail || return
 
-  ssh::set-args || softfail || return
+  local sshArgs=(); ssh::set-args || softfail || return
 
-  tmpFile="$(mktemp)" || softfail || return
+  local tmpFile; tmpFile="$(mktemp)" || softfail || return
 
   ssh::script "$@" >"${tmpFile}" || softfail || return
 
-  scriptChecksum="$(cksum <"${tmpFile}")" || softfail || return
+  local scriptChecksum; scriptChecksum="$(cksum <"${tmpFile}")" || softfail || return
 
-  remoteTmpFile="$(ssh "${sshArgs[@]}" "${REMOTE_HOST}" 'tmpFile="$(mktemp)" && cat>"$tmpFile" && echo "$tmpFile"' <"$tmpFile")" || softfail || return
+  local remoteTmpFile; remoteTmpFile="$(ssh "${sshArgs[@]}" "${REMOTE_HOST}" 'tmpFile="$(mktemp)" && cat>"$tmpFile" && echo "$tmpFile"' <"$tmpFile")" || softfail || return
 
   if [ -z "${remoteTmpFile}" ]; then
     softfail "Unable to get remote temp file name"
