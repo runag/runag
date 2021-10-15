@@ -51,7 +51,7 @@ ruby::install-rbenv-shellrc() {
   if [ -n "${1:-}" ]; then
     local output="$1"
   else
-    local output; output="$(shell::get-shellrc-filename "rbenv")" || fail
+    local output; output="$(shellrc::get-filename "rbenv")" || fail
   fi
 
   local opensslLine=""
@@ -82,7 +82,7 @@ SHELL
 }
 
 ruby::load-rbenv() {
-  shell::load-shellrc "rbenv" || fail
+  shellrc::load "rbenv" || fail
   rbenv rehash || fail
 }
 

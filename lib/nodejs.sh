@@ -62,7 +62,7 @@ nodejs::install-nodenv-shellrc() {
   if [ -n "${1:-}" ]; then
     local output="$1"
   else
-    local output; output="$(shell::get-shellrc-filename "nodenv")" || fail
+    local output; output="$(shellrc::get-filename "nodenv")" || fail
   fi
 
   file::write "${output}" 600 <<SHELL || fail
@@ -84,7 +84,7 @@ SHELL
 }
 
 nodejs::load-nodenv() {
-  shell::load-shellrc "nodenv" || fail
+  shellrc::load "nodenv" || fail
   nodenv rehash || fail
 }
 

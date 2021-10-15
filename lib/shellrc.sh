@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-shell::install-shellrc-directory-loader() {
+shellrc::install-loader() {
   local shellrcFile="$1"
 
   local shellrcDir="${HOME}/.shellrc.d"
@@ -41,7 +41,7 @@ SHELL
   fi
 }
 
-shell::get-shellrc-filename() {
+shellrc::get-filename() {
   local name="$1"
 
   local shellrcDir="${HOME}/.shellrc.d"
@@ -50,7 +50,7 @@ shell::get-shellrc-filename() {
   echo "${shellrcDir}/${name}.sh" || fail
 }
 
-shell::write-shellrc() {
+shellrc::write() {
   local name="$1"
 
   local shellrcDir="${HOME}/.shellrc.d"
@@ -59,7 +59,7 @@ shell::write-shellrc() {
   file::write "${shellrcDir}/${name}.sh" 600 || fail
 }
 
-shell::load-shellrc() {
+shellrc::load() {
   local name="$1"
 
   local shellrcDir="${HOME}/.shellrc.d"
@@ -67,16 +67,16 @@ shell::load-shellrc() {
   . "${shellrcDir}/${name}.sh" || fail
 }
 
-shell::install-sopka-path-shellrc() {
-  shell::write-shellrc "sopka-path" <<SHELL || fail
+shellrc::install-sopka-path-rc() {
+  shellrc::write "sopka-path" <<SHELL || fail
     if [ -d "\${HOME}/.sopka/bin" ]; then
       export PATH="\${HOME}/.sopka/bin:\${PATH}"
     fi
 SHELL
 }
 
-shell::install-direnv-loader-shellrc() {
-  shell::write-shellrc "hook-direnv" <<SHELL || fail
+shellrc::install-direnv-rc() {
+  shellrc::write "direnv" <<SHELL || fail
     if command -v direnv >/dev/null; then
       export DIRENV_LOG_FORMAT=""
       if [ -n "\${ZSH_VERSION:-}" ]; then
@@ -88,8 +88,8 @@ shell::install-direnv-loader-shellrc() {
 SHELL
 }
 
-shell::install-nano-editor-shellrc() {
-  shell::write-shellrc "use-nano-editor" <<SHELL || fail
+shellrc::install-nano-editor-rc() {
+  shellrc::write "nano-editor" <<SHELL || fail
     if [ -z "\${EDITOR:-}" ]; then
       if command -v nano >/dev/null; then
         export EDITOR="\$(command -v nano)"
