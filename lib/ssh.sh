@@ -233,6 +233,8 @@ ssh::run() {
     return
   fi
 
+  rm "${tmpFile}" || softfail || return
+
   # shellcheck disable=2029,2016
   ssh "${sshArgs[@]}" "${REMOTE_HOST}" "$(printf 'if [ "$(cksum <%q)" != %q ]; then exit 254; fi; bash %q; scriptStatus=$?; rm -f %q; exit $scriptStatus' \
     "${remoteTmpFile}" \
