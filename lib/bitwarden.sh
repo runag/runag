@@ -15,39 +15,43 @@
 #  limitations under the License.
 
 bitwarden::install-cli::snap() {(
-  unset BW_SESSION
+  unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
 
   if ! snap list bw >/dev/null 2>&1; then
-    sudo snap install bw || fail
+    sudo snap install bw || softfail || return
   fi
 
   if ! command -v jq >/dev/null; then
-    apt::lazy-update || fail
-    apt::install jq || fail
+    apt::lazy-update || softfail || return
+    apt::install jq || softfail || return
   fi
 )}
 
 bitwarden::beyond-session() {(
-  unset BW_SESSION
+  unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
   "$@"
 )}
 
-bitwarden::login() {
+bitwarden::logout-if-user-email-differs() {
   local bitwardenEmail="$1"
+
+  local bwStatus; bwStatus="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return
+
+  if [ "${bwStatus}" = "unlocked" ] || [ "${bwStatus}" = "locked" ]; then
+    local bwCurrentUserEmail; bwCurrentUserEmail="$(bw status | jq '.userEmail' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return
+    if [ "${bwCurrentUserEmail}" != "${bitwardenEmail}" ]; then
+      bw logout || softfail || return
+    fi
+  fi
+}
+
+bitwarden::is-logged-in() {
+  # this function is intent to use fail (and not softfail) in case of errors
 
   local bwStatus; bwStatus="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
 
-  if [ "${bwStatus}" = "unlocked" ] || [ "${bwStatus}" = "locked" ]; then
-    local bwCurrentUserEmail; bwCurrentUserEmail="$(bw status | jq '.userEmail' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
-    if [ "${bwCurrentUserEmail}" != "${bitwardenEmail}" ]; then
-      bw logout || fail
-      bwStatus="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
-    fi
-  fi
-
   if [ "${bwStatus}" = "unauthenticated" ]; then
-    BW_SESSION="$(bw login "${bitwardenEmail}" --raw)" || fail
-    export BW_SESSION
+    return 1
   elif [ "${bwStatus}" = "unlocked" ] || [ "${bwStatus}" = "locked" ]; then
     return 0
   else
@@ -55,11 +59,29 @@ bitwarden::login() {
   fi
 }
 
-bitwarden::unlock-and-sync() {
-  local bwStatus; bwStatus="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
+bitwarden::login() {
+  local bwStatus; bwStatus="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return
 
   if [ "${bwStatus}" = "unauthenticated" ]; then
-    fail "Please log in to bitwarden"
+    local rawResult; rawResult="$(bw login --raw "$@")" || softfail || return
+
+    if [ -n "${rawResult}" ]; then
+      export BW_SESSION="${rawResult}"
+    fi
+    
+  elif [ "${bwStatus}" = "unlocked" ] || [ "${bwStatus}" = "locked" ]; then
+    return 0
+  else
+    softfail "Unknown bitwarden status" || return
+  fi
+}
+
+bitwarden::unlock-and-sync() {
+  local bwStatus; bwStatus="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return
+
+  if [ "${bwStatus}" = "unauthenticated" ]; then
+    softfail "Please log in to bitwarden"
+    return
 
   elif [ "${bwStatus}" = "unlocked" ]; then
     return 0
@@ -67,12 +89,19 @@ bitwarden::unlock-and-sync() {
   elif [ "${bwStatus}" = "locked" ]; then
     echo "Please unlock your bitwarden vault"
 
-    BW_SESSION="$(bw unlock --raw)" || fail
-    export BW_SESSION
+    local rawResult; rawResult="$(bw unlock --raw "$@")" || softfail || return
 
-    bw sync || fail
+    if [ -n "${rawResult}" ]; then
+      export BW_SESSION="${rawResult}"
+    else
+      softfail "Unable to oabtain bitwarden session"
+      return
+    fi
+
+    bw sync || softfail || return
   else
-    fail "Unknown bitwarden status"
+    softfail "Unknown bitwarden status"
+    return
   fi
 }
 
@@ -82,7 +111,7 @@ bitwarden::write-notes-to-file-if-not-exists() {
   local mode="${3:-"600"}"
 
   if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
-    bitwarden::write-notes-to-file "${bitwardenObjectId}" "${outputFile}" "${mode}" || fail
+    bitwarden::write-notes-to-file "${bitwardenObjectId}" "${outputFile}" "${mode}" || softfail || return
   fi
 }
 
@@ -91,14 +120,14 @@ bitwarden::write-notes-to-file() {
   local outputFile="$2"
   local mode="${3:-"600"}"
 
-  bitwarden::unlock-and-sync || fail
-  local bwdata; bwdata="$(bw --nointeraction get item "${bitwardenObjectId}")" || fail
+  bitwarden::unlock-and-sync || softfail || return
+  local bwdata; bwdata="$(bw --nointeraction get item "${bitwardenObjectId}")" || softfail || return
 
   (
-    unset BW_SESSION
+    unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
     echo "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}" "${mode}"
-    test "${PIPESTATUS[*]}" = "0 0 0" || fail
-  ) || fail
+    test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return
+  ) || softfail || return
 }
 
 bitwarden::write-password-to-file-if-not-exists() {
@@ -107,7 +136,7 @@ bitwarden::write-password-to-file-if-not-exists() {
   local mode="${3:-"600"}"
 
   if [ ! -f "${outputFile}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
-    bitwarden::write-password-to-file "${bitwardenObjectId}" "${outputFile}" "${mode}" || fail
+    bitwarden::write-password-to-file "${bitwardenObjectId}" "${outputFile}" "${mode}" || softfail || return
   fi
 }
 
@@ -116,14 +145,14 @@ bitwarden::write-password-to-file() {
   local outputFile="$2"
   local mode="${3:-"600"}"
 
-  bitwarden::unlock-and-sync || fail
-  local bwdata; bwdata="$(bw --nointeraction get password "${bitwardenObjectId}")" || fail
+  bitwarden::unlock-and-sync || softfail || return
+  local bwdata; bwdata="$(bw --nointeraction get password "${bitwardenObjectId}")" || softfail || return
 
   (
-    unset BW_SESSION
+    unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
     echo -n "${bwdata}" | file::write "${outputFile}" "${mode}"
-    test "${PIPESTATUS[*]}" = "0 0" || fail
-  ) || fail
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return
+  ) || softfail || return
 }
 
 bitwarden::use() {
@@ -143,22 +172,24 @@ bitwarden::use() {
   local functionPrefix="$2"
 
   if ! declare -f "${functionPrefix}::exists" >/dev/null && ! command -v "${functionPrefix}::exists" >/dev/null; then
-    fail "${functionPrefix}::exists should be available as function or command"
+    softfail "${functionPrefix}::exists should be available as function or command"
+    return
   fi
 
   if ! declare -f "${functionPrefix}::save" >/dev/null && ! command -v "${functionPrefix}::save" >/dev/null; then
-    fail "${functionPrefix}::save should be available as function or command"
+    softfail "${functionPrefix}::save should be available as function or command"
+    return
   fi
 
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! ( unset BW_SESSION && "${functionPrefix}::exists" "${@:3}" ); then
-    bitwarden::unlock-and-sync || fail
+  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! ( unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD && "${functionPrefix}::exists" "${@:3}" ); then
+    bitwarden::unlock-and-sync || softfail || return
     
     local secretsList=()
     for item in "${getList[@]}"; do
-      secretsList+=("$(bw get "${item}" "${bitwardenObjectId}")") || fail
+      secretsList+=("$(bw get "${item}" "${bitwardenObjectId}")") || softfail || return
     done
 
-    ( unset BW_SESSION && "${functionPrefix}::save" "${secretsList[@]}" "${@:3}" ) || fail
+    ( unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD && "${functionPrefix}::save" "${secretsList[@]}" "${@:3}" ) || softfail || return
   fi
 }
 
