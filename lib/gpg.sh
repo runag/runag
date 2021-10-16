@@ -19,9 +19,9 @@ gpg::import-key-with-ultimate-ownertrust() {
   local sourcePath="$2"
 
   if ! gpg --list-keys "${key}" >/dev/null 2>&1; then
-    file::wait-until-available "${sourcePath}" || fail
-    gpg --import "${sourcePath}" || fail
-    echo "${key}:6:" | gpg --import-ownertrust || fail
+    file::wait-until-available "${sourcePath}" || softfail || return
+    gpg --import "${sourcePath}" || softfail || return
+    echo "${key}:6:" | gpg --import-ownertrust || softfail || return
   fi
 }
 
@@ -31,8 +31,35 @@ gpg::decrypt-and-install-file() {
   local mode="${3:-"600"}"
 
   if [ ! -f "${destPath}" ]; then
-    file::wait-until-available "${sourcePath}" || fail
+    file::wait-until-available "${sourcePath}" || softfail || return
     gpg --decrypt "${sourcePath}" | file::write "${destPath}" "${mode}"
-    test "${PIPESTATUS[*]}" = "0 0" || fail
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return
   fi
+}
+
+gpg::decrypt-and-source-script() {
+  local sourcePath="$1"
+
+  file::wait-until-available "${sourcePath}" || softfail || return
+
+  local tmpDir; tmpDir="$(mktemp -d)" || softfail || return
+
+  # I don't want to put data in file system here so I'll use fifo
+  # I want sopka code to be bash-3.2 compatible so I can't use coproc
+  mkfifo -m 600 "${tmpDir}/fifo" || softfail || return
+
+  gpg --decrypt "${sourcePath}" >"${tmpDir}/fifo" &
+  local gpgPid=$!
+
+  . "${tmpDir}/fifo"
+  local sourceStatus=$?
+
+  wait "${gpgPid}"
+  local gpgStatus=$?
+
+  rm "${tmpDir}/fifo" || softfail || return
+  rm -d "${tmpDir}" || softfail || return
+
+  test "${sourceStatus}" = "0" || softfail || return
+  test "${gpgStatus}" = "0" || softfail || return
 }
