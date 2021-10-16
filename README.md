@@ -57,7 +57,7 @@ Possible sopkafile locations are:
 * [apt](docs/lib/apt.md)
 * [linux](docs/lib/linux.md)
 * [macos](docs/lib/macos.md)
-* [shell](docs/lib/shell.md)
+* [shellrc](docs/lib/shellrc.md)
 * [systemd](docs/lib/systemd.md)
 * [vmware](docs/lib/vmware.md)
 
@@ -65,7 +65,7 @@ Possible sopkafile locations are:
 
 * [bitwarden](docs/lib/bitwarden.md)
 * [checksums](docs/lib/checksums.md)
-* [keys](docs/lib/keys.md)
+* [gpg](docs/lib/gpg.md)
 
 ### Development
 
