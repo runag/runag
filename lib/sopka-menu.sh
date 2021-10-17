@@ -37,3 +37,13 @@ sopka-menu::is-present() {
 sopka-menu::clear() {
   SOPKA_MENU=()
 }
+
+sopka-menu::sort() {
+  if [ -n "${SOPKA_MENU:+x}" ]; then
+    local previousIFS="${IFS}"
+    IFS=$'\n'
+    # shellcheck disable=SC2207
+    SOPKA_MENU=($(sort <<<"${SOPKA_MENU[*]}")) || { softfail; IFS="$previousIFS"; return 1; }
+    IFS="$previousIFS"
+  fi
+}
