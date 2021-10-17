@@ -15,17 +15,17 @@
 #  limitations under the License.
 
 postgresql::su(){
-  local userName
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
     if [ -n "${SUDO_USER:-}" ]; then
-      userName="${SUDO_USER}"
+      local userName="${SUDO_USER}"
     else
-      userName="${USER}"
+      local userName="${USER}"
     fi
   else
-    userName=postgres
+    local userName=postgres
   fi
-  echo "sudo -i -u ${userName} psql --username ${userName} --set ON_ERROR_STOP=on"
+  
+  sudo -i -u "${userName}" psql --username "${userName}" --set ON_ERROR_STOP=on "$@" || softfail || return
 }
 
 postgresql::install-dictionaries() {
@@ -54,17 +54,15 @@ postgresql::install-dictionaries() {
   fi
 }
 
-postgresql::create-superuser-for-local-account() {
-  local userName="${USER}"
-  local userExists
-
-  local psqlSu; psqlSu="$(postgresql::su)" || fail
-
-  userExists="$(${psqlSu} --dbname postgres -tA -c "SELECT 1 FROM pg_roles WHERE rolname='${userName}'")" || fail
-
-  if [ "${userExists}" = '1' ]; then
-    return 0
+postgresql::create-role-if-not-exists() {
+  local userName="$1"
+  if ! postgresql::is-role-exists "${userName}"; then
+    postgresql::su --echo-errors --command "CREATE ROLE ${userName} ${*:2}" --dbname postgres --quiet || softfail || return
   fi
+}
 
-  ${psqlSu} --dbname postgres -c "CREATE ROLE ${userName} WITH SUPERUSER CREATEDB CREATEROLE LOGIN" || fail
+postgresql::is-role-exists() {
+  local roleName="$1"
+  local roleExists; roleExists="$(postgresql::su --no-align --echo-errors --command "SELECT 1 FROM pg_roles WHERE rolname='${roleName}'" --dbname postgres --quiet --tuples-only)" || fail # no softfail here!
+  test "${roleExists}" = 1
 }
