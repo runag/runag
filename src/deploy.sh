@@ -26,36 +26,30 @@ $(sopka::print-license)
 
 __xVhMyefCbBnZFUQtwqCs() {
 
-$(declare -f terminal::color)
-$(declare -f terminal::default-color)
-$(declare -f log::notice)
-$(declare -f log::error)
-$(declare -f log::with-color)
-$(declare -f log::error-trace)
+$(declare -f apt::install)
+$(declare -f apt::update)
+$(declare -f deploy-script::add)
+$(declare -f deploy-script::run)
+$(declare -f deploy-script)
 $(declare -f fail)
-$(declare -f softfail)
+$(declare -f git::install-git)
+$(declare -f git::place-up-to-date-clone)
+$(declare -f log::error-trace)
+$(declare -f log::error)
+$(declare -f log::notice)
+$(declare -f log::with-color)
 $(declare -f softfail-unless-good-code)
-$(declare -f softfail::internal)
 $(declare -f softfail-unless-good::internal)
-
-# shellcheck disable=SC2031
+$(declare -f softfail::internal)
+$(declare -f softfail)
+$(declare -f sopka::add-sopkafile)
 $(declare -f task::cleanup)
 $(declare -f task::detect-fail-state)
 $(declare -f task::is-stderr-empty-after-filtering)
 $(declare -f task::run)
 $(declare -f task::stderr-filter)
-
-$(declare -f apt::install)
-# shellcheck disable=SC2034
-$(declare -f apt::update)
-
-$(declare -f git::install-git)
-$(declare -f git::place-up-to-date-clone)
-
-$(declare -f sopka::add-sopkafile)
-$(declare -f deploy-script)
-$(declare -f deploy-script::add)
-$(declare -f deploy-script::run)
+$(declare -f terminal::color)
+$(declare -f terminal::default-color)
 
 if [ "\${SOPKA_VERBOSE:-}" = true ]; then
   set -o xtrace

@@ -11,6 +11,6 @@
   "repository": "senotrusov/sopka",
   "scripts": {
     "build": "src/deploy.sh; docs/make.sh",
-    "lint": "shellcheck *.sh bin/* $(find lib -name '*.sh')"
+    "lint": "shellcheck index.sh bin/* $(find lib -name '*.sh')"
   }
 }

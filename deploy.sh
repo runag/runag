@@ -19,47 +19,84 @@
 
 __xVhMyefCbBnZFUQtwqCs() {
 
-terminal::color () 
+apt::install () 
 { 
-    local foreground="$1";
-    local background="${2:-}";
-    local amount;
-    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
-        if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
-            tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        fi;
-        if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
-            tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    sudo apt-get -y install "$@" || fail
+}
+apt::update () 
+{ 
+    SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
+    sudo apt-get update || fail
+}
+deploy-script::add () 
+{ 
+    task::run sopka::add-sopkafile "$1" || softfail || return;
+    deploy-script "${@:2}";
+    softfail-unless-good-code $?
+}
+deploy-script::run () 
+{ 
+    "${HOME}/.sopka/bin/sopka" "$@";
+    softfail-unless-good-code $?
+}
+deploy-script () 
+{ 
+    if [ -n "${1:-}" ]; then
+        if declare -f "deploy-script::$1" > /dev/null; then
+            "deploy-script::$1" "${@:2}";
+            softfail-unless-good-code $? || return;
+        else
+            softfail "Sopka deploy-script: command not found: $1";
+            return;
         fi;
     fi
 }
-terminal::default-color () 
+fail () 
 { 
-    if command -v tput > /dev/null; then
-        tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-    fi
+    softfail::internal "$@";
+    exit
 }
-log::notice () 
+git::install-git () 
 { 
-    local message="$1";
-    log::with-color "${message}" 11
-}
-log::error () 
-{ 
-    local message="$1";
-    log::with-color "${message}" 9 1>&2
-}
-log::with-color () 
-{ 
-    local message="$1";
-    local foregroundColor="$2";
-    local backgroundColor="${3:-}";
-    local colorSeq="" defaultColorSeq="";
-    if [ -t 1 ]; then
-        colorSeq="$(terminal::color "${foregroundColor}" "${backgroundColor:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        defaultColorSeq="$(terminal::default-color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    if [[ "${OSTYPE}" =~ ^linux ]]; then
+        if ! command -v git > /dev/null; then
+            if command -v apt-get > /dev/null; then
+                apt::update || fail;
+                apt::install git || fail;
+            else
+                fail "Unable to install git, apt-get not found";
+            fi;
+        fi;
     fi;
-    echo "${colorSeq}${message}${defaultColorSeq}"
+    git --version > /dev/null || fail
+}
+git::place-up-to-date-clone () 
+{ 
+    local url="$1";
+    local dest="$2";
+    local branch="${3:-}";
+    if [ -d "${dest}" ]; then
+        local currentUrl;
+        currentUrl="$(git -C "${dest}" config remote.origin.url)" || fail;
+        if [ "${currentUrl}" != "${url}" ]; then
+            local destFullPath;
+            destFullPath="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail;
+            local destParentDir;
+            destParentDir="$(dirname "${destFullPath}")" || fail;
+            local destDirName;
+            destDirName="$(basename "${destFullPath}")" || fail;
+            local packupPath;
+            packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail;
+            mv "${destFullPath}" "${packupPath}" || fail;
+            git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
+        fi;
+        git -C "${dest}" pull || fail "Unable to git pull in ${dest}";
+    else
+        git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
+    fi;
+    if [ -n "${branch:-}" ]; then
+        git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}";
+    fi
 }
 log::error-trace () 
 { 
@@ -75,18 +112,43 @@ log::error-trace ()
         log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" 1>&2;
     done
 }
-fail () 
+log::error () 
 { 
-    softfail::internal "$@";
-    exit
+    local message="$1";
+    log::with-color "${message}" 9 1>&2
 }
-softfail () 
+log::notice () 
 { 
-    softfail::internal "$@"
+    local message="$1";
+    log::with-color "${message}" 11
+}
+log::with-color () 
+{ 
+    local message="$1";
+    local foregroundColor="$2";
+    local backgroundColor="${3:-}";
+    local colorSeq="" defaultColorSeq="";
+    if [ -t 1 ]; then
+        colorSeq="$(terminal::color "${foregroundColor}" "${backgroundColor:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        defaultColorSeq="$(terminal::default-color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    fi;
+    echo "${colorSeq}${message}${defaultColorSeq}"
 }
 softfail-unless-good-code () 
 { 
     softfail-unless-good::internal "" "$1"
+}
+softfail-unless-good::internal () 
+{ 
+    local message="${1:-"Abnormal termination"}";
+    local exitStatus="${2:-undefined}";
+    if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
+        exitStatus=1;
+    fi;
+    if [ "${exitStatus}" != 0 ]; then
+        log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    fi;
+    return "${exitStatus}"
 }
 softfail::internal () 
 { 
@@ -101,20 +163,17 @@ softfail::internal ()
     fi;
     return 1
 }
-softfail-unless-good::internal () 
+softfail () 
 { 
-    local message="${1:-"Abnormal termination"}";
-    local exitStatus="${2:-undefined}";
-    if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
-        exitStatus=1;
-    fi;
-    if [ "${exitStatus}" != 0 ]; then
-        log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
-    fi;
-    return "${exitStatus}"
+    softfail::internal "$@"
 }
-
-# shellcheck disable=SC2031
+sopka::add-sopkafile () 
+{ 
+    local packageId="$1";
+    local dest;
+    dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return;
+    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return
+}
 task::cleanup () 
 { 
     local errorState=0;
@@ -181,90 +240,25 @@ task::stderr-filter ()
     grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\." | awk NF;
     true
 }
-
-apt::install () 
+terminal::color () 
 { 
-    sudo apt-get -y install "$@" || fail
-}
-# shellcheck disable=SC2034
-apt::update () 
-{ 
-    SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
-    sudo apt-get update || fail
-}
-
-git::install-git () 
-{ 
-    if [[ "${OSTYPE}" =~ ^linux ]]; then
-        if ! command -v git > /dev/null; then
-            if command -v apt-get > /dev/null; then
-                apt::update || fail;
-                apt::install git || fail;
-            else
-                fail "Unable to install git, apt-get not found";
-            fi;
+    local foreground="$1";
+    local background="${2:-}";
+    local amount;
+    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
+        if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
+            tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
-    fi;
-    git --version > /dev/null || fail
-}
-git::place-up-to-date-clone () 
-{ 
-    local url="$1";
-    local dest="$2";
-    local branch="${3:-}";
-    if [ -d "${dest}" ]; then
-        local currentUrl;
-        currentUrl="$(git -C "${dest}" config remote.origin.url)" || fail;
-        if [ "${currentUrl}" != "${url}" ]; then
-            local destFullPath;
-            destFullPath="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail;
-            local destParentDir;
-            destParentDir="$(dirname "${destFullPath}")" || fail;
-            local destDirName;
-            destDirName="$(basename "${destFullPath}")" || fail;
-            local packupPath;
-            packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail;
-            mv "${destFullPath}" "${packupPath}" || fail;
-            git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
-        fi;
-        git -C "${dest}" pull || fail "Unable to git pull in ${dest}";
-    else
-        git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
-    fi;
-    if [ -n "${branch:-}" ]; then
-        git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}";
-    fi
-}
-
-sopka::add-sopkafile () 
-{ 
-    local packageId="$1";
-    local dest;
-    dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return;
-    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return
-}
-deploy-script () 
-{ 
-    if [ -n "${1:-}" ]; then
-        if declare -f "deploy-script::$1" > /dev/null; then
-            "deploy-script::$1" "${@:2}";
-            softfail-unless-good-code $? || return;
-        else
-            softfail "Sopka deploy-script: command not found: $1";
-            return;
+        if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
+            tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
     fi
 }
-deploy-script::add () 
+terminal::default-color () 
 { 
-    task::run sopka::add-sopkafile "$1" || softfail || return;
-    deploy-script "${@:2}";
-    softfail-unless-good-code $?
-}
-deploy-script::run () 
-{ 
-    "${HOME}/.sopka/bin/sopka" "$@";
-    softfail-unless-good-code $?
+    if command -v tput > /dev/null; then
+        tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    fi
 }
 
 if [ "${SOPKA_VERBOSE:-}" = true ]; then
