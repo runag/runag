@@ -211,6 +211,10 @@ $3 # taskStatus (integer exit status)
 
 The function must return new exit status which will be assumed to be an exit status of the task.
 
+#### `SOPKA_TASK_STDERR_FILTER`
+
+Could be set to function name. Function is expected to filter it's input. If function output is empty then stderr will not be displayed.
+Could be set to "false" to disable sopka built-in filtering. Built-in filtering tries to be conservative, and could be examined in `task::stderr-filter` function.
 
 
 ### Internal variables, not to be used by non-library code

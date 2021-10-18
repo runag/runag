@@ -83,7 +83,7 @@ task::run() {(
 
 task::stderr-filter() {
   # Those greps are for:
-  # 1. ?
+  # 1. tailscale
   # 2. apt-key
   # 3. git
   # 4. systemd
@@ -96,11 +96,16 @@ task::stderr-filter() {
 }
 
 task::is-stderr-empty-after-filtering() {
-  if declare -f "task::stderr-filter" >/dev/null; then
-    # shellcheck disable=2266
-    task::stderr-filter | test "$(wc -c)" = 0
-    test "${PIPESTATUS[*]}" = "0 0"
+  local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}"
+
+  if [ "${stderrFilter}" = "false" ]; then
+    test "$(wc -c)" = 0
+    return
   fi
+
+  # shellcheck disable=2266
+  "${stderrFilter}" | test "$(wc -c)" = 0
+  test "${PIPESTATUS[*]}" = "0 0"
 }
 
 # shellcheck disable=SC2031
