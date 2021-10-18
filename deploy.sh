@@ -214,10 +214,13 @@ task::detect-fail-state ()
 }
 task::is-stderr-empty-after-filtering () 
 { 
-    if declare -f "task::stderr-filter" > /dev/null; then
-        task::stderr-filter | test "$(wc -c)" = 0;
-        test "${PIPESTATUS[*]}" = "0 0";
-    fi
+    local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}";
+    if [ "${stderrFilter}" = "false" ]; then
+        test "$(wc -c)" = 0;
+        return;
+    fi;
+    "${stderrFilter}" | test "$(wc -c)" = 0;
+    test "${PIPESTATUS[*]}" = "0 0"
 }
 task::run () 
 { 
