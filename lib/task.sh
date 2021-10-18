@@ -14,8 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::run-and-fail-on-error-in-rubygems() {
-  SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS=true task::run "$@"
+task::run-with-rubygems-fail-detector() {
+  SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector task::run "$@"
 }
 
 task::run-and-omit-title() {
@@ -34,14 +34,37 @@ task::run-verbose() {
   SOPKA_VERBOSE_TASKS=true task::run "$@"
 }
 
+task::rubygems-fail-detector() {
+  # shellcheck disable=SC2034
+  local stdoutFile="$1"
+  local stderrFile="$2"
+  local taskStatus="$3"
+
+  if [ "${taskStatus}" = 0 ] && grep -q "^ERROR:" "${stderrFile}"; then
+    return 1
+  fi
+
+  return "${taskStatus}"
+}
+
+task::detect-fail-state() {
+  local taskStatus="$3"
+
+  if [ -z "${SOPKA_TASK_FAIL_DETECTOR:-}" ]; then
+    return "${taskStatus}"
+  fi
+
+  "${SOPKA_TASK_FAIL_DETECTOR}" "$@"
+}
+
 # note the subshells
-# shellcheck disable=SC2030
 task::run() {(
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
     log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail
   fi
 
-  local tmpFile; tmpFile="$(mktemp)" || fail
+  # shellcheck disable=SC2030
+  local tmpFile; tmpFile="$(mktemp)" || fail # tmpFile also used in task::cleanup signal handler
 
   trap "task::cleanup" EXIT
 
@@ -52,13 +75,10 @@ task::run() {(
     ("$@") >"${tmpFile}" 2>"${tmpFile}.stderr"
   fi
   
-  local taskResult=$?
-
-  if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
-    taskResult=1
-  fi
-
-  exit $taskResult
+  # shellcheck disable=SC2030
+  local taskStatus=$? # taskStatus also used in task::cleanup signal handler
+  
+  task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}"
 )}
 
 task::stderr-filter() {
@@ -76,8 +96,8 @@ task::stderr-filter() {
 }
 
 task::is-stderr-empty-after-filtering() {
-  # shellcheck disable=2266
   if declare -f "task::stderr-filter" >/dev/null; then
+    # shellcheck disable=2266
     task::stderr-filter | test "$(wc -c)" = 0
     test "${PIPESTATUS[*]}" = "0 0"
   fi
@@ -95,7 +115,7 @@ task::cleanup() {
     fi
   fi
 
-  if [ "${taskResult:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+  if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
 
     cat "${tmpFile}" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
 

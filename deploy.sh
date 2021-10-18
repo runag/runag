@@ -114,38 +114,6 @@ softfail-unless-good::internal ()
     return "${exitStatus}"
 }
 
-# shellcheck disable=SC2030
-task::run () 
-{ 
-    ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-        log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
-    fi;
-    local tmpFile;
-    tmpFile="$(mktemp)" || fail;
-    trap "task::cleanup" EXIT;
-    if [ -t 0 ]; then
-        ( "$@" ) < /dev/null > "${tmpFile}" 2> "${tmpFile}.stderr";
-    else
-        ( "$@" ) > "${tmpFile}" 2> "${tmpFile}.stderr";
-    fi;
-    local taskResult=$?;
-    if [ $taskResult = 0 ] && [ "${SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS:-}" = true ] && grep -q "^ERROR:" "${tmpFile}.stderr"; then
-        taskResult=1;
-    fi;
-    exit $taskResult )
-}
-task::stderr-filter () 
-{ 
-    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\." | awk NF;
-    true
-}
-task::is-stderr-empty-after-filtering () 
-{ 
-    if declare -f "task::stderr-filter" > /dev/null; then
-        task::stderr-filter | test "$(wc -c)" = 0;
-        test "${PIPESTATUS[*]}" = "0 0";
-    fi
-}
 # shellcheck disable=SC2031
 task::cleanup () 
 { 
@@ -157,7 +125,7 @@ task::cleanup ()
             stderrPresent=false;
         fi;
     fi;
-    if [ "${taskResult:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+    if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
         cat "${tmpFile}" || { 
             echo "Sopka: Unable to display task stdout ($?)" 1>&2;
             errorState=1
@@ -177,16 +145,52 @@ task::cleanup ()
     rm "${tmpFile}" || fail;
     rm -f "${tmpFile}.stderr" || fail
 }
+task::detect-fail-state () 
+{ 
+    local taskStatus="$3";
+    if [ -z "${SOPKA_TASK_FAIL_DETECTOR:-}" ]; then
+        return "${taskStatus}";
+    fi;
+    "${SOPKA_TASK_FAIL_DETECTOR}" "$@"
+}
+task::is-stderr-empty-after-filtering () 
+{ 
+    if declare -f "task::stderr-filter" > /dev/null; then
+        task::stderr-filter | test "$(wc -c)" = 0;
+        test "${PIPESTATUS[*]}" = "0 0";
+    fi
+}
+task::run () 
+{ 
+    ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
+        log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
+    fi;
+    local tmpFile;
+    tmpFile="$(mktemp)" || fail;
+    trap "task::cleanup" EXIT;
+    if [ -t 0 ]; then
+        ( "$@" ) < /dev/null > "${tmpFile}" 2> "${tmpFile}.stderr";
+    else
+        ( "$@" ) > "${tmpFile}" 2> "${tmpFile}.stderr";
+    fi;
+    local taskStatus=$?;
+    task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}" )
+}
+task::stderr-filter () 
+{ 
+    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\." | awk NF;
+    true
+}
 
+apt::install () 
+{ 
+    sudo apt-get -y install "$@" || fail
+}
 # shellcheck disable=SC2034
 apt::update () 
 { 
     SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
     sudo apt-get update || fail
-}
-apt::install () 
-{ 
-    sudo apt-get -y install "$@" || fail
 }
 
 git::install-git () 

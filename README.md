@@ -199,6 +199,19 @@ Could be set to `"true"`
 
 Could be set to `"true"`
 
+#### `SOPKA_TASK_FAIL_DETECTOR`
+
+Could be set to function name. The function will be called with 3 arguments:
+
+```
+$1 # stdoutFile (path fo file)
+$2 # stderrFile (path fo file)
+$3 # taskStatus (integer exit status)
+```
+
+The function must return new exit status which will be assumed to be an exit status of the task.
+
+
 
 ### Internal variables, not to be used by non-library code
 
@@ -206,7 +219,6 @@ Could be set to `"true"`
 SOPKA_APT_LAZY_UPDATE_HAPPENED
 SOPKA_NODENV_INITIALIZED
 SOPKA_RBENV_INITIALIZED
-SOPKA_TASK_FAIL_ON_ERROR_IN_RUBYGEMS
 SOPKA_TASK_OMIT_TITLE
 SOPKA_TASK_TITLE
 ```

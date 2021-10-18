@@ -38,16 +38,16 @@ $(declare -f softfail-unless-good-code)
 $(declare -f softfail::internal)
 $(declare -f softfail-unless-good::internal)
 
-# shellcheck disable=SC2030
-$(declare -f task::run)
-$(declare -f task::stderr-filter)
-$(declare -f task::is-stderr-empty-after-filtering)
 # shellcheck disable=SC2031
 $(declare -f task::cleanup)
+$(declare -f task::detect-fail-state)
+$(declare -f task::is-stderr-empty-after-filtering)
+$(declare -f task::run)
+$(declare -f task::stderr-filter)
 
+$(declare -f apt::install)
 # shellcheck disable=SC2034
 $(declare -f apt::update)
-$(declare -f apt::install)
 
 $(declare -f git::install-git)
 $(declare -f git::place-up-to-date-clone)
