@@ -14,20 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-postgresql::su(){
-  if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    if [ -n "${SUDO_USER:-}" ]; then
-      local userName="${SUDO_USER}"
-    else
-      local userName="${USER}"
-    fi
-  else
-    local userName=postgres
-  fi
-  
-  sudo -i -u "${userName}" psql --username "${userName}" --set ON_ERROR_STOP=on "$@" || softfail || return
-}
-
 postgresql::install-dictionaries() {
   local folder="$1"
 
@@ -54,15 +40,45 @@ postgresql::install-dictionaries() {
   fi
 }
 
+psql-su(){
+  postgresql::psql-su "$@" || softfail || return
+}
+
+postgresql::psql-su(){
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
+    if [ -n "${SUDO_USER:-}" ]; then
+      local userName="${SUDO_USER}"
+    else
+      local userName="${USER}"
+    fi
+  else
+    local userName=postgres
+  fi
+  
+  sudo -i -u "${userName}" psql --username "${userName}" --set ON_ERROR_STOP=on "$@" || softfail || return
+}
+
+postgresql::psql-su-run(){
+  postgresql::psql-su --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return
+}
+
+postgresql::psql(){
+  psql --set ON_ERROR_STOP=on "$@" || softfail || return
+}
+
+postgresql::psql-run(){
+  postgresql::psql --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return
+}
+
 postgresql::create-role-if-not-exists() {
   local userName="$1"
   if ! postgresql::is-role-exists "${userName}"; then
-    postgresql::su --echo-errors --command "CREATE ROLE ${userName} ${*:2}" --dbname postgres --quiet || softfail || return
+    postgresql::psql-su-run "CREATE ROLE ${userName} ${*:2}" postgres || softfail || return
   fi
 }
 
 postgresql::is-role-exists() {
   local roleName="$1"
-  local roleExists; roleExists="$(postgresql::su --no-align --echo-errors --command "SELECT 1 FROM pg_roles WHERE rolname='${roleName}'" --dbname postgres --quiet --tuples-only)" || fail # no softfail here!
+  local roleExists; roleExists="$(postgresql::psql-su-run "SELECT 1 FROM pg_roles WHERE rolname='${roleName}'" postgres)" || fail # no softfail here!
   test "${roleExists}" = 1
 }
