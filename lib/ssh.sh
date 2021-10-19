@@ -184,7 +184,7 @@ ssh::shell-options() {
 }
 
 ssh::remote-env::base-list() {
-  echo "SOPKA_UPDATE_SECRETS SOPKA_VERBOSE_TASKS SOPKA_VERBOSE"
+  echo "SOPKA_UPDATE_SECRETS SOPKA_TASK_VERBOSE SOPKA_VERBOSE"
 }
 
 ssh::remote-env() {

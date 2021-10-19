@@ -117,10 +117,6 @@ You could use that file as an executable or you could source that file in your s
 
 Could be set to `"true"`
 
-#### `SOPKA_VERBOSE_TASKS`
-
-Could be set to `"true"`
-
 #### `SOPKA_VERBOSE`
 
 Could be set to `"true"`
@@ -150,7 +146,7 @@ Space-separated list of environment variable names, to be set in remote script
 with the values present in the calling sopka instance at the moment of ssh call.
 Example list is: `"FOO BAR QUX"`.
 For any provided names (or for absence of them),
-sopka will internaly add `"SOPKA_UPDATE_SECRETS SOPKA_VERBOSE_TASKS SOPKA_VERBOSE"`.
+sopka will internaly add `"SOPKA_UPDATE_SECRETS SOPKA_TASK_VERBOSE SOPKA_VERBOSE"`.
 
 #### `REMOTE_HOST`
 
@@ -215,6 +211,10 @@ The function must return new exit status which will be assumed to be an exit sta
 
 Could be set to function name. Function is expected to filter it's input. If function output is empty then stderr will not be displayed.
 Could be set to "false" to disable sopka built-in filtering. Built-in filtering tries to be conservative, and could be examined in `task::stderr-filter` function.
+
+#### `SOPKA_TASK_VERBOSE`
+
+Could be set to `"true"`
 
 
 ### Internal variables, not to be used by non-library code

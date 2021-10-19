@@ -18,7 +18,7 @@ task::run-with-rubygems-fail-detector() {
   SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector task::run "$@"
 }
 
-task::run-and-omit-title() {
+task::run-without-title() {
   SOPKA_TASK_OMIT_TITLE=true task::run "$@"
 }
 
@@ -31,7 +31,7 @@ task::run-with-short-title() {
 }
 
 task::run-verbose() {
-  SOPKA_VERBOSE_TASKS=true task::run "$@"
+  SOPKA_TASK_VERBOSE=true task::run "$@"
 }
 
 task::rubygems-fail-detector() {
@@ -120,7 +120,7 @@ task::cleanup() {
     fi
   fi
 
-  if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+  if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
 
     cat "${tmpFile}" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
 

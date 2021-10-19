@@ -184,7 +184,7 @@ task::cleanup ()
             stderrPresent=false;
         fi;
     fi;
-    if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_VERBOSE_TASKS:-}" = true ]; then
+    if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
         cat "${tmpFile}" || { 
             echo "Sopka: Unable to display task stdout ($?)" 1>&2;
             errorState=1

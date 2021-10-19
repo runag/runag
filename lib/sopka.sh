@@ -20,7 +20,7 @@ sopka::with-update-secrets() {
 }
 
 sopka::with-verbose-tasks() {
-  export SOPKA_VERBOSE_TASKS=true
+  export SOPKA_TASK_VERBOSE=true
   "$@"
 }
 
