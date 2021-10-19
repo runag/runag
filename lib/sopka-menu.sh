@@ -24,7 +24,7 @@ sopka-menu::add() {
 sopka-menu::display() {
   if [ -z ${SOPKA_MENU:+x} ]; then
     softfail "Menu is empty"
-    return
+    return $?
   fi
   menu::select-and-run "${SOPKA_MENU[@]}"
   softfail-unless-good-code $?

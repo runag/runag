@@ -15,9 +15,9 @@
 #  limitations under the License.
 
 sublime-merge::install::apt() {
-  apt::add-key-and-source "https://download.sublimetext.com/sublimehq-pub.gpg" "deb https://download.sublimetext.com/ apt/stable/" "sublime-text" || softfail || return
-  apt::update || softfail || return
-  apt::install sublime-merge || softfail || return
+  apt::add-key-and-source "https://download.sublimetext.com/sublimehq-pub.gpg" "deb https://download.sublimetext.com/ apt/stable/" "sublime-text" || softfail || return $?
+  apt::update || softfail || return $?
+  apt::install sublime-merge || softfail || return $?
 }
 
 sublime-merge::get-config-path() {
@@ -30,31 +30,31 @@ sublime-merge::get-config-path() {
     configPath="${APPDATA}/Sublime Merge"
 
   else
-    dir::make-if-not-exists "${HOME}/.config" 755 || softfail || return
+    dir::make-if-not-exists "${HOME}/.config" 755 || softfail || return $?
     configPath="${HOME}/.config/sublime-merge"
   fi
 
-  dir::make-if-not-exists "${configPath}" 700 || softfail || return
+  dir::make-if-not-exists "${configPath}" 700 || softfail || return $?
   echo "${configPath}"
 }
 
 sublime-merge::install-config-file() {
   local srcPath="$1"
 
-  local fileName; fileName="$(basename "${srcPath}")" || softfail || return
-  local configPath; configPath="$(sublime-merge::get-config-path)" || softfail || return
+  local fileName; fileName="$(basename "${srcPath}")" || softfail || return $?
+  local configPath; configPath="$(sublime-merge::get-config-path)" || softfail || return $?
 
-  dir::make-if-not-exists "${configPath}/Packages" 700 || softfail || return
-  dir::make-if-not-exists "${configPath}/Packages/User" 700 || softfail || return
+  dir::make-if-not-exists "${configPath}/Packages" 700 || softfail || return $?
+  dir::make-if-not-exists "${configPath}/Packages/User" 700 || softfail || return $?
 
-  config::install "${srcPath}" "${configPath}/Packages/User/${fileName}" || softfail || return
+  config::install "${srcPath}" "${configPath}/Packages/User/${fileName}" || softfail || return $?
 }
 
 sublime-merge::merge-config-file() {
   local srcPath="$1"
   
-  local fileName; fileName="$(basename "${srcPath}")" || softfail || return
-  local configPath; configPath="$(sublime-merge::get-config-path)" || softfail || return
+  local fileName; fileName="$(basename "${srcPath}")" || softfail || return $?
+  local configPath; configPath="$(sublime-merge::get-config-path)" || softfail || return $?
 
-  config::merge "${srcPath}" "${configPath}/Packages/User/${fileName}" || softfail || return
+  config::merge "${srcPath}" "${configPath}/Packages/User/${fileName}" || softfail || return $?
 }

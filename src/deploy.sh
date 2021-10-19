@@ -56,9 +56,9 @@ if [ "\${SOPKA_VERBOSE:-}" = true ]; then
 fi
 set -o nounset
 
-task::run git::install-git || softfail || return
+task::run git::install-git || softfail || return $?
 
-task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "\${HOME}/.sopka" || softfail || return
+task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "\${HOME}/.sopka" || softfail || return $?
 
 deploy-script "\$@"
 softfail-unless-good-code \$?

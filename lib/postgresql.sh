@@ -41,7 +41,7 @@ postgresql::install-dictionaries() {
 }
 
 psql-su(){
-  postgresql::psql-su "$@" || softfail || return
+  postgresql::psql-su "$@" || softfail || return $?
 }
 
 postgresql::psql-su(){
@@ -55,25 +55,25 @@ postgresql::psql-su(){
     local userName=postgres
   fi
   
-  sudo -i -u "${userName}" psql --username "${userName}" --set ON_ERROR_STOP=on "$@" || softfail || return
+  sudo -i -u "${userName}" psql --username "${userName}" --set ON_ERROR_STOP=on "$@" || softfail || return $?
 }
 
 postgresql::psql-su-run(){
-  postgresql::psql-su --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return
+  postgresql::psql-su --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return $?
 }
 
 postgresql::psql(){
-  psql --set ON_ERROR_STOP=on "$@" || softfail || return
+  psql --set ON_ERROR_STOP=on "$@" || softfail || return $?
 }
 
 postgresql::psql-run(){
-  postgresql::psql --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return
+  postgresql::psql --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return $?
 }
 
 postgresql::create-role-if-not-exists() {
   local userName="$1"
   if ! postgresql::is-role-exists "${userName}"; then
-    postgresql::psql-su-run "CREATE ROLE ${userName} ${*:2}" postgres || softfail || return
+    postgresql::psql-su-run "CREATE ROLE ${userName} ${*:2}" postgres || softfail || return $?
   fi
 }
 

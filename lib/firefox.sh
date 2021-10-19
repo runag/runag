@@ -17,10 +17,10 @@
 firefox::enable-wayland() {
   local pamFile="${HOME}/.pam_environment"
 
-  touch "${pamFile}" || softfail || return
+  touch "${pamFile}" || softfail || return $?
 
   if ! grep -q "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
-    echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || softfail || return
+    echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || softfail || return $?
   fi
 }
 
@@ -34,7 +34,7 @@ firefox::set-pref() {
     if [ -d "${profileFolder}" ]; then
       local prefsFile="${profileFolder}/prefs.js"
       if ! grep -qFx "${prefsLine}" "${prefsFile}"; then
-        echo "${prefsLine}" >>"${prefsFile}" || softfail || return
+        echo "${prefsLine}" >>"${prefsFile}" || softfail || return $?
       fi
     fi
   done

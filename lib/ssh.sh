@@ -97,7 +97,7 @@ ssh::wait-for-host-ssh-to-become-available() {
     # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
     local key; key="$(ssh-keyscan "${ip}" 2>/dev/null)"
     if [ -n "${key}" ]; then
-      return
+      return 0
     else
       if [ -t 1 ]; then
         echo "Waiting for SSH to become available on host '${ip}'..." >&2
@@ -188,9 +188,9 @@ ssh::remote-env::base-list() {
 }
 
 ssh::remote-env() {
-  local baseList; baseList="$(ssh::remote-env::base-list)" || softfail || return
+  local baseList; baseList="$(ssh::remote-env::base-list)" || softfail || return $?
 
-  local list; IFS=" " read -r -a list <<< "${REMOTE_ENV:-} ${baseList}" || softfail || return
+  local list; IFS=" " read -r -a list <<< "${REMOTE_ENV:-} ${baseList}" || softfail || return $?
 
   local item; for item in "${list[@]}"; do
     if [ -n "${!item:-}" ]; then
@@ -200,38 +200,38 @@ ssh::remote-env() {
 }
 
 ssh::script() {
-  ssh::shell-options || softfail || return
-  ssh::remote-env || softfail || return
+  ssh::shell-options || softfail || return $?
+  ssh::remote-env || softfail || return $?
 
-  declare -f || softfail || return
+  declare -f || softfail || return $?
 
-  printf "%q " "$@" || softfail || return
+  printf "%q " "$@" || softfail || return $?
 }
 
 ssh::run() {
   if [ -z "${REMOTE_HOST:-}" ]; then
     softfail "REMOTE_HOST should be set"
-    return
+    return $?
   fi
   
-  ssh::make-user-config-directory-if-not-exists || softfail || return
+  ssh::make-user-config-directory-if-not-exists || softfail || return $?
 
-  local sshArgs=(); ssh::set-args || softfail || return
+  local sshArgs=(); ssh::set-args || softfail || return $?
 
-  local tmpFile; tmpFile="$(mktemp)" || softfail || return
+  local tmpFile; tmpFile="$(mktemp)" || softfail || return $?
 
-  ssh::script "$@" >"${tmpFile}" || softfail || return
+  ssh::script "$@" >"${tmpFile}" || softfail || return $?
 
-  local scriptChecksum; scriptChecksum="$(cksum <"${tmpFile}")" || softfail || return
+  local scriptChecksum; scriptChecksum="$(cksum <"${tmpFile}")" || softfail || return $?
 
-  local remoteTmpFile; remoteTmpFile="$(ssh "${sshArgs[@]}" "${REMOTE_HOST}" 'tmpFile="$(mktemp)" && cat>"$tmpFile" && echo "$tmpFile"' <"$tmpFile")" || softfail || return
+  local remoteTmpFile; remoteTmpFile="$(ssh "${sshArgs[@]}" "${REMOTE_HOST}" 'tmpFile="$(mktemp)" && cat>"$tmpFile" && echo "$tmpFile"' <"$tmpFile")" || softfail || return $?
 
   if [ -z "${remoteTmpFile}" ]; then
     softfail "Unable to get remote temp file name"
-    return
+    return $?
   fi
 
-  rm "${tmpFile}" || softfail || return
+  rm "${tmpFile}" || softfail || return $?
 
   # shellcheck disable=2029,2016
   ssh "${sshArgs[@]}" "${REMOTE_HOST}" "$(printf 'if [ "$(cksum <%q)" != %q ]; then exit 254; fi; bash %q; scriptStatus=$?; rm -f %q; exit $scriptStatus' \

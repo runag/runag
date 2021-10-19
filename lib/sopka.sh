@@ -26,11 +26,11 @@ sopka::with-verbose-tasks() {
 
 sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
-    git -C "${HOME}/.sopka" pull || softfail || return
+    git -C "${HOME}/.sopka" pull || softfail || return $?
 
     local fileFolder; for fileFolder in "${HOME}"/.sopka/sopkafiles/*; do
       if [ -d "${fileFolder}/.git" ]; then
-        git -C "${fileFolder}" pull || softfail || return
+        git -C "${fileFolder}" pull || softfail || return $?
       fi
     done
   fi
@@ -56,8 +56,8 @@ EOT
 
 sopka::add-sopkafile() {
   local packageId="$1"
-  local dest; dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return
-  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return
+  local dest; dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return $?
+  git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return $?
 }
 
 # Find and load sopkafile.
@@ -76,29 +76,29 @@ sopka::load-sopkafile() {
   if [ -f "./sopkafile" ]; then
     . "./sopkafile"
     softfail-unless-good "Unable to load './sopkafile' ($?)" $?
-    return
+    return $?
 
   elif [ -f "./sopkafile/index.sh" ]; then
     . "./sopkafile/index.sh"
     softfail-unless-good "Unable to load './sopkafile/index.sh' ($?)" $?
-    return
+    return $?
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
     . "${HOME:-}/.sopkafile"
     softfail-unless-good "Unable to load '${HOME:-}/.sopkafile' ($?)" $?
-    return
+    return $?
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
     . "${HOME:-}/.sopkafile/index.sh"
     softfail-unless-good "Unable to load '${HOME:-}/.sopkafile/index.sh' ($?)" $?
-    return
+    return $?
 
   else
     local fileFound=false
     local filePath; for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
       if [ -f "${filePath}" ]; then
         . "${filePath}"
-        softfail-unless-good "Unable to load '${filePath}' ($?)" $? || return
+        softfail-unless-good "Unable to load '${filePath}' ($?)" $? || return $?
         fileFound=true
       fi
     done

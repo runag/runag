@@ -54,7 +54,7 @@ deploy-script ()
 fail () 
 { 
     softfail::internal "$@";
-    exit
+    exit $?
 }
 git::install-git () 
 { 
@@ -172,15 +172,15 @@ sopka::add-sopkafile ()
     local packageId="$1";
     local dest;
     dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return;
-    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return
+    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return $?
 }
 task::cleanup () 
 { 
     local errorState=0;
     local stderrPresent=false;
-    if [ -s "${tmpFile}.stderr" ]; then
+    if [ "${taskStatus:-1}" = 0 ] && [ -s "${tmpFile}.stderr" ]; then
         stderrPresent=true;
-        if task::is-stderr-empty-after-filtering < "${tmpFile}.stderr"; then
+        if task::is-stderr-empty-after-filtering "${tmpFile}.stderr"; then
             stderrPresent=false;
         fi;
     fi;
@@ -214,13 +214,17 @@ task::detect-fail-state ()
 }
 task::is-stderr-empty-after-filtering () 
 { 
+    local stderrFile="$1";
     local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}";
     if [ "${stderrFilter}" = "false" ]; then
-        test "$(wc -c)" = 0;
-        return;
+        test ! -s "${stderrFile}";
+        return $?;
     fi;
-    "${stderrFilter}" | test "$(wc -c)" = 0;
-    test "${PIPESTATUS[*]}" = "0 0"
+    local stderrSize;
+    stderrSize="$("${stderrFilter}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
+    if [ "${stderrSize}" != 0 ]; then
+        return 1;
+    fi
 }
 task::run () 
 { 
@@ -236,12 +240,17 @@ task::run ()
         ( "$@" ) > "${tmpFile}" 2> "${tmpFile}.stderr";
     fi;
     local taskStatus=$?;
-    task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}" )
+    task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}";
+    local taskStatus=$?;
+    exit "${taskStatus}" )
 }
 task::stderr-filter () 
 { 
-    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\." | awk NF;
-    true
+    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\.";
+    if [[ "${PIPESTATUS[*]}" =~ "2" ]]; then
+        softfail;
+        return $?;
+    fi
 }
 terminal::color () 
 { 
@@ -269,9 +278,9 @@ if [ "${SOPKA_VERBOSE:-}" = true ]; then
 fi
 set -o nounset
 
-task::run git::install-git || softfail || return
+task::run git::install-git || softfail || return $?
 
-task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return
+task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
 
 deploy-script "$@"
 softfail-unless-good-code $?

@@ -17,42 +17,42 @@
 # foo || fail ["error message" [<error code>]]
 fail() {
   softfail::internal "$@"
-  exit
+  exit $?
 }
 
 # foo || fail-code <error code>
 fail-code() {
   softfail::internal "" "$1"
-  exit
+  exit $?
 }
 
 # foo || fail-unless-good ["error message" [<error code>]]
 fail-unless-good() {
-  softfail-unless-good::internal "$@" || exit
+  softfail-unless-good::internal "$@" || exit $?
 }
 
 # foo || fail-unless-good-code <error code>
 fail-unless-good-code() {
-  softfail-unless-good::internal "" "$1" || exit
+  softfail-unless-good::internal "" "$1" || exit $?
 }
 
 
-# foo || softfail ["error message" [<error code>]] || return
+# foo || softfail ["error message" [<error code>]] || return $?
 softfail() {
   softfail::internal "$@"
 }
 
-# foo || softfail-code <error code> || return
+# foo || softfail-code <error code> || return $?
 softfail-code() {
   softfail::internal "" "$1"
 }
 
-# foo || softfail-unless-good ["error message" [<error code>]] || return
+# foo || softfail-unless-good ["error message" [<error code>]] || return $?
 softfail-unless-good() {
   softfail-unless-good::internal "$@"
 }
 
-# foo || softfail-unless-good-code <error code> || return
+# foo || softfail-unless-good-code <error code> || return $?
 softfail-unless-good-code() {
   softfail-unless-good::internal "" "$1"
 }
@@ -112,15 +112,15 @@ softfail-unless-good::internal() {
 #   # fail-unless-good-code 12
 #   # fail-unless-good-code 0
 
-#   # softfail || return
-#   # softfail-code 12 || return
-#   # softfail "foo" 12 || return
-#   # softfail-unless-good || return
-#   # softfail-unless-good "foo" || return
-#   # softfail-unless-good "foo" 12 || return
-#   # softfail-unless-good "foo" 0 || return
-#   # softfail-unless-good-code 12 || return
-#   # softfail-unless-good-code 0 || return
+#   # softfail || return $?
+#   # softfail-code 12 || return $?
+#   # softfail "foo" 12 || return $?
+#   # softfail-unless-good || return $?
+#   # softfail-unless-good "foo" || return $?
+#   # softfail-unless-good "foo" 12 || return $?
+#   # softfail-unless-good "foo" 0 || return $?
+#   # softfail-unless-good-code 12 || return $?
+#   # softfail-unless-good-code 0 || return $?
 
 #   echo end of function!!!
 # }

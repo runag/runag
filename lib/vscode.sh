@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 vscode::install::snap() {
-  sudo snap install code --classic || softfail || return
+  sudo snap install code --classic || softfail || return $?
 }
 
 vscode::get-config-path() {
@@ -28,20 +28,20 @@ vscode::get-config-path() {
     configPath="${APPDATA}/Code"
 
   else
-    dir::make-if-not-exists "${HOME}/.config" 755 || softfail || return
+    dir::make-if-not-exists "${HOME}/.config" 755 || softfail || return $?
     configPath="${HOME}/.config/Code"
   fi
 
-  dir::make-if-not-exists "${configPath}" 700 || softfail || return
+  dir::make-if-not-exists "${configPath}" 700 || softfail || return $?
   echo "${configPath}"
 }
 
 vscode::list-extensions-to-temp-file() {
-  local tmpFile; tmpFile="$(mktemp)" || softfail "Unable to create temp file" || return
+  local tmpFile; tmpFile="$(mktemp)" || softfail "Unable to create temp file" || return $?
 
   code --list-extensions | sort > "${tmpFile}"
 
-  test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to list extensions" || return
+  test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to list extensions" || return $?
   echo "${tmpFile}"
 }
 
@@ -49,7 +49,7 @@ vscode::install-extensions() {
   local extensionsList="$1"
 
   if [ -f "${extensionsList}" ]; then
-    local installedExtensionsList; installedExtensionsList="$(vscode::list-extensions-to-temp-file)" || softfail "Unable get extensions list" || return
+    local installedExtensionsList; installedExtensionsList="$(vscode::list-extensions-to-temp-file)" || softfail "Unable get extensions list" || return $?
 
     if ! diff --strip-trailing-cr "${extensionsList}" "${installedExtensionsList}" >/dev/null 2>&1; then
       local extension
@@ -63,11 +63,11 @@ vscode::install-extensions() {
       # TODO: how to do correct error handling here (cat | while)?
       while IFS="${ifs_value}" read -r extension; do
         if [ -n "${extension}" ]; then
-          code --install-extension "${extension}" || softfail "Unable to install vscode extension ${extension}" || return
+          code --install-extension "${extension}" || softfail "Unable to install vscode extension ${extension}" || return $?
         fi
       done <"${extensionsList}"
     fi
 
-    rm "${installedExtensionsList}" || softfail || return
+    rm "${installedExtensionsList}" || softfail || return $?
   fi
 }

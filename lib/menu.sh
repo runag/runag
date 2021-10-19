@@ -24,14 +24,14 @@ menu::select-argument-and-run() {
 
   if ! [ -t 0 ] || ! [ -t 1 ]; then
     softfail "Menu was called while not in terminal"
-    return
+    return $?
   fi
 
   local colorA="" colorB="" defaultColor=""
   if [ -t 1 ]; then
-    colorA="$(terminal::color 14)" || softfail || return
-    colorB="$(terminal::color 15)" || softfail || return
-    defaultColor="$(terminal::default-color)" || softfail || return
+    colorA="$(terminal::color 14)" || softfail || return $?
+    colorB="$(terminal::color 15)" || softfail || return $?
+    defaultColor="$(terminal::default-color)" || softfail || return $?
   fi
 
   echo ""
@@ -40,8 +40,8 @@ menu::select-argument-and-run() {
     item="${list[${index}]}"
     nextItem="${list[$((index+1))]:-}"
 
-    group="$(echo "${item}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return
-    nextGroup="$(echo "${nextItem}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return
+    group="$(echo "${item}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+    nextGroup="$(echo "${nextItem}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
 
     if [ "${lastGroup}" = "${group}" ]; then
       lastGroupIsBig=true
@@ -77,18 +77,18 @@ menu::select-argument-and-run() {
       exit 0
     else
       softfail "Read failed (${readStatus})"
-      return
+      return $?
     fi
   fi
 
   if ! [[ "${inputText}" =~ ^[0-9]+$ ]]; then
     softfail "Please select number"
-    return
+    return $?
   fi
 
   if [ -z "${list[$((inputText-1))]:+x}" ]; then
     softfail "Selected number is not in the list"
-    return
+    return $?
   fi
 
   local selectedItem="${list[$((inputText-1))]}"

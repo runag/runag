@@ -64,10 +64,10 @@ sopka::load-sopka-library || {
 # Load sopkafile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
   sopka::load-sopkafile
-  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || return
+  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || return $?
 else # we are not sourced
   sopka::load-sopkafile
-  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || exit
+  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || exit $?
 fi
 
 # if there is something in the first argument, run it
@@ -75,11 +75,11 @@ if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
     softfail-unless-good "Sopka: Error performing $1 ($?)" $?
-    return
+    return $?
   else # we are not sourced
     "$@"
     softfail-unless-good "Sopka: Error performing $1 ($?)" $?
-    exit
+    exit $?
   fi
 fi
 
@@ -88,11 +88,11 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -f sopkafile::main >/dev/null; then
     sopkafile::main
     softfail-unless-good "Sopka: Error performing sopkafile::main ($?)" $?
-    exit
+    exit $?
   elif sopka-menu::is-present && [ -t 0 ] && [ -t 1 ]; then
     sopka-menu::display
     softfail-unless-good "Sopka: Error performing sopka-menu::display ($?)" $?
-    exit
+    exit $?
   fi
 
   log::error "Sopka: Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu (and run sopka in terminal)"

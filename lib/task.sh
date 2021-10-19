@@ -35,8 +35,6 @@ task::run-verbose() {
 }
 
 task::rubygems-fail-detector() {
-  # shellcheck disable=SC2034
-  local stdoutFile="$1"
   local stderrFile="$2"
   local taskStatus="$3"
 
@@ -76,9 +74,13 @@ task::run() {(
   fi
   
   # shellcheck disable=SC2030
-  local taskStatus=$? # taskStatus also used in task::cleanup signal handler
+  local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
   
   task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}"
+
+  local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
+
+  exit "${taskStatus}"
 )}
 
 task::stderr-filter() {
@@ -87,25 +89,33 @@ task::stderr-filter() {
   # 2. apt-key
   # 3. git
   # 4. systemd
+
   grep -vFx "Success." |\
   grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" |\
   grep -vx "Cloning into '.*'\\.\\.\\." |\
-  grep -vx "Created symlink .* → .*\\." |\
-  awk NF
-  true # TODO: ensure grep exit statuses are good
+  grep -vx "Created symlink .* → .*\\."
+  
+  if [[ "${PIPESTATUS[*]}" =~ "2" ]]; then
+    softfail
+    return $?
+  fi
 }
 
 task::is-stderr-empty-after-filtering() {
+  local stderrFile="$1"
+
   local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}"
 
   if [ "${stderrFilter}" = "false" ]; then
-    test "$(wc -c)" = 0
-    return
+    test ! -s "${stderrFile}"
+    return $?
   fi
 
-  # shellcheck disable=2266
-  "${stderrFilter}" | test "$(wc -c)" = 0
-  test "${PIPESTATUS[*]}" = "0 0"
+  local stderrSize; stderrSize="$("${stderrFilter}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+
+  if [ "${stderrSize}" != 0 ]; then
+    return 1
+  fi
 }
 
 # shellcheck disable=SC2031
@@ -113,9 +123,9 @@ task::cleanup() {
   local errorState=0
   local stderrPresent=false
 
-  if [ -s "${tmpFile}.stderr" ]; then
+  if [ "${taskStatus:-1}" = 0 ] && [ -s "${tmpFile}.stderr" ]; then
     stderrPresent=true
-    if task::is-stderr-empty-after-filtering <"${tmpFile}.stderr"; then
+    if task::is-stderr-empty-after-filtering "${tmpFile}.stderr"; then
       stderrPresent=false
     fi
   fi
