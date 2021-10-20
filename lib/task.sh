@@ -38,7 +38,7 @@ task::rubygems-fail-detector() {
   local stderrFile="$2"
   local taskStatus="$3"
 
-  if [ "${taskStatus}" = 0 ] && grep -q "^ERROR:" "${stderrFile}"; then
+  if [ "${taskStatus}" = 0 ] && [ -s "${stderrFile}" ] && grep -q "^ERROR:" "${stderrFile}"; then
     return 1
   fi
 
@@ -103,13 +103,7 @@ task::stderr-filter() {
 
 task::is-stderr-empty-after-filtering() {
   local stderrFile="$1"
-
-  local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}"
-
-  if [ "${stderrFilter}" = "false" ]; then
-    test ! -s "${stderrFile}"
-    return $?
-  fi
+  local stderrFilter="$2"
 
   local stderrSize; stderrSize="$("${stderrFilter}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
 
@@ -125,14 +119,18 @@ task::cleanup() {
 
   if [ "${taskStatus:-1}" = 0 ] && [ -s "${tmpFile}.stderr" ]; then
     stderrPresent=true
-    if task::is-stderr-empty-after-filtering "${tmpFile}.stderr"; then
+    local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}"
+
+    if [ "${stderrFilter}" != "false" ] && task::is-stderr-empty-after-filtering "${tmpFile}.stderr" "${stderrFilter}"; then
       stderrPresent=false
     fi
   fi
 
   if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
 
-    cat "${tmpFile}" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
+    if [ -s "${tmpFile}" ]; then
+      cat "${tmpFile}" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
+    fi
 
     if [ -s "${tmpFile}.stderr" ]; then
       test -t 2 && terminal::color 9 >&2
