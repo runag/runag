@@ -75,9 +75,8 @@ task::run() {(
   
   # shellcheck disable=SC2030
   local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
-  
-  task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}"
 
+  task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}"
   local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
 
   exit "${taskStatus}"
@@ -140,11 +139,11 @@ task::cleanup() {
   fi
 
   if [ "${errorState}" != 0 ]; then
-    fail "task::cleanup error state ${errorState}"
+    softfail "task::cleanup error state ${errorState}" || return $?
   fi
 
-  rm "${tmpFile}" || fail
-  rm -f "${tmpFile}.stderr" || fail
+  rm "${tmpFile}" || softfail || return $?
+  rm -f "${tmpFile}.stderr" || softfail || return $?
 }
 
 # weird stuff
