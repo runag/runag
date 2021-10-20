@@ -18,6 +18,10 @@ task::run-with-rubygems-fail-detector() {
   SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector task::run "$@"
 }
 
+task::run-with-install-filter() {
+  SOPKA_TASK_STDERR_FILTER=task::install-filter task::run "$@"
+}
+
 task::run-without-title() {
   SOPKA_TASK_OMIT_TITLE=true task::run "$@"
 }
@@ -82,7 +86,7 @@ task::run() {(
   exit "${taskStatus}"
 )}
 
-task::stderr-filter() {
+task::install-filter() {
   # Those greps are for:
   # 1. tailscale
   # 2. apt-key
@@ -102,9 +106,8 @@ task::stderr-filter() {
 
 task::is-stderr-empty-after-filtering() {
   local stderrFile="$1"
-  local stderrFilter="$2"
 
-  local stderrSize; stderrSize="$("${stderrFilter}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+  local stderrSize; stderrSize="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
 
   if [ "${stderrSize}" != 0 ]; then
     return 1
@@ -118,9 +121,7 @@ task::cleanup() {
 
   if [ "${taskStatus:-1}" = 0 ] && [ -s "${tmpFile}.stderr" ]; then
     stderrPresent=true
-    local stderrFilter="${SOPKA_TASK_STDERR_FILTER:-"task::stderr-filter"}"
-
-    if [ "${stderrFilter}" != "false" ] && task::is-stderr-empty-after-filtering "${tmpFile}.stderr" "${stderrFilter}"; then
+    if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tmpFile}.stderr"; then
       stderrPresent=false
     fi
   fi

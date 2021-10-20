@@ -27,7 +27,7 @@ deploy-script() {
 }
 
 deploy-script::add() {
-  task::run sopka::add-sopkafile "$1" || softfail || return $?
+  task::run-with-install-filter sopka::add-sopkafile "$1" || softfail || return $?
 
   deploy-script "${@:2}"
   softfail-unless-good-code $?

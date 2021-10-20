@@ -16,6 +16,20 @@
 
 . bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
 
+sopka::deploy-sh-main() {
+  if [ "${SOPKA_VERBOSE:-}" = true ]; then
+    set -o xtrace
+  fi
+  set -o nounset
+
+  task::run-with-install-filter git::install-git || softfail || return $?
+
+  task::run-with-install-filter git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
+
+  deploy-script "$@"
+  softfail-unless-good-code $?
+}
+
 file::write deploy.sh <<EOF || fail
 #!/usr/bin/env bash
 
@@ -43,25 +57,17 @@ $(declare -f softfail-unless-good::internal)
 $(declare -f softfail::internal)
 $(declare -f softfail)
 $(declare -f sopka::add-sopkafile)
+$(declare -f sopka::deploy-sh-main)
 $(declare -f task::cleanup)
 $(declare -f task::detect-fail-state)
+$(declare -f task::install-filter)
 $(declare -f task::is-stderr-empty-after-filtering)
+$(declare -f task::run-with-install-filter)
 $(declare -f task::run)
-$(declare -f task::stderr-filter)
 $(declare -f terminal::color)
 $(declare -f terminal::default-color)
 
-if [ "\${SOPKA_VERBOSE:-}" = true ]; then
-  set -o xtrace
-fi
-set -o nounset
-
-task::run git::install-git || softfail || return $?
-
-task::run git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "\${HOME}/.sopka" || softfail || return $?
-
-deploy-script "\$@"
-softfail-unless-good-code \$?
+sopka::deploy-sh-main "\$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "\$@"
 EOF
