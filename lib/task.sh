@@ -14,12 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::run-with-rubygems-fail-detector() {
-  SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector task::run "$@"
-}
-
 task::run-with-install-filter() {
   SOPKA_TASK_STDERR_FILTER=task::install-filter task::run "$@"
+}
+
+task::run-with-rubygems-fail-detector() {
+  SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector task::run "$@"
 }
 
 task::run-without-title() {
