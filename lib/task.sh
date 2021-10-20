@@ -142,8 +142,7 @@ task::cleanup() {
     softfail "task::cleanup error state ${errorState}" || return $?
   fi
 
-  rm "${tmpFile}" || softfail || return $?
-  rm -f "${tmpFile}.stderr" || softfail || return $?
+  rm -f "${tmpFile}" "${tmpFile}.stderr" || softfail || return $?
 }
 
 # weird stuff
