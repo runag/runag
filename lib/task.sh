@@ -140,6 +140,14 @@ task::complete() {
       cat "${tempDir}/stdout" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
     fi
 
+    # TEMPTEMPTEMP
+    if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+      echo "SLEEPING_SLEEPING_SLEEPING"
+      echo "SLEEPING_SLEEPING_SLEEPING" >&2
+      sleep 10
+      echo "SLEPT_SLEPT_SLEPT_SLEPT_SLEPT" >&2
+    fi
+
     if [ -s "${tempDir}/stderr" ]; then
       test -t 2 && terminal::color 9 >&2
       cat "${tempDir}/stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; errorState=2; }
