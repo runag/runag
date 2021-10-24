@@ -23,10 +23,10 @@ run [function-name [function-arguments]]
 Possible sopkafile locations are:
 
 ```sh
-./sopkafile
+./sopkafile.sh
 ./sopkafile/index.sh
 
-~/.sopkafile
+~/.sopkafile.sh
 ~/.sopkafile/index.sh
 
 ~/.sopka/sopkafiles/*/index.sh

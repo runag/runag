@@ -73,9 +73,9 @@ sopka::add-sopkafile() {
 # ~/.sopka/sopkafiles/*/index.sh
 #
 sopka::load-sopkafile() {
-  if [ -f "./sopkafile" ]; then
-    . "./sopkafile"
-    softfail-unless-good "Unable to load './sopkafile' ($?)" $?
+  if [ -f "./sopkafile.sh" ]; then
+    . "./sopkafile.sh"
+    softfail-unless-good "Unable to load './sopkafile.sh' ($?)" $?
     return $?
 
   elif [ -f "./sopkafile/index.sh" ]; then
@@ -83,9 +83,9 @@ sopka::load-sopkafile() {
     softfail-unless-good "Unable to load './sopkafile/index.sh' ($?)" $?
     return $?
 
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile" ]; then
-    . "${HOME:-}/.sopkafile"
-    softfail-unless-good "Unable to load '${HOME:-}/.sopkafile' ($?)" $?
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile.sh" ]; then
+    . "${HOME:-}/.sopkafile.sh"
+    softfail-unless-good "Unable to load '${HOME:-}/.sopkafile.sh' ($?)" $?
     return $?
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
