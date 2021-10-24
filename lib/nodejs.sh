@@ -41,7 +41,6 @@ nodejs::install-and-load-nodenv() {
 nodejs::install-nodenv() {
   nodejs::install-nodenv-repositories || fail
   nodejs::install-nodenv-shellrc || fail
-  nodejs::configure-mismatched-binaries-workaround || fail
 }
 
 nodejs::configure-mismatched-binaries-workaround() {
