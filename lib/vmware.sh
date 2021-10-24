@@ -81,8 +81,11 @@ vmware::symlink-hgfs-mounts() {
 }
 
 vmware::get-host-ip-address() {
-  ip route show | grep 'default via' | awk '{print $3}' | sed 's/[[:digit:]]\+$/1/'
-  test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
+  local ipAddress; ipAddress="$(ip route get 1.1.1.1 | sed -n 's/^.*via \([[:digit:].]*\).*$/\1/p' | sed 's/[[:digit:]]\+$/1/'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail "Unable to obtain host ip address" || return $?
+  if [ -z "${ipAddress}" ]; then
+    softfail "Unable to obtain host ip address" || return $?
+  fi
+  echo "${ipAddress}"
 }
 
 vmware::get-machine-uuid() {
