@@ -142,8 +142,8 @@ task::complete() {
 
     # TEMPTEMPTEMP
     if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
-      echo "SLEEPING_SLEEPING_SLEEPING"
-      echo "SLEEPING_SLEEPING_SLEEPING" >&2
+      echo "SLEEPING_SLEEPING_SLEEPING STDOUT"
+      echo "SLEEPING_SLEEPING_SLEEPING STDERR" >&2
       sleep 10
       echo "SLEPT_SLEPT_SLEPT_SLEPT_SLEPT" >&2
     fi
