@@ -66,21 +66,21 @@ task::run() {(
   fi
 
   # shellcheck disable=SC2030
-  local tmpFile; tmpFile="$(mktemp)" || fail # tmpFile also used in task::cleanup signal handler
+  local tempDir; tempDir="$(mktemp -d)" || fail # tempDir also used in task::cleanup signal handler
 
-  trap "task::cleanup" EXIT
+  trap "task::complete-with-cleanup" EXIT
 
   # I know I could put /dev/fd/0 in variable, but what if system does not support it?
   if [ -t 0 ]; then
-    ("$@") </dev/null >"${tmpFile}" 2>"${tmpFile}.stderr"
+    ("$@") </dev/null >"${tempDir}/stdout" 2>"${tempDir}/stderr"
   else
-    ("$@") >"${tmpFile}" 2>"${tmpFile}.stderr"
+    ("$@") >"${tempDir}/stdout" 2>"${tempDir}/stderr"
   fi
   
   # shellcheck disable=SC2030
   local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
 
-  task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}"
+  task::detect-fail-state "${tempDir}/stdout" "${tempDir}/stderr" "${taskStatus}"
   local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
 
   exit "${taskStatus}"
@@ -99,8 +99,7 @@ task::install-filter() {
   grep -vx "Created symlink .* → .*\\."
   
   if [[ "${PIPESTATUS[*]}" =~ "2" ]]; then
-    softfail
-    return $?
+    softfail || return $?
   fi
 }
 
@@ -115,26 +114,35 @@ task::is-stderr-empty-after-filtering() {
 }
 
 # shellcheck disable=SC2031
-task::cleanup() {
+task::complete-with-cleanup() {
+  task::complete || softfail || return $?
+
+  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+    rm -fd "${tempDir}/stdout" "${tempDir}/stderr" "${tempDir}" || softfail || return $?
+  fi
+}
+
+# shellcheck disable=SC2031
+task::complete() {
   local errorState=0
   local stderrPresent=false
 
-  if [ "${taskStatus:-1}" = 0 ] && [ -s "${tmpFile}.stderr" ]; then
+  if [ "${taskStatus:-1}" = 0 ] && [ -s "${tempDir}/stderr" ]; then
     stderrPresent=true
-    if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tmpFile}.stderr"; then
+    if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tempDir}/stderr"; then
       stderrPresent=false
     fi
   fi
 
   if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
 
-    if [ -s "${tmpFile}" ]; then
-      cat "${tmpFile}" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
+    if [ -s "${tempDir}/stdout" ]; then
+      cat "${tempDir}/stdout" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
     fi
 
-    if [ -s "${tmpFile}.stderr" ]; then
+    if [ -s "${tempDir}/stderr" ]; then
       test -t 2 && terminal::color 9 >&2
-      cat "${tmpFile}.stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; errorState=2; }
+      cat "${tempDir}/stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; errorState=2; }
       test -t 2 && terminal::default-color >&2
     fi
   fi
@@ -142,8 +150,6 @@ task::cleanup() {
   if [ "${errorState}" != 0 ]; then
     softfail "task::cleanup error state ${errorState}" || return $?
   fi
-
-  rm -f "${tmpFile}" "${tmpFile}.stderr" || softfail || return $?
 }
 
 # weird stuff

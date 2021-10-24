@@ -185,26 +185,33 @@ sopka::deploy-sh-main ()
     deploy-script "$@";
     softfail-unless-good-code $?
 }
-task::cleanup () 
+task::complete-with-cleanup () 
+{ 
+    task::complete || softfail || return $?;
+    if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+        rm -fd "${tempDir}/stdout" "${tempDir}/stderr" "${tempDir}" || softfail || return $?;
+    fi
+}
+task::complete () 
 { 
     local errorState=0;
     local stderrPresent=false;
-    if [ "${taskStatus:-1}" = 0 ] && [ -s "${tmpFile}.stderr" ]; then
+    if [ "${taskStatus:-1}" = 0 ] && [ -s "${tempDir}/stderr" ]; then
         stderrPresent=true;
-        if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tmpFile}.stderr"; then
+        if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tempDir}/stderr"; then
             stderrPresent=false;
         fi;
     fi;
     if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
-        if [ -s "${tmpFile}" ]; then
-            cat "${tmpFile}" || { 
+        if [ -s "${tempDir}/stdout" ]; then
+            cat "${tempDir}/stdout" || { 
                 echo "Sopka: Unable to display task stdout ($?)" 1>&2;
                 errorState=1
             };
         fi;
-        if [ -s "${tmpFile}.stderr" ]; then
+        if [ -s "${tempDir}/stderr" ]; then
             test -t 2 && terminal::color 9 1>&2;
-            cat "${tmpFile}.stderr" 1>&2 || { 
+            cat "${tempDir}/stderr" 1>&2 || { 
                 echo "Sopka: Unable to display task stderr ($?)" 1>&2;
                 errorState=2
             };
@@ -213,8 +220,7 @@ task::cleanup ()
     fi;
     if [ "${errorState}" != 0 ]; then
         softfail "task::cleanup error state ${errorState}" || return $?;
-    fi;
-    rm -f "${tmpFile}" "${tmpFile}.stderr" || softfail || return $?
+    fi
 }
 task::detect-fail-state () 
 { 
@@ -228,8 +234,7 @@ task::install-filter ()
 { 
     grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\.";
     if [[ "${PIPESTATUS[*]}" =~ "2" ]]; then
-        softfail;
-        return $?;
+        softfail || return $?;
     fi
 }
 task::is-stderr-empty-after-filtering () 
@@ -250,16 +255,16 @@ task::run ()
     ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
         log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
     fi;
-    local tmpFile;
-    tmpFile="$(mktemp)" || fail;
-    trap "task::cleanup" EXIT;
+    local tempDir;
+    tempDir="$(mktemp -d)" || fail;
+    trap "task::complete-with-cleanup" EXIT;
     if [ -t 0 ]; then
-        ( "$@" ) < /dev/null > "${tmpFile}" 2> "${tmpFile}.stderr";
+        ( "$@" ) < /dev/null > "${tempDir}/stdout" 2> "${tempDir}/stderr";
     else
-        ( "$@" ) > "${tmpFile}" 2> "${tmpFile}.stderr";
+        ( "$@" ) > "${tempDir}/stdout" 2> "${tempDir}/stderr";
     fi;
     local taskStatus=$?;
-    task::detect-fail-state "${tmpFile}" "${tmpFile}.stderr" "${taskStatus}";
+    task::detect-fail-state "${tempDir}/stdout" "${tempDir}/stderr" "${taskStatus}";
     local taskStatus=$?;
     exit "${taskStatus}" )
 }

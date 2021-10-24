@@ -207,6 +207,18 @@ $3 # taskStatus (integer exit status)
 
 The function must return new exit status which will be assumed to be an exit status of the task.
 
+#### `SOPKA_TASK_KEEP_TEMP_FILES`
+
+Could be set to `"true"`
+
+#### `SOPKA_TASK_RECONNECT_ATTEMPTS`
+
+Integer
+
+#### `SOPKA_TASK_RECONNECT_DELAY`
+
+Integer (could be float but that depends on your `sleep` command implementation).
+
 #### `SOPKA_TASK_STDERR_FILTER`
 
 Could be set to function name. Function is expected to filter it's input. If function output is empty then stderr will not be displayed.
@@ -214,7 +226,6 @@ Could be set to function name. Function is expected to filter it's input. If fun
 #### `SOPKA_TASK_VERBOSE`
 
 Could be set to `"true"`
-
 
 ### Internal variables, not to be used by non-library code
 
