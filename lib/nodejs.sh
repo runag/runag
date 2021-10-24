@@ -46,7 +46,7 @@ nodejs::install-nodenv() {
 
 nodejs::configure-mismatched-binaries-workaround() {
   # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
-  NODENV_VERSION=system npm config set scripts-prepend-node-path auto || fail
+  npm config set scripts-prepend-node-path auto || fail
 }
 
 nodejs::install-nodenv-repositories() {
@@ -104,5 +104,5 @@ nodejs::auth-token::save(){
   local token="$1"
   local registry="${2:-"registry.npmjs.org"}"
   
-  NODENV_VERSION=system npm set "//${registry}/:_authToken" "${token}" || fail
+  npm set "//${registry}/:_authToken" "${token}" || fail
 }
