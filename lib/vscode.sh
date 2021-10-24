@@ -37,12 +37,12 @@ vscode::get-config-path() {
 }
 
 vscode::list-extensions-to-temp-file() {
-  local tmpFile; tmpFile="$(mktemp)" || softfail "Unable to create temp file" || return $?
+  local tempFile; tempFile="$(mktemp)" || softfail "Unable to create temp file" || return $?
 
-  code --list-extensions | sort > "${tmpFile}"
+  code --list-extensions | sort > "${tempFile}"
 
   test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to list extensions" || return $?
-  echo "${tmpFile}"
+  echo "${tempFile}"
 }
 
 vscode::install-extensions() {

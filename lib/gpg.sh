@@ -42,23 +42,23 @@ gpg::decrypt-and-source-script() {
 
   file::wait-until-available "${sourcePath}" || softfail || return $?
 
-  local tmpDir; tmpDir="$(mktemp -d)" || softfail || return $?
+  local tempDir; tempDir="$(mktemp -d)" || softfail || return $?
 
   # I don't want to put data in file system here so I'll use fifo
   # I want sopka code to be bash-3.2 compatible so I can't use coproc
-  mkfifo -m 600 "${tmpDir}/fifo" || softfail || return $?
+  mkfifo -m 600 "${tempDir}/fifo" || softfail || return $?
 
-  gpg --decrypt "${sourcePath}" >"${tmpDir}/fifo" &
+  gpg --decrypt "${sourcePath}" >"${tempDir}/fifo" &
   local gpgPid=$!
 
-  . "${tmpDir}/fifo"
+  . "${tempDir}/fifo"
   local sourceStatus=$?
 
   wait "${gpgPid}"
   local gpgStatus=$?
 
-  rm "${tmpDir}/fifo" || softfail || return $?
-  rm -d "${tmpDir}" || softfail || return $?
+  rm "${tempDir}/fifo" || softfail || return $?
+  rm -d "${tempDir}" || softfail || return $?
 
   test "${sourceStatus}" = "0" || softfail || return $?
   test "${gpgStatus}" = "0" || softfail || return $?

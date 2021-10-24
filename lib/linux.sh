@@ -110,24 +110,24 @@ linux::get-distributor-id-lowercase() {
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
-linux::with-secure-tmpdir() {
-  local secureTmpDir
+linux::with-secure-temp-dir() {
+  local secureTempDir
   
-  secureTmpDir="$(mktemp -d)" || fail
+  secureTempDir="$(mktemp -d)" || fail
 
   # data in tmpfs can be swapped to disk, data in ramfs can't be swapped so we are using ramfs here
-  sudo mount -t ramfs -o mode=700 ramfs "${secureTmpDir}" || fail
-  sudo chown "${USER}.${USER}" "${secureTmpDir}" || fail
+  sudo mount -t ramfs -o mode=700 ramfs "${secureTempDir}" || fail
+  sudo chown "${USER}.${USER}" "${secureTempDir}" || fail
 
   (
-    export TMPDIR="${secureTmpDir}"
+    export TMPDIR="${secureTempDir}"
     "$@"
   )
 
   local result=$?
 
-  sudo umount "${secureTmpDir}" || fail
-  rmdir "${secureTmpDir}" || fail
+  sudo umount "${secureTempDir}" || fail
+  rmdir "${secureTempDir}" || fail
 
   if [ "${result}" != 0 ]; then
     fail "Error performing ${1:-"(argument is empty)"} (${result})"
