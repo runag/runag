@@ -15,16 +15,19 @@
 #  limitations under the License.
 
 ruby::install::apt() {
+  ruby::install-dependencies::apt || softfail || return $?
+  apt::install ruby-full || softfail || return $?
+}
+
+ruby::install-dependencies::apt() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
     libedit-dev `# dependency to install ruby 2.7.3 using rbenv` \
     libffi-dev `# some gems require libffi, like fiddle-1.0.8.gem` \
     libsqlite3-dev `# new rails project uses sqlite` \
     libssl-dev `# dependency to install ruby 2.7.3 using rbenv` \
-    ruby-full `# ruby from system packages` \
     zlib1g-dev `# dependency to install ruby 2.7.3 using rbenv` \
-      || fail
-  # rails also requires 'nodejs' and 'npm' apt packages, but I guess I better not to install them here
+      || softfail || return $?
 }
 
 ruby::install-and-load-rbenv() {
