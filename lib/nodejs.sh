@@ -38,6 +38,16 @@ nodejs::install-and-load-nodenv() {
   nodejs::load-nodenv || fail
 }
 
+nodejs::nodenv::install() {
+  local nodeVersion="$1"
+
+  if ! nodenv versions | grep -qF "* ${nodeVersion}"; then
+    nodenv install "${nodeVersion}" || softfail || return $?
+  fi
+
+  nodenv rehash || softfail || return $?
+}
+
 nodejs::install-nodenv() {
   nodejs::install-nodenv-repositories || fail
   nodejs::install-nodenv-shellrc || fail

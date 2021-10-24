@@ -35,6 +35,16 @@ ruby::install-and-load-rbenv() {
   ruby::load-rbenv || fail
 }
 
+ruby::rbenv::install() {
+  local rubyVersion="$1"
+
+  if ! rbenv versions | grep -qF "* ${rubyVersion}"; then
+    rbenv install "${rubyVersion}" || softfail || return $?
+  fi
+
+  rbenv rehash || softfail || return $?
+}
+
 ruby::install-rbenv() {
   ruby::install-rbenv-repositories || fail
   ruby::install-rbenv-shellrc || fail
