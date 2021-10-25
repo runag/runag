@@ -14,6 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+apt::autoremove-lazy-update-and-maybe-dist-upgrade() {
+  apt::autoremove || softfail || return $?
+
+  apt::lazy-update || softfail || return $?
+
+  if [ "${CI:-}" != "true" ]; then
+    apt::dist-upgrade || softfail || return $?
+  fi
+}
+
 # @description Perform apt update once per script run
 apt::lazy-update() {
   if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
