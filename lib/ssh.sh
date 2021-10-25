@@ -15,8 +15,8 @@
 #  limitations under the License.
 
 sshd::disable-password-authentication() {
-  dir::sudo-make-if-not-exists /etc/xssh 755 || fail
-  dir::sudo-make-if-not-exists /etc/xssh/sshd_config.d 755 || fail
+  dir::sudo-make-if-not-exists /etc/ssh 755 || fail
+  dir::sudo-make-if-not-exists /etc/ssh/sshd_config.d 755 || fail
   echo "PasswordAuthentication no" | file::sudo-write /etc/ssh/sshd_config.d/disable-password-authentication.conf || fail
 }
 
