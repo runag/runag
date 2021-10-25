@@ -73,6 +73,7 @@ Possible sopkafile locations are:
 * [imagemagick](docs/lib/imagemagick.md)
 * [nodejs](docs/lib/nodejs.md)
 * [postgresql](docs/lib/postgresql.md)
+* [python](docs/lib/python.md)
 * [rails](docs/lib/rails.md)
 * [ruby](docs/lib/ruby.md)
 

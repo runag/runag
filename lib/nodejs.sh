@@ -14,6 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# Get a version number: nodenv install --list | grep ^14
+nodejs::install-and-update::nodenv() {
+  local nodeVersion="$1"
+
+  nodejs::install-and-load-nodenv || softfail || return $?
+
+  nodejs::nodenv::install "${nodeVersion}" || softfail || return $?
+  nodenv global "${nodeVersion}" || softfail || return $?
+  
+  nodejs::configure-mismatched-binaries-workaround || softfail || return $?
+}
+
+nodejs::install-and-update::apt(){
+  local nodeVersion="$1"
+  
+  nodejs::install::apt "${nodeVersion}" || softfail || return $?
+  nodejs::update-system-wide-packages || softfail || return $?
+}
+
 nodejs::install::apt() {
   local version="$1"
 

@@ -14,6 +14,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# To get a version number, use: rbenv install -l
+ruby::install-and-update::rbenv() {
+  local rubyVersion="$1"
+
+  ruby::install-dependencies::apt || softfail || return $?
+  ruby::install-and-load-rbenv || softfail || return $?
+
+  ruby::rbenv::install "${rubyVersion}" || softfail || return $?
+  rbenv global "${rubyVersion}" || softfail || return $?
+}
+
+ruby::install-and-update::apt() {
+  ruby::install::apt || softfail || return $?
+  ruby::update-system-wide-packages || softfail || return $?
+}
+
 ruby::install::apt() {
   ruby::install-dependencies::apt || softfail || return $?
   apt::install ruby-full || softfail || return $?
