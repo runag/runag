@@ -129,3 +129,20 @@ mount::wait-until-available() {
     sleep 0.1
   done
 }
+
+fs::source(){
+  local selfDir
+  selfDir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
+
+  . "${selfDir}/$2" || softfail "Unable to load: ${selfDir}/$2" || return $?
+}
+
+fs::recursive-source(){
+  local selfDir filePath
+  
+  selfDir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
+
+  while IFS= read -r -d '' filePath; do
+    . "${filePath}" || softfail "Unable to load: ${filePath}" || return $?
+  done < <(find "${selfDir}/$2" -type f -name '*.sh' -print0)
+}
