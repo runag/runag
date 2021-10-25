@@ -54,6 +54,10 @@ apt::install() {
   sudo apt-get -y install "$@" || fail
 }
 
+apt::remove() {
+  sudo apt-get -y remove "$@" || fail
+}
+
 # @description Perform apt autoremove
 apt::autoremove() {
   sudo apt-get -y autoremove || fail
