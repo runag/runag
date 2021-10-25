@@ -24,7 +24,7 @@ dir::make-if-not-exists() {
   local mode="${2:-}"
 
   if ! mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
-    test -d "${dirPath}" || fail "Unable to create directory, maybe file already exists: ${dirPath}"
+    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
   fi
 }
 
@@ -33,8 +33,27 @@ dir::make-if-not-exists-but-chmod-anyway() {
   local mode="${2:-}"
 
   if ! mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
-    test -d "${dirPath}" || fail "Unable to create directory, maybe file already exists: ${dirPath}"
+    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
     chmod "${mode}" "${dirPath}" || fail
+  fi
+}
+
+dir::sudo-make-if-not-exists() {
+  local dirPath="$1"
+  local mode="${2:-}"
+
+  if ! sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
+  fi
+}
+
+dir::sudo-make-if-not-exists-but-chmod-anyway() {
+  local dirPath="$1"
+  local mode="${2:-}"
+
+  if ! sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
+    sudo chmod "${mode}" "${dirPath}" || fail
   fi
 }
 
