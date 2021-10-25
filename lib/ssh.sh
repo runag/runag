@@ -99,7 +99,7 @@ ssh::wait-for-host-ssh-to-become-available() {
     if [ -n "${key}" ]; then
       return 0
     else
-      if [ -t 1 ]; then
+      if [ -t 2 ]; then
         echo "Waiting for SSH to become available on host '${ip}'..." >&2
       fi
       sleep 1 || fail
