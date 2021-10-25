@@ -47,3 +47,20 @@ sopka-menu::sort() {
     IFS="$previousIFS"
   fi
 }
+
+sopka-menu::add-defaults() {
+  if [ -d "${HOME}/.sopka" ]; then
+    sopka-menu::add sopka::update || softfail || return $?
+  fi
+
+  sopka-menu::add "sopka::with-update-secrets sopka-menu::display" || softfail || return $?
+  sopka-menu::add "sopka::with-verbose-tasks sopka-menu::display" || softfail || return $?
+
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    sopka-menu::add linux::display-if-restart-required || softfail || return $?
+  fi
+
+  if benchmark::is-available; then
+    sopka-menu::add benchmark::run || softfail || return $?
+  fi
+}
