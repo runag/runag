@@ -14,20 +14,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ruby::install-update-and-set-global::rbenv() {
+ruby::install-and-set-global::rbenv() {
   local rubyVersion="$1"
-  ruby::install-and-update::rbenv "${rubyVersion}" || softfail || return $?
+  ruby::install::rbenv "${rubyVersion}" || softfail || return $?
   rbenv global "${rubyVersion}" || softfail || return $?
 }
 
 # To get a version number, use: rbenv install -l
-ruby::install-and-update::rbenv() {
+ruby::install::rbenv() {
   ruby::install-dependencies::apt || softfail || return $?
   ruby::install-and-load-rbenv || softfail || return $?
   ruby::rbenv::install "$@" || softfail || return $?
 }
 
-ruby::install-and-update-without-dependencies::rbenv() {
+ruby::install-without-dependencies::rbenv() {
   ruby::install-and-load-rbenv || softfail || return $?
   ruby::rbenv::install "$@" || softfail || return $?
 }
