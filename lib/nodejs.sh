@@ -15,14 +15,15 @@
 #  limitations under the License.
 
 # Get a version number: nodenv install --list | grep ^14
-nodejs::install-and-update::nodenv() {
+nodejs::install-and-set-global::nodenv() {
   local nodeVersion="$1"
-
-  nodejs::install-and-load-nodenv || softfail || return $?
-
-  nodejs::nodenv::install "${nodeVersion}" || softfail || return $?
+  nodejs::install::nodenv "${nodeVersion}" || softfail || return $?
   nodenv global "${nodeVersion}" || softfail || return $?
-  
+}
+
+nodejs::install::nodenv() {
+  nodejs::install-and-load-nodenv || softfail || return $?
+  nodejs::nodenv::install "$@" || softfail || return $?
   nodejs::configure-mismatched-binaries-workaround || softfail || return $?
 }
 
@@ -58,11 +59,7 @@ nodejs::install-and-load-nodenv() {
 }
 
 nodejs::nodenv::install() {
-  local nodeVersion="$1"
-
-  if ! nodenv versions | grep -qF "* ${nodeVersion}"; then
-    nodenv install "${nodeVersion}" || softfail || return $?
-  fi
+  nodenv install --skip-existing "$@" || softfail || return $?
 
   nodenv rehash || softfail || return $?
 }
