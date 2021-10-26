@@ -120,13 +120,16 @@ bitwarden::write-notes-to-file() {
   local outputFile="$2"
   local mode="${3:-"600"}"
 
-  bitwarden::unlock-and-sync || softfail || return $?
-  local bwdata; bwdata="$(bw --nointeraction get item "${bitwardenObjectId}")" || softfail || return $?
+  bitwarden::unlock-and-sync || softfail "Unable to unlock and sync bitwarden" || return $?
+  local itemData; itemData="$(bw --nointeraction get item "${bitwardenObjectId}")" || softfail "Unable to get item from bitwarden" || return $?
 
   (
     unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
-    echo "${bwdata}" | jq '.notes' --raw-output --exit-status | file::write "${outputFile}" "${mode}"
-    test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
+
+    local notesData; notesData="$(jq '.notes' --raw-output --exit-status <<< "${itemData}")" || softfail "Unable to extract notes from bitwarden data" || return $?
+
+    file::write "${outputFile}" "${mode}" <<< "${notesData}" || softfail "Unable to write to file: ${outputFile}" || return $?
+    
   ) || softfail || return $?
 }
 
@@ -145,13 +148,14 @@ bitwarden::write-password-to-file() {
   local outputFile="$2"
   local mode="${3:-"600"}"
 
-  bitwarden::unlock-and-sync || softfail || return $?
-  local bwdata; bwdata="$(bw --nointeraction get password "${bitwardenObjectId}")" || softfail || return $?
+  bitwarden::unlock-and-sync "Unable to unlock and sync bitwarden" || softfail || return $?
+  local passwordData; passwordData="$(bw --nointeraction get password "${bitwardenObjectId}")" || softfail "Unable to get password from bitwarden" || return $?
 
   (
     unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
-    echo -n "${bwdata}" | file::write "${outputFile}" "${mode}"
-    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+
+    file::write "${outputFile}" "${mode}" <<< "${passwordData}" || softfail "Unable to write to file: ${outputFile}" || return $?
+
   ) || softfail || return $?
 }
 
