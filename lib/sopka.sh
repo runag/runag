@@ -30,6 +30,25 @@ sopka::with-verbose-tasks() {
   "$@"
 }
 
+sopka::linux::run-benchmark() {
+  benchmark::run || softfail || return $?
+}
+
+sopka::linux::display-if-restart-required() {
+  linux::display-if-restart-required || softfail || return $?
+}
+
+sopka::linux::dangerously-set-hostname() {
+  echo "Please keep in mind that the script to change hostname is not perfect, please take time to review the script and it's results"
+  echo "Please enter new hostname:"
+  
+  local hostname; IFS="" read -r hostname || softfail || return $?
+
+  linux::dangerously-set-hostname "${hostname}" || softfail || return $?
+
+  log::success "Done" || softfail || return $?
+}
+
 sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || softfail || return $?
