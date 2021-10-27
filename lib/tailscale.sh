@@ -44,10 +44,10 @@ tailscale::is-logged-out() {
 }
 
 tailscale::issue-2541-workaround() {
-  if ip address show tailscale0; then
+  if ip address show tailscale0 >/dev/null 2>&1; then
     if ! ip address show tailscale0 | grep -qF "inet"; then
       echo "tailscale::issue-2541-workaround: about to restart tailscaled"
-      sudo systemctl restart tailscaled || fail
+      sudo systemctl restart tailscaled || { echo "Unable to restart tailscaled" >&2; exit 1; }
     fi
   fi
 }
@@ -56,15 +56,8 @@ tailscale::install-issue-2541-workaround() {
   file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround 755 <<EOF || fail
 #!/usr/bin/env bash
 $(sopka::print-license)
-
-$(declare -f terminal::color)
-$(declare -f terminal::default-color)
-$(declare -f log::error)
-$(declare -f log::with-color)
-$(declare -f fail)
-
 $(declare -f tailscale::issue-2541-workaround)
-tailscale::issue-2541-workaround || fail
+tailscale::issue-2541-workaround || { echo "Unable to perform tailscale::issue-2541-workaround" >&2; exit 1; }
 EOF
 
   file::sudo-write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || fail
