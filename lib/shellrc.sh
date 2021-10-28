@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+shellrc::install-loader::bash() {
+  shellrc::install-loader "${HOME}/.bashrc" || softfail || return $?
+}
+
 shellrc::install-loader() {
   local shellrcFile="$1"
 
