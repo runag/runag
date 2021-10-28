@@ -74,12 +74,18 @@ fi
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
-    softfail-unless-good "Sopka: Error performing $1 ($?)" $?
-    return $?
+    softfail-unless-good "Sopka: Error performing $1 ($?)" $? || return $?
+    if [ -t 1 ]; then
+      log::success "Done: $*"
+    fi
+    return 0
   else # we are not sourced
     "$@"
-    softfail-unless-good "Sopka: Error performing $1 ($?)" $?
-    exit $?
+    softfail-unless-good "Sopka: Error performing $1 ($?)" $? || exit $?
+    if [ -t 1 ]; then
+      log::success "Done: $*"
+    fi
+    exit 0
   fi
 fi
 

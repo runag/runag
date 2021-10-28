@@ -15,12 +15,7 @@
 #  limitations under the License.
 
 menu::select-and-run() {
-  menu::select-argument-and-run menu::just-run "$@"
-  softfail-unless-good-code $?
-}
-
-menu::select-argument-and-run() {
-  local list=("${@:2}")
+  local list=("$@")
 
   if ! [ -t 0 ] || ! [ -t 1 ]; then
     softfail "Menu was called while not in terminal"
@@ -96,14 +91,12 @@ menu::select-argument-and-run() {
   # I use "test" instead of "|| fail" here in case if someone wants
   # to use "set -o errexit" in their functions
 
-  # shellcheck disable=SC2086
-  $1 ${selectedItem}
-  softfail-unless-good "Error performing $1 ${selectedItem} ($?)" $?
-}
+  eval "${selectedItem}"
+  softfail-unless-good "Error performing ${selectedItem}" $? || return $?
 
-menu::just-run() {
-  # I use "test" instead of "|| fail" here in case if someone wants
-  # to use "set -o errexit" in their functions
-  "$@"
-  softfail-unless-good "Error performing '${1:-"(first argument is empty)"}' ($?)" $?
+  if [ -t 1 ]; then
+    log::success "Done: ${selectedItem}"
+  fi
+
+  return 0
 }
