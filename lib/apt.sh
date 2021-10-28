@@ -94,13 +94,10 @@ apt::install-gnome-keyring-and-libsecret() {
       || fail
 }
 
-apt::install-tools() {
-  apt::install \
-    curl \
-    debian-goodies `# checkrestart is in there` \
-    direnv \
-    git \
-    jq `# for use with bitwarden` \
-    sysbench \
-      || fail
+apt::install-sopka-essential-dependencies() {
+  apt::install curl git jq || softfail || $?
+}
+
+apt::install-display-if-restart-required-dependencies() {
+  apt::install debian-goodies || softfail || $?
 }

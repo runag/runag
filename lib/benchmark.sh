@@ -23,6 +23,10 @@ benchmark::is-available() {
   return 1
 }
 
+benchmark::install::apt() {
+  apt::install sysbench || softfail || $?
+}
+
 benchmark::run() {
   local hostnameString; hostnameString="$(hostname)" || fail
   local currentDate; currentDate="$(date +"%Y-%m-%d %H-%M-%S")" || fail

@@ -71,6 +71,15 @@ EOF
   sudo sysctl --system || fail
 }
 
+linux::display-if-restart-required::is-available() {
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    if command -v checkrestart >/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
 linux::display-if-restart-required() {
   if command -v checkrestart >/dev/null; then
     sudo checkrestart || fail

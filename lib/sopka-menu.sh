@@ -51,7 +51,9 @@ sopka-menu::sort() {
 sopka-menu::add-defaults() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     sopka-menu::add sopka::linux::dangerously-set-hostname || softfail || return $?
-    sopka-menu::add sopka::linux::display-if-restart-required || softfail || return $?
+    if linux::display-if-restart-required::is-available; then
+      sopka-menu::add sopka::linux::display-if-restart-required || softfail || return $?
+    fi
   fi
 
   if benchmark::is-available; then
