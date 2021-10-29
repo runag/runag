@@ -13,3 +13,33 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+
+rails::get-database-config() {
+  ruby <(rails::get-database-config::ruby-script) "$1" || softfail "Unable to get database config from ruby" || return $?
+}
+
+rails::get-database-config::ruby-script(){
+  cat << RUBY
+    require "yaml"
+
+    key=ARGV[0]
+
+    exit 1 unless key
+    exit 1 if key.empty?
+    
+    config = YAML.load_file "config/database.yml"
+
+    exit 1 unless config.is_a?(Hash)
+
+    env_config = config[ENV["RAILS_ENV"] || "development"]
+
+    exit 1 unless env_config.is_a?(Hash)
+
+    value = env_config[key]
+
+    exit 1 unless value
+    exit 1 if value.empty?
+
+    puts value
+RUBY
+}
