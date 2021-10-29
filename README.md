@@ -34,71 +34,73 @@ Possible sopkafile locations are:
 
 ## API docs
 
+Please refer to the source code for now.
+
 <!-- API TOC BEGIN -->
 
 ### Sopka core
 
-* [deploy-script](docs/lib/deploy-script.md)
-* [fail](docs/lib/fail.md)
-* [log](docs/lib/log.md)
-* [menu](docs/lib/menu.md)
-* [sopka-menu](docs/lib/sopka-menu.md)
-* [sopka](docs/lib/sopka.md)
-* [terminal](docs/lib/terminal.md)
+* [deploy-script](lib/deploy-script.sh)
+* [fail](lib/fail.sh)
+* [log](lib/log.sh)
+* [menu](lib/menu.sh)
+* [sopka-menu](lib/sopka-menu.sh)
+* [sopka](lib/sopka.sh)
+* [terminal](lib/terminal.sh)
 
 ### General utility
 
-* [config](docs/lib/config.md)
-* [fs](docs/lib/fs.md)
-* [task](docs/lib/task.md)
+* [config](lib/config.sh)
+* [fs](lib/fs.sh)
+* [task](lib/task.sh)
 
 ### Interfacing with OS anv VMs
 
-* [apt](docs/lib/apt.md)
-* [linux](docs/lib/linux.md)
-* [macos](docs/lib/macos.md)
-* [shellrc](docs/lib/shellrc.md)
-* [systemd](docs/lib/systemd.md)
-* [vmware](docs/lib/vmware.md)
+* [apt](lib/apt.sh)
+* [linux](lib/linux.sh)
+* [macos](lib/macos.sh)
+* [shellrc](lib/shellrc.sh)
+* [systemd](lib/systemd.sh)
+* [vmware](lib/vmware.sh)
 
 ### Managment of keys, passwords, and other secrets
 
-* [bitwarden](docs/lib/bitwarden.md)
-* [checksums](docs/lib/checksums.md)
-* [gpg](docs/lib/gpg.md)
+* [bitwarden](lib/bitwarden.sh)
+* [checksums](lib/checksums.sh)
+* [gpg](lib/gpg.sh)
 
 ### Development
 
-* [git](docs/lib/git.md)
-* [imagemagick](docs/lib/imagemagick.md)
-* [nodejs](docs/lib/nodejs.md)
-* [postgresql](docs/lib/postgresql.md)
-* [python](docs/lib/python.md)
-* [rails](docs/lib/rails.md)
-* [ruby](docs/lib/ruby.md)
+* [git](lib/git.sh)
+* [imagemagick](lib/imagemagick.sh)
+* [nodejs](lib/nodejs.sh)
+* [postgresql](lib/postgresql.sh)
+* [python](lib/python.sh)
+* [rails](lib/rails.sh)
+* [ruby](lib/ruby.sh)
 
 ### Networking and access to remote systems
 
-* [cifs](docs/lib/cifs.md)
-* [rsync](docs/lib/rsync.md)
-* [ssh](docs/lib/ssh.md)
-* [syncthing](docs/lib/syncthing.md)
-* [tailscale](docs/lib/tailscale.md)
+* [cifs](lib/cifs.sh)
+* [rsync](lib/rsync.sh)
+* [ssh](lib/ssh.sh)
+* [syncthing](lib/syncthing.sh)
+* [tailscale](lib/tailscale.sh)
 
 ### API access to cloud services
 
-* [github](docs/lib/github.md)
+* [github](lib/github.sh)
 
 ### Desktop applications
 
-* [firefox](docs/lib/firefox.md)
-* [sublime-merge](docs/lib/sublime-merge.md)
-* [sublime-text](docs/lib/sublime-text.md)
-* [vscode](docs/lib/vscode.md)
+* [firefox](lib/firefox.sh)
+* [sublime-merge](lib/sublime-merge.sh)
+* [sublime-text](lib/sublime-text.sh)
+* [vscode](lib/vscode.sh)
 
 ### Hard to define a category
 
-* [benchmark](docs/lib/benchmark.md)
+* [benchmark](lib/benchmark.sh)
 
 <!-- API TOC END -->
 

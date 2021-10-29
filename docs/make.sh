@@ -35,7 +35,9 @@ docs::make() {
       local file_basename; file_basename="$(basename "${file}")" || fail
 
       shdoc <"${file}" >"${output}" || fail
-      echo "* [${file_basename%%.*}](${output})" >> "${filesList}" || fail
+      # TODO: I hope that happy moment to enable this line will come
+      # echo "* [${file_basename%%.*}](${output})" >> "${filesList}" || fail
+      echo "* [${file_basename%%.*}](${file})" >> "${filesList}" || fail
     fi
   done
 
