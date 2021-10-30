@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+task::ssh-jump() {
+  SOPKA_TASK_SSH_JUMP=true "$@"
+}
+
 task::run-with-install-filter() {
   SOPKA_TASK_STDERR_FILTER=task::install-filter task::run "$@"
 }
@@ -61,6 +65,11 @@ task::detect-fail-state() {
 
 # note the subshells
 task::run() {(
+  if [ "${SOPKA_TASK_SSH_JUMP:-}" = true ]; then
+    ssh::task "$@"
+    return $?
+  fi
+
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
     log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail
   fi

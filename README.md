@@ -226,6 +226,10 @@ Integer
 
 Integer (could be float but that depends on your `sleep` command implementation).
 
+#### `SOPKA_TASK_SSH_JUMP`
+
+Run tasks on remote machine through ssh
+
 #### `SOPKA_TASK_STDERR_FILTER`
 
 Could be set to function name. Function is expected to filter it's input. If function output is empty then stderr will not be displayed.
