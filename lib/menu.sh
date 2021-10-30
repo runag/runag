@@ -24,7 +24,7 @@ menu::select-and-run() {
 
   local colorA="" colorB="" defaultColor=""
   if [ -t 1 ]; then
-    colorA="$(terminal::color 14)" || softfail || return $?
+    colorA="$(terminal::color 13)" || softfail || return $?
     colorB="$(terminal::color 15)" || softfail || return $?
     defaultColor="$(terminal::default-color)" || softfail || return $?
   fi
