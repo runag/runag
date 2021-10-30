@@ -68,6 +68,6 @@ sopka-menu::add-defaults() {
   sopka-menu::add "sopka::with-verbose-tasks sopka-menu::display" || softfail || return $?
 
   if command -v psql >/dev/null; then
-    sopka-menu::add postgresql::psql-su || softfail || return $?
+    sopka-menu::add psql-su || softfail || return $?
   fi
 }
