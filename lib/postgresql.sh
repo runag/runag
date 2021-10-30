@@ -81,7 +81,7 @@ postgresql::create-role-if-not-exists() {
 
 postgresql::is-role-exists() {
   local roleName="${1:-"${PGUSER}"}"
-  local roleExists; roleExists="$(postgresql::psql-run "SELECT 1 FROM pg_roles WHERE rolname='${roleName}'" postgres)" || fail "Unable to query postgresql" 2 # no softfail here!
+  local roleExists; roleExists="$(postgresql::psql-su-run "SELECT 1 FROM pg_roles WHERE rolname='${roleName}'" postgres)" || fail "Unable to query postgresql" 2 # no softfail here!
   test "${roleExists}" = 1
 }
 
