@@ -18,19 +18,24 @@ log::elapsed-time() {
   echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
 
-log::success() {
+log::error() {
   local message="$1"
-  log::with-color "${message}" 10
+  log::with-color "${message}" 9 >&2
+}
+
+log::warning() {
+  local message="$1"
+  log::with-color "${message}" 11 >&2
 }
 
 log::notice() {
   local message="$1"
-  log::with-color "${message}" 11
+  log::with-color "${message}" 14
 }
 
-log::error() {
+log::success() {
   local message="$1"
-  log::with-color "${message}" 9 >&2
+  log::with-color "${message}" 10
 }
 
 log::with-color() {
