@@ -212,6 +212,10 @@ ssh::script() {
 
   declare -f || softfail "Unable to produce source code dump of functions" || return $?
 
+  if [ -n "${REMOTE_DIR:-}" ]; then
+    printf "cd %q || exit \$?\n" "${REMOTE_DIR}"
+  fi
+
   local commandString; printf -v commandString " %q" "$@" || softfail "Unable to produce command string" || return $?
   echo "${commandString:1}"
 }
