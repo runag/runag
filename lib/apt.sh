@@ -41,26 +41,27 @@ apt::lazy-update-and-dist-upgrade() {
 # @description Perform apt update
 apt::update() {
   SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-  sudo apt-get update || fail
+  sudo DEBIAN_FRONTEND=noninteractive apt-get update || fail
 }
 
 # @description Perform apt dist-upgrade
 apt::dist-upgrade() {
-  sudo apt-get -y dist-upgrade || fail
+  # TODO: Check if this Dpkg::Options are good defaults
+  sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y dist-upgrade || fail
 }
 
 # @description Install package
 apt::install() {
-  sudo apt-get -y install "$@" || fail
+  sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || fail
 }
 
 apt::remove() {
-  sudo apt-get -y remove "$@" || fail
+  sudo DEBIAN_FRONTEND=noninteractive apt-get -y remove "$@" || fail
 }
 
 # @description Perform apt autoremove
 apt::autoremove() {
-  sudo apt-get -y autoremove || fail
+  sudo DEBIAN_FRONTEND=noninteractive apt-get -y autoremove || fail
 }
 
 # @description Add apt source and key
