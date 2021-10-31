@@ -223,7 +223,7 @@ ssh::script() {
 ssh::remove-temp-files() {
   local exitStatus="${1:-0}"
 
-  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ] && [ -n "${tempDir:-}" ]; then
     rm -fd "${tempDir}/script" "${tempDir}/stdin" "${tempDir}/stdout" "${tempDir}/stderr" "${tempDir}" || softfail "Unable to remote temp files" || return $?
   fi
 
