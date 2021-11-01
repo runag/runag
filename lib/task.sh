@@ -80,7 +80,7 @@ task::run() {(
   trap "task::complete-with-cleanup" EXIT
 
   # I know I could put /dev/fd/0 in variable, but what if system does not support it?
-  if [ -t 0 ]; then
+  if [ -t 0 ]; then # stdin is a terminal
     ("$@") </dev/null >"${tempDir}/stdout" 2>"${tempDir}/stderr"
   else
     ("$@") >"${tempDir}/stdout" 2>"${tempDir}/stderr"
