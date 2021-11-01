@@ -20,6 +20,26 @@ sshd::disable-password-authentication() {
   echo "PasswordAuthentication no" | file::sudo-write /etc/ssh/sshd_config.d/disable-password-authentication.conf || fail
 }
 
+ssh::import-id() {
+  local publicUserId="$1"
+  local userName="${2:-"${USER}"}"
+
+  local userHome; userHome="$(linux::get-user-home "${userName}")" || fail
+  local authorizedKeys="${userHome}/.ssh/authorized_keys"
+
+  if [ "${userName}" != "${USER}" ]; then
+    dir::sudo-make-if-not-exists-and-set-permissions "${userHome}/.ssh" 700 "${userName}" "${userName}" || fail
+  else
+    dir::make-if-not-exists-and-set-permissions "${userHome}/.ssh" 700 || fail
+  fi
+
+  ssh-import-id --output "${authorizedKeys}" "${publicUserId}" || fail
+
+  if [ "${userName}" != "${USER}" ]; then
+    sudo chown "${userName}"."${userName}" "${authorizedKeys}" || fail
+  fi
+}
+
 ssh::make-user-config-directory-if-not-exists() {
   dir::make-if-not-exists "${HOME}/.ssh" 700 || fail
 }
