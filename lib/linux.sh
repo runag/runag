@@ -142,3 +142,9 @@ linux::with-secure-temp-dir() {
     fail "Error performing ${1:-"(argument is empty)"} (${result})"
   fi
 }
+
+linux::get-user-home() {
+  local userName="$1"
+  getent passwd "${userName}" | cut -d : -f 6
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}
