@@ -17,12 +17,17 @@
 postgresql::install-dictionaries() {
   local folder="$1"
 
+  if [ ! -d "${folder}" ]; then
+    softfail "Folder does not exists: ${folder}"
+    return $?
+  fi
+
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
     local dest; for dest in /usr/local/Cellar/postgresql/*; do
       if [ -d "${dest}" ]; then
         local file; for file in "${folder}"/*; do
           if [ -f "${file}" ]; then
-            cp "${file}" "${dest}/share/postgresql/tsearch_data" || fail
+            cp "${file}" "${dest}/share/postgresql/tsearch_data" || softfail "File copy failed: from '${file}' to '${dest}/share/postgresql/tsearch_data'" || return $?
           fi
         done
       fi
@@ -32,7 +37,7 @@ postgresql::install-dictionaries() {
       if [ -d "${dest}" ]; then
         local file; for file in "${folder}"/*; do
           if [ -f "${file}" ]; then
-            sudo install --owner=root --group=root --mode=0644 "${file}" -D "${dest}/tsearch_data" || fail
+            sudo install --owner=root --group=root --mode=0644 --compare "${file}" -D "${dest}/tsearch_data" || softfail "File install failed: from '${file}' to '${dest}/tsearch_data'" || return $?
           fi
         done
       fi
