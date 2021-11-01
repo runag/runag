@@ -299,6 +299,36 @@ ssh::call() {
   SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true ssh::task "$@"
 }
 
+ssh::call-with-remote-temp-copy() {
+  SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true ssh::task-with-remote-temp-copy "$@"
+}
+
+ssh::task-with-remote-temp-copy() {
+  local localFolder="$1"
+
+  if [ ! -e "${localFolder}" ]; then
+    softfail "File does not exists: ${localFolder}"
+    return $?
+  fi
+
+  if [ -d "${localFolder}" ]; then
+    local rsyncSrc="${localFolder}/"
+    local rsyncDest; rsyncDest="$(ssh::call mktemp -d)" || softfail "Unable to create remote temp dir" || return $?
+  else
+    local rsyncSrc="${localFolder}"
+    local rsyncDest; rsyncDest="$(ssh::call mktemp)" || softfail "Unable to create remote temp file" || return $?
+  fi
+
+  rsync::sync-to-remote "${rsyncSrc}" "${rsyncDest}" || softfail "Unable to rsync to remote" || return $?
+
+  ssh::task "$2" "${rsyncDest}" "${@:3}"
+  local taskResult=$?
+
+  ssh::call rm -rf "${rsyncDest}" || softfail "Unable to remove remote temp file"
+
+  return "${taskResult}"
+}
+
 ssh::task::softfail(){
   # Please note: tempDir and remoteTempDir variables are not function-local for this function
   local message="$1"
