@@ -28,7 +28,7 @@ dir::make-if-not-exists() {
   fi
 }
 
-dir::make-if-not-exists-but-chmod-anyway() {
+dir::make-if-not-exists-and-set-permissions() {
   local dirPath="$1"
   local mode="${2:-}"
 
@@ -41,19 +41,31 @@ dir::make-if-not-exists-but-chmod-anyway() {
 dir::sudo-make-if-not-exists() {
   local dirPath="$1"
   local mode="${2:-}"
+  local owner="${3:-}"
+  local group="${4:-}"
 
-  if ! sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+  if sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+    if [ -n "${owner}" ]; then
+      sudo chown "${owner}${group:+".${group}"}" "${dirPath}" || fail
+    fi
+  else
     test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
   fi
 }
 
-dir::sudo-make-if-not-exists-but-chmod-anyway() {
+dir::sudo-make-if-not-exists-and-set-permissions() {
   local dirPath="$1"
   local mode="${2:-}"
+  local owner="${3:-}"
+  local group="${4:-}"
 
   if ! sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
     test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
     sudo chmod "${mode}" "${dirPath}" || fail
+  fi
+
+  if [ -n "${owner}" ]; then
+    sudo chown "${owner}${group:+".${group}"}" "${dirPath}" || fail
   fi
 }
 
