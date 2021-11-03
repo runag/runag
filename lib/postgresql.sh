@@ -15,17 +15,17 @@
 #  limitations under the License.
 
 postgresql::install-dictionaries() {
-  local folder="$1"
+  local sourceDir="$1"
 
-  if [ ! -d "${folder}" ]; then
-    softfail "Folder does not exists: ${folder}"
+  if [ ! -d "${sourceDir}" ]; then
+    softfail "sourceDir does not exists: ${sourceDir}"
     return $?
   fi
 
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
     local dest; for dest in /usr/local/Cellar/postgresql/*; do
       if [ -d "${dest}" ]; then
-        local file; for file in "${folder}"/*; do
+        local file; for file in "${sourceDir}"/*; do
           if [ -f "${file}" ]; then
             cp "${file}" "${dest}/share/postgresql/tsearch_data" || softfail "File copy failed: from '${file}' to '${dest}/share/postgresql/tsearch_data'" || return $?
           fi
@@ -35,7 +35,7 @@ postgresql::install-dictionaries() {
   else
     local dest; for dest in /usr/share/postgresql/*; do
       if [ -d "${dest}" ]; then
-        local file; for file in "${folder}"/*; do
+        local file; for file in "${sourceDir}"/*; do
           if [ -f "${file}" ]; then
             sudo install --owner=root --group=root --mode=0644 --compare "${file}" -D "${dest}/tsearch_data" || softfail "File install failed: from '${file}' to '${dest}/tsearch_data'" || return $?
           fi

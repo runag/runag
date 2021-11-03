@@ -30,9 +30,9 @@ firefox::set-pref() {
   
   local prefsLine="user_pref(\"${name}\", ${value});"
   
-  local profileFolder; for profileFolder in "${HOME}/.mozilla/firefox"/*.default-release; do
-    if [ -d "${profileFolder}" ]; then
-      local prefsFile="${profileFolder}/prefs.js"
+  local profileDir; for profileDir in "${HOME}/.mozilla/firefox"/*.default-release; do
+    if [ -d "${profileDir}" ]; then
+      local prefsFile="${profileDir}/prefs.js"
       if ! grep -qFx "${prefsLine}" "${prefsFile}"; then
         echo "${prefsLine}" >>"${prefsFile}" || softfail || return $?
       fi

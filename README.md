@@ -113,7 +113,7 @@ Please refer to the source code for now.
 
 That variable is here to help you to generate scripts or systemd units that might need to use sopka.
 Anywhere you put sopka, the variable will reflect it actual location.
-If you put sopka into your home dir them value will be `"${HOME}/.sopka/bin"`.
+If you put sopka into your home directory them value will be `"${HOME}/.sopka/bin"`.
 You could use that file as an executable or you could source that file in your scripts.
 
 #### `SOPKA_UPDATE_SECRETS`
@@ -143,9 +143,9 @@ By default sopka will use `"${HOME}/.ssh/control-socket.%C"`.
 To disable `ControlPersist` set this to `"no"`.
 By default sopka will use `600` seconds.
 
-#### `REMOTE_DIR`
+#### `REMOTE_FOLDER`
 
-Directory to run script in.
+Remote directory to run script in.
 
 #### `REMOTE_ENV`
 
@@ -181,6 +181,10 @@ thus ssh could potentially use a value from your ssh config file.
 #### `REMOTE_SSH_ARGS`
 
 Additional SSH arguments, array of strings, for example `("-i" "keyfile")`.
+
+#### `REMOTE_UMASK`
+
+Umask for remote commands
 
 #### `REMOTE_USER`
 

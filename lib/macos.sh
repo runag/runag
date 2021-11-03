@@ -51,7 +51,7 @@ EOF
   fi
 }
 
-macos::hide-folder() {
+macos::hide-dir() {
   if [ -d "$1" ]; then
     chflags hidden "$1" || fail
   fi

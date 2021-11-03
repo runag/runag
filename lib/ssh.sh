@@ -40,7 +40,7 @@ ssh::import-id() {
   fi
 }
 
-ssh::make-user-config-directory-if-not-exists() {
+ssh::make-user-config-dir-if-not-exists() {
   dir::make-if-not-exists "${HOME}/.ssh" 700 || fail
 }
 
@@ -146,7 +146,7 @@ ssh::add-host-to-known-hosts() {
   fi
 
   if [ ! -f "${knownHosts}" ]; then
-    ssh::make-user-config-directory-if-not-exists || fail
+    ssh::make-user-config-dir-if-not-exists || fail
     (umask 133 && touch "${knownHosts}") || fail
   fi
 
@@ -236,6 +236,10 @@ ssh::script() {
     printf "cd %q || exit \$?\n" "${REMOTE_DIR}"
   fi
 
+  if [ -n "${REMOTE_UMASK:-}" ]; then
+    printf "umask %q || exit \$?\n" "${REMOTE_UMASK}"
+  fi
+
   local commandString; printf -v commandString " %q" "$@" || softfail "Unable to produce command string" || return $?
   echo "${commandString:1}"
 }
@@ -257,7 +261,7 @@ ssh::before-run() {
     softfail "REMOTE_HOST should be set" || return $?
   fi
 
-  ssh::make-user-config-directory-if-not-exists || softfail "Unable to create ssh user config directory" || return $?
+  ssh::make-user-config-dir-if-not-exists || softfail "Unable to create ssh user config directory" || return $?
 
   ssh::set-args || softfail "Unable to set ssh args" || return $?
 
@@ -324,18 +328,18 @@ ssh::call-with-remote-temp-copy() {
 }
 
 ssh::task-with-remote-temp-copy() {
-  local localFolder="$1"
+  local localDir="$1"
 
-  if [ ! -e "${localFolder}" ]; then
-    softfail "File does not exists: ${localFolder}"
+  if [ ! -e "${localDir}" ]; then
+    softfail "File does not exists: ${localDir}"
     return $?
   fi
 
-  if [ -d "${localFolder}" ]; then
-    local rsyncSrc="${localFolder}/"
-    local rsyncDest; rsyncDest="$(ssh::call mktemp -d)" || softfail "Unable to create remote temp dir" || return $?
+  if [ -d "${localDir}" ]; then
+    local rsyncSrc="${localDir}/"
+    local rsyncDest; rsyncDest="$(ssh::call mktemp -d)" || softfail "Unable to create remote temp directory" || return $?
   else
-    local rsyncSrc="${localFolder}"
+    local rsyncSrc="${localDir}"
     local rsyncDest; rsyncDest="$(ssh::call mktemp)" || softfail "Unable to create remote temp file" || return $?
   fi
 

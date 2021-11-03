@@ -53,9 +53,9 @@ sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || softfail || return $?
 
-    local fileFolder; for fileFolder in "${HOME}"/.sopka/sopkafiles/*; do
-      if [ -d "${fileFolder}/.git" ]; then
-        git -C "${fileFolder}" pull || softfail || return $?
+    local sopkafileDir; for sopkafileDir in "${HOME}"/.sopka/sopkafiles/*; do
+      if [ -d "${sopkafileDir}/.git" ]; then
+        git -C "${sopkafileDir}" pull || softfail || return $?
       fi
     done
   fi
