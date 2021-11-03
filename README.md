@@ -143,7 +143,7 @@ By default sopka will use `"${HOME}/.ssh/control-socket.%C"`.
 To disable `ControlPersist` set this to `"no"`.
 By default sopka will use `600` seconds.
 
-#### `REMOTE_FOLDER`
+#### `REMOTE_DIR`
 
 Remote directory to run script in.
 
