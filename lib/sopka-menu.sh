@@ -18,7 +18,7 @@ sopka-menu::add() {
   if [ -z ${SOPKA_MENU:+x} ]; then
     SOPKA_MENU=()
   fi
-  SOPKA_MENU+=("$@")
+  SOPKA_MENU+=("$*")
 }
 
 sopka-menu::display() {
