@@ -148,3 +148,13 @@ linux::get-user-home() {
   getent passwd "${userName}" | cut -d : -f 6
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
+
+linux::get-cpu-count() {
+  local cpuCount; cpuCount="$(grep -c ^processor /proc/cpuinfo 2>/dev/null)"
+
+  if [[ "${cpuCount}" =~ ^[0-9]+$ ]]; then
+    echo "${cpuCount}"
+  else
+    echo 1
+  fi
+}
