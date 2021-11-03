@@ -177,3 +177,21 @@ fs::recursive-source(){
     . "${filePath}" || softfail "Unable to load: ${filePath}" || return $?
   done < <(find "${selfDir}/$2" -type f -name '*.sh' -print0)
 }
+
+fs::get-absolute-path() {
+  local relativePath="$1"
+  
+  # get basename
+  local pathBasename; pathBasename="$(basename "${relativePath}")" \
+    || softfail "Sopka: Unable to get a basename of '${relativePath}' ($?)" || return $?
+
+  # get dirname that yet may result to relative path
+  local unresolvedDir; unresolvedDir="$(dirname "${relativePath}")" \
+    || softfail "Sopka: Unable to get a dirname of '${relativePath}'" || return $?
+
+  # get absolute path
+  local resolvedDir; resolvedDir="$(cd "${unresolvedDir}" >/dev/null 2>&1 && pwd)" \
+    || softfail "Sopka: Unable to determine absolute path for '${unresolvedDir}'" || return $?
+
+  echo "${resolvedDir}/${pathBasename}"
+}
