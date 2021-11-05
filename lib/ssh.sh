@@ -296,35 +296,51 @@ ssh::run() {
 }
 
 ssh::task-with-install-filter() {
-  SOPKA_TASK_STDERR_FILTER=task::install-filter ssh::task "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_STDERR_FILTER=task::install-filter
+  ssh::task "$@"
 }
 
 ssh::task-with-rubygems-fail-detector() {
-  SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector ssh::task "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector
+  ssh::task "$@"
 }
 
 ssh::task-without-title() {
-  SOPKA_TASK_OMIT_TITLE=true ssh::task "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_OMIT_TITLE=true
+  ssh::task "$@"
 }
 
 ssh::task-with-title() {
-  SOPKA_TASK_TITLE="$1" ssh::task "${@:2}"
+  # shellcheck disable=2034
+  local SOPKA_TASK_TITLE="$1"
+  ssh::task "${@:2}"
 }
 
 ssh::task-with-short-title() {
-  SOPKA_TASK_TITLE="$1" ssh::task "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_TITLE="$1"
+  ssh::task "$@"
 }
 
 ssh::task-verbose() {
-  SOPKA_TASK_VERBOSE=true ssh::task "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_VERBOSE=true
+  ssh::task "$@"
 }
 
 ssh::call() {
-  SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true ssh::task "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true
+  ssh::task "$@"
 }
 
 ssh::call-with-remote-temp-copy() {
-  SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true ssh::task-with-remote-temp-copy "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true
+  ssh::task-with-remote-temp-copy "$@"
 }
 
 ssh::task-with-remote-temp-copy() {

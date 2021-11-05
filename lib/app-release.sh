@@ -121,7 +121,9 @@ app-release::cleanup() {
 }
 
 app-release::with-release-remote-dir() {
-  REMOTE_DIR="${APP_DIR:?}/releases/${APP_RELEASE:?}" "$@"
+  # shellcheck disable=2034
+  local REMOTE_DIR="${APP_DIR:?}/releases/${APP_RELEASE:?}"
+  "$@"
 }
 
 app-release::sync-to-remote() {

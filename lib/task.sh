@@ -15,31 +15,45 @@
 #  limitations under the License.
 
 task::ssh-jump() {
-  SOPKA_TASK_SSH_JUMP=true "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_SSH_JUMP=true
+  "$@"
 }
 
 task::run-with-install-filter() {
-  SOPKA_TASK_STDERR_FILTER=task::install-filter task::run "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_STDERR_FILTER=task::install-filter
+  task::run "$@"
 }
 
 task::run-with-rubygems-fail-detector() {
-  SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector task::run "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector
+  task::run "$@"
 }
 
 task::run-without-title() {
-  SOPKA_TASK_OMIT_TITLE=true task::run "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_OMIT_TITLE=true
+  task::run "$@"
 }
 
 task::run-with-title() {
-  SOPKA_TASK_TITLE="$1" task::run "${@:2}"
+  # shellcheck disable=2034
+  local SOPKA_TASK_TITLE="$1"
+  task::run "${@:2}"
 }
 
 task::run-with-short-title() {
-  SOPKA_TASK_TITLE="$1" task::run "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_TITLE="$1"
+  task::run "$@"
 }
 
 task::run-verbose() {
-  SOPKA_TASK_VERBOSE=true task::run "$@"
+  # shellcheck disable=2034
+  local SOPKA_TASK_VERBOSE=true
+  task::run "$@"
 }
 
 task::rubygems-fail-detector() {
