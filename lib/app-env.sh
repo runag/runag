@@ -24,4 +24,6 @@ app-env::write-env() {
   local item; for item in "${@:2}"; do
     printf "export ${item}=%q\n" "${!item}"
   done | file::write "${appEnvDir}/${name}.sh" 600 || fail
+
+  # TODO: better error handling?
 }
