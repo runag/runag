@@ -197,9 +197,27 @@ bitwarden::use() {
   fi
 }
 
+bitwarden::remote-file::exists() {(
+  unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
+
+  local filePath="$1"
+
+  ssh::call test -f "${filePath}"
+)}
+
+bitwarden::remote-file::save() {(
+  unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
+
+  local secretKey="$1"
+  local filePath="$2"
+  local mode="${3:-"600"}"
+
+  ssh::call file::write "${filePath}" "${mode}" <<< "${secretKey}" || softfail "Unable to write remote file" || return $?
+)}
+
 # sopka bitwarden::use username password uri "test record" bitwarden::test hello there
 
-# bitwarden::test::exists(){
+# bitwarden::test::exists() {
 #   local item index=1
 #   echo bitwarden::test::exists was called with:
 #   for item in "$@"; do
@@ -209,7 +227,7 @@ bitwarden::use() {
 #   false
 # }
 # 
-# bitwarden::test::save(){
+# bitwarden::test::save() {
 #   local item index=1
 #   echo bitwarden::test::save was called with:
 #   for item in "$@"; do
