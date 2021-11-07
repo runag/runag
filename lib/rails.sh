@@ -19,7 +19,7 @@ rails::get-database-config() {
 }
 
 rails::get-database-config::ruby-script(){
-  cat << RUBY
+  cat <<RUBY
     require "yaml"
 
     key=ARGV[0]

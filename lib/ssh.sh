@@ -103,13 +103,13 @@ ssh::macos-keychain::configure-use-on-all-hosts() {
   fi
 
   if ! grep -q "^# Use keychain" "${sshConfigFile}"; then
-tee -a "${sshConfigFile}" <<SHELL || fail "Unable to append to the file: ${sshConfigFile}"
+tee -a "${sshConfigFile}" <<EOF || fail "Unable to append to the file: ${sshConfigFile}"
 
 # Use keychain
 Host *
   UseKeychain yes
   AddKeysToAgent yes
-SHELL
+EOF
   fi
 }
 

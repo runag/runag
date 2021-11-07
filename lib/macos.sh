@@ -24,7 +24,7 @@ macos::increase-maxfiles-limit() {
   local dst="/Library/LaunchDaemons/${label}.plist"
 
   if [ ! -f "${dst}" ]; then
-    file::sudo-write "${dst}" 644 root wheel <<EOF || fail
+    file::sudo-write "${dst}" 644 root wheel <<HTML || fail
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
         "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -46,7 +46,7 @@ macos::increase-maxfiles-limit() {
     <false/>
   </dict>
 </plist>
-EOF
+HTML
     echo "increase-maxfiles-limit: Please reboot your computer" >&2
   fi
 }

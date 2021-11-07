@@ -30,7 +30,7 @@ sopka::deploy-sh-main() {
   softfail-unless-good-code $?
 }
 
-file::write deploy.sh <<EOF || fail
+file::write deploy.sh <<SHELL || fail
 #!/usr/bin/env bash
 
 $(sopka::print-license)
@@ -71,4 +71,4 @@ $(declare -f terminal::default-color)
 sopka::deploy-sh-main "\$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "\$@"
-EOF
+SHELL
