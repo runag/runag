@@ -22,12 +22,14 @@ nodejs::install-and-set-global::nodenv() {
 }
 
 nodejs::install::nodenv() {
+  local nodeVersion="${1:-}"
+
   nodejs::install-and-load-nodenv || softfail || return $?
-  nodejs::nodenv::install "$@" || softfail || return $?
+  nodejs::nodenv::install "${nodeVersion:-}" || softfail || return $?
 
   # this will set NODENV_VERSION to the last element of ARGV array
   # shellcheck disable=2124
-  NODENV_VERSION="${@:$#}" nodejs::configure-mismatched-binaries-workaround || softfail || return $?
+  NODENV_VERSION="${nodeVersion:-"${NODENV_VERSION:-}"}" nodejs::configure-mismatched-binaries-workaround || softfail || return $?
 }
 
 nodejs::install-and-update::apt(){
