@@ -22,7 +22,9 @@ shellrc::install-loader() {
   dir::make-if-not-exists "${shellrcDir}" 700 || fail
 
   if [ ! -f "${shellrcFile}" ]; then
-    (umask 133 && touch "${shellrcFile}") || fail
+    # ubuntu default seems to be 133 (rw-r--r--)
+    # I'll try 137 (rw-r-----) to see if there are any downsides of that
+    (umask 137 && touch "${shellrcFile}") || fail
   fi
 
   if ! grep -Fxq "# shellrc.d loader" "${shellrcFile}"; then
