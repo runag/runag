@@ -88,11 +88,12 @@ shellrc::install-direnv-rc() {
 SHELL
 }
 
-shellrc::install-nano-editor-rc() {
-  shellrc::write "nano-editor" <<SHELL || fail
+shellrc::install-editor-rc() {
+  local editorPath="$1"
+  shellrc::write "editor" <<SHELL || fail
     if [ -z "\${EDITOR:-}" ]; then
-      if command -v nano >/dev/null; then
-        export EDITOR="\$(command -v nano)"
+      if command -v ${editorPath} >/dev/null; then
+        export EDITOR="\$(command -v ${editorPath})"
       fi
     fi
 SHELL
