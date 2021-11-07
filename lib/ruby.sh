@@ -115,7 +115,6 @@ SHELL
 
 ruby::load-rbenv() {
   shellrc::load "rbenv" || fail
-  rbenv rehash || fail
 }
 
 ruby::dangerously-append-nodocument-to-gemrc() {

@@ -110,7 +110,6 @@ SHELL
 
 nodejs::load-nodenv() {
   shellrc::load "nodenv" || fail
-  nodenv rehash || fail
 }
 
 nodejs::update-system-wide-packages() {
