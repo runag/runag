@@ -24,7 +24,10 @@ nodejs::install-and-set-global::nodenv() {
 nodejs::install::nodenv() {
   nodejs::install-and-load-nodenv || softfail || return $?
   nodejs::nodenv::install "$@" || softfail || return $?
-  nodejs::configure-mismatched-binaries-workaround || softfail || return $?
+
+  # this will set NODENV_VERSION to the last element of ARGV array
+  # shellcheck disable=2124
+  NODENV_VERSION="${@:$#}" nodejs::configure-mismatched-binaries-workaround || softfail || return $?
 }
 
 nodejs::install-and-update::apt(){
@@ -60,7 +63,6 @@ nodejs::install-and-load-nodenv() {
 
 nodejs::nodenv::install() {
   nodenv install --skip-existing "$@" || softfail || return $?
-
   nodenv rehash || softfail || return $?
 }
 

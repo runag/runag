@@ -60,7 +60,6 @@ ruby::install-and-load-rbenv() {
 
 ruby::rbenv::install() {
   rbenv install --skip-existing "$@" || softfail || return $?
-
   rbenv rehash || softfail || return $?
 }
 
