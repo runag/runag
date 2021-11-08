@@ -90,6 +90,12 @@ Please refer to the source code for now.
 ### API access to cloud services
 
 * [github](lib/github.sh)
+* [leaseweb](lib/leaseweb.sh)
+
+### Application deployment
+
+* [app-env](lib/app-env.sh)
+* [app-release](lib/app-release.sh)
 
 ### Desktop applications
 

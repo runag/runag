@@ -21,12 +21,12 @@ __xVhMyefCbBnZFUQtwqCs() {
 
 apt::install () 
 { 
-    sudo apt-get -y install "$@" || fail
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || fail
 }
 apt::update () 
 { 
     SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
-    sudo apt-get update || fail
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update || fail
 }
 deploy-script::add () 
 { 
@@ -120,7 +120,7 @@ log::error ()
 log::notice () 
 { 
     local message="$1";
-    log::with-color "${message}" 11
+    log::with-color "${message}" 14
 }
 log::with-color () 
 { 
@@ -248,11 +248,16 @@ task::is-stderr-empty-after-filtering ()
 }
 task::run-with-install-filter () 
 { 
-    SOPKA_TASK_STDERR_FILTER=task::install-filter task::run "$@"
+    local SOPKA_TASK_STDERR_FILTER=task::install-filter;
+    task::run "$@"
 }
 task::run () 
 { 
-    ( if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
+    ( if [ "${SOPKA_TASK_SSH_JUMP:-}" = true ]; then
+        ssh::task "$@";
+        return $?;
+    fi;
+    if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
         log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
     fi;
     local tempDir;
