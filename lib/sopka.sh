@@ -119,17 +119,11 @@ sopka::load-sopkafile() {
     return $?
 
   else
-    local fileFound=false
     local filePath; for filePath in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
       if [ -f "${filePath}" ]; then
         . "${filePath}"
         softfail-unless-good "Unable to load '${filePath}' ($?)" $? || return $?
-        fileFound=true
       fi
     done
-    if [ "${fileFound}" = false ]; then
-      log::error "Unable to find sopkafile"
-      return 1
-    fi
   fi
 }

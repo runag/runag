@@ -101,6 +101,6 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     exit $?
   fi
 
-  log::error "Sopka: Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu (and run sopka in terminal)"
+  log::error "Sopka: Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu to see it if you run sopka in terminal"
   exit 1
 fi
