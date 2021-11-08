@@ -20,12 +20,9 @@
 app-release::init() {
   local appDir="${APP_DIR:?}"
 
-  local mode="${1:-}"
-
-  dir::make-if-not-exists "${appDir}" "${mode}" || softfail || return $?
-  dir::make-if-not-exists "${appDir}/releases" "${mode}" || softfail || return $?
-  dir::make-if-not-exists "${appDir}/repo" "${mode}" || softfail || return $?
-  dir::make-if-not-exists "${appDir}/shared" "${mode}" || softfail || return $?
+  dir::make-if-not-exists "${appDir}" || softfail || return $?
+  dir::make-if-not-exists "${appDir}/repo" || softfail || return $?
+  dir::make-if-not-exists "${appDir}/shared" || softfail || return $?
 
   git --bare init "${appDir}/repo" || softfail || return $?
 }
@@ -45,9 +42,26 @@ app-release::push-local-repo-to-remote() {
 app-release::make() {
   local appDir="${APP_DIR:?}"
 
-  local currentDate; currentDate="$(date "+%Y%m%dT%H%M%SZ")" || softfail || return $?
+  local mode="${1:-}"
+  local owner="${2:-}"
+  local group="${3:-}"
 
-  ( cd "${appDir}/releases" && mktemp -d "${currentDate}-XXXX" ) || softfail || return $?
+  local currentDate; currentDate="$(date "+%Y%m%dT%H%M%SZ")" || softfail || return $?
+  local releasesPath="${appDir}/releases"
+  
+  dir::make-if-not-exists "${releasesPath}" "${mode}" "${owner}" "${group}" || softfail || return $?
+
+  local releaseDir; releaseDir="$(cd "${releasesPath}" >/dev/null 2>&1 && mktemp -d "${currentDate}-XXXX")" || softfail "Unable to make release directory" || return $?
+
+  if [ -n "${mode}" ]; then
+    chmod "${mode}" "${releasesPath}/${releaseDir}" || softfail || return $?
+  fi
+
+  if [ -n "${owner}" ]; then
+    chown "${owner}${group:+".${group}"}" "${releasesPath}/${releaseDir}" || softfail || return $?
+  fi
+
+  echo "${releaseDir}"
 }
 
 app-release::clone() {
@@ -59,12 +73,13 @@ app-release::clone() {
   fi
 }
 
+# TODO: link to file? link to dir? Document magic happening here
 app-release::link-shared-file() {
   local appDir="${APP_DIR:?}"
   local appReleasePath="${appDir}/releases/${APP_RELEASE:?}"
 
   local linkPath="${appReleasePath}/$1"
-  local target="${2:-"${appDir}/shared/${1}"}"
+  local target="${2:-"${appDir}/shared/$1"}"
 
   if [ ! -e "${target}" ]; then
     mkdir -p "${target}" || softfail || return $?
