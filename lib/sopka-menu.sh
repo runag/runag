@@ -43,7 +43,16 @@ sopka-menu::sort() {
     local previousIFS="${IFS}"
     IFS=$'\n'
     # shellcheck disable=SC2207
-    SOPKA_MENU=($(sort <<<"${SOPKA_MENU[*]}")) || { softfail; IFS="$previousIFS"; return 1; }
+    SOPKA_MENU=($(
+      grep -F "::" <<<"${SOPKA_MENU[*]}" | sort
+      savedPipeStatus="${PIPESTATUS[*]}"
+      if [ "${savedPipeStatus}" != 0$'\n'0 ] && [ "${savedPipeStatus}" != 1$'\n'0 ]; then exit 1; fi
+
+      grep -vF "::" <<<"${SOPKA_MENU[*]}" | sort
+      savedPipeStatus="${PIPESTATUS[*]}"
+      if [ "${savedPipeStatus}" != 0$'\n'0 ] && [ "${savedPipeStatus}" != 1$'\n'0 ]; then exit 1; fi
+
+      )) || { softfail "Unable to sort menu"; IFS="$previousIFS"; return 1; }
     IFS="$previousIFS"
   fi
 }
