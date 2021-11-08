@@ -28,15 +28,16 @@ app-release::init() {
 }
 
 app-release::push-local-repo-to-remote() {
-  local gitRemoteUrl="${REMOTE_USER}@${REMOTE_HOST}:${APP_DIR:?}/repo"
+  local gitRemoteUrl="${REMOTE_USER:?}@${REMOTE_HOST:?}:${APP_DIR:?}/repo"
+  local remoteName="${REMOTE_USER}@${REMOTE_HOST}/${APP_DIR}"
 
-  if ! git config remote.production.url >/dev/null; then
-    git remote add production "${gitRemoteUrl}" || softfail || return $?
+  if ! git config "remote.${remoteName}.url" >/dev/null; then
+    git remote add "${remoteName}" "${gitRemoteUrl}" || softfail || return $?
   else
-    git config remote.production.url "${gitRemoteUrl}" || softfail || return $?
+    git config "remote.${remoteName}.url" "${gitRemoteUrl}" || softfail || return $?
   fi
 
-  git push production master || softfail || return $?
+  git push "${remoteName}" master || softfail || return $?
 }
 
 app-release::make() {
