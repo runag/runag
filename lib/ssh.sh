@@ -20,6 +20,17 @@ sshd::disable-password-authentication() {
   echo "PasswordAuthentication no" | file::sudo-write /etc/ssh/sshd_config.d/disable-password-authentication.conf || fail
 }
 
+ssh::copy-authorized-keys-to-user() {
+  local userName="$1"
+
+  local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
+
+  if [ ! -f "${userHome}/.ssh/authorized_keys" ]; then
+    dir::sudo-make-if-not-exists "${userHome}/.ssh" 700 "${userName}" "${userName}" || softfail || return $?
+    file::sudo-write "${userHome}/.ssh/authorized_keys" 600 "${userName}" "${userName}" <"${HOME}/.ssh/authorized_keys" || softfail || return $?
+  fi
+}
+
 ssh::import-id() {
   local publicUserId="$1"
   local userName="${2:-"${USER}"}"
@@ -28,9 +39,9 @@ ssh::import-id() {
   local authorizedKeys="${userHome}/.ssh/authorized_keys"
 
   if [ "${userName}" != "${USER}" ]; then
-    dir::sudo-make-if-not-exists-and-set-permissions "${userHome}/.ssh" 700 "${userName}" "${userName}" || fail
+    dir::sudo-make-if-not-exists "${userHome}/.ssh" 700 "${userName}" "${userName}" || fail
   else
-    dir::make-if-not-exists-and-set-permissions "${userHome}/.ssh" 700 || fail
+    dir::make-if-not-exists "${userHome}/.ssh" 700 || fail
   fi
 
   ssh-import-id --output "${authorizedKeys}" "${publicUserId}" || fail
