@@ -114,12 +114,10 @@ task::install-filter() {
   # 1. tailscale
   # 2. apt-key
   # 3. git
-  # 4. systemd
 
   grep -vFx "Success." |\
   grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" |\
   grep -vx "Cloning into '.*'\\.\\.\\." |\
-  grep -vx "Created symlink .* → .*\\."
 
   if ! [[ "${PIPESTATUS[*]}" =~ ^([01][[:blank:]])*[01]$ ]]; then
     softfail || return $?
