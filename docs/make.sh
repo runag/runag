@@ -17,35 +17,35 @@
 . bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
 
 shdoc::install() {
-  local tempDir; tempDir="$(mktemp -d)" || fail
-  git clone --recursive https://github.com/reconquest/shdoc "${tempDir}" || fail
-  (cd "${tempDir}" && make && sudo make install) || fail
-  rm -rf "${tempDir}" || fail
+  local tempDir; tempDir="$(mktemp -d)" || softfail || return $?
+  git clone --recursive https://github.com/reconquest/shdoc "${tempDir}" || softfail || return $?
+  (cd "${tempDir}" && make && sudo make install) || softfail || return $?
+  rm -rf "${tempDir}" || softfail || return $?
 }
 
 docs::make() {
-  rm docs/lib/*.md || fail
+  rm docs/lib/*.md || softfail || return $?
 
-  local filesList; filesList="$(mktemp)" || fail
-  local readmeContent; readmeContent="$(mktemp)" || fail
+  local filesList; filesList="$(mktemp)" || softfail || return $?
+  local readmeContent; readmeContent="$(mktemp)" || softfail || return $?
 
   local file; for file in lib/*.sh; do
     if [ -f "${file}" ]; then
-      local output; output="docs/${file%.*}.md" || fail
-      local file_basename; file_basename="$(basename "${file}")" || fail
+      local output; output="docs/${file%.*}.md" || softfail || return $?
+      local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
 
-      shdoc <"${file}" >"${output}" || fail
+      shdoc <"${file}" >"${output}" || softfail || return $?
       # TODO: I hope that happy moment to enable this line will come
-      # echo "* [${file_basename%%.*}](${output})" >> "${filesList}" || fail
-      echo "* [${file_basename%%.*}](${file})" >> "${filesList}" || fail
+      # echo "* [${file_basename%%.*}](${output})" >> "${filesList}" || softfail || return $?
+      echo "* [${file_basename%%.*}](${file})" >> "${filesList}" || softfail || return $?
     fi
   done
 
-  sort "${filesList}" > "${filesList}.tmp" || fail
-  mv "${filesList}.tmp" "${filesList}" || fail
+  sort "${filesList}" > "${filesList}.tmp" || softfail || return $?
+  mv "${filesList}.tmp" "${filesList}" || softfail || return $?
   
   < README.md awk '/API TOC BEGIN/{ line = 1; next } /API TOC END/{ line = 0 } line' | grep -v "^###" | awk NF | sort > "${readmeContent}"
-  test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
 
   if ! diff --strip-trailing-cr "${readmeContent}" "${filesList}" >/dev/null 2>&1; then
     if command -v git >/dev/null; then
@@ -56,8 +56,8 @@ docs::make() {
     log::error "Please update API TOC in README.md"
   fi
 
-  rm "${filesList}" || fail
-  rm "${readmeContent}" || fail
+  rm "${filesList}" || softfail || return $?
+  rm "${readmeContent}" || softfail || return $?
 }
 
 if ! command -v gawk >/dev/null; then

@@ -19,5 +19,5 @@ imagemagick::set-policy::resource() {
   local value="$2"
   local filePath="${4:-"/etc/ImageMagick-6/policy.xml"}"
 
-  sudo sed --in-place "s/^.*\(<policy domain=\"resource\" name=\"${name}\" value=\"\).*\(\"\/>\)$/\1${value}\2/g" "${filePath}" || fail
+  sudo sed --in-place "s/^.*\(<policy domain=\"resource\" name=\"${name}\" value=\"\).*\(\"\/>\)$/\1${value}\2/g" "${filePath}" || softfail || return $?
 }
