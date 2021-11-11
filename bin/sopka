@@ -59,7 +59,7 @@ sopka::load-sopka-library || {
 
 # == we should have all library functions available by now ==
 
-# I don't use "foo || fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
+# I don't use "user-function || fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
 
 # Load sopkafile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
