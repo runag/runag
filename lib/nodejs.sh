@@ -134,3 +134,10 @@ nodejs::auth-token::save(){
   
   npm set "//${registry}/:_authToken" "${token}" || fail
 }
+
+nodejs::nodenv-path-variable() {
+  local userName="${1:-"${USER}"}"
+  local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
+  echo "${userHome}/.nodenv/shims:${userHome}/.nodenv/bin"
+}
+

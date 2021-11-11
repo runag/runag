@@ -149,6 +149,13 @@ linux::get-user-home() {
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
+# do I need it?
+# linux::cd-user-home() {
+#   local userName="$1"
+#   local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
+#   cd "${userHome}" || softfail || return $?
+# }
+
 linux::get-cpu-count() {
   local cpuCount; cpuCount="$(grep -c ^processor /proc/cpuinfo 2>/dev/null)"
 
@@ -158,3 +165,7 @@ linux::get-cpu-count() {
     echo 1
   fi
 }
+
+linux::get-default-path-variable() {(
+  . /etc/environment && echo "${PATH}" || softfail || return $?
+)}

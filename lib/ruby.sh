@@ -125,3 +125,9 @@ ruby::dangerously-append-nodocument-to-gemrc() {
 ruby::update-system-wide-packages() {
   sudo gem update || fail
 }
+
+ruby::rbenv-path-variable() {
+  local userName="${1:-"${USER}"}"
+  local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
+  echo "${userHome}/.rbenv/shims:${userHome}/.rbenv/bin"
+}

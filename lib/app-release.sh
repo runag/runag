@@ -16,9 +16,11 @@
 
 # APP_DIR
 # APP_RELEASE
+# REMOTE_HOST
+# REMOTE_USER
 
 app-release::init() {
-  local appDir="${APP_DIR:?}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
 
   dir::make-if-not-exists "${appDir}" || softfail || return $?
   dir::make-if-not-exists "${appDir}/repo" || softfail || return $?
@@ -27,9 +29,26 @@ app-release::init() {
   git --bare init "${appDir}/repo" || softfail || return $?
 }
 
+app-release::change-app-dir-group() {
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
+
+  local groupName="$1"
+
+  chgrp "${groupName}" "${appDir}" || softfail || return $?
+}
+
+app-release::get-absolute-app-dir() {
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
+
+  local userHome; userHome="$(linux::get-user-home "${APP_USER}")" || softfail || return $?
+  
+  ( cd "${userHome}" >/dev/null 2>&1 && cd "${appDir}" >/dev/null 2>&1 && pwd ) || softfail "Unable to find application directory" || return $?
+}
+
 app-release::push-local-repo-to-remote() {
-  local gitRemoteUrl="${REMOTE_USER:?}@${REMOTE_HOST:?}:${APP_DIR:?}/repo"
-  local remoteName="${REMOTE_USER}@${REMOTE_HOST}/${APP_DIR}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
+  local gitRemoteUrl="${REMOTE_USER:?}@${REMOTE_HOST:?}:${appDir}/repo"
+  local remoteName="${REMOTE_USER}@${REMOTE_HOST}/${appDir}"
 
   if ! git config "remote.${remoteName}.url" >/dev/null; then
     git remote add "${remoteName}" "${gitRemoteUrl}" || softfail || return $?
@@ -41,7 +60,7 @@ app-release::push-local-repo-to-remote() {
 }
 
 app-release::make() {
-  local appDir="${APP_DIR:?}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
 
   local mode="${1:-}"
   local owner="${2:-}"
@@ -66,7 +85,7 @@ app-release::make() {
 }
 
 app-release::clone() {
-  local appDir="${APP_DIR:?}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"  
   local appReleasePath="${appDir}/releases/${APP_RELEASE:?}"
   
   if [ ! -d "${appReleasePath}/.git" ]; then
@@ -76,7 +95,7 @@ app-release::clone() {
 
 # TODO: link to file? link to dir? Document magic happening here
 app-release::link-shared-file() {
-  local appDir="${APP_DIR:?}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
   local appReleasePath="${appDir}/releases/${APP_RELEASE:?}"
 
   local linkPath="${appReleasePath}/$1"
@@ -103,7 +122,7 @@ app-release::link-shared-file() {
 }
 
 app-release::link-as-current() {
-  local appDir="${APP_DIR:?}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
 
   local linkName="${appDir}/current"
 
@@ -116,7 +135,9 @@ app-release::link-as-current() {
 }
 
 app-release::cleanup() {
-  local appReleasesCollectionPath="${APP_DIR:?}/releases"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
+
+  local appReleasesCollectionPath="${appDir}/releases"
 
   local keepAmount="${1:-10}"
 
@@ -137,16 +158,18 @@ app-release::cleanup() {
 }
 
 app-release::with-release-remote-dir() {
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
   # shellcheck disable=2034
-  local REMOTE_DIR="${APP_DIR:?}/releases/${APP_RELEASE:?}"
+  local REMOTE_DIR="${appDir}/releases/${APP_RELEASE:?}"
   "$@"
 }
 
 app-release::sync-to-remote() {
-  local appReleasePath="${APP_DIR:?}/releases/${APP_RELEASE:?}"
+  local appDir="${APP_DIR:-"${APP_NAME:?}"}"
+  local appReleasePath="${appDir}/releases/${APP_RELEASE:?}"
 
   local sourcePath="$1"
   local destPath="${2:-"$1"}"
 
-  rsync::sync-to-remote "${sourcePath}" "${appReleasePath}/${destPath}" || fail
+  rsync::sync-to-remote "${sourcePath}" "${appReleasePath}/${destPath}" || softfail || return $?
 }
