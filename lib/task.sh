@@ -175,7 +175,7 @@ task::complete() {
 
 # weird stuff
 # -----------
-# onexit(){
+# onexit() {
 #   echo hello
 #   cat out
 #   cat err
@@ -183,7 +183,7 @@ task::complete() {
 #
 # trap "onexit" EXIT
 #
-# thing(){
+# thing() {
 #   echo ok
 #   sleep 30
 # }

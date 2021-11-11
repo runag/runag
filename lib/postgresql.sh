@@ -45,11 +45,11 @@ postgresql::install-dictionaries() {
   fi
 }
 
-psql-su(){
+psql-su() {
   postgresql::psql-su "$@" || softfail || return $?
 }
 
-postgresql::psql-su(){
+postgresql::psql-su() {
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
     if [ -n "${SUDO_USER:-}" ]; then
       local userName="${SUDO_USER}"
@@ -63,15 +63,15 @@ postgresql::psql-su(){
   sudo -i -u "${userName}" psql --username "${userName}" --set ON_ERROR_STOP=on "$@" || softfail || return $?
 }
 
-postgresql::psql-su-run(){
+postgresql::psql-su-run() {
   postgresql::psql-su --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return $?
 }
 
-postgresql::psql(){
+postgresql::psql() {
   psql --set ON_ERROR_STOP=on "$@" || softfail || return $?
 }
 
-postgresql::psql-run(){
+postgresql::psql-run() {
   postgresql::psql --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return $?
 }
 

@@ -32,7 +32,7 @@ nodejs::install::nodenv() {
   NODENV_VERSION="${nodeVersion:-"${NODENV_VERSION:-}"}" nodejs::configure-mismatched-binaries-workaround || softfail || return $?
 }
 
-nodejs::install-and-update::apt(){
+nodejs::install-and-update::apt() {
   local nodeVersion="$1"
   
   nodejs::install::apt "${nodeVersion}" || softfail || return $?
@@ -122,13 +122,13 @@ nodejs::update-system-wide-packages() {
 
 # bitwarden::use password "test record" nodejs::auth-token registry.npmjs.org
 
-nodejs::auth-token::exists(){
+nodejs::auth-token::exists() {
   local registry="${1:-"registry.npmjs.org"}"
   test -f "${HOME}/.npmrc" || return 1
   grep -qF "//${registry}/:_authToken" "${HOME}/.npmrc"
 }
 
-nodejs::auth-token::save(){
+nodejs::auth-token::save() {
   local token="$1"
   local registry="${2:-"registry.npmjs.org"}"
   
@@ -140,4 +140,3 @@ nodejs::nodenv-path-variable() {
   local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
   echo "${userHome}/.nodenv/shims:${userHome}/.nodenv/bin"
 }
-

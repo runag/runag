@@ -56,7 +56,7 @@ git::install-libsecret-credential-helper() {
   fi
 }
 
-git::use-libsecret-credential-helper(){
+git::use-libsecret-credential-helper() {
   git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }
 

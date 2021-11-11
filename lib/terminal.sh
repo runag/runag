@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-terminal::have-16-colors(){
+terminal::have-16-colors() {
   local amount
   command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
 }

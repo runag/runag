@@ -173,14 +173,14 @@ mount::wait-until-available() {
   done
 }
 
-fs::source(){
+fs::source() {
   local selfDir
   selfDir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
 
   . "${selfDir}/$2" || softfail "Unable to load: ${selfDir}/$2" || return $?
 }
 
-fs::recursive-source(){
+fs::recursive-source() {
   local selfDir filePath
   
   selfDir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?

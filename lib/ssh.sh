@@ -380,17 +380,17 @@ ssh::task-with-remote-temp-copy() {
   return "${taskResult}"
 }
 
-ssh::task::softfail(){
+ssh::task::softfail() {
   # Please note: tempDir and remoteTempDir variables are not function-local for this function
   local message="$1"
   softfail "${message}${tempDir:+". Local task: ${tempDir}."}${remoteTempDir:+". Remote task: ${remoteTempDir}"}" "${@:2}"
 }
 
-ssh::task::invoke(){
+ssh::task::invoke() {
   ssh::task::raw-invoke "$@" || ssh::task::softfail "ssh::task::raw-invoke call failed" $? || return $?
 }
 
-ssh::task::quiet-on-ssh-errors-invoke(){
+ssh::task::quiet-on-ssh-errors-invoke() {
   local errorMessage="$1"
 
   ssh::task::raw-invoke "${@:2}"
@@ -407,13 +407,13 @@ ssh::task::quiet-on-ssh-errors-invoke(){
   fi
 }
 
-ssh::task::raw-invoke(){
+ssh::task::raw-invoke() {
   # Please note: remoteTempDir variable is not function-local for this function
   # shellcheck disable=2029
   ssh "${sshArgs[@]}" "${REMOTE_HOST}" "$(printf "sh -c %q" "$(printf "tempDir=%q; $1" "${remoteTempDir}" "${@:2}")")"
 }
 
-ssh::task::nohup-raw-invoke(){
+ssh::task::nohup-raw-invoke() {
   # Keep an eye on this
   # Bug 396 - sshd orphans processes when no pty allocated
   # https://bugzilla.mindrot.org/show_bug.cgi?id=396
@@ -422,7 +422,7 @@ ssh::task::nohup-raw-invoke(){
   ssh "${sshArgs[@]}" "${REMOTE_HOST}" "$(printf "sh -c %q" "$(printf "nohup sh -c %q >/dev/null 2>/dev/null </dev/null" "$(printf "tempDir=%q; $1" "${remoteTempDir}" "${@:2}")")")"
 }
 
-ssh::task::information-message(){
+ssh::task::information-message() {
   local message="$1"
   if [ -t 2 ]; then
     test -t 2 && terminal::color 12 >&2
@@ -516,7 +516,7 @@ ssh::task::store-stdin() {
 }
 
 # shellcheck disable=2016
-ssh::task::get-result(){
+ssh::task::get-result() {
   # Please note: taskStatus and tempDir variables are not function-local for this function
 
   if [ "${taskStatus}" = 255 ]; then

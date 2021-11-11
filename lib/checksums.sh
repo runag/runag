@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-checksums::create-or-update(){
+checksums::create-or-update() {
   local directory="$1"
   local currentChecksumFile="$2"
   local checksumAlgo="${3:-"sha3-256"}"

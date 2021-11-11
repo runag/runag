@@ -18,7 +18,7 @@ rails::get-database-config() {
   ruby <(rails::get-database-config::ruby-script) "$1" || softfail "Unable to get database config from ruby" || return $?
 }
 
-rails::get-database-config::ruby-script(){
+rails::get-database-config::ruby-script() {
   cat <<RUBY
     require "yaml"
 
