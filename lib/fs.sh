@@ -91,6 +91,10 @@ dir::default-mode() {
   printf "%o" "$(( 0777 ^ "${umaskValue}" ))" || softfail || return $?
 }
 
+dir::default-mode-with-remote-umask() {
+  printf "%o" "$(( 0777 ^ "0${REMOTE_UMASK}" ))" || softfail || return $?
+}
+
 file::sudo-write() {
   local dest="$1"
   local mode="${2:-}"
