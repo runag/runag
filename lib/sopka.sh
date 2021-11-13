@@ -49,6 +49,10 @@ sopka::linux::dangerously-set-hostname() {
   log::success "Done" || softfail || return $?
 }
 
+sopka::install-as-repository-clone() {
+  git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
+}
+
 sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || softfail || return $?

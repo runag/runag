@@ -59,6 +59,14 @@ app-release::push-local-repo-to-remote() {
   git push "${remoteName}" master || softfail || return $?
 }
 
+app-release::make-with-group() {
+  local groupName="$1"
+
+  local dirMode; dirMode="$(dir::default-mode)" || softfail || return $?
+
+  app-release::make "${dirMode}" "${APP_USER}" "${groupName}" || softfail || return $?
+}
+
 app-release::make() {
   local appDir="${APP_DIR:-"${APP_NAME:?}"}"
 
@@ -75,6 +83,9 @@ app-release::make() {
 
   if [ -n "${mode}" ]; then
     chmod "${mode}" "${releasesPath}/${releaseDir}" || softfail || return $?
+  else
+    local dirMode; dirMode="$(dir::default-mode)" || softfail || return $?
+    chmod "${dirMode}" "${releasesPath}/${releaseDir}" || softfail || return $?
   fi
 
   if [ -n "${owner}" ]; then
@@ -122,6 +133,15 @@ app-release::link-shared-file() {
 }
 
 app-release::link-as-current() {
+  if [ "${USER}" != "${APP_USER}" ]; then
+    local userHome; userHome="$(linux::get-user-home "${APP_USER}")" || softfail || return $?
+    ( cd "${userHome}" && app-release::link-as-current::perform "$@" ) || softfail || return $?
+  else
+    app-release::link-as-current::perform "$@" || softfail || return $?
+  fi
+}
+
+app-release::link-as-current::perform() {
   local appDir="${APP_DIR:-"${APP_NAME:?}"}"
 
   local linkName="${appDir}/current"

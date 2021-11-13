@@ -86,6 +86,11 @@ dir::remove-if-exists-and-empty() {
   rmdir "${dirPath}" 2>/dev/null || true
 }
 
+dir::default-mode() {
+  local umaskValue; umaskValue="$(umask)" || softfail || return $?
+  printf "%o" "$(( 0777 ^ "${umaskValue}" ))" || softfail || return $?
+}
+
 file::sudo-write() {
   local dest="$1"
   local mode="${2:-}"
