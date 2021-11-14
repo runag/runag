@@ -169,3 +169,19 @@ linux::get-cpu-count() {
 linux::get-default-path-variable() {(
   . /etc/environment && echo "${PATH}" || softfail || return $?
 )}
+
+linux::get-ipv4-address() {
+  local ipAddress; ipAddress="$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/^.*src \([[:digit:].]*\).*$/\1/p'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain host ipv6 address" || return $?
+  if [ -z "${ipAddress}" ]; then
+    softfail "Unable to obtain host ipv6 address" || return $?
+  fi
+  echo "${ipAddress}"
+}
+
+linux::get-ipv6-address() {
+  local ipAddress; ipAddress="$(ip route get 2606:4700:4700::1111 2>/dev/null | sed -n 's/^.*src \([[:xdigit:]:]*\).*$/\1/p'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain host ipv6 address" || return $?
+  if [ -z "${ipAddress}" ]; then
+    softfail "Unable to obtain host ipv6 address" || return $?
+  fi
+  echo "${ipAddress}"
+}
