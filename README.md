@@ -74,9 +74,11 @@ Please refer to the source code for now.
 * [git](lib/git.sh)
 * [imagemagick](lib/imagemagick.sh)
 * [nodejs](lib/nodejs.sh)
+* [nodenv](lib/nodenv.sh)
 * [postgresql](lib/postgresql.sh)
 * [python](lib/python.sh)
 * [rails](lib/rails.sh)
+* [rbenv](lib/rbenv.sh)
 * [ruby](lib/ruby.sh)
 
 ### Networking and access to remote systems
@@ -91,11 +93,13 @@ Please refer to the source code for now.
 
 * [github](lib/github.sh)
 * [leaseweb](lib/leaseweb.sh)
+* [letsencrypt](lib/letsencrypt.sh)
 
 ### Application deployment
 
 * [app-env](lib/app-env.sh)
 * [app-release](lib/app-release.sh)
+* [app-units](lib/app-units.sh)
 
 ### Desktop applications
 
