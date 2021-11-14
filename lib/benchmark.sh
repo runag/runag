@@ -24,7 +24,7 @@ benchmark::is-available() {
 }
 
 benchmark::install::apt() {
-  apt::install sysbench || softfail || $?
+  apt::install sysbench || softfail || return $?
 }
 
 benchmark::run() {

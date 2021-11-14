@@ -96,9 +96,9 @@ apt::install-gnome-keyring-and-libsecret() {
 }
 
 apt::install-sopka-essential-dependencies() {
-  apt::install curl git jq || softfail || $?
+  apt::install curl git jq || softfail || return $?
 }
 
 apt::install-display-if-restart-required-dependencies() {
-  apt::install debian-goodies || softfail || $?
+  apt::install debian-goodies || softfail || return $?
 }
