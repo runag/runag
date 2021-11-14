@@ -1,4 +1,32 @@
+<!--
+Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # 🏔️ Sopka
+
+Sopka is my attempt to tame the complexity of deploying software.
+
+I do not try to solve all problems that might arise in that enormous field. On the contrary, I keep a narrow scope to solve just my own problems. But, doing that, I spent lot of my time to coin an API and scripting environment that might help other people too.
+
+Those people might never come, but it brightens my mood then I solve my own software problems by writing nice, declarative scripts in the meantime.
+
+You are looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with it please check those other repositories:
+
+  * [🚞 Sopkafile to configure my workstation](https://github.com/senotrusov/sopkafile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
+
+  * [Example sopkafile with rails and node](https://github.com/senotrusov/example-sopkafile-with-rails-and-node). That I use to deploy my Rails/Node projects to the Linux servers. I usually put that into the project folder to extend with project-specific stuff.
 
 ## One-liner to deploy sopka an a new machine
 
@@ -20,6 +48,8 @@ run [function-name [function-arguments]]
 
 ## Sopkafile
 
+Sopka is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Sopka into your scripts with `. sopka` or you could make a file called `sopkafile` and then run `sopka`.
+
 Possible sopkafile locations are:
 
 ```sh
@@ -34,7 +64,7 @@ Possible sopkafile locations are:
 
 ## API docs
 
-Please refer to the source code for now.
+I slowly try to document that thing. Please refer to the source code for now.
 
 <!-- API TOC BEGIN -->
 
@@ -265,3 +295,5 @@ SOPKA_TASK_TITLE
 ## Contributing
 
 Please check shell scripts before commiting any changes with `npm run lint`.
+
+I mostly follow [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html), except for the function names. Function names here are more similar to those you would meet in LISP.
