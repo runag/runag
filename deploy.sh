@@ -232,8 +232,8 @@ task::detect-fail-state ()
 }
 task::install-filter () 
 { 
-    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\." | grep -vx "Created symlink .* → .*\\.";
-    if [[ "${PIPESTATUS[*]}" =~ "2" ]]; then
+    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\.";
+    if ! [[ "${PIPESTATUS[*]}" =~ ^([01][[:blank:]])*[01]$ ]]; then
         softfail || return $?;
     fi
 }
