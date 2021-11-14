@@ -14,8 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+leaseweb::domains::get-short-record() {
+  local record="$1"
+  local recordType="$2"
+
+  leaseweb::domains::list "${record}" "${recordType}" | jq --exit-status 'del(._links, .editable)'
+  test "${PIPESTATUS[*]}" = "0 0" || fail
+}
+
 leaseweb::domains::list() {(
-  local domain="$1"
+  local record="$1"
+  local recordType="$2"
+
+  local domain; domain="$(leaseweb::domains::extract-domain-from-host "${record}")" || softfail || return $?
   local apiKey; apiKey="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
   curl \
@@ -24,10 +35,11 @@ leaseweb::domains::list() {(
     --request GET \
     --show-error \
     --silent \
-    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets" \
+    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType}" \
       || softfail || return $?
 )}
 
+# 1m 5m 30m 1h 4h 8h 12h 1d
 leaseweb::domains::set-record() {(
   local record="$1"
   local recordTtl="$2"
@@ -61,7 +73,7 @@ leaseweb::domains::set-record() {(
     --request GET \
     --show-error \
     --silent \
-    --url https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType} \
+    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType}" \
     --write-out "%{http_code}" \
     )" || softfail || return $?
 
