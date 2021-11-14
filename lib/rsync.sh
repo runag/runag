@@ -62,9 +62,9 @@ rsync::run() {
   ssh::set-args || softfail || return $?
 
   local sshArgsString
-  printf -v sshArgsString "'%s' " "${sshArgs[@]}" || softfail || return $?
+  printf -v sshArgsString " '%s'" "${sshArgs[@]}" || softfail || return $?
 
-  rsync --rsh "ssh ${sshArgsString}" "$@" || softfail || return $?
+  rsync --rsh "ssh ${sshArgsString:1}" "$@" || softfail || return $?
 }
 
 # REMOTE_HOST=example.com sopka rsync::upload ~/.sopka/ .sopka
