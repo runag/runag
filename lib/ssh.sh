@@ -177,6 +177,28 @@ ssh::remove-host-from-known-hosts() {
   ssh-keygen -R "${hostName}" || fail
 }
 
+ssh::without-control-master() {
+  REMOTE_CONTROL_MASTER=no "$@"
+}
+
+# shellcheck disable=2030
+ssh::with-ssh-args() {(
+  if ! declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
+    REMOTE_SSH_ARGS=()
+  fi
+
+  local item; for item in "$@"; do
+    if [ "${item}" = "--" ]; then
+      shift
+      break
+    fi
+    REMOTE_SSH_ARGS+=("${item}")
+    shift
+  done
+
+  "$@"
+)}
+
 ssh::set-args() {
   # Please note: sshArgs variable is not function-local for this function
 
@@ -450,7 +472,7 @@ ssh::task() {
   local taskStatus=$?
 
   if [ "${taskStatus}" = 255 ]; then
-    ssh::task::information-message "Transport error getting the command exit status, attempting to reconnect..."
+    ssh::task::information-message "Got 255 as an exit status from local ssh command. That could be transport error or remote command may actually return 255. Will now attempt to reconnect to get a real remote command exit status and stdio streams..."
   fi
 
   local maxRetries="${SOPKA_TASK_RECONNECT_ATTEMPTS:-120}"
