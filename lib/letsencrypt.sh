@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 letsencrypt::agree-tos-and-register-unsafely-without-email() {
-  if [ -z "$(ls -A /etc/letsencrypt/accounts)" ]; then
+  if [ ! -d /etc/letsencrypt/accounts ] || [ -z "$(ls -A /etc/letsencrypt/accounts)" ]; then
     sudo letsencrypt register \
       --agree-tos \
       --register-unsafely-without-email \
