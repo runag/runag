@@ -241,7 +241,7 @@ ssh::shell-options() {
 }
 
 ssh::remote-env::base-list() {
-  echo "SOPKA_UPDATE_SECRETS SOPKA_TASK_VERBOSE SOPKA_VERBOSE"
+  echo "SOPKA_UPDATE_SECRETS SOPKA_TASK_VERBOSE SOPKA_VERBOSE SOPKA_STDOUT_IS_TERMINAL SOPKA_STDERR_IS_TERMINAL"
 }
 
 ssh::remote-env() {
@@ -299,6 +299,16 @@ ssh::before-run() {
   ssh::set-args || softfail "Unable to set ssh args" || return $?
 
   tempDir="$(mktemp -d)" || softfail "Unable to make temp file" || return $?
+
+  # shellcheck disable=2034
+  if [ -t 1 ]; then
+    local SOPKA_STDOUT_IS_TERMINAL=true
+  fi
+
+  # shellcheck disable=2034
+  if [ -t 2 ]; then
+    local SOPKA_STDERR_IS_TERMINAL=true
+  fi
 
   ssh::script "$@" >"${tempDir}/script" || softfail "Unable to produce script" || return $?
 
