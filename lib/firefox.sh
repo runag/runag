@@ -17,7 +17,7 @@
 firefox::enable-wayland() {
   local pamFile="${HOME}/.pam_environment"
 
-  touch "${pamFile}" || softfail || return $?
+  ( umask 0137 && touch "${pamFile}" ) || softfail || return $?
 
   if ! grep -q "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
     echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || softfail || return $?

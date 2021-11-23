@@ -43,3 +43,15 @@ rails::get-database-config::ruby-script() {
     puts value
 RUBY
 }
+
+rails::is-migration-pending() {
+  # I count lines here because "grep -q" will stop on first match and then
+  # rails will abort with pipe error and with an error message
+  bin/rails db:migrate:status | grep -cE "^[[:space:]]+down" >/dev/null
+
+  local savedPipeStatus=("${PIPESTATUS[@]}")
+
+  test "${savedPipeStatus[0]}" = 0 || fail "Error performing 'bin/rails db:migrate:status'"
+
+  test "${savedPipeStatus[1]}" = 0
+}

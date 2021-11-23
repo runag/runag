@@ -50,6 +50,6 @@ ruby::install-dependencies-by-apt() {
 
 ruby::dangerously-append-nodocument-to-gemrc() {
   local gemrcFile="${HOME}/.gemrc"
-  (umask 177 && touch "${gemrcFile}") || softfail || return $?
+  ( umask 0177 && touch "${gemrcFile}" ) || softfail || return $?
   file::append-line-unless-present "gem: --no-document" "${gemrcFile}" || softfail || return $?
 }

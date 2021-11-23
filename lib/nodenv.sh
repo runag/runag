@@ -62,6 +62,10 @@ nodenv::load-shellrc() {
   shellrc::load "nodenv" || softfail || return $?
 }
 
+nodenv::load-shellrc-if-exists() {
+  shellrc::load-if-exists "nodenv" || softfail || return $?
+}
+
 nodenv::path-variable() {
   local userName="${1:-"${USER}"}"
   local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?

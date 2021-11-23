@@ -110,7 +110,7 @@ ssh::macos-keychain::configure-use-on-all-hosts() {
   local sshConfigFile="${HOME}/.ssh/config"
 
   if [ ! -f "${sshConfigFile}" ]; then
-    touch "${sshConfigFile}" || fail
+    ( umask 0177 && touch "${sshConfigFile}" ) || fail
   fi
 
   if ! grep -q "^# Use keychain" "${sshConfigFile}"; then
@@ -158,7 +158,7 @@ ssh::add-host-to-known-hosts() {
 
   if [ ! -f "${knownHosts}" ]; then
     ssh::make-user-config-dir-if-not-exists || fail
-    (umask 133 && touch "${knownHosts}") || fail
+    ( umask 0177 && touch "${knownHosts}") || fail
   fi
 
   if [ "${sshPort}" = "22" ]; then
@@ -177,11 +177,22 @@ ssh::remove-host-from-known-hosts() {
   ssh-keygen -R "${hostName}" || fail
 }
 
+# shellcheck disable=2030
+ssh::with-forward-agent() {(
+  if ! declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
+    REMOTE_SSH_ARGS=()
+  fi
+
+  REMOTE_SSH_ARGS+=("-o" "ForwardAgent=yes")
+  REMOTE_CONTROL_PATH="${HOME}/.ssh/control-socket.with-forward-agent.%C"
+  "$@"
+)}
+
 ssh::without-control-master() {
   REMOTE_CONTROL_MASTER=no "$@"
 }
 
-# shellcheck disable=2030
+# shellcheck disable=2030,2031
 ssh::with-ssh-args() {(
   if ! declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
     REMOTE_SSH_ARGS=()
@@ -225,6 +236,7 @@ ssh::set-args() {
     sshArgs+=("-l" "${REMOTE_USER}")
   fi
 
+  # shellcheck disable=2031
   if declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
     sshArgs=("${sshArgs[@]}" "${REMOTE_SSH_ARGS[@]}")
   fi

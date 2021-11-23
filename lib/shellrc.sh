@@ -24,7 +24,7 @@ shellrc::install-loader() {
   if [ ! -f "${shellrcFile}" ]; then
     # ubuntu default seems to be 133 (rw-r--r--)
     # I'll try 137 (rw-r-----) to see if there are any downsides of that
-    (umask 137 && touch "${shellrcFile}") || fail
+    ( umask 0137 && touch "${shellrcFile}" ) || fail
   fi
 
   if ! grep -Fxq "# shellrc.d loader" "${shellrcFile}"; then
@@ -67,6 +67,16 @@ shellrc::load() {
   local shellrcDir="${HOME}/.shellrc.d"
 
   . "${shellrcDir}/${name}.sh" || fail
+}
+
+shellrc::load-if-exists() {
+  local name="$1"
+
+  local shellrcDir="${HOME}/.shellrc.d"
+
+  if [ -f "${shellrcDir}/${name}.sh" ]; then
+    . "${shellrcDir}/${name}.sh" || fail
+  fi
 }
 
 shellrc::install-sopka-path-rc() {

@@ -127,9 +127,9 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 ### Application deployment
 
-* [app-env](lib/app-env.sh)
 * [app-release](lib/app-release.sh)
 * [app-units](lib/app-units.sh)
+* [direnv](lib/direnv.sh)
 
 ### Desktop applications
 
