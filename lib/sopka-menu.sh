@@ -63,13 +63,13 @@ sopka-menu::clear() {
 }
 
 sopka-menu::add-defaults() {
-  sopka-menu::add-header "Sopka default menu" || fail
-
+  sopka-menu::add-header "Same menu but with flags set" || fail
   sopka-menu::add sopka::with-update-secrets sopka-menu::display || softfail || return $?
   sopka-menu::add sopka::with-verbose-tasks sopka-menu::display || softfail || return $?
   sopka-menu::add-delimiter || softfail || return $?
 
   if [[ "${OSTYPE}" =~ ^linux ]]; then
+    sopka-menu::add-header "Linux host" || fail
     sopka-menu::add sopka::linux::dangerously-set-hostname || softfail || return $?
     if linux::display-if-restart-required::is-available; then
       sopka-menu::add sopka::linux::display-if-restart-required || softfail || return $?
@@ -78,15 +78,15 @@ sopka-menu::add-defaults() {
     if benchmark::is-available; then
       sopka-menu::add sopka::linux::run-benchmark || softfail || return $?
     fi
+    if command -v psql >/dev/null; then
+      sopka-menu::add psql-su || softfail || return $?
+    fi
     sopka-menu::add-delimiter || softfail || return $?
   fi
 
   if [ -d "${HOME}/.sopka" ]; then
+    sopka-menu::add-header "Sopka and sopkafiles" || fail
     sopka-menu::add sopka::update || softfail || return $?
     sopka-menu::add-delimiter || softfail || return $?
-  fi
-
-  if command -v psql >/dev/null; then
-    sopka-menu::add psql-su || softfail || return $?
   fi
 }
