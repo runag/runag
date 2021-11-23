@@ -126,6 +126,6 @@ app-units::sopka-menu::add-all::remote() {
   sopka-menu::add "$1" ssh::task "$2" app-units::restart || softfail || return $?
   sopka-menu::add "$1" ssh::task "$2" app-units::restart-services || softfail || return $?
   sopka-menu::add "$1" ssh::task-verbose "$2" app-units::statuses || softfail || return $?
-  sopka-menu::add "$1" "ssh::run $(printf "%q" "$2") app-units::journal --since yesterday --follow || true" || softfail || return $?
-  sopka-menu::add "$1" "ssh::run $(printf "%q" "$2") app-units::follow-journal || true" || softfail || return $?
+  sopka-menu::add-raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app-units::journal --since yesterday --follow || true" || softfail || return $?
+  sopka-menu::add-raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app-units::follow-journal || true" || softfail || return $?
 }

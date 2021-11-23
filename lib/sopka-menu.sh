@@ -18,7 +18,31 @@ sopka-menu::add() {
   if [ -z ${SOPKA_MENU:+x} ]; then
     SOPKA_MENU=()
   fi
-  SOPKA_MENU+=("$*")
+
+  local commandString; printf -v commandString " %q" "$@" || softfail "Unable to produce command string" || return $?
+  SOPKA_MENU+=("${commandString:1}")
+}
+
+sopka-menu::add-raw() {
+  if [ -z ${SOPKA_MENU:+x} ]; then
+    SOPKA_MENU=()
+  fi
+
+  SOPKA_MENU+=("$1")
+}
+
+sopka-menu::add-delimiter() {
+  if [ -z ${SOPKA_MENU:+x} ]; then
+    SOPKA_MENU=()
+  fi
+  SOPKA_MENU+=("")
+}
+
+sopka-menu::add-header() {
+  if [ -z ${SOPKA_MENU:+x} ]; then
+    SOPKA_MENU=()
+  fi
+  SOPKA_MENU+=("#$1")
 }
 
 sopka-menu::display() {
@@ -38,43 +62,29 @@ sopka-menu::clear() {
   SOPKA_MENU=()
 }
 
-sopka-menu::sort() {
-  if [ -n "${SOPKA_MENU:+x}" ]; then
-    local previousIFS="${IFS}"
-    IFS=$'\n'
-    # shellcheck disable=SC2207
-    SOPKA_MENU=($(
-      grep -F "::" <<<"${SOPKA_MENU[*]}" | sort
-      savedPipeStatus="${PIPESTATUS[*]}"
-      if [ "${savedPipeStatus}" != 0$'\n'0 ] && [ "${savedPipeStatus}" != 1$'\n'0 ]; then exit 1; fi
-
-      grep -vF "::" <<<"${SOPKA_MENU[*]}" | sort
-      savedPipeStatus="${PIPESTATUS[*]}"
-      if [ "${savedPipeStatus}" != 0$'\n'0 ] && [ "${savedPipeStatus}" != 1$'\n'0 ]; then exit 1; fi
-
-      )) || { softfail "Unable to sort menu"; IFS="$previousIFS"; return 1; }
-    IFS="$previousIFS"
-  fi
-}
-
 sopka-menu::add-defaults() {
+  sopka-menu::add-header "Sopka default menu" || fail
+
+  sopka-menu::add sopka::with-update-secrets sopka-menu::display || softfail || return $?
+  sopka-menu::add sopka::with-verbose-tasks sopka-menu::display || softfail || return $?
+  sopka-menu::add-delimiter || softfail || return $?
+
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     sopka-menu::add sopka::linux::dangerously-set-hostname || softfail || return $?
     if linux::display-if-restart-required::is-available; then
       sopka-menu::add sopka::linux::display-if-restart-required || softfail || return $?
     fi
-  fi
 
-  if benchmark::is-available; then
-    sopka-menu::add sopka::linux::run-benchmark || softfail || return $?
+    if benchmark::is-available; then
+      sopka-menu::add sopka::linux::run-benchmark || softfail || return $?
+    fi
+    sopka-menu::add-delimiter || softfail || return $?
   fi
 
   if [ -d "${HOME}/.sopka" ]; then
     sopka-menu::add sopka::update || softfail || return $?
+    sopka-menu::add-delimiter || softfail || return $?
   fi
-
-  sopka-menu::add "sopka::with-update-secrets sopka-menu::display" || softfail || return $?
-  sopka-menu::add "sopka::with-verbose-tasks sopka-menu::display" || softfail || return $?
 
   if command -v psql >/dev/null; then
     sopka-menu::add psql-su || softfail || return $?

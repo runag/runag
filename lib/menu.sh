@@ -15,48 +15,43 @@
 #  limitations under the License.
 
 menu::select-and-run() {
-  local list=("$@")
+  local commandsList=()
 
   if ! [ -t 0 ] || ! [ -t 1 ]; then
     softfail "Menu was called while not in terminal"
     return $?
   fi
 
-  local colorA="" colorB="" defaultColor=""
-  if [ -t 1 ]; then
-    colorA="$(terminal::color 13)" || softfail || return $?
-    colorB="$(terminal::color 15)" || softfail || return $?
-    defaultColor="$(terminal::default-color)" || softfail || return $?
-  fi
+  local colorA; colorA="$(terminal::color 13)" || softfail || return $?
+  local colorB; colorB="$(terminal::color 15)" || softfail || return $?
+  local headerColor; headerColor="$(terminal::color 14)" || softfail || return $?
+  local defaultColor; defaultColor="$(terminal::default-color)" || softfail || return $?
 
+  local index=1 item currentColor=""
   echo ""
-  local index item nextItem group nextGroup lastGroup="" lastGroupIsBig=false currentColor=""
-  for index in "${!list[@]}"; do
-    item="${list[${index}]}"
-    nextItem="${list[$((index+1))]:-}"
 
-    group="$(echo "${item}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
-    nextGroup="$(echo "${nextItem}" | sed 's/ .*$//' | sed 's/::[^:]*$//'; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+  for item in "$@"; do
+    if [ -z "${item}" ]; then
+      echo ""
+      currentColor=""
 
-    if [ "${lastGroup}" = "${group}" ]; then
-      lastGroupIsBig=true
-    else    
-      if [ "${lastGroup}" != "" ]; then
-        if [ "${lastGroupIsBig}" = true ] || [ "${nextGroup}" = "${group}" ]; then
-          echo ""
-        fi
-      fi
-      lastGroup="${group}"
-      lastGroupIsBig=false
-    fi
+    elif [[ "${item}" =~ ^\# ]]; then
+      echo "  ${headerColor}== ${item:1} ==${defaultColor}"
+      currentColor=""
 
-    if [ "${currentColor}" = "${colorA}" ]; then
-      currentColor="${colorB}"
     else
-      currentColor="${colorA}"
-    fi
+      if [ "${currentColor}" = "${colorA}" ]; then
+        currentColor="${colorB}"
+      else
+        currentColor="${colorA}"
+      fi
 
-    echo "  ${currentColor}$((index+1))) ${item}${defaultColor}"
+      echo "  ${currentColor}$((index))) ${item}${defaultColor}"
+      
+      ((index+=1))
+      commandsList+=("${item}")
+
+    fi
   done
 
   echo ""
@@ -81,12 +76,12 @@ menu::select-and-run() {
     return $?
   fi
 
-  if [ -z "${list[$((inputText-1))]:+x}" ]; then
+  if [ -z "${commandsList[$((inputText-1))]:+x}" ]; then
     softfail "Selected number is not in the list"
     return $?
   fi
 
-  local selectedItem="${list[$((inputText-1))]}"
+  local selectedItem="${commandsList[$((inputText-1))]}"
 
   # I use "test" instead of "|| fail" here in case if someone wants
   # to use "set -o errexit" in their functions
@@ -94,9 +89,6 @@ menu::select-and-run() {
   eval "${selectedItem}"
   softfail-unless-good "Error performing ${selectedItem}" $? || return $?
 
-  if [ -t 1 ]; then
-    log::success "Done: ${selectedItem}"
-  fi
-
+  log::success "Done: ${selectedItem}"
   return 0
 }
