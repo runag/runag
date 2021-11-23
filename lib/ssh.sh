@@ -147,9 +147,15 @@ ssh::refresh-host-in-known-hosts() {
   ssh::add-host-to-known-hosts "${hostName}" || fail
 }
 
+ssh::add-remote-to-known-hosts-and-then() {
+  ssh::add-host-to-known-hosts || softfail || return $?
+  "$@"
+}
+
 ssh::add-host-to-known-hosts() {
   local hostName="${1:-"${REMOTE_HOST}"}"
   local sshPort="${2:-"${REMOTE_PORT:-"22"}"}"
+
   local knownHosts="${HOME}/.ssh/known_hosts"
 
   if ! command -v ssh-keygen >/dev/null; then
