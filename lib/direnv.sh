@@ -14,10 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+direnv::write-file() {
+  local name="$1"
+
+  local dirName=".direnv.d"
+  dir::make-if-not-exists "${dirName}" 700 || fail
+
+  cat | file::write "${dirName}/${name}.sh" 600 || fail
+
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}
+
 direnv::write-block() {
   local blockName="$1"
   local fileName="${2:-".envrc"}"
-  local mode="${3:-"0640"}"
+  local mode="${3:-"0600"}"
 
   if [ -n "${mode}" ]; then
     local umaskValue
@@ -32,22 +43,34 @@ direnv::write-block() {
   direnv allow "${fileName}" || softfail || return $?
 }
 
-direnv::write-env() {
-  # TODO: if 1st argument starts with 0 threat it as file mode
-  local blockName="$1"
-  direnv::write-env-file ".envrc" "${blockName}" "${@:2}" || softfail || return $?
+direnv::save-variables() {
+  local item; for item in "$@"; do
+    printf "export ${item}=%q\n" "${!item}" || softfail || return $?
+  done
 }
 
-direnv::write-env-file() {
-  # TODO: if 2nd argument starts with 0 threat it as file mode
+direnv::save-variables-to-block() {
+  local blockName="$1"
+  direnv::save-variables "${@:2}" | direnv::write-block "${blockName}"
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}
+
+direnv::save-variables-to-file() {
   local fileName="$1"
-  local blockName="$2"
+  direnv::save-variables "${@:2}" | direnv::write-file "${fileName}"
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}
 
-  local item; for item in "${@:3}"; do
-    printf "export ${item}=%q\n" "${!item}"
-  done | direnv::write-block "${blockName}" "${fileName}"
+direnv::directory-loader() {
+  cat <<'SHELL'
+for file in .direnv.d/*.sh; do
+  . "${file}" || echo "Unable to load ${file} ($?)" >&2
+done
+SHELL
+}
 
-  if [[ "${PIPESTATUS[*]}" =~ [^0[:space:]] ]]; then
-    softfail || return $?
-  fi
+direnv::save-directory-loader-to-block() {
+  local blockName="${1:"directory-loader"}"
+  direnv::directory-loader | direnv::write-block "${blockName}"
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
