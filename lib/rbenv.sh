@@ -82,6 +82,11 @@ rbenv::load-shellrc-if-exists() {
   shellrc::load-if-exists "rbenv" || softfail || return $?
 }
 
+rbenv::with-shellrc() {(
+  rbenv::load-shellrc || softfail || return $?
+  "$@"
+)}
+
 rbenv::path-variable() {
   local userName="${1:-"${USER}"}"
   local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
