@@ -41,6 +41,12 @@ rbenv::install-shellrc() {
     local output; output="$(shellrc::get-filename "rbenv")" || softfail || return $?
   fi
 
+  local rubyConfigureOptsLine=""
+  if [ -n "${RUBY_CONFIGURE_OPTS}" ]; then
+    # shellcheck disable=SC1083
+    rubyConfigureOptsLine="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}$(printf "%q" "${RUBY_CONFIGURE_OPTS}")"" || softfail || return $?
+  fi
+
   local opensslLine=""
   if [[ "${OSTYPE}" =~ ^darwin ]] && command -v brew >/dev/null; then
     local opensslDir; opensslDir="$(brew --prefix openssl@1.1)" || softfail || return $?
@@ -60,7 +66,7 @@ fi
 if command -v rbenv >/dev/null; then
   if [ -z \${SOPKA_RBENV_INITIALIZED+x} ]; then
     eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
-    export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--disable-install-doc"
+    ${rubyConfigureOptsLine}
     ${opensslLine}
     export SOPKA_RBENV_INITIALIZED=true
   fi
