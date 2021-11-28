@@ -14,21 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopka::with-update-secrets() {
+sopka::with-update-secrets() {(
   if [ -t 1 ]; then
     log::notice "SOPKA_UPDATE_SECRETS flag is set" || fail
   fi
   export SOPKA_UPDATE_SECRETS=true
   "$@"
-}
+)}
 
-sopka::with-verbose-tasks() {
+sopka::with-verbose-tasks() {(
   if [ -t 1 ]; then
     log::notice "SOPKA_TASK_VERBOSE flag is set" || fail
   fi
   export SOPKA_TASK_VERBOSE=true
   "$@"
-}
+)}
 
 sopka::linux::run-benchmark() {
   benchmark::run || softfail || return $?
