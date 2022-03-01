@@ -42,7 +42,7 @@ rbenv::install_shellrc() {
   fi
 
   local ruby_configure_opts_line=""
-  if [ -n "${RUBY_CONFIGURE_OPTS}" ]; then
+  if [ -n "${RUBY_CONFIGURE_OPTS:-}" ]; then
     # shellcheck disable=SC1083
     ruby_configure_opts_line="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}$(printf "%q" "${RUBY_CONFIGURE_OPTS}")"" || softfail || return $?
   fi
