@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,44 +14,44 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-github::get-release-by-label() {
-  local repoPath="$1"
+github::get_release_by_label() {
+  local repo_path="$1"
   local label="$2"
   local release="${3:-latest}"
 
-  github::get-release "${repoPath}" ".label == \"${label}\"" "${release}" || fail
+  github::get-release "${repo_path}" ".label == \"${label}\"" "${release}" || fail
 }
 
-github::get-release-by-name() {
-  local repoPath="$1"
+github::get_release_by_name() {
+  local repo_path="$1"
   local label="$2"
   local release="${3:-latest}"
 
-  github::get-release "${repoPath}" ".name | test(\"${label}\")" "${release}" || fail
+  github::get-release "${repo_path}" ".name | test(\"${label}\")" "${release}" || fail
 }
 
-github::get-release() {
-  local repoPath="$1"
+github::get_release() {
+  local repo_path="$1"
   local query="$2"
   local release="${3:-latest}"
 
-  local apiUrl="https://api.github.com/repos/${repoPath}/releases/${release}"
-  local jqFilter=".assets[] | select(${query}).browser_download_url"
-  local fileUrl; fileUrl="$(curl --fail --silent --show-error "${apiUrl}" | jq --raw-output --exit-status "${jqFilter}"; test "${PIPESTATUS[*]}" = "0 0")" || fail
+  local api_url="https://api.github.com/repos/${repo_path}/releases/${release}"
+  local jq_filter=".assets[] | select(${query}).browser_download_url"
+  local file_url; file_url="$(curl --fail --silent --show-error "${api_url}" | jq --raw-output --exit-status "${jq_filter}"; test "${PIPESTATUS[*]}" = "0 0")" || fail
 
-  if [ -z "${fileUrl}" ]; then
-    fail "Can't find release URL for ${repoPath} that matched ${query} and release ${release}"
+  if [ -z "${file_url}" ]; then
+    fail "Can't find release URL for ${repo_path} that matched ${query} and release ${release}"
   fi
 
-  local tempFile; tempFile="$(mktemp "${HOME}/sopka-github-get-release-XXXXXXXXXX")" || fail "Unable to create temp file"
+  local temp_file; temp_file="$(mktemp "${HOME}/sopka-github-get-release-XXXXXXXXXX")" || fail "Unable to create temp file"
 
   curl \
     --location \
     --fail \
     --silent \
     --show-error \
-    --output "${tempFile}" \
-    "${fileUrl}" >/dev/null || fail "Unable to download ${fileUrl}"
+    --output "${temp_file}" \
+    "${file_url}" >/dev/null || fail "Unable to download ${file_url}"
 
-  echo "${tempFile}"
+  echo "${temp_file}"
 }

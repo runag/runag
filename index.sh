@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,35 +14,35 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopka::load-lib() {
+sopka::load_lib() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
-    local indexPath; indexPath="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
+    local index_path; index_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
   else
-    local indexPath; indexPath="${BASH_SOURCE[0]}"
+    local index_path; index_path="${BASH_SOURCE[0]}"
   fi
 
   # get dirname that yet may result to relative path
-  local unresolvedSopkaDir; unresolvedSopkaDir="$(dirname "${indexPath}")" || { echo "Sopka: Unable to get a dirname of '${indexPath}' ($?)" >&2; return 1; }
+  local unresolved_sopka_dir; unresolved_sopka_dir="$(dirname "${index_path}")" || { echo "Sopka: Unable to get a dirname of '${index_path}' ($?)" >&2; return 1; }
 
   # get absolute path to dirname
-  local sopkaDir; sopkaDir="$(cd "${unresolvedSopkaDir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolvedSopkaDir}' ($?)" >&2; return 1; }
+  local sopka_dir; sopka_dir="$(cd "${unresolved_sopka_dir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolved_sopka_dir}' ($?)" >&2; return 1; }
 
   # set SOPKA_BIN_PATH if needed
-  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${sopkaDir}/bin/sopka" ] && [ -x "${sopkaDir}/bin/sopka" ]; then
-    export SOPKA_BIN_PATH="${sopkaDir}/bin/sopka"
+  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${sopka_dir}/bin/sopka" ] && [ -x "${sopka_dir}/bin/sopka" ]; then
+    export SOPKA_BIN_PATH="${sopka_dir}/bin/sopka"
   fi
 
   # load all lib/*.sh
-  local filePath; for filePath in "${sopkaDir}"/lib/*.sh; do
-    if [ -f "${filePath}" ]; then
-      . "${filePath}" || { echo "Sopka: Unable to load '${filePath}' ($?)" >&2; return 1; }
+  local file_path; for file_path in "${sopka_dir}"/lib/*.sh; do
+    if [ -f "${file_path}" ]; then
+      . "${file_path}" || { echo "Sopka: Unable to load '${file_path}' ($?)" >&2; return 1; }
     fi
   done
 }
 
-sopka::load-lib || {
-  echo "Sopka: Unable to perform sopka::load-lib' ($?)" >&2
+sopka::load_lib || {
+  echo "Sopka: Unable to perform sopka::load_lib' ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
   else

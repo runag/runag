@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,54 +14,54 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-direnv::write-file() {
+direnv::write_file() {
   local name="$1"
 
-  local dirName=".direnv.d"
-  dir::make-if-not-exists "${dirName}" 700 || fail
+  local dir_name=".direnv.d"
+  dir::make_if_not_exists "${dir_name}" 700 || fail
 
-  cat | file::write "${dirName}/${name}.sh" 600 || fail
+  cat | file::write "${dir_name}/${name}.sh" 600 || fail
 
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-direnv::write-block() {
-  local blockName="$1"
-  local fileName="${2:-".envrc"}"
+direnv::write_block() {
+  local block_name="$1"
+  local file_name="${2:-".envrc"}"
   local mode="${3:-"0600"}"
 
   if [ -n "${mode}" ]; then
-    local umaskValue
-    printf -v umaskValue "%o" "$(( 0777 ^ "0${mode}" ))" || softfail || return $?
-    ( umask "${umaskValue}" && touch "${fileName}" ) || softfail || return $?
+    local umask_value
+    printf -v umask_value "%o" "$(( 0777 ^ "0${mode}" ))" || softfail || return $?
+    ( umask "${umask_value}" && touch "${file_name}" ) || softfail || return $?
   fi
 
-  sed -i "/^# BEGIN-SOPKA-BLOCK =${blockName}=$/,/^# END-SOPKA-BLOCK =${blockName}=$/d" "${fileName}" || softfail || return $?
+  sed -i "/^# BEGIN-SOPKA-BLOCK =${block_name}=$/,/^# END-SOPKA-BLOCK =${block_name}=$/d" "${file_name}" || softfail || return $?
 
-  { echo "# BEGIN-SOPKA-BLOCK =${blockName}=" && cat && echo "# END-SOPKA-BLOCK =${blockName}="; } >> "${fileName}" || softfail || return $?
+  { echo "# BEGIN-SOPKA-BLOCK =${block_name}=" && cat && echo "# END-SOPKA-BLOCK =${block_name}="; } >> "${file_name}" || softfail || return $?
 
-  direnv allow "${fileName}" || softfail || return $?
+  direnv allow "${file_name}" || softfail || return $?
 }
 
-direnv::save-variables() {
+direnv::save_variables() {
   local item; for item in "$@"; do
     printf "export ${item}=%q\n" "${!item}" || softfail || return $?
   done
 }
 
-direnv::save-variables-to-block() {
-  local blockName="$1"
-  direnv::save-variables "${@:2}" | direnv::write-block "${blockName}"
+direnv::save_variables_to_block() {
+  local block_name="$1"
+  direnv::save_variables "${@:2}" | direnv::write_block "${block_name}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-direnv::save-variables-to-file() {
-  local fileName="$1"
-  direnv::save-variables "${@:2}" | direnv::write-file "${fileName}"
+direnv::save_variables_to_file() {
+  local file_name="$1"
+  direnv::save_variables "${@:2}" | direnv::write_file "${file_name}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-direnv::directory-loader() {
+direnv::directory_loader() {
   cat <<'SHELL'
 for file in .direnv.d/*.sh; do
   . "${file}" || echo "Unable to load ${file} ($?)" >&2
@@ -69,8 +69,8 @@ done
 SHELL
 }
 
-direnv::save-directory-loader-to-block() {
-  local blockName="${1:"directory-loader"}"
-  direnv::directory-loader | direnv::write-block "${blockName}"
+direnv::save_directory_loader_to_block() {
+  local block_name="${1:"directory-loader"}"
+  direnv::directory_loader | direnv::write_block "${block_name}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }

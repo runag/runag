@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# shellcheck disable=2154
+
+app_units::run() {
+  local item units_list=()
+
+  for item in "${app_units[@]}"; do
+    units_list+=("${APP_NAME}-${item}") || softfail || return $?
+  done
+
+  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+    local systemd_colors=1
+  else
+    local systemd_colors=0
+  fi
+
+  SYSTEMD_COLORS="${systemd_colors}" "$@" "${units_list[@]}"
+}
+
+app_units::run_for_services_only() {
+  local item units_list=()
+
+  for item in "${app_units[@]}"; do
+    if [[ "${item}" =~ [.]service$ ]]; then
+      units_list+=("${APP_NAME}-${item}") || softfail || return $?
+    fi
+  done
+
+  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+    local systemd_colors=1
+  else
+    local systemd_colors=0
+  fi
+
+  SYSTEMD_COLORS="${systemd_colors}" "$@" "${units_list[@]}"
+}
+
+app_units::run_with_units() {
+  local item units_list=()
+
+  for item in "${app_units[@]}"; do
+    units_list+=(--unit "${APP_NAME}-${item}") || softfail || return $?
+  done
+
+  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+    local systemd_colors=1
+  else
+    local systemd_colors=0
+  fi
+
+  SYSTEMD_COLORS="${systemd_colors}" "$@" "${units_list[@]}"
+}
+
+app_units::enable() {
+  app_units::run systemctl "$@" --quiet enable || softfail_code $? || return $?
+}
+
+app_units::enable_now() {
+  app_units::run systemctl "$@" --quiet --now enable || softfail_code $? || return $?
+}
+
+app_units::disable() {
+  app_units::run systemctl "$@" --quiet disable || softfail_code $? || return $?
+}
+
+app_units::disable_now() {
+  app_units::run systemctl "$@" --quiet --now disable || softfail_code $? || return $?
+}
+
+app_units::start() {
+  app_units::run systemctl "$@" --quiet start || softfail_code $? || return $?
+}
+
+app_units::stop() {
+  app_units::run systemctl "$@" stop || softfail_code $? || return $?
+}
+
+app_units::restart() {
+  app_units::run systemctl "$@" restart || softfail_code $? || return $?
+}
+
+app_units::restart_services() {
+  app_units::run_for_services_only systemctl "$@" restart || softfail_code $? || return $?
+}
+
+app_units::statuses() {
+  app_units::run systemctl "$@" status
+  local exit_status=$?
+
+  if [ "${exit_status}" != 0 ] && [ "${exit_status}" != 3 ]; then
+    softfail
+    return "${exit_status}"
+  fi
+}
+
+app_units::journal() {
+  app_units::run_with_units journalctl "$@" || softfail_code $? || return $?
+}
+
+app_units::follow_journal() {
+  app_units::run_with_units journalctl --lines=1000 --follow "$@" || softfail_code $? || return $?
+}
+
+app_units::sopka_menu::add_all::remote() {
+  sopka_menu::add "$1" ssh::task "$2" app_units::enable || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::enable_now || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::disable || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::disable_now || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::start || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::stop || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::restart || softfail || return $?
+  sopka_menu::add "$1" ssh::task "$2" app_units::restart_services || softfail || return $?
+  sopka_menu::add_delimiter || softfail || return $?
+  sopka_menu::add "$1" ssh::task_verbose "$2" app_units::statuses || softfail || return $?
+  sopka_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
+  sopka_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 #  limitations under the License.
 
 config::install() {
-  src="$1"
-  dst="$2"
+  local src="$1"
+  local dst="$2"
 
   if [ -f "${dst}" ]; then
     config::merge "${src}" "${dst}" || fail
@@ -26,8 +26,8 @@ config::install() {
 }
 
 config::merge() {
-  src="$1"
-  dst="$2"
+  local src="$1"
+  local dst="$2"
 
   # TODO: is mtime-based update possible here?
 

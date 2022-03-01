@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-apt::autoremove-lazy-update-and-maybe-dist-upgrade() {
+apt::autoremove_lazy_update_and_maybe_dist_upgrade() {
   apt::autoremove || softfail || return $?
 
-  apt::lazy-update || softfail || return $?
+  apt::lazy_update || softfail || return $?
 
   if [ "${CI:-}" != "true" ]; then
-    apt::dist-upgrade || softfail || return $?
+    apt::dist_upgrade || softfail || return $?
   fi
 }
 
 # @description Perform apt update once per script run
-apt::lazy-update() {
+apt::lazy_update() {
   if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
     SOPKA_APT_LAZY_UPDATE_HAPPENED=true
     apt::update || fail
@@ -33,9 +33,9 @@ apt::lazy-update() {
 }
 
 # @description Perform apt update once per script run, and then perform apt dist-upgrade
-apt::lazy-update-and-dist-upgrade() {
-  apt::lazy-update || fail
-  apt::dist-upgrade || fail
+apt::lazy_update_and_dist_upgrade() {
+  apt::lazy_update || fail
+  apt::dist_upgrade || fail
 }
 
 # @description Perform apt update
@@ -45,7 +45,7 @@ apt::update() {
 }
 
 # @description Perform apt dist-upgrade
-apt::dist-upgrade() {
+apt::dist_upgrade() {
   # TODO: Check if this Dpkg::Options are good defaults
   sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y dist-upgrade || fail
 }
@@ -67,26 +67,26 @@ apt::autoremove() {
 # @description Add apt source and key
 #
 # @example
-#    apt::add-key-and-source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" | fail
+#    apt::add_key_and_source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" | fail
 #
 # @arg $1 string key url
 # @arg $2 string source string
 # @arg $3 string source name for sources.list.d
-apt::add-key-and-source() {
-  local keyUrl="$1"
-  local sourceString="$2"
-  local sourceName="$3"
+apt::add_key_and_source() {
+  local key_url="$1"
+  local source_string="$2"
+  local source_name="$3"
 
-  local sourceFile="/etc/apt/sources.list.d/${sourceName}.list"
+  local source_file="/etc/apt/sources.list.d/${source_name}.list"
 
-  curl --fail --silent --show-error "${keyUrl}" | sudo apt-key add -
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to get key from ${keyUrl} or import in into apt"
+  curl --fail --silent --show-error "${key_url}" | sudo apt-key add -
+  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to get key from ${key_url} or import in into apt"
 
-  echo "${sourceString}" | sudo tee "${sourceFile}" >/dev/null || fail "Unable to write apt source into the ${sourceFile}"
+  echo "${source_string}" | sudo tee "${source_file}" >/dev/null || fail "Unable to write apt source into the ${source_file}"
 }
 
 # gnome-keyring and libsecret (for git and ssh)
-apt::install-gnome-keyring-and-libsecret() {
+apt::install_gnome_keyring_and_libsecret() {
   apt::install \
     gnome-keyring \
     libsecret-tools \
@@ -95,10 +95,10 @@ apt::install-gnome-keyring-and-libsecret() {
       || fail
 }
 
-apt::install-sopka-essential-dependencies() {
+apt::install_sopka_essential_dependencies() {
   apt::install curl git jq || softfail || return $?
 }
 
-apt::install-display-if-restart-required-dependencies() {
+apt::install_display_if_restart_required_dependencies() {
   apt::install debian-goodies || softfail || return $?
 }

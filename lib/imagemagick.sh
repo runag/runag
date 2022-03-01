@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-imagemagick::set-policy::resource() {
+imagemagick::set_policy::resource() {
   local name="$1"
   local value="$2"
-  local filePath="${4:-"/etc/ImageMagick-6/policy.xml"}"
+  local file_path="${4:-"/etc/ImageMagick-6/policy.xml"}"
 
-  sudo sed --in-place "s/^.*\(<policy domain=\"resource\" name=\"${name}\" value=\"\).*\(\"\/>\)$/\1${value}\2/g" "${filePath}" || softfail || return $?
+  sudo sed --in-place "s/^.*\(<policy domain=\"resource\" name=\"${name}\" value=\"\).*\(\"\/>\)$/\1${value}\2/g" "${file_path}" || softfail || return $?
 }

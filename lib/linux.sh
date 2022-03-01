@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,40 +14,40 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-linux::set-timezone() {
+linux::set_timezone() {
   local timezone="$1"
   sudo timedatectl set-timezone "${timezone}" || fail "Unable to set timezone ($?)"
 }
 
-linux::set-hostname() {
+linux::set_hostname() {
   local hostname="$1"
   sudo hostnamectl set-hostname "${hostname}" || fail
-  file::sudo-append-line-unless-present "127.0.1.1	${hostname}" /etc/hosts || fail
+  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" /etc/hosts || fail
 }
 
-linux::dangerously-set-hostname() {
+linux::dangerously_set_hostname() {
   local hostname="$1"
-  local hostsFile=/etc/hosts
-  local previousName
-  local previousNameEscaped
+  local hosts_file=/etc/hosts
+  local previous_name
+  local previous_name_escaped
   
-  previousName="$(hostnamectl --static status)" || fail
-  previousNameEscaped="$(echo "${previousName}" | sed 's/\./\\./g')" || fail
+  previous_name="$(hostnamectl --static status)" || fail
+  previous_name_escaped="$(echo "${previous_name}" | sed 's/\./\\./g')" || fail
 
   sudo hostnamectl set-hostname "${hostname}" || fail
 
-  if [ -f "${hostsFile}" ]; then
-    grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previousNameEscaped}[[:blank:]]*" "${hostsFile}" | sudo tee "${hostsFile}.sopka-new" >/dev/null
+  if [ -f "${hosts_file}" ]; then
+    grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" | sudo tee "${hosts_file}.sopka-new" >/dev/null
     test "${PIPESTATUS[*]}" = "0 0" || fail
   fi
 
-  file::sudo-append-line-unless-present "127.0.1.1	${hostname}" "${hostsFile}.sopka-new" || fail
+  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" "${hosts_file}.sopka-new" || fail
 
-  sudo cp "${hostsFile}" "${hostsFile}.before-sopka-changes" || fail
-  sudo mv "${hostsFile}.sopka-new" "${hostsFile}" || fail
+  sudo cp "${hosts_file}" "${hosts_file}.before-sopka-changes" || fail
+  sudo mv "${hosts_file}.sopka-new" "${hosts_file}" || fail
 }
 
-linux::set-locale() {
+linux::set_locale() {
   local locale="$1"
 
   sudo locale-gen "${locale}" || fail "Unable to run locale-gen ($?)"
@@ -59,11 +59,11 @@ linux::set-locale() {
   export LC_ALL="${locale}"
 }
 
-linux::configure-inotify() {
+linux::configure_inotify() {
   local max_user_watches="${1:-1048576}"
   local max_user_instances="${2:-2048}"
 
-  file::sudo-write /etc/sysctl.d/sopka-inotify.conf <<EOF || fail
+  file::sudo_write /etc/sysctl.d/sopka-inotify.conf <<EOF || fail
 fs.inotify.max_user_watches=${max_user_watches}
 fs.inotify.max_user_instances=${max_user_instances}
 EOF
@@ -71,7 +71,7 @@ EOF
   sudo sysctl --system || fail
 }
 
-linux::display-if-restart-required::is-available() {
+linux::display_if_restart_required::is_available() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     if command -v checkrestart >/dev/null; then
       return 0
@@ -80,7 +80,7 @@ linux::display-if-restart-required::is-available() {
   return 1
 }
 
-linux::display-if-restart-required() {
+linux::display_if_restart_required() {
   if command -v checkrestart >/dev/null; then
     sudo checkrestart || fail
   fi
@@ -90,98 +90,98 @@ linux::display-if-restart-required() {
   fi
 }
 
-linux::is-bare-metal() {
+linux::is_bare_metal() {
   # "hostnamectl status" could also be used to detect that we are running insde the vm
   ! grep -q "^flags.*:.*hypervisor" /proc/cpuinfo
 }
 
-linux::add-user() {
-  local userName="$1"
-  if ! id -u "${userName}" >/dev/null 2>&1; then
-    sudo adduser --system --group --shell /bin/bash "${userName}" || fail
+linux::add_user() {
+  local user_name="$1"
+  if ! id -u "${user_name}" >/dev/null 2>&1; then
+    sudo adduser --system --group --shell /bin/bash "${user_name}" || fail
   fi
 }
 
-linux::assign-user-to-group() {
-  local userName="$1"
-  local groupName="$2"
+linux::assign_user_to_group() {
+  local user_name="$1"
+  local group_name="$2"
 
-  usermod --append --groups "${groupName}" "${userName}" || fail
+  usermod --append --groups "${group_name}" "${user_name}" || fail
 }
 
-linux::get-default-route() {
+linux::get_default_route() {
   ip route show | grep 'default via' | awk '{print $3}'
   test "${PIPESTATUS[*]}" = "0 0 0" || fail
 }
 
-linux::get-distributor-id-lowercase() {
+linux::get_distributor_id_lowercase() {
   lsb_release --id --short | tr '[:upper:]' '[:lower:]'
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
-linux::with-secure-temp-dir() {
-  local secureTempDir
+linux::with_secure_temp_dir() {
+  local secure_temp_dir
   
-  secureTempDir="$(mktemp -d)" || fail
+  secure_temp_dir="$(mktemp -d)" || fail
 
   # data in tmpfs can be swapped to disk, data in ramfs can't be swapped so we are using ramfs here
-  sudo mount -t ramfs -o mode=700 ramfs "${secureTempDir}" || fail
-  sudo chown "${USER}.${USER}" "${secureTempDir}" || fail
+  sudo mount -t ramfs -o mode=700 ramfs "${secure_temp_dir}" || fail
+  sudo chown "${USER}.${USER}" "${secure_temp_dir}" || fail
 
   (
-    export TMPDIR="${secureTempDir}"
+    export TMPDIR="${secure_temp_dir}"
     "$@"
   )
 
   local result=$?
 
-  sudo umount "${secureTempDir}" || fail
-  rmdir "${secureTempDir}" || fail
+  sudo umount "${secure_temp_dir}" || fail
+  rmdir "${secure_temp_dir}" || fail
 
   if [ "${result}" != 0 ]; then
     fail "Error performing ${1:-"(argument is empty)"} (${result})"
   fi
 }
 
-linux::get-user-home() {
-  local userName="$1"
-  getent passwd "${userName}" | cut -d : -f 6
+linux::get_user_home() {
+  local user_name="$1"
+  getent passwd "${user_name}" | cut -d : -f 6
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 # do I need it?
-# linux::cd-user-home() {
-#   local userName="$1"
-#   local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
-#   cd "${userHome}" || softfail || return $?
+# linux::cd_user_home() {
+#   local user_name="$1"
+#   local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
+#   cd "${user_home}" || softfail || return $?
 # }
 
-linux::get-cpu-count() {
-  local cpuCount; cpuCount="$(grep -c ^processor /proc/cpuinfo 2>/dev/null)"
+linux::get_cpu_count() {
+  local cpu_count; cpu_count="$(grep -c ^processor /proc/cpuinfo 2>/dev/null)"
 
-  if [[ "${cpuCount}" =~ ^[0-9]+$ ]]; then
-    echo "${cpuCount}"
+  if [[ "${cpu_count}" =~ ^[0-9]+$ ]]; then
+    echo "${cpu_count}"
   else
     echo 1
   fi
 }
 
-linux::get-default-path-variable() {(
+linux::get_default_path_variable() {(
   . /etc/environment && echo "${PATH}" || softfail || return $?
 )}
 
-linux::get-ipv4-address() {
-  local ipAddress; ipAddress="$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/^.*src \([[:digit:].]*\).*$/\1/p'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain host ipv6 address" || return $?
-  if [ -z "${ipAddress}" ]; then
+linux::get_ipv4_address() {
+  local ip_address; ip_address="$(ip route get 1.1.1.1 2>/dev/null | sed -n 's/^.*src \([[:digit:].]*\).*$/\1/p'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain host ipv6 address" || return $?
+  if [ -z "${ip_address}" ]; then
     softfail "Unable to obtain host ipv6 address" || return $?
   fi
-  echo "${ipAddress}"
+  echo "${ip_address}"
 }
 
-linux::get-ipv6-address() {
-  local ipAddress; ipAddress="$(ip route get 2606:4700:4700::1111 2>/dev/null | sed -n 's/^.*src \([[:xdigit:]:]*\).*$/\1/p'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain host ipv6 address" || return $?
-  if [ -z "${ipAddress}" ]; then
+linux::get_ipv6_address() {
+  local ip_address; ip_address="$(ip route get 2606:4700:4700::1111 2>/dev/null | sed -n 's/^.*src \([[:xdigit:]:]*\).*$/\1/p'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain host ipv6 address" || return $?
+  if [ -z "${ip_address}" ]; then
     softfail "Unable to obtain host ipv6 address" || return $?
   fi
-  echo "${ipAddress}"
+  echo "${ip_address}"
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -28,25 +28,25 @@ apt::update ()
     SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
     sudo DEBIAN_FRONTEND=noninteractive apt-get update || fail
 }
-deploy-script::add () 
+deploy_script::add () 
 { 
-    task::run-with-install-filter sopka::add-sopkafile "$1" || softfail || return $?;
-    deploy-script "${@:2}";
-    softfail-unless-good-code $?
+    task::run_with_install_filter sopka::add_sopkafile "$1" || softfail || return $?;
+    deploy_script "${@:2}";
+    softfail_unless_good_code $?
 }
-deploy-script::run () 
+deploy_script::run () 
 { 
     "${HOME}/.sopka/bin/sopka" "$@";
-    softfail-unless-good-code $?
+    softfail_unless_good_code $?
 }
-deploy-script () 
+deploy_script () 
 { 
     if [ -n "${1:-}" ]; then
-        if declare -f "deploy-script::$1" > /dev/null; then
-            "deploy-script::$1" "${@:2}";
-            softfail-unless-good-code $? || return $?;
+        if declare -f "deploy_script::$1" > /dev/null; then
+            "deploy_script::$1" "${@:2}";
+            softfail_unless_good_code $? || return $?;
         else
-            softfail "Sopka deploy-script: command not found: $1";
+            softfail "Sopka deploy_script: command not found: $1";
             return $?;
         fi;
     fi
@@ -56,7 +56,7 @@ fail ()
     softfail::internal "$@";
     exit $?
 }
-git::install-git () 
+git::install_git () 
 { 
     if [[ "${OSTYPE}" =~ ^linux ]]; then
         if ! command -v git > /dev/null; then
@@ -70,24 +70,24 @@ git::install-git ()
     fi;
     git --version > /dev/null || fail
 }
-git::place-up-to-date-clone () 
+git::place_up_to_date_clone () 
 { 
     local url="$1";
     local dest="$2";
     local branch="${3:-}";
     if [ -d "${dest}" ]; then
-        local currentUrl;
-        currentUrl="$(git -C "${dest}" config remote.origin.url)" || fail;
-        if [ "${currentUrl}" != "${url}" ]; then
-            local destFullPath;
-            destFullPath="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail;
-            local destParentDir;
-            destParentDir="$(dirname "${destFullPath}")" || fail;
-            local destDirName;
-            destDirName="$(basename "${destFullPath}")" || fail;
-            local packupPath;
-            packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail;
-            mv "${destFullPath}" "${packupPath}" || fail;
+        local current_url;
+        current_url="$(git -C "${dest}" config remote.origin.url)" || fail;
+        if [ "${current_url}" != "${url}" ]; then
+            local dest_full_path;
+            dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail;
+            local dest_parent_dir;
+            dest_parent_dir="$(dirname "${dest_full_path}")" || fail;
+            local dest_dir_name;
+            dest_dir_name="$(basename "${dest_full_path}")" || fail;
+            local backup_path;
+            backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail;
+            mv "${dest_full_path}" "${backup_path}" || fail;
             git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
         fi;
         git -C "${dest}" pull || fail "Unable to git pull in ${dest}";
@@ -98,15 +98,15 @@ git::place-up-to-date-clone ()
         git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}";
     fi
 }
-log::error-trace () 
+log::error_trace () 
 { 
     local message="${1:-""}";
-    local startTraceFrom="${2:-1}";
+    local start_trace_from="${2:-1}";
     if [ -n "${message}" ]; then
         log::error "${message}" || echo "Sopka: Unable to log error: ${message}" 1>&2;
     fi;
-    local line i endAt=$((${#BASH_LINENO[@]}-1));
-    for ((i=startTraceFrom; i<=endAt; i++))
+    local line i end_at=$((${#BASH_LINENO[@]}-1));
+    for ((i=start_trace_from; i<=end_at; i++))
     do
         line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
         log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" 1>&2;
@@ -115,51 +115,51 @@ log::error-trace ()
 log::error () 
 { 
     local message="$1";
-    log::with-color "${message}" 9 1>&2
+    log::with_color "${message}" 9 1>&2
 }
 log::notice () 
 { 
     local message="$1";
-    log::with-color "${message}" 14
+    log::with_color "${message}" 14
 }
-log::with-color () 
+log::with_color () 
 { 
     local message="$1";
-    local foregroundColor="$2";
-    local backgroundColor="${3:-}";
-    local colorSeq="" defaultColorSeq="";
+    local foreground_color="$2";
+    local background_color="${3:-}";
+    local color_seq="" default_color_seq="";
     if [ -t 1 ]; then
-        colorSeq="$(terminal::color "${foregroundColor}" "${backgroundColor:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        defaultColorSeq="$(terminal::default-color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        default_color_seq="$(terminal::default_color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
     fi;
-    echo "${colorSeq}${message}${defaultColorSeq}"
+    echo "${color_seq}${message}${default_color_seq}"
 }
-softfail-unless-good-code () 
+softfail_unless_good_code () 
 { 
-    softfail-unless-good::internal "" "$1"
+    softfail_unless_good::internal "" "$1"
 }
-softfail-unless-good::internal () 
+softfail_unless_good::internal () 
 { 
     local message="${1:-"Abnormal termination"}";
-    local exitStatus="${2:-undefined}";
-    if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
-        exitStatus=1;
+    local exit_status="${2:-undefined}";
+    if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
+        exit_status=1;
     fi;
-    if [ "${exitStatus}" != 0 ]; then
-        log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    if [ "${exit_status}" != 0 ]; then
+        log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
     fi;
-    return "${exitStatus}"
+    return "${exit_status}"
 }
 softfail::internal () 
 { 
     local message="${1:-"Abnormal termination"}";
-    local exitStatus="${2:-undefined}";
-    if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
-        exitStatus=1;
+    local exit_status="${2:-undefined}";
+    if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
+        exit_status=1;
     fi;
-    log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
-    if [ "${exitStatus}" != 0 ]; then
-        return "${exitStatus}";
+    log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    if [ "${exit_status}" != 0 ]; then
+        return "${exit_status}";
     fi;
     return 1
 }
@@ -167,88 +167,88 @@ softfail ()
 { 
     softfail::internal "$@"
 }
-sopka::add-sopkafile () 
+sopka::add_sopkafile () 
 { 
-    local packageId="$1";
+    local package_id="$1";
     local dest;
-    dest="$(echo "${packageId}" | tr "/" "-")" || softfail || return $?;
-    git::place-up-to-date-clone "https://github.com/${packageId}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return $?
+    dest="$(echo "${package_id}" | tr "/" "-")" || softfail || return $?;
+    git::place_up_to_date_clone "https://github.com/${package_id}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return $?
 }
-sopka::deploy-sh-main () 
+sopka::deploy_sh_main () 
 { 
     if [ "${SOPKA_VERBOSE:-}" = true ]; then
         set -o xtrace;
     fi;
     set -o nounset;
-    task::run-with-install-filter git::install-git || softfail || return $?;
-    task::run-with-install-filter git::place-up-to-date-clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?;
-    deploy-script "$@";
-    softfail-unless-good-code $?
+    task::run_with_install_filter git::install_git || softfail || return $?;
+    task::run_with_install_filter git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?;
+    deploy_script "$@";
+    softfail_unless_good_code $?
 }
-task::complete-with-cleanup () 
+task::complete_with_cleanup () 
 { 
     task::complete || softfail || return $?;
     if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
-        rm -fd "${tempDir}/stdout" "${tempDir}/stderr" "${tempDir}" || softfail || return $?;
+        rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?;
     fi
 }
 task::complete () 
 { 
-    local errorState=0;
-    local stderrPresent=false;
-    if [ "${taskStatus:-1}" = 0 ] && [ -s "${tempDir}/stderr" ]; then
-        stderrPresent=true;
-        if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tempDir}/stderr"; then
-            stderrPresent=false;
+    local error_state=0;
+    local stderr_present=false;
+    if [ "${task_status:-1}" = 0 ] && [ -s "${temp_dir}/stderr" ]; then
+        stderr_present=true;
+        if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is_stderr_empty_after_filtering "${temp_dir}/stderr"; then
+            stderr_present=false;
         fi;
     fi;
-    if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
-        if [ -s "${tempDir}/stdout" ]; then
-            cat "${tempDir}/stdout" || { 
+    if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
+        if [ -s "${temp_dir}/stdout" ]; then
+            cat "${temp_dir}/stdout" || { 
                 echo "Sopka: Unable to display task stdout ($?)" 1>&2;
-                errorState=1
+                error_state=1
             };
         fi;
-        if [ -s "${tempDir}/stderr" ]; then
+        if [ -s "${temp_dir}/stderr" ]; then
             test -t 2 && terminal::color 9 1>&2;
-            cat "${tempDir}/stderr" 1>&2 || { 
+            cat "${temp_dir}/stderr" 1>&2 || { 
                 echo "Sopka: Unable to display task stderr ($?)" 1>&2;
-                errorState=2
+                error_state=2
             };
-            test -t 2 && terminal::default-color 1>&2;
+            test -t 2 && terminal::default_color 1>&2;
         fi;
     fi;
-    if [ "${errorState}" != 0 ]; then
-        softfail "task::cleanup error state ${errorState}" || return $?;
+    if [ "${error_state}" != 0 ]; then
+        softfail "task::cleanup error state ${error_state}" || return $?;
     fi
 }
-task::detect-fail-state () 
+task::detect_fail_state () 
 { 
-    local taskStatus="$3";
+    local task_status="$3";
     if [ -z "${SOPKA_TASK_FAIL_DETECTOR:-}" ]; then
-        return "${taskStatus}";
+        return "${task_status}";
     fi;
     "${SOPKA_TASK_FAIL_DETECTOR}" "$@"
 }
-task::install-filter () 
+task::install_filter () 
 { 
     grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\.";
     if ! [[ "${PIPESTATUS[*]}" =~ ^([01][[:blank:]])*[01]$ ]]; then
         softfail || return $?;
     fi
 }
-task::is-stderr-empty-after-filtering () 
+task::is_stderr_empty_after_filtering () 
 { 
-    local stderrFile="$1";
-    local stderrSize;
-    stderrSize="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
-    if [ "${stderrSize}" != 0 ]; then
+    local stderr_file="$1";
+    local stderr_size;
+    stderr_size="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
+    if [ "${stderr_size}" != 0 ]; then
         return 1;
     fi
 }
-task::run-with-install-filter () 
+task::run_with_install_filter () 
 { 
-    local SOPKA_TASK_STDERR_FILTER=task::install-filter;
+    local SOPKA_TASK_STDERR_FILTER=task::install_filter;
     task::run "$@"
 }
 task::run () 
@@ -260,18 +260,18 @@ task::run ()
     if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
         log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
     fi;
-    local tempDir;
-    tempDir="$(mktemp -d)" || fail;
-    trap "task::complete-with-cleanup" EXIT;
+    local temp_dir;
+    temp_dir="$(mktemp -d)" || fail;
+    trap "task::complete_with_cleanup" EXIT;
     if [ -t 0 ]; then
-        ( "$@" ) < /dev/null > "${tempDir}/stdout" 2> "${tempDir}/stderr";
+        ( "$@" ) < /dev/null > "${temp_dir}/stdout" 2> "${temp_dir}/stderr";
     else
-        ( "$@" ) > "${tempDir}/stdout" 2> "${tempDir}/stderr";
+        ( "$@" ) > "${temp_dir}/stdout" 2> "${temp_dir}/stderr";
     fi;
-    local taskStatus=$?;
-    task::detect-fail-state "${tempDir}/stdout" "${tempDir}/stderr" "${taskStatus}";
-    local taskStatus=$?;
-    exit "${taskStatus}" )
+    local task_status=$?;
+    task::detect_fail_state "${temp_dir}/stdout" "${temp_dir}/stderr" "${task_status}";
+    local task_status=$?;
+    exit "${task_status}" )
 }
 terminal::color () 
 { 
@@ -287,13 +287,13 @@ terminal::color ()
         fi;
     fi
 }
-terminal::default-color () 
+terminal::default_color () 
 { 
     if command -v tput > /dev/null; then
         tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
     fi
 }
 
-sopka::deploy-sh-main "$@"
+sopka::deploy_sh_main "$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "$@"

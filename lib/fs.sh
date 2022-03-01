@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,88 +14,88 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-path::convert-msys-to-windows() {
+path::convert_msys_to_windows() {
   echo "$1" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
   test "${PIPESTATUS[*]}" = "0 0 0" || fail
 }  
 
-dir::make-if-not-exists() {
-  local dirPath="$1"
+dir::make_if_not_exists() {
+  local dir_path="$1"
   local mode="${2:-}"
   local owner="${3:-}"
   local group="${4:-}"
 
-  if mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+  if mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
     if [ -n "${owner}" ]; then
-      chown "${owner}${group:+".${group}"}" "${dirPath}" || fail
+      chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
     fi
   else
-    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
+    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
   fi
 }
 
-dir::make-if-not-exists-and-set-permissions() {
-  local dirPath="$1"
+dir::make_if_not_exists_and_set_permissions() {
+  local dir_path="$1"
   local mode="${2:-}"
   local owner="${3:-}"
   local group="${4:-}"
 
-  if ! mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
-    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
-    chmod "${mode}" "${dirPath}" || fail
+  if ! mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
+    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
+    chmod "${mode}" "${dir_path}" || fail
   fi
 
   if [ -n "${owner}" ]; then
-    chown "${owner}${group:+".${group}"}" "${dirPath}" || fail
+    chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
   fi
 }
 
-dir::sudo-make-if-not-exists() {
-  local dirPath="$1"
+dir::sudo_make_if_not_exists() {
+  local dir_path="$1"
   local mode="${2:-}"
   local owner="${3:-}"
   local group="${4:-}"
 
-  if sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
+  if sudo mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
     if [ -n "${owner}" ]; then
-      sudo chown "${owner}${group:+".${group}"}" "${dirPath}" || fail
+      sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
     fi
   else
-    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
+    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
   fi
 }
 
-dir::sudo-make-if-not-exists-and-set-permissions() {
-  local dirPath="$1"
+dir::sudo_make_if_not_exists_and_set_permissions() {
+  local dir_path="$1"
   local mode="${2:-}"
   local owner="${3:-}"
   local group="${4:-}"
 
-  if ! sudo mkdir ${mode:+-m "${mode}"} "${dirPath}" 2>/dev/null; then
-    test -d "${dirPath}" || fail "Unable to create directory, maybe there is a file here already: ${dirPath}"
-    sudo chmod "${mode}" "${dirPath}" || fail
+  if ! sudo mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
+    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
+    sudo chmod "${mode}" "${dir_path}" || fail
   fi
 
   if [ -n "${owner}" ]; then
-    sudo chown "${owner}${group:+".${group}"}" "${dirPath}" || fail
+    sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
   fi
 }
 
-dir::remove-if-exists-and-empty() {
-  local dirPath="$1"
-  rmdir "${dirPath}" 2>/dev/null || true
+dir::remove_if_exists_and_empty() {
+  local dir_path="$1"
+  rmdir "${dir_path}" 2>/dev/null || true
 }
 
-dir::default-mode() {
-  local umaskValue; umaskValue="$(umask)" || softfail || return $?
-  printf "%o" "$(( 0777 ^ "${umaskValue}" ))" || softfail || return $?
+dir::default_mode() {
+  local umask_value; umask_value="$(umask)" || softfail || return $?
+  printf "%o" "$(( 0777 ^ "${umask_value}" ))" || softfail || return $?
 }
 
-dir::default-mode-with-remote-umask() {
+dir::default_mode_with_remote_umask() {
   printf "%o" "$(( 0777 ^ "0${REMOTE_UMASK}" ))" || softfail || return $?
 }
 
-file::sudo-write() {
+file::sudo_write() {
   local dest="$1"
   local mode="${2:-}"
   local owner="${3:-}"
@@ -128,7 +128,7 @@ file::write() {
   cat >"${dest}" || fail
 }
 
-file::append-line-unless-present() {
+file::append_line_unless_present() {
   local string="$1"
   local file="$2"
 
@@ -141,7 +141,7 @@ file::append-line-unless-present() {
   fi
 }
 
-file::sudo-append-line-unless-present() {
+file::sudo_append_line_unless_present() {
   local string="$1"
   local file="$2"
 
@@ -154,21 +154,21 @@ file::sudo-append-line-unless-present() {
   fi
 }
 
-file::wait-until-available() {
-  local filePath="$1"
+file::wait_until_available() {
+  local file_path="$1"
 
-  if [ ! -f "${filePath}" ]; then
-    echo "File not found: '${filePath}'" >&2
+  if [ ! -f "${file_path}" ]; then
+    echo "File not found: '${file_path}'" >&2
     echo "Please connect the external media if the file resides on it" >&2
     echo "Waiting for the file to be available, press Control-C to interrupt" >&2
   fi
 
-  while [ ! -f "${filePath}" ]; do
+  while [ ! -f "${file_path}" ]; do
     sleep 0.1
   done
 }
 
-mount::wait-until-available() {
+mount::wait_until_available() {
   local mountpoint="$1"
 
   if ! findmnt --mountpoint "${mountpoint}" >/dev/null; then
@@ -183,36 +183,36 @@ mount::wait-until-available() {
 }
 
 fs::source() {
-  local selfDir
-  selfDir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
+  local self_dir
+  self_dir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
 
-  . "${selfDir}/$2" || softfail "Unable to load: ${selfDir}/$2" || return $?
+  . "${self_dir}/$2" || softfail "Unable to load: ${self_dir}/$2" || return $?
 }
 
-fs::recursive-source() {
-  local selfDir filePath
+fs::recursive_source() {
+  local self_dir file_path
   
-  selfDir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
+  self_dir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
 
-  while IFS= read -r -d '' filePath; do
-    . "${filePath}" || softfail "Unable to load: ${filePath}" || return $?
-  done < <(find "${selfDir}/$2" -type f -name '*.sh' -print0)
+  while IFS= read -r -d '' file_path; do
+    . "${file_path}" || softfail "Unable to load: ${file_path}" || return $?
+  done < <(find "${self_dir}/$2" -type f -name '*.sh' -print0)
 }
 
-fs::get-absolute-path() {
-  local relativePath="$1"
+fs::get_absolute_path() {
+  local relative_path="$1"
   
   # get basename
-  local pathBasename; pathBasename="$(basename "${relativePath}")" \
-    || softfail "Sopka: Unable to get a basename of '${relativePath}' ($?)" || return $?
+  local path_basename; path_basename="$(basename "${relative_path}")" \
+    || softfail "Sopka: Unable to get a basename of '${relative_path}' ($?)" || return $?
 
   # get dirname that yet may result to relative path
-  local unresolvedDir; unresolvedDir="$(dirname "${relativePath}")" \
-    || softfail "Sopka: Unable to get a dirname of '${relativePath}'" || return $?
+  local unresolved_dir; unresolved_dir="$(dirname "${relative_path}")" \
+    || softfail "Sopka: Unable to get a dirname of '${relative_path}'" || return $?
 
   # get absolute path
-  local resolvedDir; resolvedDir="$(cd "${unresolvedDir}" >/dev/null 2>&1 && pwd)" \
-    || softfail "Sopka: Unable to determine absolute path for '${unresolvedDir}'" || return $?
+  local resolved_dir; resolved_dir="$(cd "${unresolved_dir}" >/dev/null 2>&1 && pwd)" \
+    || softfail "Sopka: Unable to determine absolute path for '${unresolved_dir}'" || return $?
 
-  echo "${resolvedDir}/${pathBasename}"
+  echo "${resolved_dir}/${path_basename}"
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-terminal::have-16-colors() {
+terminal::have_16_colors() {
   local amount
   command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
 }
 
-terminal::print-color-table() {
+terminal::print_color_table() {
   for i in {0..16..1}; do 
     echo "$(tput setaf "${i}")tput setaf ${i}$(tput sgr 0)"
   done
@@ -46,7 +46,7 @@ terminal::color() {
   fi
 }
 
-terminal::default-color() {
+terminal::default_color() {
   if command -v tput >/dev/null; then
     tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
   fi

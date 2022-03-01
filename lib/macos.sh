@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 # TODO: Check if its working after recent changes
 # based on https://unix.stackexchange.com/questions/108174/how-to-persistently-control-maximum-system-resource-consumption-on-mac
-macos::increase-maxfiles-limit() {
-  local softLimit="${1:-"262144"}"
-  local hardLimit="${2:-"524288"}"
+macos::increase_maxfiles_limit() {
+  local soft_limit="${1:-"262144"}"
+  local hard_limit="${2:-"524288"}"
 
   local label="sopka.limit.maxfiles"
   local dst="/Library/LaunchDaemons/${label}.plist"
 
   if [ ! -f "${dst}" ]; then
-    file::sudo-write "${dst}" 644 root wheel <<HTML || fail
+    file::sudo_write "${dst}" 644 root wheel <<HTML || fail
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
         "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -37,8 +37,8 @@ macos::increase-maxfiles-limit() {
       <string>launchctl</string>
       <string>limit</string>
       <string>maxfiles</string>
-      <string>${softLimit}</string>
-      <string>${hardLimit}</string>
+      <string>${soft_limit}</string>
+      <string>${hard_limit}</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -51,13 +51,13 @@ HTML
   fi
 }
 
-macos::hide-dir() {
+macos::hide_dir() {
   if [ -d "$1" ]; then
     chflags hidden "$1" || fail
   fi
 }
 
-macos::install-homebrew() {
+macos::install_homebrew() {
   if ! command -v brew >/dev/null; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null || fail "Unable to install homebrew"
   fi

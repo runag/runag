@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,20 +14,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-systemd::write-user-unit() {
+systemd::write_user_unit() {
   local name="$1"
 
-  local userUnitsDir="${HOME}/.config/systemd/user"
+  local user_units_dir="${HOME}/.config/systemd/user"
 
-  dir::make-if-not-exists "${HOME}/.config" 755 || softfail || return $?
-  dir::make-if-not-exists "${HOME}/.config/systemd" 700 || softfail || return $?
-  dir::make-if-not-exists "${userUnitsDir}" 700 || softfail || return $?
+  dir::make_if_not_exists "${HOME}/.config" 755 || softfail || return $?
+  dir::make_if_not_exists "${HOME}/.config/systemd" 700 || softfail || return $?
+  dir::make_if_not_exists "${user_units_dir}" 700 || softfail || return $?
 
-  file::write "${userUnitsDir}/${name}" 600 || softfail || return $?
+  file::write "${user_units_dir}/${name}" 600 || softfail || return $?
 }
 
-systemd::write-system-unit() {
+systemd::write_system_unit() {
   local name="$1"
 
-  file::sudo-write /etc/systemd/system/"${name}" 644 || softfail || return $?
+  file::sudo_write /etc/systemd/system/"${name}" 644 || softfail || return $?
 }

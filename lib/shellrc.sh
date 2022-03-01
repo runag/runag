@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-shellrc::install-loader() {
-  local shellrcFile="$1"
+shellrc::install_loader() {
+  local shellrc_file="$1"
 
-  local shellrcDir="${HOME}/.shellrc.d"
+  local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make-if-not-exists "${shellrcDir}" 700 || fail
+  dir::make_if_not_exists "${shellrc_dir}" 700 || fail
 
-  if [ ! -f "${shellrcFile}" ]; then
+  if [ ! -f "${shellrc_file}" ]; then
     # ubuntu default seems to be 133 (rw-r--r--)
     # I'll try 137 (rw-r-----) to see if there are any downsides of that
-    ( umask 0137 && touch "${shellrcFile}" ) || fail
+    ( umask 0137 && touch "${shellrc_file}" ) || fail
   fi
 
-  if ! grep -Fxq "# shellrc.d loader" "${shellrcFile}"; then
-    cat <<SHELL >>"${shellrcFile}" || fail
+  if ! grep -Fxq "# shellrc.d loader" "${shellrc_file}"; then
+    cat <<SHELL >>"${shellrc_file}" || fail
 
 # shellrc.d loader
 if [ -d "\${HOME}"/.shellrc.d ]; then
@@ -43,43 +43,43 @@ SHELL
   fi
 }
 
-shellrc::get-filename() {
+shellrc::get_filename() {
   local name="$1"
 
-  local shellrcDir="${HOME}/.shellrc.d"
+  local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make-if-not-exists "${shellrcDir}" 700 || fail
-  echo "${shellrcDir}/${name}.sh" || fail
+  dir::make_if_not_exists "${shellrc_dir}" 700 || fail
+  echo "${shellrc_dir}/${name}.sh" || fail
 }
 
 shellrc::write() {
   local name="$1"
 
-  local shellrcDir="${HOME}/.shellrc.d"
+  local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make-if-not-exists "${shellrcDir}" 700 || fail
-  file::write "${shellrcDir}/${name}.sh" 600 || fail
+  dir::make_if_not_exists "${shellrc_dir}" 700 || fail
+  file::write "${shellrc_dir}/${name}.sh" 600 || fail
 }
 
 shellrc::load() {
   local name="$1"
 
-  local shellrcDir="${HOME}/.shellrc.d"
+  local shellrc_dir="${HOME}/.shellrc.d"
 
-  . "${shellrcDir}/${name}.sh" || fail
+  . "${shellrc_dir}/${name}.sh" || fail
 }
 
-shellrc::load-if-exists() {
+shellrc::load_if_exists() {
   local name="$1"
 
-  local shellrcDir="${HOME}/.shellrc.d"
+  local shellrc_dir="${HOME}/.shellrc.d"
 
-  if [ -f "${shellrcDir}/${name}.sh" ]; then
-    . "${shellrcDir}/${name}.sh" || fail
+  if [ -f "${shellrc_dir}/${name}.sh" ]; then
+    . "${shellrc_dir}/${name}.sh" || fail
   fi
 }
 
-shellrc::install-sopka-path-rc() {
+shellrc::install_sopka_path_rc() {
   shellrc::write "sopka-path" <<SHELL || fail
     if [ -d "\${HOME}/.sopka/bin" ]; then
       export PATH="\${HOME}/.sopka/bin:\${PATH}"
@@ -87,7 +87,7 @@ shellrc::install-sopka-path-rc() {
 SHELL
 }
 
-shellrc::install-direnv-rc() {
+shellrc::install_direnv_rc() {
   shellrc::write "direnv" <<SHELL || fail
     if command -v direnv >/dev/null; then
       export DIRENV_LOG_FORMAT=""
@@ -100,12 +100,12 @@ shellrc::install-direnv-rc() {
 SHELL
 }
 
-shellrc::install-editor-rc() {
-  local editorPath="$1"
+shellrc::install_editor_rc() {
+  local editor_path="$1"
   shellrc::write "editor" <<SHELL || fail
     if [ -z "\${EDITOR:-}" ]; then
-      if command -v ${editorPath} >/dev/null; then
-        export EDITOR="\$(command -v ${editorPath})"
+      if command -v ${editor_path} >/dev/null; then
+        export EDITOR="\$(command -v ${editor_path})"
       fi
     fi
 SHELL

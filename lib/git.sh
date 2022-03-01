@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,23 +14,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ssh::add-host-to-known-hosts bitbucket.org || fail
-# ssh::add-host-to-known-hosts github.com || fail
+# ssh::add_host_to_known_hosts bitbucket.org || fail
+# ssh::add_host_to_known_hosts github.com || fail
 
-git::place-up-to-date-clone() {
+git::place_up_to_date_clone() {
   local url="$1"
   local dest="$2"
   local branch="${3:-}"
 
   if [ -d "${dest}" ]; then
-    local currentUrl; currentUrl="$(git -C "${dest}" config remote.origin.url)" || fail
+    local current_url; current_url="$(git -C "${dest}" config remote.origin.url)" || fail
 
-    if [ "${currentUrl}" != "${url}" ]; then
-      local destFullPath; destFullPath="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail
-      local destParentDir; destParentDir="$(dirname "${destFullPath}")" || fail
-      local destDirName; destDirName="$(basename "${destFullPath}")" || fail
-      local packupPath; packupPath="$(mktemp -u "${destParentDir}/${destDirName}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail
-      mv "${destFullPath}" "${packupPath}" || fail
+    if [ "${current_url}" != "${url}" ]; then
+      local dest_full_path; dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail
+      local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || fail
+      local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || fail
+      local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail
+      mv "${dest_full_path}" "${backup_path}" || fail
       git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}"
     fi
     git -C "${dest}" pull || fail "Unable to git pull in ${dest}"
@@ -43,31 +43,31 @@ git::place-up-to-date-clone() {
   fi
 }
 
-git::configure-signingkey() {
+git::configure_signingkey() {
   local key="$1"
   git config --global commit.gpgsign true || fail
   git config --global user.signingkey "${key}" || fail
 }
 
 # https://wiki.gnome.org/Projects/Libsecret
-git::install-libsecret-credential-helper() {
+git::install_libsecret_credential_helper() {
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
     (cd /usr/share/doc/git/contrib/credential/libsecret && sudo make) || fail "Unable to compile libsecret"
   fi
 }
 
-git::use-libsecret-credential-helper() {
+git::use_libsecret_credential_helper() {
   git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
 }
 
-git::gnome-keyring-credentials::exists() {
+git::gnome_keyring_credentials::exists() {
   local login="$1"
   local server="${2:-"github.com"}"
 
   secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null
 }
 
-git::gnome-keyring-credentials::save() {
+git::gnome_keyring_credentials::save() {
   local password="$1"
   local login="$2"
   local server="${3:-"github.com"}"
@@ -76,7 +76,7 @@ git::gnome-keyring-credentials::save() {
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
-git::install-git() {
+git::install_git() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     if ! command -v git >/dev/null; then
       if command -v apt-get >/dev/null; then

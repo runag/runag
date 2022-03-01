@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,26 +14,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-deploy-script() {
+deploy_script() {
   if [ -n "${1:-}" ]; then  
-    if declare -f "deploy-script::$1" >/dev/null; then
-      "deploy-script::$1" "${@:2}"
-      softfail-unless-good-code $? || return $?
+    if declare -f "deploy_script::$1" >/dev/null; then
+      "deploy_script::$1" "${@:2}"
+      softfail_unless_good_code $? || return $?
     else
-      softfail "Sopka deploy-script: command not found: $1"
+      softfail "Sopka deploy_script: command not found: $1"
       return $?
     fi
   fi
 }
 
-deploy-script::add() {
-  task::run-with-install-filter sopka::add-sopkafile "$1" || softfail || return $?
+deploy_script::add() {
+  task::run_with_install_filter sopka::add_sopkafile "$1" || softfail || return $?
 
-  deploy-script "${@:2}"
-  softfail-unless-good-code $?
+  deploy_script "${@:2}"
+  softfail_unless_good_code $?
 }
 
-deploy-script::run() {
+deploy_script::run() {
   "${HOME}/.sopka/bin/sopka" "$@"
-  softfail-unless-good-code $?
+  softfail_unless_good_code $?
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-benchmark::is-available() {
+benchmark::is_available() {
   if [[ "${OSTYPE}" =~ ^linux ]] || [[ "${OSTYPE}" =~ ^darwin ]]; then
     if command -v sysbench >/dev/null; then
       return 0
@@ -28,70 +28,70 @@ benchmark::install::apt() {
 }
 
 benchmark::run() {
-  local hostnameString; hostnameString="$(hostname)" || fail
-  local currentDate; currentDate="$(date +"%Y-%m-%d %H-%M-%S")" || fail
+  local hostname_string; hostname_string="$(hostname)" || fail
+  local current_date; current_date="$(date +"%Y-%m-%d %H-%M-%S")" || fail
 
-  local resultFile; resultFile="$(mktemp -u "${HOME}/sopka-benchmark ${hostnameString} ${currentDate} XXXXXXXXXX")" || fail
+  local result_file; result_file="$(mktemp -u "${HOME}/sopka-benchmark ${hostname_string} ${current_date} XXXXXXXXXX")" || fail
 
-  benchmark::actually-run "${resultFile}.txt" || fail
+  benchmark::actually_run "${result_file}.txt" || fail
 
-  echo "${resultFile}.txt"
+  echo "${result_file}.txt"
 }
 
-benchmark::actually-run() {
-  local resultFile="$1"
+benchmark::actually_run() {
+  local result_file="$1"
 
-  echo "### CPU SPEED ###" >> "${resultFile}"
-  sysbench cpu run >> "${resultFile}" || fail
+  echo "### CPU SPEED ###" >> "${result_file}"
+  sysbench cpu run >> "${result_file}" || fail
 
-  echo "### THREADS ###" >> "${resultFile}"
-  sysbench threads run >> "${resultFile}" || fail
+  echo "### THREADS ###" >> "${result_file}"
+  sysbench threads run >> "${result_file}" || fail
 
-  echo "### RAM WRITE, 4KiB BLOCKS ###" >> "${resultFile}"
-  sysbench memory run --memory-block-size=4096 >> "${resultFile}" || fail
+  echo "### RAM WRITE, 4KiB BLOCKS ###" >> "${result_file}"
+  sysbench memory run --memory-block-size=4096 >> "${result_file}" || fail
 
   (
-    local tempDir; tempDir="$(mktemp -d "${HOME}/sopka-benchmark-XXXXXXXXXX")" || fail
-    cd "${tempDir}" || fail
+    local temp_dir; temp_dir="$(mktemp -d "${HOME}/sopka-benchmark-XXXXXXXXXX")" || fail
+    cd "${temp_dir}" || fail
 
-    benchmark::fileio "${resultFile}" || fail
-    benchmark::fileio "${resultFile}" --file-extra-flags=direct || fail
+    benchmark::fileio "${result_file}" || fail
+    benchmark::fileio "${result_file}" --file-extra-flags=direct || fail
 
-    rmdir "${tempDir}" || fail
+    rmdir "${temp_dir}" || fail
   ) || fail
 }
 
 # shellcheck disable=SC2086
 benchmark::fileio() {
-  local resultFile="$1"
+  local result_file="$1"
 
   sysbench fileio prepare --verbosity=2 ${2:-} || fail
 
-  echo "### SEQUENTIAL READ ${2:-} ###" >> "${resultFile}"
-  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${2:-} >> "${resultFile}" || fail
+  echo "### SEQUENTIAL READ ${2:-} ###" >> "${result_file}"
+  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${2:-} >> "${result_file}" || fail
 
-  echo "### RANDOM READ QD1 ${2:-} ###" >> "${resultFile}"
-  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${2:-} >> "${resultFile}" || fail
+  echo "### RANDOM READ QD1 ${2:-} ###" >> "${result_file}"
+  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${2:-} >> "${result_file}" || fail
 
   if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
-    echo "### RANDOM READ QD32 ${2:-} ###" >> "${resultFile}"
-    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${resultFile}" || fail
+    echo "### RANDOM READ QD32 ${2:-} ###" >> "${result_file}"
+    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${result_file}" || fail
   fi
 
-  echo "### RANDOM WRITE QD1 ${2:-} ###" >> "${resultFile}"
-  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${resultFile}" || fail
+  echo "### RANDOM WRITE QD1 ${2:-} ###" >> "${result_file}"
+  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || fail
 
   if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
-    echo "### RANDOM WRITE QD32 ${2:-} ###" >> "${resultFile}"
-    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${resultFile}" || fail
+    echo "### RANDOM WRITE QD32 ${2:-} ###" >> "${result_file}"
+    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${result_file}" || fail
   fi
 
   # this should be final tests as they truncate files
-  echo "### SEQUENTIAL WRITE ${2:-} ###" >> "${resultFile}"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${resultFile}" || fail
+  echo "### SEQUENTIAL WRITE ${2:-} ###" >> "${result_file}"
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || fail
 
-  echo "### SEQUENTIAL WRITE IN SYNC MODE ${2:-} ###" >> "${resultFile}"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${resultFile}" || fail
+  echo "### SEQUENTIAL WRITE IN SYNC MODE ${2:-} ###" >> "${result_file}"
+  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || fail
 
   sysbench fileio cleanup --verbosity=2 || fail
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -18,40 +18,40 @@ vscode::install::snap() {
   sudo snap install code --classic || softfail || return $?
 }
 
-vscode::get-config-path() {
-  local configPath
+vscode::get_config_path() {
+  local config_path
 
   if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    configPath="${HOME}/Library/Application Support/Code"
+    config_path="${HOME}/Library/Application Support/Code"
 
   elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    configPath="${APPDATA}/Code"
+    config_path="${APPDATA}/Code"
 
   else
-    dir::make-if-not-exists "${HOME}/.config" 755 || softfail || return $?
-    configPath="${HOME}/.config/Code"
+    dir::make_if_not_exists "${HOME}/.config" 755 || softfail || return $?
+    config_path="${HOME}/.config/Code"
   fi
 
-  dir::make-if-not-exists "${configPath}" 700 || softfail || return $?
-  echo "${configPath}"
+  dir::make_if_not_exists "${config_path}" 700 || softfail || return $?
+  echo "${config_path}"
 }
 
-vscode::list-extensions-to-temp-file() {
-  local tempFile; tempFile="$(mktemp)" || softfail "Unable to create temp file" || return $?
+vscode::list_extensions_to_temp_file() {
+  local temp_file; temp_file="$(mktemp)" || softfail "Unable to create temp file" || return $?
 
-  code --list-extensions | sort > "${tempFile}"
+  code --list-extensions | sort > "${temp_file}"
 
   test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to list extensions" || return $?
-  echo "${tempFile}"
+  echo "${temp_file}"
 }
 
-vscode::install-extensions() {
-  local extensionsList="$1"
+vscode::install_extensions() {
+  local extensions_list="$1"
 
-  if [ -f "${extensionsList}" ]; then
-    local installedExtensionsList; installedExtensionsList="$(vscode::list-extensions-to-temp-file)" || softfail "Unable get extensions list" || return $?
+  if [ -f "${extensions_list}" ]; then
+    local installed_extensions_list; installed_extensions_list="$(vscode::list_extensions_to_temp_file)" || softfail "Unable get extensions list" || return $?
 
-    if ! diff --strip-trailing-cr "${extensionsList}" "${installedExtensionsList}" >/dev/null 2>&1; then
+    if ! diff --strip-trailing-cr "${extensions_list}" "${installed_extensions_list}" >/dev/null 2>&1; then
       local extension
 
       if [[ "${OSTYPE}" =~ ^msys ]]; then
@@ -65,9 +65,9 @@ vscode::install-extensions() {
         if [ -n "${extension}" ]; then
           code --install-extension "${extension}" || softfail "Unable to install vscode extension ${extension}" || return $?
         fi
-      done <"${extensionsList}"
+      done <"${extensions_list}"
     fi
 
-    rm "${installedExtensionsList}" || softfail || return $?
+    rm "${installed_extensions_list}" || softfail || return $?
   fi
 }

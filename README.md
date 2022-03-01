@@ -1,5 +1,5 @@
 <!--
-Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -70,11 +70,11 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 ### Sopka core
 
-* [deploy-script](lib/deploy-script.sh)
+* [deploy_script](lib/deploy_script.sh)
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
-* [sopka-menu](lib/sopka-menu.sh)
+* [sopka_menu](lib/sopka_menu.sh)
 * [sopka](lib/sopka.sh)
 * [terminal](lib/terminal.sh)
 
@@ -127,15 +127,15 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 ### Application deployment
 
-* [app-release](lib/app-release.sh)
-* [app-units](lib/app-units.sh)
+* [app_release](lib/app_release.sh)
+* [app_units](lib/app_units.sh)
 * [direnv](lib/direnv.sh)
 
 ### Desktop applications
 
 * [firefox](lib/firefox.sh)
-* [sublime-merge](lib/sublime-merge.sh)
-* [sublime-text](lib/sublime-text.sh)
+* [sublime_merge](lib/sublime_merge.sh)
+* [sublime_text](lib/sublime_text.sh)
 * [vscode](lib/vscode.sh)
 
 ### Hard to define a category
@@ -251,9 +251,9 @@ Could be set to `"true"`
 Could be set to function name. The function will be called with 3 arguments:
 
 ```
-$1 # stdoutFile (path fo file)
-$2 # stderrFile (path fo file)
-$3 # taskStatus (integer exit status)
+$1 # stdout_file (path fo file)
+$2 # stderr_file (path fo file)
+$3 # task_status (integer exit status)
 ```
 
 The function must return new exit status which will be assumed to be an exit status of the task.

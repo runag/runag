@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -22,33 +22,33 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   set -o nounset
 fi
 
-sopka::load-sopka-library() {
+sopka::load_sopka_library() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
-    local binPath; binPath="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
+    local bin_path; bin_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
   else
-    local binPath; binPath="${BASH_SOURCE[0]}"
+    local bin_path; bin_path="${BASH_SOURCE[0]}"
   fi
 
   # get basename of binary
-  local binName; binName="$(basename "${binPath}")" || { echo "Sopka: Unable to get a basename of '${binPath}' ($?)" >&2; return 1; }
+  local bin_name; bin_name="$(basename "${bin_path}")" || { echo "Sopka: Unable to get a basename of '${bin_path}' ($?)" >&2; return 1; }
 
   # get dirname that yet may result to relative path
-  local unresolvedBinDir; unresolvedBinDir="$(dirname "${binPath}")" || { echo "Sopka: Unable to get a dirname of '${binPath}' ($?)" >&2; return 1; }
+  local unresolved_bin_dir; unresolved_bin_dir="$(dirname "${bin_path}")" || { echo "Sopka: Unable to get a dirname of '${bin_path}' ($?)" >&2; return 1; }
 
   # get absolute path to dirname
-  local binDir; binDir="$(cd "${unresolvedBinDir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolvedBinDir}' ($?)" >&2; return 1; }
+  local bin_dir; bin_dir="$(cd "${unresolved_bin_dir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolved_bin_dir}' ($?)" >&2; return 1; }
 
   # set SOPKA_BIN_PATH if needed
-  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${binDir}/${binName}" ] && [ -x "${binDir}/${binName}" ]; then
-    export SOPKA_BIN_PATH="${binDir}/${binName}"
+  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${bin_dir}/${bin_name}" ] && [ -x "${bin_dir}/${bin_name}" ]; then
+    export SOPKA_BIN_PATH="${bin_dir}/${bin_name}"
   fi
 
-  . "${binDir}/../index.sh" || { echo "Sopka: Unable to load '${binDir}/../index.sh' ($?)" >&2; return 1; }
+  . "${bin_dir}/../index.sh" || { echo "Sopka: Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }
 }
 
 # Load sopka library index file
-sopka::load-sopka-library || {
+sopka::load_sopka_library || {
   echo "Sopka: Unable to load sopka library index file ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
@@ -63,25 +63,25 @@ sopka::load-sopka-library || {
 
 # Load sopkafile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
-  sopka::load-sopkafile
-  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || return $?
+  sopka::load_sopkafile
+  softfail_unless_good "Sopka: Unable to load sopkafile ($?)" $? || return $?
 else # we are not sourced
-  sopka::load-sopkafile
-  softfail-unless-good "Sopka: Unable to load sopkafile ($?)" $? || exit $?
+  sopka::load_sopkafile
+  softfail_unless_good "Sopka: Unable to load sopkafile ($?)" $? || exit $?
 fi
 
 # if there is something in the first argument, run it
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
-    softfail-unless-good "Sopka: Error performing $1 ($?)" $? || return $?
+    softfail_unless_good "Sopka: Error performing $1 ($?)" $? || return $?
     if [ -t 1 ]; then
       log::success "Done: $*"
     fi
     return 0
   else # we are not sourced
     "$@"
-    softfail-unless-good "Sopka: Error performing $1 ($?)" $? || exit $?
+    softfail_unless_good "Sopka: Error performing $1 ($?)" $? || exit $?
     if [ -t 1 ]; then
       log::success "Done: $*"
     fi
@@ -93,11 +93,11 @@ fi
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -f sopkafile::main >/dev/null; then
     sopkafile::main
-    softfail-unless-good "Sopka: Error performing sopkafile::main ($?)" $?
+    softfail_unless_good "Sopka: Error performing sopkafile::main ($?)" $?
     exit $?
-  elif sopka-menu::is-present && [ -t 0 ] && [ -t 1 ]; then
-    sopka-menu::display
-    softfail-unless-good "Sopka: Error performing sopka-menu::display ($?)" $?
+  elif sopka_menu::is_present && [ -t 0 ] && [ -t 1 ]; then
+    sopka_menu::display
+    softfail_unless_good "Sopka: Error performing sopka_menu::display ($?)" $?
     exit $?
   fi
 

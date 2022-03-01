@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,42 +14,42 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-menu::select-and-run() {
-  local commandsList=()
+menu::select_and_run() {
+  local commands_list=()
 
   if ! [ -t 0 ] || ! [ -t 1 ]; then
     softfail "Menu was called while not in terminal"
     return $?
   fi
 
-  local colorA; colorA="$(terminal::color 13)" || softfail || return $?
-  local colorB; colorB="$(terminal::color 15)" || softfail || return $?
-  local headerColor; headerColor="$(terminal::color 14)" || softfail || return $?
-  local defaultColor; defaultColor="$(terminal::default-color)" || softfail || return $?
+  local color_a; color_a="$(terminal::color 13)" || softfail || return $?
+  local color_b; color_b="$(terminal::color 15)" || softfail || return $?
+  local header_color; header_color="$(terminal::color 14)" || softfail || return $?
+  local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
-  local index=1 item currentColor=""
+  local index=1 item current_color=""
   echo ""
 
   for item in "$@"; do
     if [ -z "${item}" ]; then
       echo ""
-      currentColor=""
+      current_color=""
 
     elif [[ "${item}" =~ ^\# ]]; then
-      echo "  ${headerColor}== ${item:1} ==${defaultColor}"
-      currentColor=""
+      echo "  ${header_color}== ${item:1} ==${default_color}"
+      current_color=""
 
     else
-      if [ "${currentColor}" = "${colorA}" ]; then
-        currentColor="${colorB}"
+      if [ "${current_color}" = "${color_a}" ]; then
+        current_color="${color_b}"
       else
-        currentColor="${colorA}"
+        current_color="${color_a}"
       fi
 
-      echo "  ${currentColor}$((index))) ${item}${defaultColor}"
+      echo "  ${current_color}$((index))) ${item}${default_color}"
       
       ((index+=1))
-      commandsList+=("${item}")
+      commands_list+=("${item}")
 
     fi
   done
@@ -57,38 +57,38 @@ menu::select-and-run() {
   echo ""
   echo -n "${PS3:-"Please select number: "}"
 
-  local inputText readStatus
-  IFS="" read -r inputText
-  readStatus=$?
+  local input_text read_status
+  IFS="" read -r input_text
+  read_status=$?
 
-  if [ ${readStatus} != 0 ]; then
-    if [ ${readStatus} = 1 ] && [ -z "${inputText}" ]; then
+  if [ ${read_status} != 0 ]; then
+    if [ ${read_status} = 1 ] && [ -z "${input_text}" ]; then
       echo "cancelled" >&2
       exit 0
     else
-      softfail "Read failed (${readStatus})"
+      softfail "Read failed (${read_status})"
       return $?
     fi
   fi
 
-  if ! [[ "${inputText}" =~ ^[0-9]+$ ]]; then
+  if ! [[ "${input_text}" =~ ^[0-9]+$ ]]; then
     softfail "Please select number"
     return $?
   fi
 
-  if [ -z "${commandsList[$((inputText-1))]:+x}" ]; then
+  if [ -z "${commands_list[$((input_text-1))]:+x}" ]; then
     softfail "Selected number is not in the list"
     return $?
   fi
 
-  local selectedItem="${commandsList[$((inputText-1))]}"
+  local selected_item="${commands_list[$((input_text-1))]}"
 
   # I use "test" instead of "|| fail" here in case if someone wants
   # to use "set -o errexit" in their functions
 
-  eval "${selectedItem}"
-  softfail-unless-good "Error performing ${selectedItem}" $? || return $?
+  eval "${selected_item}"
+  softfail_unless_good "Error performing ${selected_item}" $? || return $?
 
-  log::success "Done: ${selectedItem}"
+  log::success "Done: ${selected_item}"
   return 0
 }

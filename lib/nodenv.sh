@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,34 +14,34 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-nodenv::install-and-load-shellrc() {
+nodenv::install_and_load_shellrc() {
   nodenv::install || softfail || return $?
-  nodenv::load-shellrc || softfail || return $?
+  nodenv::load_shellrc || softfail || return $?
 }
 
 nodenv::install() {
-  nodenv::install-repositories || softfail || return $?
-  nodenv::install-shellrc || softfail || return $?
+  nodenv::install_repositories || softfail || return $?
+  nodenv::install_shellrc || softfail || return $?
 }
 
-nodenv::install-repositories() {
-  local nodenvRoot="${HOME}/.nodenv"
+nodenv::install_repositories() {
+  local nodenv_root="${HOME}/.nodenv"
 
-  git::place-up-to-date-clone "https://github.com/nodenv/nodenv.git" "${nodenvRoot}" || softfail || return $?
+  git::place_up_to_date_clone "https://github.com/nodenv/nodenv.git" "${nodenv_root}" || softfail || return $?
 
-  dir::make-if-not-exists "${nodenvRoot}/plugins" || softfail || return $?
-  git::place-up-to-date-clone "https://github.com/nodenv/node-build.git" "${nodenvRoot}/plugins/node-build" || softfail || return $?
+  dir::make_if_not_exists "${nodenv_root}/plugins" || softfail || return $?
+  git::place_up_to_date_clone "https://github.com/nodenv/node-build.git" "${nodenv_root}/plugins/node-build" || softfail || return $?
 }
 
-nodenv::install-shellrc() {
+nodenv::install_shellrc() {
   if [ -n "${1:-}" ]; then
     local output="$1"
   else
-    local output; output="$(shellrc::get-filename "nodenv")" || softfail || return $?
+    local output; output="$(shellrc::get_filename "nodenv")" || softfail || return $?
   fi
 
   file::write "${output}" 600 <<SHELL || softfail || return $?
-$(sopka::print-license)
+$(sopka::print_license)
 
 if [ -d "\${HOME}/.nodenv/bin" ]; then
   if ! [[ ":\${PATH}:" == *":\${HOME}/.nodenv/bin:"* ]]; then
@@ -58,31 +58,31 @@ fi
 SHELL
 }
 
-nodenv::load-shellrc() {
+nodenv::load_shellrc() {
   shellrc::load "nodenv" || softfail || return $?
 }
 
-nodenv::load-shellrc-if-exists() {
-  shellrc::load-if-exists "nodenv" || softfail || return $?
+nodenv::load_shellrc_if_exists() {
+  shellrc::load_if_exists "nodenv" || softfail || return $?
 }
 
-nodenv::with-shellrc() {(
-  nodenv::load-shellrc || softfail || return $?
+nodenv::with_shellrc() {(
+  nodenv::load_shellrc || softfail || return $?
   "$@"
 )}
 
-nodenv::path-variable() {
-  local userName="${1:-"${USER}"}"
-  local userHome; userHome="$(linux::get-user-home "${userName}")" || softfail || return $?
-  echo "${userHome}/.nodenv/shims:${userHome}/.nodenv/bin"
+nodenv::path_variable() {
+  local user_name="${1:-"${USER}"}"
+  local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
+  echo "${user_home}/.nodenv/shims:${user_home}/.nodenv/bin"
 }
 
-nodenv::install-nodejs() {
+nodenv::install_nodejs() {
   nodenv install --skip-existing "$@" || softfail || return $?
   nodenv rehash || softfail || return $?
 }
 
-nodenv::configure-mismatched-binaries-workaround() {
+nodenv::configure_mismatched_binaries_workaround() {
   # https://github.com/nodenv/nodenv/wiki/FAQ#npm-warning-about-mismatched-binaries
   npm config set scripts-prepend-node-path auto || softfail || return $?
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,88 +14,88 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-leaseweb::domains::get-short-record() {
+leaseweb::domains::get_short_record() {
   local record="$1"
-  local recordType="$2"
+  local record_type="$2"
 
-  leaseweb::domains::list "${record}" "${recordType}" | jq --exit-status 'del(._links, .editable)'
+  leaseweb::domains::list "${record}" "${record_type}" | jq --exit-status 'del(._links, .editable)'
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
 leaseweb::domains::list() {(
   local record="$1"
-  local recordType="$2"
+  local record_type="$2"
 
-  local domain; domain="$(leaseweb::domains::extract-domain-from-host "${record}")" || softfail || return $?
-  local apiKey; apiKey="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
+  local domain; domain="$(leaseweb::domains::extract_domain_from_host "${record}")" || softfail || return $?
+  local api_key; api_key="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
   curl \
     --fail \
-    --header "X-Lsw-Auth: ${apiKey}" \
+    --header "X-Lsw-Auth: ${api_key}" \
     --request GET \
     --show-error \
     --silent \
-    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType}" \
+    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
       || softfail || return $?
 )}
 
 # 1m 5m 30m 1h 4h 8h 12h 1d
-leaseweb::domains::set-record() {(
+leaseweb::domains::set_record() {(
   local record="$1"
-  local recordTtl="$2"
-  local recordType="$3"
-  local recordData="$4"
+  local record_ttl="$2"
+  local record_type="$3"
+  local record_data="$4"
 
-  local domain; domain="$(leaseweb::domains::extract-domain-from-host "${record}")" || softfail || return $?
-  local apiKey; apiKey="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
+  local domain; domain="$(leaseweb::domains::extract_domain_from_host "${record}")" || softfail || return $?
+  local api_key; api_key="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
-  if [ "${recordTtl}" = 1m ]; then
-    recordTtl=60
-  elif [ "${recordTtl}" = 5m ]; then
-    recordTtl=300
-  elif [ "${recordTtl}" = 30m ]; then
-    recordTtl=1800
-  elif [ "${recordTtl}" = 1h ]; then
-    recordTtl=3600
-  elif [ "${recordTtl}" = 4h ]; then
-    recordTtl=14400
-  elif [ "${recordTtl}" = 8h ]; then
-    recordTtl=28800
-  elif [ "${recordTtl}" = 12h ]; then
-    recordTtl=43200
-  elif [ "${recordTtl}" = 1d ]; then
-    recordTtl=86400
+  if [ "${record_ttl}" = 1m ]; then
+    record_ttl=60
+  elif [ "${record_ttl}" = 5m ]; then
+    record_ttl=300
+  elif [ "${record_ttl}" = 30m ]; then
+    record_ttl=1800
+  elif [ "${record_ttl}" = 1h ]; then
+    record_ttl=3600
+  elif [ "${record_ttl}" = 4h ]; then
+    record_ttl=14400
+  elif [ "${record_ttl}" = 8h ]; then
+    record_ttl=28800
+  elif [ "${record_ttl}" = 12h ]; then
+    record_ttl=43200
+  elif [ "${record_ttl}" = 1d ]; then
+    record_ttl=86400
   fi
 
-  local domainExists; domainExists="$(curl \
-    --header "X-Lsw-Auth: ${apiKey}" \
+  local domain_exists; domain_exists="$(curl \
+    --header "X-Lsw-Auth: ${api_key}" \
     --output /dev/null \
     --request GET \
     --show-error \
     --silent \
-    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType}" \
+    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
     --write-out "%{http_code}" \
     )" || softfail || return $?
 
-  if [ "${domainExists}" = 200 ]; then
+  if [ "${domain_exists}" = 200 ]; then
     curl \
-      --data "{ \"content\": [\"${recordData}\"], \"ttl\": ${recordTtl} }" \
+      --data "{ \"content\": [\"${record_data}\"], \"ttl\": ${record_ttl} }" \
       --fail \
       --header "content-type: application/json" \
-      --header "X-Lsw-Auth: ${apiKey}" \
+      --header "X-Lsw-Auth: ${api_key}" \
       --output /dev/null \
       --request PUT \
       --show-error \
       --silent \
-      --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType}" \
+      --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
         || softfail || return $?
 
-  elif [ "$domainExists" = 404 ]; then
+  elif [ "$domain_exists" = 404 ]; then
     curl \
-      --data "{ \"name\": \"${record}.\", \"type\": \"${recordType}\", \"content\": [\"${recordData}\"], \"ttl\": ${recordTtl} }" \
+      --data "{ \"name\": \"${record}.\", \"type\": \"${record_type}\", \"content\": [\"${record_data}\"], \"ttl\": ${record_ttl} }" \
       --fail \
       --header "content-type: application/json" \
-      --header "X-Lsw-Auth: ${apiKey}" \
+      --header "X-Lsw-Auth: ${api_key}" \
       --output /dev/null \
       --request POST \
       --show-error \
@@ -104,39 +104,39 @@ leaseweb::domains::set-record() {(
         || softfail || return $?
 
   else
-    softfail "Domain check returned HTTP status code: ${domainExists}"
+    softfail "Domain check returned HTTP status code: ${domain_exists}"
     return $?
   fi
 )}
 
-leaseweb::domains::clear-record() {(
+leaseweb::domains::clear_record() {(
   local record="$1"
-  local recordType="$2"
+  local record_type="$2"
 
-  local domain; domain="$(leaseweb::domains::extract-domain-from-host "${record}")" || softfail || return $?
-  local apiKey; apiKey="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
+  local domain; domain="$(leaseweb::domains::extract_domain_from_host "${record}")" || softfail || return $?
+  local api_key; api_key="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
   curl \
     --fail \
-    --header "X-Lsw-Auth: ${apiKey}" \
+    --header "X-Lsw-Auth: ${api_key}" \
     --output /dev/null \
     --request DELETE \
     --show-error \
     --silent \
-    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${recordType}" \
+    --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
       || softfail || return $?
 )}
 
-leaseweb::domains::set-acme-challenge() {
+leaseweb::domains::set_acme_challenge() {
   export LEASEWEB_KEY_FILE="$1"
-  leaseweb::domains::set-record "_acme-challenge.${CERTBOT_DOMAIN}" 1m TXT "${CERTBOT_VALIDATION}" || softfail || return $?
+  leaseweb::domains::set_record "_acme-challenge.${CERTBOT_DOMAIN}" 1m TXT "${CERTBOT_VALIDATION}" || softfail || return $?
 }
 
-leaseweb::domains::clear-acme-challenge() {
+leaseweb::domains::clear_acme_challenge() {
   export LEASEWEB_KEY_FILE="$1"
-  leaseweb::domains::clear-record "_acme-challenge.${CERTBOT_DOMAIN}" TXT || softfail || return $?
+  leaseweb::domains::clear_record "_acme-challenge.${CERTBOT_DOMAIN}" TXT || softfail || return $?
 }
 
-leaseweb::domains::extract-domain-from-host() {
+leaseweb::domains::extract_domain_from_host() {
   grep -E --only-matching "[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-]+$" <<< "$1" || softfail || return $?
 }

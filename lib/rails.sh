@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-rails::get-database-config() {
-  ruby <(rails::get-database-config::ruby-script) "$1" || softfail "Unable to get database config from ruby" || return $?
+rails::get_database_config() {
+  ruby <(rails::get_database_config::ruby_script) "$1" || softfail "Unable to get database config from ruby" || return $?
 }
 
-rails::get-database-config::ruby-script() {
+rails::get_database_config::ruby_script() {
   cat <<RUBY
     require "yaml"
 
@@ -44,14 +44,14 @@ rails::get-database-config::ruby-script() {
 RUBY
 }
 
-rails::is-migration-pending() {
+rails::is_migration_pending() {
   # I count lines here because "grep -q" will stop on first match and then
   # rails will abort with pipe error and with an error message
   bin/rails db:migrate:status | grep -cE "^[[:space:]]+down" >/dev/null
 
-  local savedPipeStatus=("${PIPESTATUS[@]}")
+  local saved_pipe_status=("${PIPESTATUS[@]}")
 
-  test "${savedPipeStatus[0]}" = 0 || fail "Error performing 'bin/rails db:migrate:status'"
+  test "${saved_pipe_status[0]}" = 0 || fail "Error performing 'bin/rails db:migrate:status'"
 
-  test "${savedPipeStatus[1]}" = 0
+  test "${saved_pipe_status[1]}" = 0
 }

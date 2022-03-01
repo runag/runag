@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,29 +15,29 @@
 #  limitations under the License.
 
 # To get a version number, use: rbenv install -l
-ruby::install-by-rbenv() {
-  ruby::install-dependencies-by-apt || softfail || return $?
-  rbenv::install-and-load-shellrc || softfail || return $?
-  rbenv::install-ruby "$@" || softfail || return $?
+ruby::install_by_rbenv() {
+  ruby::install_dependencies_by_apt || softfail || return $?
+  rbenv::install_and_load_shellrc || softfail || return $?
+  rbenv::install_ruby "$@" || softfail || return $?
 }
 
-ruby::install-and-set-global-by-rbenv() {
-  local rubyVersion="$1"
-  ruby::install-by-rbenv "${rubyVersion}" || softfail || return $?
-  rbenv global "${rubyVersion}" || softfail || return $?
+ruby::install_and_set_global_by_rbenv() {
+  local ruby_version="$1"
+  ruby::install_by_rbenv "${ruby_version}" || softfail || return $?
+  rbenv global "${ruby_version}" || softfail || return $?
 }
 
-ruby::install-without-dependencies-by-rbenv() {
-  rbenv::install-and-load-shellrc || softfail || return $?
-  rbenv::install-ruby "$@" || softfail || return $?
+ruby::install_without_dependencies_by_rbenv() {
+  rbenv::install_and_load_shellrc || softfail || return $?
+  rbenv::install_ruby "$@" || softfail || return $?
 }
 
-ruby::install-by-apt() {
-  ruby::install-dependencies-by-apt || softfail || return $?
+ruby::install_by_apt() {
+  ruby::install_dependencies_by_apt || softfail || return $?
   apt::install ruby-full || softfail || return $?
 }
 
-ruby::install-dependencies-by-apt() {
+ruby::install_dependencies_by_apt() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
     libedit-dev `# dependency to install ruby 2.7.3 using rbenv` \
@@ -48,8 +48,8 @@ ruby::install-dependencies-by-apt() {
       || softfail || return $?
 }
 
-ruby::dangerously-append-nodocument-to-gemrc() {
-  local gemrcFile="${HOME}/.gemrc"
-  ( umask 0177 && touch "${gemrcFile}" ) || softfail || return $?
-  file::append-line-unless-present "gem: --no-document" "${gemrcFile}" || softfail || return $?
+ruby::dangerously_append_nodocument_to_gemrc() {
+  local gemrc_file="${HOME}/.gemrc"
+  ( umask 0177 && touch "${gemrc_file}" ) || softfail || return $?
+  file::append_line_unless_present "gem: --no-document" "${gemrc_file}" || softfail || return $?
 }

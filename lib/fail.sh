@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -20,20 +20,20 @@ fail() {
   exit $?
 }
 
-# foo || fail-code <error code>
-fail-code() {
+# foo || fail_code <error code>
+fail_code() {
   softfail::internal "" "$1"
   exit $?
 }
 
-# foo || fail-unless-good ["error message" [<error code>]]
-fail-unless-good() {
-  softfail-unless-good::internal "$@" || exit $?
+# foo || fail_unless_good ["error message" [<error code>]]
+fail_unless_good() {
+  softfail_unless_good::internal "$@" || exit $?
 }
 
-# foo || fail-unless-good-code <error code>
-fail-unless-good-code() {
-  softfail-unless-good::internal "" "$1" || exit $?
+# foo || fail_unless_good_code <error code>
+fail_unless_good_code() {
+  softfail_unless_good::internal "" "$1" || exit $?
 }
 
 
@@ -42,57 +42,57 @@ softfail() {
   softfail::internal "$@"
 }
 
-# foo || softfail-code <error code> || return $?
-softfail-code() {
+# foo || softfail_code <error code> || return $?
+softfail_code() {
   softfail::internal "" "$1"
 }
 
-# foo || softfail-unless-good ["error message" [<error code>]] || return $?
-softfail-unless-good() {
-  softfail-unless-good::internal "$@"
+# foo || softfail_unless_good ["error message" [<error code>]] || return $?
+softfail_unless_good() {
+  softfail_unless_good::internal "$@"
 }
 
-# foo || softfail-unless-good-code <error code> || return $?
-softfail-unless-good-code() {
-  softfail-unless-good::internal "" "$1"
+# foo || softfail_unless_good_code <error code> || return $?
+softfail_unless_good_code() {
+  softfail_unless_good::internal "" "$1"
 }
 
 softfail::internal() {
   local message="${1:-"Abnormal termination"}"
-  local exitStatus="${2:-undefined}"
+  local exit_status="${2:-undefined}"
 
-  # make sure we fail if there are some unexpected stuff in exitStatus
-  if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
-    exitStatus=1
+  # make sure we fail if there are some unexpected stuff in exit_status
+  if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
+    exit_status=1
   fi
 
   # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
   # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
-  log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" >&2
+  log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" >&2
 
-  if [ "${exitStatus}" != 0 ]; then
-    return "${exitStatus}"
+  if [ "${exit_status}" != 0 ]; then
+    return "${exit_status}"
   fi
 
   return 1
 }
 
-softfail-unless-good::internal() {
+softfail_unless_good::internal() {
   local message="${1:-"Abnormal termination"}"
-  local exitStatus="${2:-undefined}"
+  local exit_status="${2:-undefined}"
 
-  # make sure we fail if there are some unexpected stuff in exitStatus
-  if ! [[ "${exitStatus}" =~ ^[0-9]+$ ]]; then
-    exitStatus=1
+  # make sure we fail if there are some unexpected stuff in exit_status
+  if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
+    exit_status=1
   fi
 
-  if [ "${exitStatus}" != 0 ]; then
+  if [ "${exit_status}" != 0 ]; then
     # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
     # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
-    log::error-trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" >&2
+    log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" >&2
   fi
 
-  return "${exitStatus}"
+  return "${exit_status}"
 }
 
 # sopka test::fail-foo; echo exit status: $?
@@ -103,24 +103,24 @@ softfail-unless-good::internal() {
 
 # test::fail-bar() {
 #   # fail
-#   # fail-code 12
+#   # fail_code 12
 #   # fail "foo" 12
-#   # fail-unless-good
-#   # fail-unless-good "foo"
-#   # fail-unless-good "foo" 12
-#   # fail-unless-good "foo" 0
-#   # fail-unless-good-code 12
-#   # fail-unless-good-code 0
+#   # fail_unless_good
+#   # fail_unless_good "foo"
+#   # fail_unless_good "foo" 12
+#   # fail_unless_good "foo" 0
+#   # fail_unless_good_code 12
+#   # fail_unless_good_code 0
 
 #   # softfail || return $?
-#   # softfail-code 12 || return $?
+#   # softfail_code 12 || return $?
 #   # softfail "foo" 12 || return $?
-#   # softfail-unless-good || return $?
-#   # softfail-unless-good "foo" || return $?
-#   # softfail-unless-good "foo" 12 || return $?
-#   # softfail-unless-good "foo" 0 || return $?
-#   # softfail-unless-good-code 12 || return $?
-#   # softfail-unless-good-code 0 || return $?
+#   # softfail_unless_good || return $?
+#   # softfail_unless_good "foo" || return $?
+#   # softfail_unless_good "foo" 12 || return $?
+#   # softfail_unless_good "foo" 0 || return $?
+#   # softfail_unless_good_code 12 || return $?
+#   # softfail_unless_good_code 0 || return $?
 
 #   echo end of function!!!
 # }

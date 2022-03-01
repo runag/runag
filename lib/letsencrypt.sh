@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-letsencrypt::agree-tos-and-register-unsafely-without-email() {
+letsencrypt::agree_tos_and_register_unsafely_without_email() {
   if [ ! -d /etc/letsencrypt/accounts ] || [ -z "$(ls -A /etc/letsencrypt/accounts)" ]; then
     sudo letsencrypt register \
       --agree-tos \
@@ -24,8 +24,8 @@ letsencrypt::agree-tos-and-register-unsafely-without-email() {
   fi
 }
 
-letsencrypt::make-domains-string() {
-  local domainsList; IFS=" " read -r -a domainsList <<< "${LETSENCRYPT_DOMAINS:-"${APP_DOMAINS:?}"}" || softfail || return $?
-  local domainsString; printf -v domainsString ",%s" "${domainsList[@]}" || softfail || return $?
-  echo "${domainsString:1}"
+letsencrypt::make_domains_string() {
+  local domains_list; IFS=" " read -r -a domains_list <<< "${LETSENCRYPT_DOMAINS:-"${APP_DOMAINS:?}"}" || softfail || return $?
+  local domains_string; printf -v domains_string ",%s" "${domains_list[@]}" || softfail || return $?
+  echo "${domains_string:1}"
 }

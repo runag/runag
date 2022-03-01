@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,64 +14,64 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::ssh-jump() {
+task::ssh_jump() {
   # shellcheck disable=2034
   local SOPKA_TASK_SSH_JUMP=true
   "$@"
 }
 
-task::run-with-install-filter() {
+task::run_with_install_filter() {
   # shellcheck disable=2034
-  local SOPKA_TASK_STDERR_FILTER=task::install-filter
+  local SOPKA_TASK_STDERR_FILTER=task::install_filter
   task::run "$@"
 }
 
-task::run-with-rubygems-fail-detector() {
+task::run_with_rubygems_fail_detector() {
   # shellcheck disable=2034
-  local SOPKA_TASK_FAIL_DETECTOR=task::rubygems-fail-detector
+  local SOPKA_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
   task::run "$@"
 }
 
-task::run-without-title() {
+task::run_without_title() {
   # shellcheck disable=2034
   local SOPKA_TASK_OMIT_TITLE=true
   task::run "$@"
 }
 
-task::run-with-title() {
+task::run_with_title() {
   # shellcheck disable=2034
   local SOPKA_TASK_TITLE="$1"
   task::run "${@:2}"
 }
 
-task::run-with-short-title() {
+task::run_with_short_title() {
   # shellcheck disable=2034
   local SOPKA_TASK_TITLE="$1"
   task::run "$@"
 }
 
-task::run-verbose() {
+task::run_verbose() {
   # shellcheck disable=2034
   local SOPKA_TASK_VERBOSE=true
   task::run "$@"
 }
 
-task::rubygems-fail-detector() {
-  local stderrFile="$2"
-  local taskStatus="$3"
+task::rubygems_fail_detector() {
+  local stderr_file="$2"
+  local task_status="$3"
 
-  if [ "${taskStatus}" = 0 ] && [ -s "${stderrFile}" ] && grep -q "^ERROR:" "${stderrFile}"; then
+  if [ "${task_status}" = 0 ] && [ -s "${stderr_file}" ] && grep -q "^ERROR:" "${stderr_file}"; then
     return 1
   fi
 
-  return "${taskStatus}"
+  return "${task_status}"
 }
 
-task::detect-fail-state() {
-  local taskStatus="$3"
+task::detect_fail_state() {
+  local task_status="$3"
 
   if [ -z "${SOPKA_TASK_FAIL_DETECTOR:-}" ]; then
-    return "${taskStatus}"
+    return "${task_status}"
   fi
 
   "${SOPKA_TASK_FAIL_DETECTOR}" "$@"
@@ -89,27 +89,27 @@ task::run() {(
   fi
 
   # shellcheck disable=SC2030
-  local tempDir; tempDir="$(mktemp -d)" || fail # tempDir also used in task::cleanup signal handler
+  local temp_dir; temp_dir="$(mktemp -d)" || fail # temp_dir also used in task::cleanup signal handler
 
-  trap "task::complete-with-cleanup" EXIT
+  trap "task::complete_with_cleanup" EXIT
 
   # I know I could put /dev/fd/0 in variable, but what if system does not support it?
   if [ -t 0 ]; then # stdin is a terminal
-    ("$@") </dev/null >"${tempDir}/stdout" 2>"${tempDir}/stderr"
+    ("$@") </dev/null >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"
   else
-    ("$@") >"${tempDir}/stdout" 2>"${tempDir}/stderr"
+    ("$@") >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"
   fi
   
   # shellcheck disable=SC2030
-  local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
+  local task_status=$? # task_status also used in task::cleanup signal handler so we must assign it here
 
-  task::detect-fail-state "${tempDir}/stdout" "${tempDir}/stderr" "${taskStatus}"
-  local taskStatus=$? # taskStatus also used in task::cleanup signal handler so we must assign it here
+  task::detect_fail_state "${temp_dir}/stdout" "${temp_dir}/stderr" "${task_status}"
+  local task_status=$? # task_status also used in task::cleanup signal handler so we must assign it here
 
-  exit "${taskStatus}"
+  exit "${task_status}"
 )}
 
-task::install-filter() {
+task::install_filter() {
   # Those greps are for:
   # 1. tailscale
   # 2. apt-key
@@ -124,52 +124,52 @@ task::install-filter() {
   fi
 }
 
-task::is-stderr-empty-after-filtering() {
-  local stderrFile="$1"
+task::is_stderr_empty_after_filtering() {
+  local stderr_file="$1"
 
-  local stderrSize; stderrSize="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderrFile}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+  local stderr_size; stderr_size="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
 
-  if [ "${stderrSize}" != 0 ]; then
+  if [ "${stderr_size}" != 0 ]; then
     return 1
   fi
 }
 
 # shellcheck disable=SC2031
-task::complete-with-cleanup() {
+task::complete_with_cleanup() {
   task::complete || softfail || return $?
 
   if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
-    rm -fd "${tempDir}/stdout" "${tempDir}/stderr" "${tempDir}" || softfail || return $?
+    rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?
   fi
 }
 
 # shellcheck disable=SC2031
 task::complete() {
-  local errorState=0
-  local stderrPresent=false
+  local error_state=0
+  local stderr_present=false
 
-  if [ "${taskStatus:-1}" = 0 ] && [ -s "${tempDir}/stderr" ]; then
-    stderrPresent=true
-    if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is-stderr-empty-after-filtering "${tempDir}/stderr"; then
-      stderrPresent=false
+  if [ "${task_status:-1}" = 0 ] && [ -s "${temp_dir}/stderr" ]; then
+    stderr_present=true
+    if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is_stderr_empty_after_filtering "${temp_dir}/stderr"; then
+      stderr_present=false
     fi
   fi
 
-  if [ "${taskStatus:-1}" != 0 ] || [ "${stderrPresent}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
+  if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
 
-    if [ -s "${tempDir}/stdout" ]; then
-      cat "${tempDir}/stdout" || { echo "Sopka: Unable to display task stdout ($?)" >&2; errorState=1; }
+    if [ -s "${temp_dir}/stdout" ]; then
+      cat "${temp_dir}/stdout" || { echo "Sopka: Unable to display task stdout ($?)" >&2; error_state=1; }
     fi
 
-    if [ -s "${tempDir}/stderr" ]; then
+    if [ -s "${temp_dir}/stderr" ]; then
       test -t 2 && terminal::color 9 >&2
-      cat "${tempDir}/stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; errorState=2; }
-      test -t 2 && terminal::default-color >&2
+      cat "${temp_dir}/stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; error_state=2; }
+      test -t 2 && terminal::default_color >&2
     fi
   fi
 
-  if [ "${errorState}" != 0 ]; then
-    softfail "task::cleanup error state ${errorState}" || return $?
+  if [ "${error_state}" != 0 ]; then
+    softfail "task::cleanup error state ${error_state}" || return $?
   fi
 }
 

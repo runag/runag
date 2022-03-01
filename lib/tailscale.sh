@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,52 +15,52 @@
 #  limitations under the License.
 
 tailscale::install() {
-  local distributorId distributionCodename
+  local distributor_id distribution_codename
 
-  distributorId="$(linux::get-distributor-id-lowercase)" || fail
-  distributionCodename="$(lsb_release --codename --short)" || fail
+  distributor_id="$(linux::get_distributor_id_lowercase)" || fail
+  distribution_codename="$(lsb_release --codename --short)" || fail
 
   curl --fail --silent --show-error --location \
-    "https://pkgs.tailscale.com/stable/${distributorId}/${distributionCodename}.gpg" | sudo apt-key add -
+    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" | sudo apt-key add -
   test "${PIPESTATUS[*]}" = "0 0" || fail
 
   curl --fail --silent --show-error --location \
-    "https://pkgs.tailscale.com/stable/${distributorId}/${distributionCodename}.list" | sudo tee /etc/apt/sources.list.d/tailscale.list
+    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.list" | sudo tee /etc/apt/sources.list.d/tailscale.list
   test "${PIPESTATUS[*]}" = "0 0" || fail
 
   apt::update || fail
   apt::install tailscale || fail
 }
 
-tailscale::is-logged-out() {
-  local statusString; statusString="$(tailscale status)"
-  local statusCode=$?
+tailscale::is_logged_out() {
+  local status_string; status_string="$(tailscale status)"
+  local status_code=$?
 
-  if [ "${statusCode}" = 1 ] && [ "${statusString}" = "Logged out." ]; then
+  if [ "${status_code}" = 1 ] && [ "${status_string}" = "Logged out." ]; then
     return 0
   else
     return 1
   fi
 }
 
-tailscale::issue-2541-workaround() {
+tailscale::issue_2541_workaround() {
   if ip address show tailscale0 >/dev/null 2>&1; then
     if ! ip address show tailscale0 | grep -qF "inet"; then
-      echo "tailscale::issue-2541-workaround: about to restart tailscaled"
+      echo "tailscale::issue_2541_workaround: about to restart tailscaled"
       sudo systemctl restart tailscaled || { echo "Unable to restart tailscaled" >&2; exit 1; }
     fi
   fi
 }
 
-tailscale::install-issue-2541-workaround() {
-  file::sudo-write /usr/local/bin/tailscale-issue-2541-workaround 755 <<SHELL || fail
+tailscale::install_issue_2541_workaround() {
+  file::sudo_write /usr/local/bin/tailscale-issue-2541-workaround 755 <<SHELL || fail
 #!/usr/bin/env bash
-$(sopka::print-license)
-$(declare -f tailscale::issue-2541-workaround)
-tailscale::issue-2541-workaround || { echo "Unable to perform tailscale::issue-2541-workaround" >&2; exit 1; }
+$(sopka::print_license)
+$(declare -f tailscale::issue_2541_workaround)
+tailscale::issue_2541_workaround || { echo "Unable to perform tailscale::issue_2541_workaround" >&2; exit 1; }
 SHELL
 
-  file::sudo-write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || fail
+  file::sudo_write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || fail
 [Unit]
 Description=tailscale-issue-2541-workaround
 
@@ -70,7 +70,7 @@ ExecStart=/usr/local/bin/tailscale-issue-2541-workaround
 WorkingDirectory=/
 EOF
 
-  file::sudo-write /etc/systemd/system/tailscale-issue-2541-workaround.timer <<EOF || fail
+  file::sudo_write /etc/systemd/system/tailscale-issue-2541-workaround.timer <<EOF || fail
 [Unit]
 Description=tailscale-issue-2541-workaround
 

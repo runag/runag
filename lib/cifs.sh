@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,38 +15,38 @@
 #  limitations under the License.
 
 cifs::credentials::exists() {
-  local credentialsFile="$1"
-  test -f "${credentialsFile}"
+  local credentials_file="$1"
+  test -f "${credentials_file}"
 }
 
 cifs::credentials::save() {
-  local cifsUsername="$1"
-  local cifsPassword="$2"
-  local credentialsFile="$3"
+  local cifs_username="$1"
+  local cifs_password="$2"
+  local credentials_file="$3"
   local mode="${4:-"600"}"
   
-  printf "username=%s\npassword=%s\n" "${cifsUsername}" "${cifsPassword}" | file::write "${credentialsFile}" "${mode}"
+  printf "username=%s\npassword=%s\n" "${cifs_username}" "${cifs_password}" | file::write "${credentials_file}" "${mode}"
   test "${PIPESTATUS[*]}" = "0 0" || fail
 }
 
 cifs::mount() {
-  local serverPath="$1"
-  local mountPoint="$2"
-  local credentialsFile="$3"
-  local fileMode="${4:-"0600"}" 
-  local dirMode="${5:-"0700"}" 
+  local server_path="$1"
+  local mount_point="$2"
+  local credentials_file="$3"
+  local file_mode="${4:-"0600"}" 
+  local dir_mode="${5:-"0700"}" 
 
-  dir::make-if-not-exists "${mountPoint}" "${dirMode}" || fail
+  dir::make_if_not_exists "${mount_point}" "${dir_mode}" || fail
 
-  local fstabTag="# cifs mount: ${mountPoint}"
+  local fstab_tag="# cifs mount: ${mount_point}"
 
-  if ! grep -qFx "${fstabTag}" /etc/fstab; then
-    echo "${fstabTag}" | sudo tee -a /etc/fstab >/dev/null || fail
-    echo "${serverPath} ${mountPoint} cifs credentials=${credentialsFile},uid=${USER},forceuid,gid=${USER},forcegid,file_mode=${fileMode},dir_mode=${dirMode},nosetuids,echo_interval=10,noserverino,noposix  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
+  if ! grep -qFx "${fstab_tag}" /etc/fstab; then
+    echo "${fstab_tag}" | sudo tee -a /etc/fstab >/dev/null || fail
+    echo "${server_path} ${mount_point} cifs credentials=${credentials_file},uid=${USER},forceuid,gid=${USER},forcegid,file_mode=${file_mode},dir_mode=${dir_mode},nosetuids,echo_interval=10,noserverino,noposix  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
   fi
 
   # other mounts might fail, so we ignore exit status here
   sudo mount -a
 
-  findmnt --mountpoint "${mountPoint}" >/dev/null || fail "Filesystem is not mounted: ${mountPoint}"
+  findmnt --mountpoint "${mount_point}" >/dev/null || fail "Filesystem is not mounted: ${mount_point}"
 }

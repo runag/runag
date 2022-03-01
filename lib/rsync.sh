@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,57 +14,57 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-rsync::sync-to-remote() {
+rsync::sync_to_remote() {
   rsync::sync "$1" "${REMOTE_HOST:-}:$2" || softfail || return $?
 }
 
-rsync::sync-from-remote() {
+rsync::sync_from_remote() {
   rsync::sync "${REMOTE_HOST:-}:$1" "$2" || softfail || return $?
 }
 
-rsync::set-args() {
+rsync::set_args() {
   if [ "${SOPKA_RSYNC_DELETE_AND_BACKUP:-}" = "true" ]; then
     local timestamp; timestamp="$(date --utc +"%Y%m%dT%H%M%SZ")" || softfail || return $?
 
-    rsyncArgs+=("--delete")
-    rsyncArgs+=("--backup")
-    rsyncArgs+=("--backup-dir=.sopka-rsync-backups/${timestamp}")
-    rsyncArgs+=("--filter=protect_.sopka-rsync-backups")
+    rsync_args+=("--delete")
+    rsync_args+=("--backup")
+    rsync_args+=("--backup-dir=.sopka-rsync-backups/${timestamp}")
+    rsync_args+=("--filter=protect_.sopka-rsync-backups")
   fi
 
   if [ "${SOPKA_RSYNC_WITHOUT_CHECKSUMS:-}" != "true" ]; then
-    rsyncArgs+=("--checksum")
+    rsync_args+=("--checksum")
   fi
 
   if declare -p SOPKA_RSYNC_ARGS >/dev/null 2>&1; then
-    rsyncArgs=("${rsyncArgs[@]}" "${SOPKA_RSYNC_ARGS[@]}")
+    rsync_args=("${rsync_args[@]}" "${SOPKA_RSYNC_ARGS[@]}")
   fi
 }
 
 rsync::sync() {
-  local rsyncArgs=()
+  local rsync_args=()
 
-  rsync::set-args || softfail || return $?
+  rsync::set_args || softfail || return $?
 
   rsync::run \
     --links \
     --perms \
     --recursive \
     --times \
-    "${rsyncArgs[@]}" \
+    "${rsync_args[@]}" \
     "$@" || softfail || return $?
 }
 
 rsync::run() {
-  ssh::make-user-config-dir-if-not-exists || softfail || return $?
+  ssh::make_user_config_dir_if_not_exists || softfail || return $?
 
-  local sshArgs=()
-  ssh::set-args || softfail || return $?
+  local ssh_args=()
+  ssh::set_args || softfail || return $?
 
-  local sshArgsString
-  printf -v sshArgsString " '%s'" "${sshArgs[@]}" || softfail || return $?
+  local ssh_args_string
+  printf -v ssh_args_string " '%s'" "${ssh_args[@]}" || softfail || return $?
 
-  rsync --rsh "ssh ${sshArgsString:1}" "$@" || softfail || return $?
+  rsync --rsh "ssh ${ssh_args_string:1}" "$@" || softfail || return $?
 }
 
 # REMOTE_HOST=example.com sopka rsync::upload ~/.sopka/ .sopka

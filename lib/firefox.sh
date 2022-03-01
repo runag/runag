@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,27 +14,27 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-firefox::enable-wayland() {
-  local pamFile="${HOME}/.pam_environment"
+firefox::enable_wayland() {
+  local pam_file="${HOME}/.pam_environment"
 
-  ( umask 0137 && touch "${pamFile}" ) || softfail || return $?
+  ( umask 0137 && touch "${pam_file}" ) || softfail || return $?
 
-  if ! grep -q "^MOZ_ENABLE_WAYLAND" "${pamFile}"; then
-    echo "MOZ_ENABLE_WAYLAND=1" >>"${pamFile}" || softfail || return $?
+  if ! grep -q "^MOZ_ENABLE_WAYLAND" "${pam_file}"; then
+    echo "MOZ_ENABLE_WAYLAND=1" >>"${pam_file}" || softfail || return $?
   fi
 }
 
-firefox::set-pref() {
+firefox::set_pref() {
   local name="$1"
   local value="$2"
   
-  local prefsLine="user_pref(\"${name}\", ${value});"
+  local prefs_line="user_pref(\"${name}\", ${value});"
   
-  local profileDir; for profileDir in "${HOME}/.mozilla/firefox"/*.default-release; do
-    if [ -d "${profileDir}" ]; then
-      local prefsFile="${profileDir}/prefs.js"
-      if ! grep -qFx "${prefsLine}" "${prefsFile}"; then
-        echo "${prefsLine}" >>"${prefsFile}" || softfail || return $?
+  local profile_dir; for profile_dir in "${HOME}/.mozilla/firefox"/*.default-release; do
+    if [ -d "${profile_dir}" ]; then
+      local prefs_file="${profile_dir}/prefs.js"
+      if ! grep -qFx "${prefs_line}" "${prefs_file}"; then
+        echo "${prefs_line}" >>"${prefs_file}" || softfail || return $?
       fi
     fi
   done

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2021 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@
 . bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
 
 shdoc::install() {
-  local tempDir; tempDir="$(mktemp -d)" || softfail || return $?
-  git clone --recursive https://github.com/reconquest/shdoc "${tempDir}" || softfail || return $?
-  (cd "${tempDir}" && make && sudo make install) || softfail || return $?
-  rm -rf "${tempDir}" || softfail || return $?
+  local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?
+  git clone --recursive https://github.com/reconquest/shdoc "${temp_dir}" || softfail || return $?
+  (cd "${temp_dir}" && make && sudo make install) || softfail || return $?
+  rm -rf "${temp_dir}" || softfail || return $?
 }
 
 docs::make() {
   rm docs/lib/*.md || softfail || return $?
 
-  local filesList; filesList="$(mktemp)" || softfail || return $?
-  local readmeContent; readmeContent="$(mktemp)" || softfail || return $?
+  local files_list; files_list="$(mktemp)" || softfail || return $?
+  local readme_content; readme_content="$(mktemp)" || softfail || return $?
 
   local file; for file in lib/*.sh; do
     if [ -f "${file}" ]; then
@@ -36,28 +36,28 @@ docs::make() {
 
       shdoc <"${file}" >"${output}" || softfail || return $?
       # TODO: I hope that happy moment to enable this line will come
-      # echo "* [${file_basename%%.*}](${output})" >> "${filesList}" || softfail || return $?
-      echo "* [${file_basename%%.*}](${file})" >> "${filesList}" || softfail || return $?
+      # echo "* [${file_basename%%.*}](${output})" >> "${files_list}" || softfail || return $?
+      echo "* [${file_basename%%.*}](${file})" >> "${files_list}" || softfail || return $?
     fi
   done
 
-  sort "${filesList}" > "${filesList}.tmp" || softfail || return $?
-  mv "${filesList}.tmp" "${filesList}" || softfail || return $?
+  sort "${files_list}" > "${files_list}.tmp" || softfail || return $?
+  mv "${files_list}.tmp" "${files_list}" || softfail || return $?
   
-  < README.md awk '/API TOC BEGIN/{ line = 1; next } /API TOC END/{ line = 0 } line' | grep -v "^###" | awk NF | sort > "${readmeContent}"
+  < README.md awk '/API TOC BEGIN/{ line = 1; next } /API TOC END/{ line = 0 } line' | grep -v "^###" | awk NF | sort > "${readme_content}"
   test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
 
-  if ! diff --strip-trailing-cr "${readmeContent}" "${filesList}" >/dev/null 2>&1; then
+  if ! diff --strip-trailing-cr "${readme_content}" "${files_list}" >/dev/null 2>&1; then
     if command -v git >/dev/null; then
-      git diff --ignore-cr-at-eol --color --unified=6 --no-index "${readmeContent}" "${filesList}" | tee
+      git diff --ignore-cr-at-eol --color --unified=6 --no-index "${readme_content}" "${files_list}" | tee
     else
-      diff --strip-trailing-cr --context=6 --color "${readmeContent}" "${filesList}"
+      diff --strip-trailing-cr --context=6 --color "${readme_content}" "${files_list}"
     fi
     log::error "Please update API TOC in README.md"
   fi
 
-  rm "${filesList}" || softfail || return $?
-  rm "${readmeContent}" || softfail || return $?
+  rm "${files_list}" || softfail || return $?
+  rm "${readme_content}" || softfail || return $?
 }
 
 if ! command -v gawk >/dev/null; then
