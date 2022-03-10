@@ -32,6 +32,26 @@ app_units::run() {
   SYSTEMD_COLORS="${systemd_colors}" "$@" "${units_list[@]}"
 }
 
+app_units::run_if_exists() {
+  local item units_list=()
+
+  for item in "${app_units[@]}"; do
+    units_list+=("${APP_NAME}-${item}") || softfail || return $?
+  done
+
+  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+    local systemd_colors=1
+  else
+    local systemd_colors=0
+  fi
+
+  for item in "${units_list[@]}"; do
+    if systemctl cat "${item}" >/dev/null 2>&1; then
+      SYSTEMD_COLORS="${systemd_colors}" "$@" "${units_list[@]}" || softfail || return $?
+    fi
+  done
+}
+
 app_units::run_for_services_only() {
   local item units_list=()
 
@@ -78,8 +98,16 @@ app_units::disable() {
   app_units::run systemctl "$@" --quiet disable || softfail_code $? || return $?
 }
 
+app_units::disable_if_exists() {
+  app_units::run_if_exists systemctl "$@" --quiet disable || softfail_code $? || return $?
+}
+  
 app_units::disable_now() {
   app_units::run systemctl "$@" --quiet --now disable || softfail_code $? || return $?
+}
+
+app_units::disable_now_if_exists() {
+  app_units::run_if_exists systemctl "$@" --quiet --now disable || softfail_code $? || return $?
 }
 
 app_units::start() {
@@ -88,6 +116,10 @@ app_units::start() {
 
 app_units::stop() {
   app_units::run systemctl "$@" stop || softfail_code $? || return $?
+}
+
+app_units::stop_if_exists() {
+  app_units::run_if_exists systemctl "$@" stop || softfail_code $? || return $?
 }
 
 app_units::restart() {
