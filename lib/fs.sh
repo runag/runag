@@ -216,3 +216,18 @@ fs::get_absolute_path() {
 
   echo "${resolved_dir}/${path_basename}"
 }
+
+fstab::add_mount_option() {
+  local fstype="$1"
+  local option="$2"
+
+  local skip; skip="$(<<<"${option}" sed 's/^\([[:alnum:]]\+\).*/\1/')" || softfail || return $?
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  sed "/^\(#\|[[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+.*[[:blank:][:punct:]]${skip}\([[:blank:][:punct:]]\|$\)\)/!s/^\([[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+defaults\)\([^[:alnum:]]\|$\)/\1,${option}\2/g;" /etc/fstab >"${temp_file}" || softfail "Error applying sed to /etc/fstab" || return $?
+
+  findmnt --verify --tab-file "${temp_file}" 2>&1 || softfail "fstab::add_mount_option -- failed to verify new fstab: ${temp_file}" || return $?
+
+  sudo install --owner=root --group=root --mode=0664 --compare "${temp_file}" /etc/fstab || softfail "File install failed: from '${temp_file}' to '/etc/fstab'" || return $?
+}
