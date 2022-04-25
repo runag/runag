@@ -16,7 +16,7 @@
 
 # Get a version number: nodenv install --list | grep ^14
 nodejs::install_by_nodenv_and_set_global() {
-  local node_version="$1"
+  local node_version="${1:-"${NODENV_VERSION}"}"
 
   nodejs::install_by_nodenv "${node_version}" || softfail || return $?
   nodenv global "${node_version}" || softfail || return $?

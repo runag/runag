@@ -22,7 +22,7 @@ ruby::install_by_rbenv() {
 }
 
 ruby::install_and_set_global_by_rbenv() {
-  local ruby_version="$1"
+  local ruby_version="${1:-"${RBENV_VERSION}"}"
   ruby::install_by_rbenv "${ruby_version}" || softfail || return $?
   rbenv global "${ruby_version}" || softfail || return $?
 }
