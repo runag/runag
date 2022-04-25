@@ -43,7 +43,7 @@ git::place_up_to_date_clone() {
   fi
 }
 
-git::configure_signingkey() {
+git::configure_signing_key() {
   local key="$1"
   git config --global commit.gpgsign true || fail
   git config --global user.signingkey "${key}" || fail
