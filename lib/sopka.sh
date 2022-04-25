@@ -45,8 +45,6 @@ sopka::linux::dangerously_set_hostname() {
   local hostname; IFS="" read -r hostname || softfail || return $?
 
   linux::dangerously_set_hostname "${hostname}" || softfail || return $?
-
-  log::success "Done" || softfail || return $?
 }
 
 sopka::install_as_repository_clone() {
