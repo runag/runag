@@ -219,6 +219,7 @@ ssh::with_ssh_args() {(
 ssh::set_args() {
   # Please note: ssh_args variable is not function-local for this function
 
+  # shellcheck disable=2031
   if ! [[ "${OSTYPE}" =~ ^msys ]] && [ "${REMOTE_CONTROL_MASTER:-}" != "no" ]; then
     ssh_args+=("-o" "ControlMaster=${REMOTE_CONTROL_MASTER:-"auto"}")
     ssh_args+=("-S" "${REMOTE_CONTROL_PATH:-"${HOME}/.ssh/control-socket.%C"}")
