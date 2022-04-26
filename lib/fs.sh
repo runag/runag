@@ -217,6 +217,14 @@ fs::get_absolute_path() {
   echo "${resolved_dir}/${path_basename}"
 }
 
+fs::with_secure_temp_dir_if_available() {
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    linux::with_secure_temp_dir "$@"
+  else
+    "$@"
+  fi
+}
+
 fstab::add_mount_option() {
   local fstype="$1"
   local option="$2"
