@@ -134,3 +134,8 @@ sopka::load_all_sopkafiles_from_sopka() {
     fi
   done
 }
+
+sopka::should_deploy_auth() {
+  local item="$1"
+  [[ " ${DEPLOY_AUTH} " == *" ${item} "* ]]
+}
