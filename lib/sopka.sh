@@ -82,9 +82,9 @@ SHELL
 }
 
 sopka::add_sopkafile() {
-  local package_id="$1"
-  local dest; dest="$(echo "${package_id}" | tr "/" "-")" || softfail || return $?
-  git::place_up_to_date_clone "https://github.com/${package_id}.git" "${HOME}/.sopka/sopkafiles/github-${dest}" || softfail || return $?
+  local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
+  local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
+  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/sopkafiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
 # Find and load sopkafile.
@@ -121,11 +121,16 @@ sopka::load_sopkafile() {
     return $?
 
   else
-    local file_path; for file_path in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
-      if [ -f "${file_path}" ]; then
-        . "${file_path}"
-        softfail_unless_good "Unable to load '${file_path}' ($?)" $? || return $?
-      fi
-    done
+    sopka::load_all_sopkafiles_from_sopka
+    softfail_unless_good "Unable to load sopkafiles from .sopka ($?)" $? || return $?
   fi
+}
+
+sopka::load_all_sopkafiles_from_sopka() {
+  local file_path; for file_path in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
+    if [ -f "${file_path}" ]; then
+      . "${file_path}"
+      softfail_unless_good "Unable to load '${file_path}' ($?)" $? || return $?
+    fi
+  done
 }
