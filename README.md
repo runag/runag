@@ -165,7 +165,7 @@ Could be set to `"true"`
 Could be set to `"true"`
 
 
-### SSH-related
+### SSH-related variables
 
 #### `REMOTE_CONTROL_MASTER`
 
@@ -232,7 +232,7 @@ User name.
 By default sopka will not provide any user name so ssh could use it's defaults.
 
 
-### rsync-related
+### Rsync-related variables
 
 #### `SOPKA_RSYNC_ARGS`
 
@@ -245,6 +245,9 @@ Could be set to `"true"`
 #### `SOPKA_RSYNC_WITHOUT_CHECKSUMS`
 
 Could be set to `"true"`
+
+
+### Tasks-related variables
 
 #### `SOPKA_TASK_FAIL_DETECTOR`
 
@@ -281,6 +284,7 @@ Could be set to function name. Function is expected to filter it's input. If fun
 #### `SOPKA_TASK_VERBOSE`
 
 Could be set to `"true"`
+
 
 ### Internal variables, not to be used by non-library code
 
