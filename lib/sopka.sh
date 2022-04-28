@@ -14,6 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+
+sopka::print_license() {
+  cat <<SHELL
+#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+SHELL
+}
+
 sopka::with_update_secrets() {(
   if [ -t 1 ]; then
     log::notice "SOPKA_UPDATE_SECRETS flag is set" || fail
@@ -51,6 +70,12 @@ sopka::install_as_repository_clone() {
   git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
 }
 
+sopka::add_sopkafile() {
+  local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
+  local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
+  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/sopkafiles/${repo_name}-${user_name}-github" || softfail || return $?
+}
+
 sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || softfail || return $?
@@ -63,29 +88,6 @@ sopka::update() {
   fi
 }
 
-sopka::print_license() {
-  cat <<SHELL
-#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-SHELL
-}
-
-sopka::add_sopkafile() {
-  local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
-  local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
-  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/sopkafiles/${repo_name}-${user_name}-github" || softfail || return $?
-}
 
 # Find and load sopkafile.
 #
