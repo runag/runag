@@ -156,6 +156,10 @@ Anywhere you put sopka, the variable will reflect it actual location.
 If you put sopka into your home directory them value will be `"${HOME}/.sopka/bin"`.
 You could use that file as an executable or you could source that file in your scripts.
 
+#### `SOPKA_DEPLOY_LIST` and `SOPKA_AUTH_DEPLOY_LIST`
+
+A list of strings, use it to specify things to deploy, and query them with `sopka::should_deploy` and `sopka::should_deploy_auth` later.
+
 #### `SOPKA_UPDATE_SECRETS`
 
 Could be set to `"true"`
