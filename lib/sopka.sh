@@ -142,7 +142,7 @@ sopka::should_deploy() {
   [[ " ${SOPKA_DEPLOY_LIST} " == *" ${item} "* ]]
 }
 
-sopka::should_deploy_auth() {
+sopka::should_deploy_secrets() {
   local item="$1"
-  [[ " ${SOPKA_AUTH_DEPLOY_LIST} " == *" ${item} "* ]]
+  [[ " ${SOPKA_SECRETS_DEPLOY_LIST} " == *" ${item} "* ]]
 }
