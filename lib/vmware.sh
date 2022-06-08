@@ -92,3 +92,47 @@ vmware::get_machine_uuid() {
   sudo dmidecode -t system | grep "^[[:blank:]]*Serial Number: VMware-" | sed "s/^[[:blank:]]*Serial Number: VMware-//" | sed "s/ //g"
   test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
 }
+
+vmware::vm_network_loss_workaround() {
+  if ip address show ens33 >/dev/null 2>&1; then
+    if ! ip address show ens33 | grep -qF "inet "; then
+      echo "vmware::vm_network_loss_workaround: about to restart network"
+      sudo systemctl restart NetworkManager.service || { echo "Unable to restart network" >&2; exit 1; }
+      sudo dhclient || { echo "Error running dhclient" >&2; exit 1; }
+    fi
+  fi
+}
+
+vmware::install_vm_network_loss_workaround() {
+  file::sudo_write /usr/local/bin/vmware-vm-network-loss-workaround 755 <<SHELL || fail
+#!/usr/bin/env bash
+$(sopka::print_license)
+$(declare -f vmware::vm_network_loss_workaround)
+vmware::vm_network_loss_workaround || { echo "Unable to perform vmware::vm_network_loss_workaround" >&2; exit 1; }
+SHELL
+
+  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.service <<EOF || fail
+[Unit]
+Description=vmware-vm-network-loss-workaround
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/vmware-vm-network-loss-workaround
+WorkingDirectory=/
+EOF
+
+  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.timer <<EOF || fail
+[Unit]
+Description=vmware-vm-network-loss-workaround
+
+[Timer]
+OnCalendar=minutely
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+  sudo systemctl --quiet reenable vmware-vm-network-loss-workaround.timer || fail
+  sudo systemctl start vmware-vm-network-loss-workaround.timer || fail
+}
