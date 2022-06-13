@@ -105,7 +105,7 @@ file::sudo_write() {
     # I want to create a file with the right mode right away
     # the use of "install" command performs that, at least on linux and macos
     # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
-    # it's probably better to make it different, like calculate umask and then touch, but I don't have time to think about that right now
+    # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
     sudo install ${mode:+-m "${mode}"} ${owner:+-o "${owner}"} ${group:+-g "${group}"} /dev/null "${dest}" || fail
   fi
 
@@ -121,7 +121,7 @@ file::write() {
     # I want to create a file with the right mode right away
     # the use of "install" command performs that, at least on linux and macos
     # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
-    # it's probably better to make it different, like calculate umask and then touch, but I don't have time to think about that right now
+    # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
     install -m "${mode}" /dev/null "${dest}" || fail
   fi
 
