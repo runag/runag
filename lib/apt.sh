@@ -96,7 +96,7 @@ apt::install_gnome_keyring_and_libsecret() {
 }
 
 apt::install_sopka_essential_dependencies() {
-  apt::install curl git jq || softfail || return $?
+  apt::install curl git jq pass || softfail || return $?
 }
 
 apt::install_display_if_restart_required_dependencies() {
