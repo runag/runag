@@ -14,18 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopka::install_as_repository_clone() {
-  git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
-}
-
-sopka::update() {
-  if [ -d "${HOME}/.sopka/.git" ]; then
-    git -C "${HOME}/.sopka" pull || softfail || return $?
-  fi
-
-  sopkafile::update-everything-in-sopka || softfail || return $?
-}
-
 sopka::print_license() {
   cat <<SHELL
 #  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
@@ -42,4 +30,16 @@ sopka::print_license() {
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 SHELL
+}
+
+sopka::install_as_repository_clone() {
+  git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
+}
+
+sopka::update() {
+  if [ -d "${HOME}/.sopka/.git" ]; then
+    git -C "${HOME}/.sopka" pull || softfail || return $?
+  fi
+
+  sopkafile::update-everything-in-sopka || softfail || return $?
 }
