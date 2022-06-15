@@ -14,6 +14,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+task::with_verbose_task() {(
+  if [ -t 1 ]; then
+    log::notice "SOPKA_TASK_VERBOSE flag is set" || fail
+  fi
+  export SOPKA_TASK_VERBOSE=true
+  "$@"
+)}
+
+task::with_update_secrets() {(
+  if [ -t 1 ]; then
+    log::notice "SOPKA_UPDATE_SECRETS flag is set" || fail
+  fi
+  export SOPKA_UPDATE_SECRETS=true
+  "$@"
+)}
+
 task::ssh_jump() {
   # shellcheck disable=2034
   local SOPKA_TASK_SSH_JUMP=true

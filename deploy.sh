@@ -30,7 +30,7 @@ apt::update ()
 }
 deploy_script::add () 
 { 
-    task::run_with_install_filter sopka::add_sopkafile "$1" || softfail || return $?;
+    task::run_with_install_filter sopkafile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
     softfail_unless_good_code $?
 }
@@ -167,7 +167,7 @@ softfail ()
 { 
     softfail::internal "$@"
 }
-sopka::add_sopkafile () 
+sopkafile::add () 
 { 
     local user_name;
     user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?;

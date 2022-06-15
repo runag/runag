@@ -63,10 +63,10 @@ sopka::load_sopka_library || {
 
 # Load sopkafile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
-  sopka::load_sopkafile
+  sopkafile::load
   softfail_unless_good "Sopka: Unable to load sopkafile ($?)" $? || return $?
 else # we are not sourced
-  sopka::load_sopkafile
+  sopkafile::load
   softfail_unless_good "Sopka: Unable to load sopkafile ($?)" $? || exit $?
 fi
 

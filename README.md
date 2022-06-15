@@ -76,10 +76,12 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [menu](lib/menu.sh)
 * [sopka_menu](lib/sopka_menu.sh)
 * [sopka](lib/sopka.sh)
+* [sopkafile](lib/sopkafile.sh)
 * [terminal](lib/terminal.sh)
 
 ### General utility
 
+* [bash](lib/bash.sh)
 * [config](lib/config.sh)
 * [fs](lib/fs.sh)
 * [task](lib/task.sh)
@@ -98,6 +100,7 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [bitwarden](lib/bitwarden.sh)
 * [checksums](lib/checksums.sh)
 * [gpg](lib/gpg.sh)
+* [pass](lib/pass.sh)
 
 ### Development
 
