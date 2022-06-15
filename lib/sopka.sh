@@ -43,13 +43,3 @@ sopka::print_license() {
 #  limitations under the License.
 SHELL
 }
-
-sopka::should_deploy() {
-  local item="$1"
-  [[ " ${SOPKA_DEPLOY_LIST} " == *" ${item} "* ]]
-}
-
-sopka::should_deploy_secrets() {
-  local item="$1"
-  [[ " ${SOPKA_SECRETS_DEPLOY_LIST} " == *" ${item} "* ]]
-}
