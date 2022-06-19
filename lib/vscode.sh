@@ -60,12 +60,11 @@ vscode::install_extensions() {
         export ifs_value=""
       fi
 
-      # TODO: how to do correct error handling here (cat | while)?
       while IFS="${ifs_value}" read -r extension; do
         if [ -n "${extension}" ]; then
           code --install-extension "${extension}" || softfail "Unable to install vscode extension ${extension}" || return $?
         fi
-      done <"${extensions_list}"
+      done <"${extensions_list}" || softfail "Unable to install vscode extensions" || return $?
     fi
 
     rm "${installed_extensions_list}" || softfail || return $?
