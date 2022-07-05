@@ -70,7 +70,7 @@ jobs:
       run: DISPLAY=:42 dbus-launch xvfb-run --server-num 42 bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run ubuntu_workstation::deploy_workstation_base 2>&1
 
   windows-workstation:
-    name: windows_workstation::deploy_base_workstation
+    name: windows_workstation::deploy_configuration
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -90,4 +90,4 @@ jobs:
         $env:ChocolateyInstall = Convert-Path "$((Get-Command choco).Path)\..\.."   
         Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
         refreshenv
-        & "C:\Program Files\Git\bin\sh.exe" -c "~/.sopka/bin/sopka windows_workstation::deploy_base_workstation"
+        & "C:\Program Files\Git\bin\sh.exe" -c "~/.sopka/bin/sopka windows_workstation::deploy_configuration"
