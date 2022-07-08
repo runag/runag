@@ -22,7 +22,7 @@ on:
 
 jobs:
   macos-workstation:
-    name: macos_workstation::deploy_workstation
+    name: macos_workstation::deploy_workstation_without_secrets
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -32,8 +32,8 @@ jobs:
     - name: Wait for possible 2nd repository updates
       run: sleep 30
 
-    - name: Run macos_workstation::deploy_workstation
-      run: bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run macos_workstation::deploy_workstation 2>&1
+    - name: Run macos_workstation::deploy_workstation_without_secrets
+      run: bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run macos_workstation::deploy_workstation_without_secrets 2>&1
 
   ubuntu-vm-server:
     name: ubuntu_workstation::deploy_vm_server
