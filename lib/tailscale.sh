@@ -32,14 +32,14 @@ tailscale::install() {
   apt::install tailscale || fail
 }
 
-tailscale::is_logged_out() {
-  local status_string; status_string="$(tailscale status)"
-  local status_code=$?
+tailscale::is_logged_in() {
+  # this function is intent to use fail (and not softfail) in case of errors
+  local backend_state; backend_state="$(tailscale status --json | jq .BackendState --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
 
-  if [ "${status_code}" = 1 ] && [ "${status_string}" = "Logged out." ]; then
-    return 0
-  else
+  if [ "${backend_state}" = "NeedsLogin" ]; then
     return 1
+  else
+    return 0
   fi
 }
 
