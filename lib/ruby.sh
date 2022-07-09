@@ -53,3 +53,21 @@ ruby::dangerously_append_nodocument_to_gemrc() {
   ( umask 0177 && touch "${gemrc_file}" ) || softfail || return $?
   file::append_line_unless_present "gem: --no-document" "${gemrc_file}" || softfail || return $?
 }
+
+# rubygems::credentials::exists file/path
+# rubygems::credentials::save file/path
+
+rubygems::credentials::exists() {
+  local file_path="${HOME}/.gem/credentials"
+  test -s "${file_path}"
+}
+
+rubygems::credentials::save() {
+  local api_key="$1"
+  local file_path="${HOME}/.gem/credentials"
+
+  file::write "${file_path}" "0600" <<YAML || softfail "Unable to write secret to file" || return $?
+---
+:rubygems_api_key: ${api_key}
+YAML
+}
