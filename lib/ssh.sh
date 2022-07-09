@@ -66,7 +66,7 @@ ssh::get_user_public_key() {
 
 ssh::install_ssh_key_from_pass() {
   local secret_path="$1"
-  local key_file="${2:-"id_ed25519"}"
+  local key_file; key_file="${2:-"$(basename "${secret_path}")"}" || softfail || return $?
 
   ssh::make_user_config_dir_if_not_exists || softfail || return $?
 
@@ -76,7 +76,7 @@ ssh::install_ssh_key_from_pass() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     pass::use "${secret_path}" --skip-if-empty ssh::gnome_keyring_credentials "${key_file}" || softfail || return $?
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
-    pass::use "${secret_path}" --skip-if-empty ssh::macos_keychain || softfail || return $?
+    pass::use "${secret_path}" --skip-if-empty ssh::macos_keychain "${key_file}" || softfail || return $?
   fi
 }
 
