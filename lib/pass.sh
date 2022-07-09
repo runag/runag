@@ -15,11 +15,26 @@
 #  limitations under the License.
 
 
+pass::import_store() {
+  local store_dir="$1"
+  if [ ! -d "${HOME}/.password-store" ]; then
+    file::wait_until_available "${store_dir}" || softfail || return $?
+    pass::sync_from "${store_dir}" || softfail || return $?
+  fi
+}
+
+pass::sync_from() {
+  local store_dir="$1"
+  rsync --recursive --times --chmod=go-rwx,Fu-x "${store_dir}"/ "${HOME}/.password-store" || softfail || return $?
+}
+
 # pass::use secret/path [arguments for pass::use]... foo::bar [arguments for foo::bar]...
+#   -b,--body # skip first line and then write the rest of the file contents to foo::bar::save stdin
+#   -f,--force # call to ::save if ::exists returns 0
 #   -g,--get url # get metadata instead of password
 #   -m,--multiline # write all file contents to foo::bar::save stdin
 #   -p,--pipe # write secret to foo::bar::save stdin
-#   -f,--force # call to ::save if ::exists returns 0
+#   -s,--skip-if-empty
 #
 # If no foo::bar is provided then write output to stdout
 #
@@ -33,13 +48,23 @@
 pass::use() {
   local secret_path="$1"; shift
 
+  local force_write=false
+  local get_body=false
   local get_metadata=false metadata_name
   local get_multiline=false
   local use_pipe=false
-  local force_write=false
+  local skip_if_empty=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
+    -b|--body)
+      get_body=true
+      shift
+      ;;
+    -f|--force)
+      force_write=true
+      shift
+      ;;
     -g|--get)
       get_metadata=true
       metadata_name="$2"
@@ -53,8 +78,8 @@ pass::use() {
       use_pipe=true
       shift
       ;;
-    -f|--force)
-      force_write=true
+    -s|--skip-if-empty)
+      skip_if_empty=true
       shift
       ;;
     -*)
@@ -86,6 +111,12 @@ pass::use() {
       softfail "Unable to find password file: ${password_file_path}" || return $?
     fi
 
+    if [ "${get_body}" = true ]; then
+      pass show "${secret_path}" | tail -n +2 | "${function_prefix}::save" "$@"
+      test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to obtain secret from pass and process it in ${function_prefix}::save" || return $?
+      return 0
+    fi
+
     if [ "${get_multiline}" = true ]; then
       pass show "${secret_path}" | "${function_prefix}::save" "$@"
       test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass and process it in ${function_prefix}::save" || return $?
@@ -101,7 +132,11 @@ pass::use() {
     fi
     
     if [ -z "${secret_data}" ]; then
-      softfail "Zero-length secret data from pass" || return $?
+      if [ "${skip_if_empty}" = true ]; then
+        return 0
+      else
+        softfail "Zero-length secret data from pass" || return $?
+      fi
     fi
 
     if [ "${use_pipe}" = true ] || bash::is-function-or-command-exists "${function_prefix}::pipeonly"; then
@@ -128,11 +163,10 @@ pass::get_metadata(){
   return 1
 }
 
-# pass::file::exists file/path
-# pass::file::save file/path
+
+# pass::file::exists file/path [options]
+# pass::file::save file/path [options]
 #   -m,--mode 0600 # file access mode
-#
-# By default it uses only the first line.
 
 pass::file::exists() {
   local file_path="$1"
@@ -167,6 +201,9 @@ pass::file::pipeonly() {
   true
 }
 
+
+# remote_file
+
 pass::remote_file::exists() {
   local file_path="$1"
 
@@ -199,6 +236,9 @@ pass::remote_file::save() {
 pass::remote_file::pipeonly() {
   true
 }
+
+
+# cat
 
 pass::cat::exists() {
   false

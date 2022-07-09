@@ -64,6 +64,22 @@ ssh::get_user_public_key() {
   fi
 }
 
+ssh::install_ssh_key_from_pass() {
+  local secret_path="$1"
+  local key_file="${2:-"id_ed25519"}"
+
+  ssh::make_user_config_dir_if_not_exists || softfail || return $?
+
+  pass::use "${secret_path}" --body pass::file "${HOME}/.ssh/${key_file}" --mode 0600 || softfail || return $?
+  pass::use "${secret_path}.pub" pass::file "${HOME}/.ssh/${key_file}.pub" --mode 0600 || softfail || return $?
+
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    pass::use "${secret_path}" --skip-if-empty ssh::gnome_keyring_credentials "${key_file}" || softfail || return $?
+  elif [[ "${OSTYPE}" =~ ^darwin ]]; then
+    pass::use "${secret_path}" --skip-if-empty ssh::macos_keychain || softfail || return $?
+  fi
+}
+
 ssh::gnome_keyring_credentials::exists() {
   local key_file="${1:-"id_ed25519"}"
 
