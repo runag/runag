@@ -44,6 +44,7 @@ docs::make() {
   sort "${files_list}" > "${files_list}.tmp" || softfail || return $?
   mv "${files_list}.tmp" "${files_list}" || softfail || return $?
   
+  # "awk NF" is to remove empty line
   < README.md awk '/API TOC BEGIN/{ line = 1; next } /API TOC END/{ line = 0 } line' | grep -v "^###" | awk NF | sort > "${readme_content}"
   test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
 
