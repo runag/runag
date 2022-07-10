@@ -194,13 +194,13 @@ file::sudo_append_line_unless_present() {
 file::wait_until_available() {
   local file_path="$1"
 
-  if [ ! -f "${file_path}" ]; then
+  if [ ! -e "${file_path}" ]; then
     echo "File not found: '${file_path}'" >&2
     echo "Please connect the external media if the file resides on it" >&2
     echo "Waiting for the file to be available, press Control-C to interrupt" >&2
   fi
 
-  while [ ! -f "${file_path}" ]; do
+  while [ ! -e "${file_path}" ]; do
     sleep 0.1
   done
 }
