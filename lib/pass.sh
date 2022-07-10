@@ -28,6 +28,12 @@ pass::sync_from() {
   rsync --recursive --times --chmod=go-rwx,Fu-x "${store_dir}"/ "${HOME}/.password-store" || softfail || return $?
 }
 
+pass::sync_to() {
+  local store_dir="$1"
+  file::wait_until_available "${store_dir}" || softfail || return $?
+  rsync --recursive --times --checksum --delete "${HOME}/.password-store/" "${store_dir}"  || softfail || return $?
+}
+
 # pass::use secret/path [arguments for pass::use]... foo::bar [arguments for foo::bar]...
 #   -b,--body # skip first line and then write the rest of the file contents to foo::bar::save stdin
 #   -f,--force # call to ::save if ::exists returns 0
