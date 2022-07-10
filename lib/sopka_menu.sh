@@ -45,6 +45,13 @@ sopka_menu::add_header() {
   SOPKA_MENU+=("#$1")
 }
 
+sopka_menu::add_comment() {
+  if [ -z ${SOPKA_MENU:+x} ]; then
+    SOPKA_MENU=()
+  fi
+  SOPKA_MENU+=("#/$1")
+}
+
 sopka_menu::display() {
   if [ -z ${SOPKA_MENU:+x} ]; then
     softfail "Menu is empty"

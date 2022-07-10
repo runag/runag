@@ -25,6 +25,7 @@ menu::select_and_run() {
   local color_a; color_a="$(terminal::color 13)" || softfail || return $?
   local color_b; color_b="$(terminal::color 15)" || softfail || return $?
   local header_color; header_color="$(terminal::color 14)" || softfail || return $?
+  local comment_color; comment_color="$(terminal::color 10)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
   local index=1 item current_color=""
@@ -36,7 +37,12 @@ menu::select_and_run() {
       current_color=""
 
     elif [[ "${item}" =~ ^\# ]]; then
-      echo "  ${header_color}== ${item:1} ==${default_color}"
+
+      if [[ "${item}" =~ ^\#\/ ]]; then
+        echo "  ${comment_color}* ${item:2}${default_color}"
+      else
+        echo "  ${header_color}== ${item:1} ==${default_color}"
+      fi
       current_color=""
 
     else
