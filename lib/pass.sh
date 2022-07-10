@@ -251,3 +251,42 @@ pass::cat::save() {
 pass::cat::pipeonly() {
   true
 }
+
+# pass::file_with_block::exists file/path block_title [options]
+# pass::file_with_block::save file/path block_title [options]
+#   -m,--mode 0600 # file access mode
+
+pass::file_with_block::exists() {
+  local file_path="$1"
+  local block_title="$2"
+
+  test -s "${file_path}" && grep -qFx "${block_title}" "${file_path}"
+}
+
+pass::file_with_block::save() {
+  local file_path="$1"; shift
+  local block_title="$1"; shift
+
+  local file_mode="0600"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -m|--mode)
+      file_mode="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  (echo "${block_title}"; cat; echo "${block_title} END") | file::append "${file_path}" "${file_mode}" || softfail "Unable to write secret to file" || return $?
+}
+
+pass::file_with_block::pipeonly() {
+  true
+}
