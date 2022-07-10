@@ -132,7 +132,7 @@ file::append() {
   local dest="$1"
   local mode="${2:-}"
 
-  if [ -n "${mode}" ]; then
+  if [ -n "${mode}" ] && [ ! -f "${dest}" ]; then
     # I want to create a file with the right mode right away
     # the use of "install" command performs that, at least on linux and macos
     # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
