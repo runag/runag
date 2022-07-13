@@ -93,7 +93,7 @@ checksums::verify() {(
     test "${PIPESTATUS[*]}" = "0 0" || fail
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
-      echo "${directory}: Checksums are ok"
+      echo "${directory}: Checksums are good"
       exit 0
     fi
 
