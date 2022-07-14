@@ -19,7 +19,11 @@ pass::import_store() {
   local store_dir="$1"
   if [ ! -d "${HOME}/.password-store" ]; then
     file::wait_until_available "${store_dir}" || softfail || return $?
-    pass::sync_from "${store_dir}" || softfail || return $?
+    if [[ "${OSTYPE}" =~ ^msys ]]; then
+      cp -r "${store_dir}" "${HOME}/.password-store" || softfail || return $?
+    else
+      pass::sync_from "${store_dir}" || softfail || return $?
+    fi
   fi
 }
 
