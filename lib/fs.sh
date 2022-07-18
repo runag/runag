@@ -342,6 +342,8 @@ fstab::verify-and-write() {
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
   cat >"${temp_file}" || softfail "Error writing to temp file: ${temp_file}" || return $?
+
+  test -s "${temp_file}" || softfail "Error: fstab candidate should have size greater that zero: ${temp_file}" || return $?
   
   findmnt --verify --tab-file "${temp_file}" 2>&1 || softfail "Failed to verify fstab candidate: ${temp_file}" || return $?
 
