@@ -37,7 +37,7 @@ postgresql::install_dictionaries() {
       if [ -d "${dest}" ]; then
         local file; for file in "${source_dir}"/*; do
           if [ -f "${file}" ]; then
-            sudo install --owner=root --group=root --mode=0644 --compare "${file}" -D "${dest}/tsearch_data" || softfail "File install failed: from '${file}' to '${dest}/tsearch_data'" || return $?
+            sudo install -o root -g root -m 0644 -C "${file}" -D "${dest}/tsearch_data" || softfail "File install failed: from '${file}' to '${dest}/tsearch_data'" || return $?
           fi
         done
       fi
