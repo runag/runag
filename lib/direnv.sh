@@ -36,9 +36,9 @@ direnv::write_block() {
     ( umask "${umask_value}" && touch "${file_name}" ) || softfail || return $?
   fi
 
-  sed -i "/^# BEGIN-SOPKA-BLOCK =${block_name}=$/,/^# END-SOPKA-BLOCK =${block_name}=$/d" "${file_name}" || softfail || return $?
+  sed -i "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d" "${file_name}" || softfail || return $?
 
-  { echo "# BEGIN-SOPKA-BLOCK =${block_name}=" && cat && echo "# END-SOPKA-BLOCK =${block_name}="; } >> "${file_name}" || softfail || return $?
+  { echo "# BEGIN ${block_name}" && cat && echo "# END ${block_name}"; } >> "${file_name}" || softfail || return $?
 
   direnv allow "${file_name}" || softfail || return $?
 }

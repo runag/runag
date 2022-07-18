@@ -191,6 +191,70 @@ file::sudo_append_line_unless_present() {
   fi
 }
 
+file::update_block() {
+  local file_name="$1"; shift
+  local block_name="$1"; shift
+
+  local file_mode=""
+  local file_owner=""
+  local file_group=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -m|--mode)
+      file_mode="$2"
+      shift; shift
+      ;;
+    -o|--owner)
+      file_owner="$2"
+      shift; shift
+      ;;
+    -g|--group)
+      file_group="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  if [ -z "${file_mode}" ] && [ -f "${file_name}" ]; then
+    file_mode="$(stat -c "%a" "${file_name}")" || softfail || return $?
+  fi
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  file::read_with_updated_block "${file_name}" "${block_name}" ${file_owner:+"--sudo"} >"${temp_file}" || softfail || return $?
+
+  ${file_owner:+"sudo"} install ${file_owner:+-o "${file_owner}"} ${file_group:+-g "${file_group}"} ${file_mode:+-m "${file_mode}"} -C "${temp_file}" "${file_name}" || softfail || return $?
+}
+
+file::read_with_updated_block() {
+  local file_name="$1"
+  local block_name="$2"
+
+  local perhaps_sudo=""
+
+  if [ "${3:-}" = "--sudo" ]; then
+    perhaps_sudo=sudo
+  fi
+
+  if [ -f "${file_name}" ]; then
+    ${perhaps_sudo} cat "${file_name}" | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+  fi
+
+  echo "# BEGIN ${block_name}"
+
+  cat || softfail || return $?
+
+  echo "# END ${block_name}"
+}
+
 file::wait_until_available() {
   local file_path="$1"
 
@@ -268,11 +332,20 @@ fstab::add_mount_option() {
 
   local skip; skip="$(<<<"${option}" sed 's/^\([[:alnum:]]\+\).*/\1/')" || softfail || return $?
 
+  sed "/^\(#\|[[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+.*[[:blank:][:punct:]]${skip}\([[:blank:][:punct:]]\|$\)\)/!s/^\([[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+defaults\)\([^[:alnum:]]\|$\)/\1,${option}\2/g;" \
+    /etc/fstab | fstab::verify-and-write
+    
+  test "${PIPESTATUS[*]}" = "0 0" || softfail "Error adding mount option to /etc/fstab" || return $?
+}
+
+fstab::verify-and-write() {
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
-  sed "/^\(#\|[[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+.*[[:blank:][:punct:]]${skip}\([[:blank:][:punct:]]\|$\)\)/!s/^\([[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+defaults\)\([^[:alnum:]]\|$\)/\1,${option}\2/g;" /etc/fstab >"${temp_file}" || softfail "Error applying sed to /etc/fstab" || return $?
+  cat >"${temp_file}" || softfail "Error writing to temp file: ${temp_file}" || return $?
+  
+  findmnt --verify --tab-file "${temp_file}" 2>&1 || softfail "Failed to verify fstab candidate: ${temp_file}" || return $?
 
-  findmnt --verify --tab-file "${temp_file}" 2>&1 || softfail "fstab::add_mount_option -- failed to verify new fstab: ${temp_file}" || return $?
+  sudo install -o root -g root -m 0664 -C "${temp_file}" /etc/fstab || softfail "Failed to install new fstab: ${temp_file}" || return $?
 
-  sudo install --owner=root --group=root --mode=0664 --compare "${temp_file}" /etc/fstab || softfail "File install failed: from '${temp_file}' to '/etc/fstab'" || return $?
+  rm "${temp_file}" || softfail "Failed to remove temp file: ${temp_file}" || return $?
 }
