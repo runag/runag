@@ -14,6 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+sopkafile::add_from_list() {
+  local line; while IFS="" read -r line; do
+    if [ -n "${line}" ]; then
+      echo "Adding sopkafile from ${line}..."
+      sopkafile::add "${line}" || softfail "Unable to add sopkafile ${line}" || return $?
+    fi
+  done || softfail "Unable to add sopkafiles from list" || return $?
+}
+
 sopkafile::add() {
   local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
   local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
