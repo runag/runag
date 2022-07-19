@@ -70,7 +70,7 @@ sopka_menu::clear() {
 }
 
 sopka_menu::add_defaults() {
-  sopka_menu::add_header "Same menu but with certain flags set" || fail
+  sopka_menu::add_header "Same menu with certain flags set" || fail
   sopka_menu::add task::with_update_secrets sopka_menu::display || softfail || return $?
   sopka_menu::add task::with_verbose_task sopka_menu::display || softfail || return $?
   sopka_menu::add_delimiter || softfail || return $?
