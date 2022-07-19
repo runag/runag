@@ -115,10 +115,10 @@ pass::use() {
   if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || [ "${force_write}" = true ] || ! "${function_prefix}::exists" "$@"; then
 
     local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
-    local password_file_path="${password_store_dir}/${secret_path}.gpg"
+    local secret_file_path="${password_store_dir}/${secret_path}.gpg"
 
-    if [ ! -f "${password_file_path}" ]; then
-      softfail "Unable to find password file: ${password_file_path}" || return $?
+    if [ ! -f "${secret_file_path}" ]; then
+      softfail "Unable to find password file: ${secret_file_path}" || return $?
     fi
 
     if [ "${get_body}" = true ]; then
