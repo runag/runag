@@ -26,3 +26,13 @@ os::hostname() {
     hostnamectl --static status
   fi
 }
+
+os::machine_id() {
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    if vmware::is_inside_vm; then
+      vmware::get_machine_uuid || fail
+    else
+      cat /etc/machine-id || fail
+    fi
+  fi
+}
