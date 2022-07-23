@@ -91,6 +91,7 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [apt](lib/apt.sh)
 * [linux](lib/linux.sh)
 * [macos](lib/macos.sh)
+* [os](lib/os.sh)
 * [shellrc](lib/shellrc.sh)
 * [systemd](lib/systemd.sh)
 * [vmware](lib/vmware.sh)
