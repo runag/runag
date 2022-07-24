@@ -144,14 +144,7 @@ app_release::link_as_current() {
 app_release::link_as_current::perform() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
 
-  local link_name="${app_dir}/current"
-
-  if [ -e "${link_name}" ] && [ ! -L "${link_name}" ]; then
-    softfail "Unable to create a link to current release, file exists: ${link_name}"
-    return $?
-  fi
-
-  ln --symbolic --force --no-dereference "releases/${APP_RELEASE:?}" "${link_name}" || softfail || return $?
+  symlink::update_link_to_current "releases/${APP_RELEASE:?}" "${app_dir}/current" || softfail || return $?
 }
 
 app_release::cleanup() {

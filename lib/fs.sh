@@ -351,3 +351,15 @@ fstab::verify-and-write() {
 
   rm "${temp_file}" || softfail "Failed to remove temp file: ${temp_file}" || return $?
 }
+
+symlink::update_link_to_current() {
+  local target_thing="$1"
+  local link_name="$2"
+
+  if [ -e "${link_name}" ] && [ ! -L "${link_name}" ]; then
+    softfail "Unable to create/update a link to a current thing, some non-link file exists: ${link_name}"
+    return $?
+  fi
+
+  ln --symbolic --force --no-dereference "${target_thing}" "${link_name}" || softfail || return $?
+}
