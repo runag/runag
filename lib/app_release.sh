@@ -47,16 +47,22 @@ app_release::get_absolute_app_dir() {
 
 app_release::push_local_repo_to_remote() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
-  local git_remote_url="${REMOTE_USER:?}@${REMOTE_HOST:?}:${app_dir}/repo"
   local remote_name="${REMOTE_USER}@${REMOTE_HOST}/${app_dir}"
+  local git_remote_url="${REMOTE_USER:?}@${REMOTE_HOST:?}:${app_dir}/repo"
 
-  if ! git config "remote.${remote_name}.url" >/dev/null; then
-    git remote add "${remote_name}" "${git_remote_url}" || softfail || return $?
-  else
-    git config "remote.${remote_name}.url" "${git_remote_url}" || softfail || return $?
-  fi
+  git::add_or_update_remote "${remote_name}" "${git_remote_url}" || softfail || return $?
 
   git push "${remote_name}" master || softfail || return $?
+}
+
+app_release::pull_remote_to_local_repo() {
+  local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
+  local remote_name="${REMOTE_USER}@${REMOTE_HOST}/${app_dir}"
+  local git_remote_url="${REMOTE_USER:?}@${REMOTE_HOST:?}:${app_dir}/repo"
+
+  git::add_or_update_remote "${remote_name}" "${git_remote_url}" || softfail || return $?
+
+  git pull "${remote_name}" master || softfail || return $?
 }
 
 app_release::make_with_group() {

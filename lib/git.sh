@@ -91,3 +91,14 @@ git::install_git() {
   # on macos that will start git install process
   git --version >/dev/null || fail
 }
+
+git::add_or_update_remote() {
+  local remote_name="$1"
+  local remote_url="$2"
+
+  if ! git config "remote.${remote_name}.url" >/dev/null; then
+    git remote add "${remote_name}" "${remote_url}" || softfail || return $?
+  else
+    git config "remote.${remote_name}.url" "${remote_url}" || softfail || return $?
+  fi
+}
