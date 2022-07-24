@@ -151,7 +151,7 @@ app_release::link_as_current::perform() {
     return $?
   fi
 
-  ln --symbolic --force --no-dereference "releases/${APP_RELEASE:?}" "${app_dir}/current" || softfail || return $?
+  ln --symbolic --force --no-dereference "releases/${APP_RELEASE:?}" "${link_name}" || softfail || return $?
 }
 
 app_release::cleanup() {
