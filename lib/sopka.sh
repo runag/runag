@@ -43,3 +43,19 @@ sopka::update() {
 
   sopkafile::update-everything-in-sopka || softfail || return $?
 }
+
+sopka::install_systemwide() {
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  file::get_block "${SOPKA_BIN_PATH}" set_shell_options >>"${temp_file}" || softfail || return $?
+
+  declare -f >>"${temp_file}" || softfail || return $?
+
+  file::get_block "${SOPKA_BIN_PATH}" invoke_sopkafile >>"${temp_file}" || softfail || return $?
+
+  sudo install -m 755 -o root -g root "${temp_file}" /usr/local/bin/sopka.tmp || softfail || return $?
+
+  sudo mv /usr/local/bin/sopka.tmp /usr/local/bin/sopka || softfail || return $?
+
+  rm "${temp_file}" || softfail || return $?
+}

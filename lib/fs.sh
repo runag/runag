@@ -255,6 +255,15 @@ file::read_with_updated_block() {
   echo "# END ${block_name}"
 }
 
+file::get_block() {
+  local file_name="$1"
+  local block_name="$2"
+
+  if [ -f "${file_name}" ]; then
+    <"${file_name}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" || softfail || return $?
+  fi
+}
+
 file::wait_until_available() {
   local file_path="$1"
 
