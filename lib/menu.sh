@@ -22,15 +22,71 @@ menu::select_and_run() {
     return $?
   fi
 
+  local item
+  
+  for item in "$@"; do
+    if ! { [ -z "${item}" ] || [[ "${item}" =~ ^\# ]]; }; then
+      commands_list+=("${item}")
+    fi
+  done
+
+  menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+
+  local input_text read_status
+  IFS="" read -p "${PS3:-"Please select number: "}" -e -r input_text
+  read_status=$?
+
+  if [ ${read_status} != 0 ]; then
+    if [ ${read_status} = 1 ] && [ -z "${input_text}" ]; then
+      echo "cancelled" >&2
+      exit 0
+    else
+      softfail "Read failed (${read_status})"
+      return $?
+    fi
+  fi
+
+  if [ "${input_text}" = "" ] || [ "${input_text}" = "q" ]; then
+    echo "cancelled" >&2
+    exit 0
+  fi
+
+  if ! [[ "${input_text}" =~ ^[0-9]+$ ]]; then
+    softfail "Please select number"
+    return $?
+  fi
+
+  if [ -z "${commands_list[$((input_text-1))]:+x}" ]; then
+    softfail "Selected number is not in the list"
+    return $?
+  fi
+
+  local selected_item="${commands_list[$((input_text-1))]}"
+
+  # I use "test" instead of "|| fail" here in case if someone wants
+  # to use "set -o errexit" in their functions
+
+  eval "${selected_item}"
+  softfail_unless_good "Error performing ${selected_item}" $? || return $?
+
+  log::success "Done: ${selected_item}"
+  return 0
+}
+
+menu::display_menu() {
   local color_a; color_a="$(terminal::color 13)" || softfail || return $?
   local color_b; color_b="$(terminal::color 15)" || softfail || return $?
   local header_color; header_color="$(terminal::color 14)" || softfail || return $?
   local comment_color; comment_color="$(terminal::color 10)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
-  echo ""
+  local index=1
+  local item
+  local current_color=""
 
-  local index=1 item current_color=""
+  echo ""
+  
   for item in "$@"; do
     if [ -z "${item}" ]; then
       echo ""
@@ -55,46 +111,6 @@ menu::select_and_run() {
       echo "  ${current_color}$((index))) ${item}${default_color}"
       
       ((index+=1))
-      commands_list+=("${item}")
-
     fi
   done
-
-  echo ""
-  echo -n "${PS3:-"Please select number: "}"
-
-  local input_text read_status
-  IFS="" read -r input_text
-  read_status=$?
-
-  if [ ${read_status} != 0 ]; then
-    if [ ${read_status} = 1 ] && [ -z "${input_text}" ]; then
-      echo "cancelled" >&2
-      exit 0
-    else
-      softfail "Read failed (${read_status})"
-      return $?
-    fi
-  fi
-
-  if ! [[ "${input_text}" =~ ^[0-9]+$ ]]; then
-    softfail "Please select number"
-    return $?
-  fi
-
-  if [ -z "${commands_list[$((input_text-1))]:+x}" ]; then
-    softfail "Selected number is not in the list"
-    return $?
-  fi
-
-  local selected_item="${commands_list[$((input_text-1))]}"
-
-  # I use "test" instead of "|| fail" here in case if someone wants
-  # to use "set -o errexit" in their functions
-
-  eval "${selected_item}"
-  softfail_unless_good "Error performing ${selected_item}" $? || return $?
-
-  log::success "Done: ${selected_item}"
-  return 0
 }
