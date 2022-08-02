@@ -28,9 +28,9 @@ menu::select_and_run() {
   local comment_color; comment_color="$(terminal::color 10)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
-  local index=1 item current_color=""
   echo ""
 
+  local index=1 item current_color=""
   for item in "$@"; do
     if [ -z "${item}" ]; then
       echo ""
