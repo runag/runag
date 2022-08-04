@@ -189,6 +189,27 @@ task::complete() {
   fi
 }
 
+task::function_sources() {
+  cat <<SHELL || fail
+$(declare -f task::with_verbose_task)
+$(declare -f task::with_update_secrets)
+$(declare -f task::ssh_jump)
+$(declare -f task::run_with_install_filter)
+$(declare -f task::run_with_rubygems_fail_detector)
+$(declare -f task::run_without_title)
+$(declare -f task::run_with_title)
+$(declare -f task::run_with_short_title)
+$(declare -f task::run_verbose)
+$(declare -f task::rubygems_fail_detector)
+$(declare -f task::detect_fail_state)
+$(declare -f task::run)
+$(declare -f task::install_filter)
+$(declare -f task::is_stderr_empty_after_filtering)
+$(declare -f task::complete_with_cleanup)
+$(declare -f task::complete)
+SHELL
+}
+
 # weird stuff
 # -----------
 # onexit() {

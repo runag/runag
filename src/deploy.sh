@@ -40,33 +40,21 @@ $(sopka::print_license)
 
 __xVhMyefCbBnZFUQtwqCs() {
 
+$(fail::function_sources)
+$(task::function_sources)
+$(log::function_sources)
+$(terminal::function_sources)
+$(deploy_script::function_sources)
+
 $(declare -f apt::install)
 $(declare -f apt::update)
-$(declare -f deploy_script::add)
-$(declare -f deploy_script::run)
-$(declare -f deploy_script)
-$(declare -f fail)
+
 $(declare -f git::install_git)
 $(declare -f git::place_up_to_date_clone)
-$(declare -f log::error_trace)
-$(declare -f log::error)
-$(declare -f log::notice)
-$(declare -f log::with_color)
-$(declare -f softfail_unless_good_code)
-$(declare -f softfail_unless_good::internal)
-$(declare -f softfail::internal)
-$(declare -f softfail)
+
 $(declare -f sopkafile::add)
+
 $(declare -f sopka::deploy_sh_main)
-$(declare -f task::complete_with_cleanup)
-$(declare -f task::complete)
-$(declare -f task::detect_fail_state)
-$(declare -f task::install_filter)
-$(declare -f task::is_stderr_empty_after_filtering)
-$(declare -f task::run_with_install_filter)
-$(declare -f task::run)
-$(declare -f terminal::color)
-$(declare -f terminal::default_color)
 
 sopka::deploy_sh_main "\$@"
 

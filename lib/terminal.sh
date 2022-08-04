@@ -51,3 +51,12 @@ terminal::default_color() {
     tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
   fi
 }
+
+terminal::function_sources() {
+  cat <<SHELL || fail
+$(declare -f terminal::have_16_colors)
+$(declare -f terminal::print_color_table)
+$(declare -f terminal::color)
+$(declare -f terminal::default_color)
+SHELL
+}

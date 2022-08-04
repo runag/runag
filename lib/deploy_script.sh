@@ -37,3 +37,11 @@ deploy_script::run() {
   "${HOME}/.sopka/bin/sopka" "$@"
   softfail_unless_good_code $?
 }
+
+deploy_script::function_sources() {
+  cat <<SHELL || fail
+$(declare -f deploy_script)
+$(declare -f deploy_script::add)
+$(declare -f deploy_script::run)
+SHELL
+}

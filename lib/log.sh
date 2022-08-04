@@ -66,3 +66,15 @@ log::error_trace() {
     log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" >&2
   done
 }
+
+log::function_sources() {
+  cat <<SHELL || fail
+$(declare -f log::elapsed_time)
+$(declare -f log::error)
+$(declare -f log::warning)
+$(declare -f log::notice)
+$(declare -f log::success)
+$(declare -f log::with_color)
+$(declare -f log::error_trace)
+SHELL
+}

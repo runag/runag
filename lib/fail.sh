@@ -124,3 +124,18 @@ softfail_unless_good::internal() {
 
 #   echo end of function!!!
 # }
+
+fail::function_sources() {
+  cat <<SHELL || fail
+$(declare -f fail)
+$(declare -f fail_code)
+$(declare -f fail_unless_good)
+$(declare -f fail_unless_good_code)
+$(declare -f softfail)
+$(declare -f softfail_code)
+$(declare -f softfail_unless_good)
+$(declare -f softfail_unless_good_code)
+$(declare -f softfail::internal)
+$(declare -f softfail_unless_good::internal)
+SHELL
+}
