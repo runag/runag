@@ -33,7 +33,9 @@ git::place_up_to_date_clone() {
       mv "${dest_full_path}" "${backup_path}" || fail
       git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}"
     fi
-    git -C "${dest}" pull || fail "Unable to git pull in ${dest}"
+    # when running as systemd job, sometimes there are no 'Already up to date' message".
+    # I put --verbose here to understand what's happening but don't really understand it yet
+    git -C "${dest}" pull --verbose || fail "Unable to git pull in ${dest}"
   else
     git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}"
   fi
