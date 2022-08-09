@@ -23,25 +23,25 @@ git::place_up_to_date_clone() {
   local branch="${3:-}"
 
   if [ -d "${dest}" ]; then
-    local current_url; current_url="$(git -C "${dest}" config remote.origin.url)" || fail
+    local current_url; current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?
 
     if [ "${current_url}" != "${url}" ]; then
-      local dest_full_path; dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail
-      local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || fail
-      local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || fail
-      local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail
-      mv "${dest_full_path}" "${backup_path}" || fail
-      git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}"
+      local dest_full_path; dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?
+      local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?
+      local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?
+      local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
+      mv "${dest_full_path}" "${backup_path}" || softfail || return $?
+      git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
     fi
     # when running as systemd job, sometimes there are no 'Already up to date' message".
     # I put --verbose here to understand what's happening but don't really understand it yet
-    git -C "${dest}" pull --verbose || fail "Unable to git pull in ${dest}"
+    git -C "${dest}" pull --verbose || softfail "Unable to git pull in ${dest}" || return $?
   else
-    git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}"
+    git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
   fi
 
   if [ -n "${branch:-}" ]; then
-    git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}"
+    git -C "${dest}" checkout "${branch}" || softfail "Unable to git checkout ${branch} in ${dest}" || return $?
   fi
 }
 
