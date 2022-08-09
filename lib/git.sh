@@ -33,9 +33,7 @@ git::place_up_to_date_clone() {
       mv "${dest_full_path}" "${backup_path}" || softfail || return $?
       git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
     fi
-    # when running as systemd job, sometimes there are no 'Already up to date' message".
-    # I put --verbose here to understand what's happening but don't really understand it yet
-    git -C "${dest}" pull --verbose || softfail "Unable to git pull in ${dest}" || return $?
+    git -C "${dest}" pull || softfail "Unable to git pull in ${dest}" || return $?
   else
     git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
   fi
