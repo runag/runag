@@ -18,9 +18,24 @@
 # ssh::add_host_to_known_hosts github.com || fail
 
 git::place_up_to_date_clone() {
-  local url="$1"
-  local dest="$2"
-  local branch="${3:-}"
+  local url="$1"; shift
+  local dest="$1"; shift
+
+  # TODO: pass the rest of the arguments to git clone?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -b|--branch)
+      local branch="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
 
   if [ -d "${dest}" ]; then
     local current_url; current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?
