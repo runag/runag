@@ -55,3 +55,14 @@ github::get_release() {
 
   echo "${temp_file}"
 }
+
+github::get_release_tag_name() {
+  local repo_path="$1"
+  local release="${2:-latest}"
+
+  local api_url="https://api.github.com/repos/${repo_path}/releases/${release}"
+
+  curl --fail --silent --show-error "${api_url}" | jq --raw-output --exit-status ".tag_name"
+
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}

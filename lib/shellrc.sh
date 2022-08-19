@@ -81,32 +81,38 @@ shellrc::load_if_exists() {
 
 shellrc::install_sopka_path_rc() {
   shellrc::write "sopka-path" <<SHELL || fail
-    if [ -d "\${HOME}/.sopka/bin" ]; then
-      export PATH="\${HOME}/.sopka/bin:\${PATH}"
-    fi
+$(sopka::print_license)
+
+if [ -d "\${HOME}/.sopka/bin" ]; then
+  export PATH="\${HOME}/.sopka/bin:\${PATH}"
+fi
 SHELL
 }
 
 shellrc::install_direnv_rc() {
   shellrc::write "direnv" <<SHELL || fail
-    if command -v direnv >/dev/null; then
-      export DIRENV_LOG_FORMAT=""
-      if [ -n "\${ZSH_VERSION:-}" ]; then
-        eval "\$(direnv hook zsh)" || echo "Unable to hook direnv" >&2
-      elif [ -n "\${BASH_VERSION:-}" ]; then
-        eval "\$(direnv hook bash)" || echo "Unable to hook direnv" >&2
-      fi
-    fi
+$(sopka::print_license)
+
+if command -v direnv >/dev/null; then
+  export DIRENV_LOG_FORMAT=""
+  if [ -n "\${ZSH_VERSION:-}" ]; then
+    eval "\$(direnv hook zsh)" || echo "Unable to hook direnv" >&2
+  elif [ -n "\${BASH_VERSION:-}" ]; then
+    eval "\$(direnv hook bash)" || echo "Unable to hook direnv" >&2
+  fi
+fi
 SHELL
 }
 
 shellrc::install_editor_rc() {
   local editor_path="$1"
   shellrc::write "editor" <<SHELL || fail
-    if [ -z "\${EDITOR:-}" ]; then
-      if command -v ${editor_path} >/dev/null; then
-        export EDITOR="\$(command -v ${editor_path})"
-      fi
-    fi
+$(sopka::print_license)
+
+if [ -z "\${EDITOR:-}" ]; then
+  if command -v ${editor_path} >/dev/null; then
+    export EDITOR="\$(command -v ${editor_path})"
+  fi
+fi
 SHELL
 }

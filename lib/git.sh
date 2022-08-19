@@ -21,7 +21,6 @@ git::place_up_to_date_clone() {
   local url="$1"; shift
   local dest="$1"; shift
 
-  # TODO: pass the rest of the arguments to git clone?
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -b|--branch)
@@ -45,10 +44,17 @@ git::place_up_to_date_clone() {
       local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?
       local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?
       local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
+
       mv "${dest_full_path}" "${backup_path}" || softfail || return $?
+
       git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
     fi
-    git -C "${dest}" pull || softfail "Unable to git pull in ${dest}" || return $?
+
+    if [ -n "${branch:-}" ]; then
+      git -C "${dest}" pull origin "${branch}" || softfail "Unable to git pull in ${dest}" || return $?
+    else
+      git -C "${dest}" pull || softfail "Unable to git pull in ${dest}" || return $?
+    fi
   else
     git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
   fi
