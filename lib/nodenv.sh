@@ -14,14 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-nodenv::install_and_load_shellrc() {
-  nodenv::install || softfail || return $?
-  nodenv::load_shellrc || softfail || return $?
-}
-
 nodenv::install() {
   nodenv::install_repositories || softfail || return $?
   nodenv::install_shellrc || softfail || return $?
+  nodenv::load_shellrc || softfail || return $?
 }
 
 nodenv::install_repositories() {

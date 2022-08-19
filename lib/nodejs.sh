@@ -14,6 +14,44 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# ---- asdf ----
+
+nodejs::install_asdf_specific_dependencies_by_apt() {
+  # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
+  apt::install \
+    curl \
+    dirmngr \
+    gawk \
+    gpg \
+      || softfail || return $?
+}
+
+nodejs::install_by_asdf_and_set_global() {
+  local node_version="${1:-"latest"}"
+
+  nodejs::install_by_asdf "${node_version}" || softfail || return $?
+  asdf global nodejs "${node_version}" || softfail || return $?
+}
+
+nodejs::install_by_asdf() {
+  local node_version="${1:-"latest"}"
+
+  nodejs::add_asdf_plugin || softfail || return $?
+
+  asdf install nodejs "${node_version}" || softfail || return $?
+}
+
+nodejs::add_asdf_plugin() {
+  if asdf plugin list | grep -qFx nodejs; then
+    asdf plugin update nodejs || softfail || return $?
+  else
+    asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git || softfail || return $?
+  fi
+}
+
+
+# ---- nodenv ----
+
 # Get a version number: nodenv install --list | grep ^14
 nodejs::install_by_nodenv_and_set_global() {
   local node_version="${1:-"${NODENV_VERSION}"}"
@@ -25,13 +63,15 @@ nodejs::install_by_nodenv_and_set_global() {
 nodejs::install_by_nodenv() {
   local node_version="${1:-}"
 
-  nodenv::install_and_load_shellrc || softfail || return $?
   nodenv::install_nodejs "${node_version:-}" || softfail || return $?
 
   # this will set NODENV_VERSION to the last element of ARGV array
   # shellcheck disable=2124
   NODENV_VERSION="${node_version:-"${NODENV_VERSION:-}"}" nodenv::configure_mismatched_binaries_workaround || softfail || return $?
 }
+
+
+# ---- apt ----
 
 nodejs::install_by_apt() {
   local version="$1"
@@ -52,9 +92,12 @@ nodejs::install_yarn_by_apt() {
   apt::install yarn || softfail || return $?
 }
 
-npm::update_system_wide_packages() {
+npm::update_globally_installed_packages() {
   sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || softfail || return $?
 }
+
+
+# ---- npm auth_token ----
 
 # bitwarden::use password "test record" npm::auth_token registry.npmjs.org
 #

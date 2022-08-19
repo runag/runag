@@ -14,6 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+asdf::install_dependencies_by_apt() {
+  apt::install \
+    curl \
+    git \
+      || softfail || return $?
+}
+
 asdf::install() {
   local asdf_version; asdf_version="${1:-"$(github::get_release_tag_name asdf-vm/asdf)"}" || softfail || return $?
   git::place_up_to_date_clone "https://github.com/asdf-vm/asdf.git" "${HOME}/.asdf" --branch "${asdf_version}" || softfail || return $?
