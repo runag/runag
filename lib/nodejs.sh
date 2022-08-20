@@ -16,21 +16,14 @@
 
 # ---- asdf ----
 
-nodejs::install_asdf_specific_dependencies_by_apt() {
+nodejs::install_dependencies_by_apt() {
   # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
   apt::install \
-    curl \
-    dirmngr \
-    gawk \
-    gpg \
+    curl    `# asdf-specific` \
+    dirmngr `# asdf-specific` \
+    gawk    `# asdf-specific` \
+    gpg     `# asdf-specific` \
       || softfail || return $?
-}
-
-nodejs::install_by_asdf_and_set_global() {
-  local node_version="${1:-"latest"}"
-
-  nodejs::install_by_asdf "${node_version}" || softfail || return $?
-  asdf global nodejs "${node_version}" || softfail || return $?
 }
 
 nodejs::install_by_asdf() {
@@ -39,6 +32,13 @@ nodejs::install_by_asdf() {
   nodejs::add_asdf_plugin || softfail || return $?
 
   asdf install nodejs "${node_version}" || softfail || return $?
+}
+
+nodejs::install_by_asdf_and_set_global() {
+  local node_version="${1:-"latest"}"
+
+  nodejs::install_by_asdf "${node_version}" || softfail || return $?
+  asdf global nodejs "${node_version}" || softfail || return $?
 }
 
 nodejs::add_asdf_plugin() {
@@ -53,12 +53,6 @@ nodejs::add_asdf_plugin() {
 # ---- nodenv ----
 
 # Get a version number: nodenv install --list | grep ^14
-nodejs::install_by_nodenv_and_set_global() {
-  local node_version="${1:-"${NODENV_VERSION}"}"
-
-  nodejs::install_by_nodenv "${node_version}" || softfail || return $?
-  nodenv global "${node_version}" || softfail || return $?
-}
 
 nodejs::install_by_nodenv() {
   local node_version="${1:-}"
@@ -68,6 +62,13 @@ nodejs::install_by_nodenv() {
   # this will set NODENV_VERSION to the last element of ARGV array
   # shellcheck disable=2124
   NODENV_VERSION="${node_version:-"${NODENV_VERSION:-}"}" nodenv::configure_mismatched_binaries_workaround || softfail || return $?
+}
+
+nodejs::install_by_nodenv_and_set_global() {
+  local node_version="${1:-"${NODENV_VERSION}"}"
+
+  nodejs::install_by_nodenv "${node_version}" || softfail || return $?
+  nodenv global "${node_version}" || softfail || return $?
 }
 
 

@@ -14,14 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-rbenv::install_and_load_shellrc() {
-  rbenv::install || softfail || return $?
-  rbenv::load_shellrc || softfail || return $?
-}
-
 rbenv::install() {
   rbenv::install_repositories || softfail || return $?
   rbenv::install_shellrc || softfail || return $?
+  rbenv::load_shellrc || softfail || return $?
 }
 
 rbenv::install_repositories() {

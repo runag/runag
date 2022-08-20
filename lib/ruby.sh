@@ -14,48 +14,46 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# ---- dependencies ----
+
+ruby::install_dependencies_by_apt() {
+  apt::install \
+    build-essential `# new rails project requires some gems to be compiled` \
+    libedit-dev     `# dependency to install ruby 2.7.3 using rbenv` \
+    libffi-dev      `# some gems require libffi, like fiddle-1.0.8.gem` \
+    libsqlite3-dev  `# new rails project uses sqlite` \
+    libssl-dev      `# dependency to install ruby 2.7.3 using rbenv` \
+    zlib1g-dev      `# dependency to install ruby 2.7.3 using rbenv` \
+      || softfail || return $?
+}
+
+
+# ---- rbenv ----
+
 # To get a version number, use: rbenv install -l
+
 ruby::install_by_rbenv() {
-  ruby::install_dependencies_by_apt || softfail || return $?
-  rbenv::install_and_load_shellrc || softfail || return $?
+  rbenv::install || softfail || return $?
   rbenv::install_ruby "$@" || softfail || return $?
 }
 
-ruby::install_and_set_global_by_rbenv() {
+ruby::install_by_rbenv_and_set_global() {
   local ruby_version="${1:-"${RBENV_VERSION}"}"
+
   ruby::install_by_rbenv "${ruby_version}" || softfail || return $?
   rbenv global "${ruby_version}" || softfail || return $?
 }
 
-ruby::install_without_dependencies_by_rbenv() {
-  rbenv::install_and_load_shellrc || softfail || return $?
-  rbenv::install_ruby "$@" || softfail || return $?
-}
+
+# ---- apt ----
 
 ruby::install_by_apt() {
   ruby::install_dependencies_by_apt || softfail || return $?
   apt::install ruby-full || softfail || return $?
 }
 
-ruby::install_dependencies_by_apt() {
-  apt::install \
-    build-essential `# new rails project requires some gems to be compiled` \
-    libedit-dev `# dependency to install ruby 2.7.3 using rbenv` \
-    libffi-dev `# some gems require libffi, like fiddle-1.0.8.gem` \
-    libsqlite3-dev `# new rails project uses sqlite` \
-    libssl-dev `# dependency to install ruby 2.7.3 using rbenv` \
-    zlib1g-dev `# dependency to install ruby 2.7.3 using rbenv` \
-      || softfail || return $?
-}
 
-ruby::dangerously_append_nodocument_to_gemrc() {
-  local gemrc_file="${HOME}/.gemrc"
-  ( umask 0177 && touch "${gemrc_file}" ) || softfail || return $?
-  file::append_line_unless_present "gem: --no-document" "${gemrc_file}" || softfail || return $?
-}
-
-# rubygems::credentials::exists file/path
-# rubygems::credentials::save file/path
+# ---- credentials ----
 
 rubygems::credentials::exists() {
   local file_path="${HOME}/.gem/credentials"
@@ -70,4 +68,17 @@ rubygems::credentials::save() {
 ---
 :rubygems_api_key: ${api_key}
 YAML
+}
+
+
+# ---- configuration ----
+
+ruby::dangerously_append_nodocument_to_gemrc() {
+  local gemrc_file="${HOME}/.gemrc"
+  ( umask 0177 && touch "${gemrc_file}" ) || softfail || return $?
+  file::append_line_unless_present "gem: --no-document" "${gemrc_file}" || softfail || return $?
+}
+
+ruby::disable_spring() {
+  shellrc::write "disable-spring" <<< "export DISABLE_SPRING=true" || softfail || return $?
 }
