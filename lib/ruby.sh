@@ -32,10 +32,6 @@ ruby::install_dependencies_by_apt() {
 
 # To get a version number, use: rbenv install -l
 
-ruby::without-docs() {
-  RUBY_CONFIGURE_OPTS="--disable-install-doc" "$@" || softfail || return $?
-}
-
 ruby::install_by_rbenv() {
   rbenv::install || softfail || return $?
   rbenv::install_ruby "$@" || softfail || return $?
@@ -76,6 +72,10 @@ YAML
 
 
 # ---- configuration ----
+
+ruby::without-docs() {
+  RUBY_CONFIGURE_OPTS="--disable-install-doc" "$@" || softfail || return $?
+}
 
 ruby::dangerously_append_nodocument_to_gemrc() {
   local gemrc_file="${HOME}/.gemrc"
