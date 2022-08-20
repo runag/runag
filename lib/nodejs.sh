@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ---- asdf ----
+# ---- install dependencies ----
 
 nodejs::install_dependencies_by_apt() {
   # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
@@ -25,6 +25,9 @@ nodejs::install_dependencies_by_apt() {
     gpg     `# asdf-specific` \
       || softfail || return $?
 }
+
+
+# ---- install by asdf ----
 
 nodejs::install_by_asdf() {
   local node_version="${1:-"latest"}"
@@ -50,7 +53,7 @@ nodejs::add_asdf_plugin() {
 }
 
 
-# ---- nodenv ----
+# ---- install by nodenv ----
 
 # Get a version number: nodenv install --list | grep ^14
 
@@ -72,7 +75,7 @@ nodejs::install_by_nodenv_and_set_global() {
 }
 
 
-# ---- apt ----
+# ---- install by apt ----
 
 nodejs::install_by_apt() {
   local version="$1"

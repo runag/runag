@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ---- dependencies ----
+# ---- install dependencies ----
 
 ruby::install_dependencies_by_apt() {
   apt::install \
@@ -28,7 +28,7 @@ ruby::install_dependencies_by_apt() {
 }
 
 
-# ---- rbenv ----
+# ---- install by rbenv ----
 
 # To get a version number, use: rbenv install -l
 
@@ -45,7 +45,7 @@ ruby::install_by_rbenv_and_set_global() {
 }
 
 
-# ---- apt ----
+# ---- install by apt ----
 
 ruby::install_by_apt() {
   ruby::install_dependencies_by_apt || softfail || return $?
