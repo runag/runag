@@ -71,3 +71,12 @@ asdf::path_variable() {
   local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
   echo "${user_home}/.asdf/shims:${user_home}/.asdf/bin"
 }
+
+asdf::add_plugin() {
+  local plugin_name="$1"
+  if asdf plugin list | grep -qFx "${plugin_name}"; then
+    asdf plugin update "${plugin_name}" || softfail || return $?
+  else
+    asdf plugin add "$@" || softfail || return $?
+  fi
+}

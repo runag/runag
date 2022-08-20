@@ -32,7 +32,7 @@ nodejs::install_dependencies_by_apt() {
 nodejs::install_by_asdf() {
   local node_version="${1:-"latest"}"
 
-  nodejs::add_asdf_plugin || softfail || return $?
+  asdf::add_plugin nodejs || softfail || return $?
 
   asdf install nodejs "${node_version}" || softfail || return $?
 }
@@ -42,14 +42,6 @@ nodejs::install_by_asdf_and_set_global() {
 
   nodejs::install_by_asdf "${node_version}" || softfail || return $?
   asdf global nodejs "${node_version}" || softfail || return $?
-}
-
-nodejs::add_asdf_plugin() {
-  if asdf plugin list | grep -qFx nodejs; then
-    asdf plugin update nodejs || softfail || return $?
-  else
-    asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git || softfail || return $?
-  fi
 }
 
 
