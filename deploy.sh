@@ -358,29 +358,49 @@ git::install_git ()
 git::place_up_to_date_clone () 
 { 
     local url="$1";
-    local dest="$2";
-    local branch="${3:-}";
+    shift;
+    local dest="$1";
+    shift;
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -b | --branch)
+                local branch="$2";
+                shift;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
     if [ -d "${dest}" ]; then
         local current_url;
-        current_url="$(git -C "${dest}" config remote.origin.url)" || fail;
+        current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?;
         if [ "${current_url}" != "${url}" ]; then
             local dest_full_path;
-            dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || fail;
+            dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?;
             local dest_parent_dir;
-            dest_parent_dir="$(dirname "${dest_full_path}")" || fail;
+            dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
             local dest_dir_name;
-            dest_dir_name="$(basename "${dest_full_path}")" || fail;
+            dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?;
             local backup_path;
-            backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || fail;
-            mv "${dest_full_path}" "${backup_path}" || fail;
-            git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
+            backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
+            mv "${dest_full_path}" "${backup_path}" || softfail || return $?;
+            git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?;
         fi;
-        git -C "${dest}" pull || fail "Unable to git pull in ${dest}";
+        if [ -n "${branch:-}" ]; then
+            git -C "${dest}" pull origin "${branch}" || softfail "Unable to git pull in ${dest}" || return $?;
+        else
+            git -C "${dest}" pull || softfail "Unable to git pull in ${dest}" || return $?;
+        fi;
     else
-        git clone "${url}" "${dest}" || fail "Unable to git clone ${url} to ${dest}";
+        git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?;
     fi;
     if [ -n "${branch:-}" ]; then
-        git -C "${dest}" checkout "${branch}" || fail "Unable to git checkout ${branch} in ${dest}";
+        git -C "${dest}" checkout "${branch}" || softfail "Unable to git checkout ${branch} in ${dest}" || return $?;
     fi
 }
 

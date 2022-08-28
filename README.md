@@ -105,6 +105,7 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 ### Development
 
+* [asdf](lib/asdf.sh)
 * [git](lib/git.sh)
 * [imagemagick](lib/imagemagick.sh)
 * [nodejs](lib/nodejs.sh)
