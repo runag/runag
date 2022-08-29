@@ -80,3 +80,21 @@ asdf::add_plugin() {
     asdf plugin add "$@" || softfail || return $?
   fi
 }
+
+asdf::add_plugin_and_install_package() {
+  local package_name="$1"
+  local package_version="${2:-"latest"}"
+
+  asdf::add_plugin "${package_name}" || softfail || return $?
+
+  asdf install "${package_name}" "${package_version}" || softfail || return $?
+}
+
+asdf::add_plugin_install_package_and_set_global() {
+  local package_name="$1"
+  local package_version="${2:-"latest"}"
+
+  asdf::add_plugin_and_install_package "${package_name}" "${package_version}" || softfail || return $?
+  
+  asdf global "${package_name}" "${package_version}" || softfail || return $?
+}
