@@ -14,12 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+pass::import_git_store() {
+  local store_dir="$1"
+  if [ ! -d "${HOME}/.password-store" ]; then
+    file::wait_until_available "${store_dir}" || softfail || return $?
+    git::place_up_to_date_clone "${store_dir}" "${HOME}/.password-store" || softfail || return $?
+  fi
+}
 
 pass::import_store() {
   local store_dir="$1"
   if [ ! -d "${HOME}/.password-store" ]; then
-    file::wait_until_available "${store_dir}" || softfail || return $?
     if [[ "${OSTYPE}" =~ ^msys ]]; then
+      file::wait_until_available "${store_dir}" || softfail || return $?
       cp -r "${store_dir}" "${HOME}/.password-store" || softfail || return $?
     else
       pass::sync_from "${store_dir}" || softfail || return $?
@@ -29,6 +36,7 @@ pass::import_store() {
 
 pass::sync_from() {
   local store_dir="$1"
+  file::wait_until_available "${store_dir}" || softfail || return $?
   rsync --recursive --times --chmod=go-rwx,Fu-x "${store_dir}"/ "${HOME}/.password-store" || softfail || return $?
 }
 
