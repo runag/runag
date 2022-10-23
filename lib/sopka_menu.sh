@@ -45,7 +45,14 @@ sopka_menu::add_header() {
   SOPKA_MENU+=("#$1")
 }
 
-sopka_menu::add_comment() {
+sopka_menu::add_subheader() {
+  if [ -z ${SOPKA_MENU:+x} ]; then
+    SOPKA_MENU=()
+  fi
+  SOPKA_MENU+=("##$1")
+}
+
+sopka_menu::add_note() {
   if [ -z ${SOPKA_MENU:+x} ]; then
     SOPKA_MENU=()
   fi
@@ -71,13 +78,13 @@ sopka_menu::clear() {
 
 sopka_menu::add_defaults() {
   sopka_menu::add_header "Same menu with certain flags set" || fail
+
   sopka_menu::add task::with_update_secrets sopka_menu::display || softfail || return $?
   sopka_menu::add task::with_verbose_task sopka_menu::display || softfail || return $?
-  sopka_menu::add_delimiter || softfail || return $?
 
   if [ -d "${HOME}/.sopka" ]; then
     sopka_menu::add_header "Sopka and sopkafiles" || fail
+    
     sopka_menu::add sopka::update || softfail || return $?
-    sopka_menu::add_delimiter || softfail || return $?
   fi
 }

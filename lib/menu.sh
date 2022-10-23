@@ -85,8 +85,6 @@ menu::display_menu() {
   local item
   local current_color=""
 
-  echo ""
-  
   for item in "$@"; do
     if [ -z "${item}" ]; then
       echo ""
@@ -94,10 +92,16 @@ menu::display_menu() {
 
     elif [[ "${item}" =~ ^\# ]]; then
 
-      if [[ "${item}" =~ ^\#\/ ]]; then
-        echo "  ${comment_color}* ${item:2}${default_color}"
+      if [[ "${item}" =~ ^\#\# ]]; then
+        echo ""
+        echo "  ${header_color}### ${item:2}${default_color}"
+        echo ""
+      elif [[ "${item}" =~ ^\#\/ ]]; then
+        echo "  ${comment_color}> ${item:2}${default_color}"
       else
-        echo "  ${header_color}== ${item:1} ==${default_color}"
+        echo ""
+        echo "  ${header_color}## ${item:1}${default_color}"
+        echo ""
       fi
       current_color=""
 
@@ -113,4 +117,6 @@ menu::display_menu() {
       ((index+=1))
     fi
   done
+
+  echo ""
 }

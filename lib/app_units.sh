@@ -157,7 +157,6 @@ app_units::sopka_menu::add_all::remote() {
   sopka_menu::add "$1" ssh::task "$2" app_units::stop || softfail || return $?
   sopka_menu::add "$1" ssh::task "$2" app_units::restart || softfail || return $?
   sopka_menu::add "$1" ssh::task "$2" app_units::restart_services || softfail || return $?
-  sopka_menu::add_delimiter || softfail || return $?
   sopka_menu::add "$1" ssh::task_verbose "$2" app_units::statuses || softfail || return $?
   sopka_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
   sopka_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
