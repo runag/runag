@@ -16,13 +16,13 @@
 
 # @description Perform apt update
 apt::update() {
-  task::run sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
+  task::run_with_title "apt-get update" sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
 }
 
 # @description Perform apt dist-upgrade
 apt::dist_upgrade() {
   # TODO: Check if this Dpkg::Options are good defaults
-  task::run sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y dist-upgrade || softfail || return $?
+  task::run_with_title "apt-get dist-upgrade" sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y dist-upgrade || softfail || return $?
 }
 
 apt::dist_upgrade_unless_ci() {
@@ -33,16 +33,16 @@ apt::dist_upgrade_unless_ci() {
 
 # @description Install package
 apt::install() {
-  task::run sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
+  task::run_with_title "apt-get install $*" sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
 }
 
 apt::remove() {
-  task::run sudo DEBIAN_FRONTEND=noninteractive apt-get -y remove "$@" || softfail || return $?
+  task::run_with_title "apt-get remove" sudo DEBIAN_FRONTEND=noninteractive apt-get -y remove "$@" || softfail || return $?
 }
 
 # @description Perform apt autoremove
 apt::autoremove() {
-  task::run sudo DEBIAN_FRONTEND=noninteractive apt-get -y autoremove || softfail || return $?
+  task::run_with_title "apt-get autoremove" sudo DEBIAN_FRONTEND=noninteractive apt-get -y autoremove || softfail || return $?
 }
 
 # @description Add apt source and key
