@@ -61,6 +61,7 @@ deploy_local_copy() {(
 )}
 
 configure_repo() {
+  git config core.fileMode true || fail
   reset_permissions || fail
   git remote add local-copy "$1" || fail
 }
