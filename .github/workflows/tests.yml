@@ -50,7 +50,7 @@ jobs:
       run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run ubuntu_workstation::deploy::vm_server 2>&1
 
   ubuntu-workstation:
-    name: ubuntu_workstation::deploy::packages
+    name: workstation::ubuntu::install_packages
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -64,7 +64,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y xvfb dbus-x11 ubuntu-desktop 2>&1
 
     - name: Run deploy script
-      run: DISPLAY=:42 dbus-launch xvfb-run --server-num 42 bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run ubuntu_workstation::deploy::packages 2>&1
+      run: DISPLAY=:42 dbus-launch xvfb-run --server-num 42 bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run workstation::ubuntu::install_packages 2>&1
 
   windows-workstation:
     name: windows_workstation::deploy_configuration
