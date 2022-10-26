@@ -29,12 +29,10 @@ Add apt source and key
 #### Example
 
 ```bash
-apt::add_key_and_source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" | fail
+apt::add_key_and_source "https://packages.microsoft.com/keys/microsoft.asc" "packages.microsoft" "https://packages.microsoft.com/repos/code stable main" "vscode" || softfail || return $?
 ```
 
 #### Arguments
 
 * **$1** (string): key url
-* **$2** (string): source string
-* **$3** (string): source name for sources.list.d
 

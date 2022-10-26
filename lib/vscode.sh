@@ -18,6 +18,11 @@ vscode::install::snap() {
   sudo snap install code --classic || softfail || return $?
 }
 
+vscode::install::apt() {
+  apt::add_key_and_source "https://packages.microsoft.com/keys/microsoft.asc" "packages.microsoft" "https://packages.microsoft.com/repos/code stable main" "vscode" || softfail || return $?
+  apt::install code || softfail || return $?
+}
+
 vscode::get_config_path() {
   local config_path
 

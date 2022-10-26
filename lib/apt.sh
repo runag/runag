@@ -25,6 +25,12 @@ apt::dist_upgrade() {
   sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y dist-upgrade || fail
 }
 
+apt::dist_upgrade_unless_ci() {
+  if [ "${CI:-}" != "true" ]; then
+    apt::dist_upgrade || softfail || return $?
+  fi
+}
+
 # @description Install package
 apt::install() {
   sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || fail
@@ -42,22 +48,23 @@ apt::autoremove() {
 # @description Add apt source and key
 #
 # @example
-#    apt::add_key_and_source "https://dl.yarnpkg.com/debian/pubkey.gpg" "deb https://dl.yarnpkg.com/debian/ stable main" "yarn" | fail
+#   apt::add_key_and_source "https://packages.microsoft.com/keys/microsoft.asc" "packages.microsoft" "https://packages.microsoft.com/repos/code stable main" "vscode" || softfail || return $?
 #
 # @arg $1 string key url
-# @arg $2 string source string
-# @arg $3 string source name for sources.list.d
 apt::add_key_and_source() {
   local key_url="$1"
-  local source_string="$2"
-  local source_name="$3"
+  local key_name="$2"
+  local source_string="$3"
+  local source_filename="$4"
 
-  local source_file="/etc/apt/sources.list.d/${source_name}.list"
+  apt::install curl gpg apt-transport-https || softfail || return $?
 
-  curl --fail --silent --show-error "${key_url}" | sudo apt-key add -
-  test "${PIPESTATUS[*]}" = "0 0" || fail "Unable to get key from ${key_url} or import in into apt"
+  curl --fail --silent --show-error "${key_url}" | gpg --dearmor | file::sudo_write "/etc/apt/keyrings/${key_name}.gpg" 0644 root root
+  test "${PIPESTATUS[*]}" = "0 0 0" || fail "Unable to get key from ${key_url} or to save it"
 
-  echo "${source_string}" | sudo tee "${source_file}" >/dev/null || fail "Unable to write apt source into the ${source_file}"
+  <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${key_name}.gpg] ${source_string}" file::sudo_write "/etc/apt/sources.list.d/${source_filename}.list" || softfail || return $?
+
+  apt::update || softfail || return $?
 }
 
 # gnome-keyring and libsecret (for git and ssh)
@@ -71,7 +78,7 @@ apt::install_gnome_keyring_and_libsecret() {
 }
 
 apt::install_sopka_essential_dependencies() {
-  apt::install curl git jq pass apt-transport-https || softfail || return $?
+  apt::install curl git jq pass || softfail || return $?
 }
 
 apt::install_display_if_restart_required_dependencies() {

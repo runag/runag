@@ -15,8 +15,8 @@
 #  limitations under the License.
 
 sublime_merge::install::apt() {
-  apt::add_key_and_source "https://download.sublimetext.com/sublimehq-pub.gpg" "deb https://download.sublimetext.com/ apt/stable/" "sublime-text" || softfail || return $?
-  apt::update || softfail || return $?
+  apt::add_key_and_source "https://download.sublimetext.com/sublimehq-pub.gpg" "sublimehq-pub" "https://download.sublimetext.com/ apt/stable/" "sublime-text" || softfail || return $?
+
   apt::install sublime-merge || softfail || return $?
 }
 

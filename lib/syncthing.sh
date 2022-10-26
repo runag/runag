@@ -21,8 +21,7 @@ syncthing::install::macos() {
 
 syncthing::install::apt() {
   # in accordance with instructions at https://apt.syncthing.net/
-  apt::add_key_and_source "https://syncthing.net/release-key.txt" "deb https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
-  apt::update || fail
+  apt::add_key_and_source "https://syncthing.net/release-key.txt" "syncthing" "https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
   apt::install syncthing || fail
   sudo systemctl --quiet --now enable "syncthing@${SUDO_USER}.service" || fail
 }
