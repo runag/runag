@@ -16,7 +16,7 @@
 
 # ---- install dependencies ----
 
-ruby::install_dependencies_by_apt() {
+ruby::install_dependencies::apt() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
     libedit-dev     `# dependency to install ruby 2.7.3 using ruby-build` \
@@ -65,8 +65,8 @@ ruby::install_by_rbenv_and_set_global() {
 
 # ---- install by apt ----
 
-ruby::install_by_apt() {
-  ruby::install_dependencies_by_apt || softfail || return $?
+ruby::install::apt() {
+  ruby::install_dependencies::apt || softfail || return $?
   apt::install ruby-full || softfail || return $?
 }
 

@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-asdf::install_dependencies_by_apt() {
+asdf::install_dependencies::apt() {
   apt::install \
     curl \
     git \

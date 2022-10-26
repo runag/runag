@@ -16,7 +16,7 @@
 
 # ---- install dependencies ----
 
-nodejs::install_dependencies_by_apt() {
+nodejs::install_dependencies::apt() {
   # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
   apt::install \
     curl    `# asdf-specific` \
@@ -69,7 +69,7 @@ nodejs::install_by_nodenv_and_set_global() {
 
 # ---- install by apt ----
 
-nodejs::install_by_apt() {
+nodejs::install::apt() {
   local version="$1"
 
   local distribution_codename; distribution_codename="$(lsb_release --codename --short)" || softfail || return $?
@@ -79,7 +79,7 @@ nodejs::install_by_apt() {
   apt::install nodejs || softfail || return $?
 }
 
-nodejs::install_yarn_by_apt() {
+nodejs::install_yarn::apt() {
   apt::add_key_and_source "https://dl.yarnpkg.com/debian/pubkey.gpg" "yarnpkg" "https://dl.yarnpkg.com/debian/ stable main" "yarn" || softfail "Unable to add yarn apt source" || return $?
 
   apt::install yarn || softfail || return $?
