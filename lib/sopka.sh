@@ -62,3 +62,35 @@ sopka::update() {
 
 #   rm "${temp_file}" || softfail || return $?
 # }
+
+
+sopka::make_local_copy() {(
+  local dest_path="${1:-"sopka"}"
+
+  if [ -d "${dest_path}" ]; then
+    softfail "Already exists: ${dest_path}" || return $?
+  fi
+
+  cp -R "${HOME}/.sopka" "${dest_path}" || softfail || return $?
+
+  cd "${dest_path}" || softfail || return $?
+
+  sopka::make_local_copy::configure_repo || softfail || return $?
+
+  local sopkafile_path; for sopkafile_path in sopkafiles/*; do
+    if [ -d "${sopkafile_path}" ]; then
+      (
+        cd "${sopkafile_path}" || softfail || return $?
+        sopka::make_local_copy::configure_repo || softfail || return $?
+      ) || softfail || return $?
+    fi
+  done
+)}
+
+sopka::make_local_copy::configure_repo() {
+  git config receive.denyCurrentBranch updateInstead || softfail || return $?
+
+  if git remote show local-copy >/dev/null 2>&1; then
+    git remote remove local-copy || softfail || return $?
+  fi
+}
