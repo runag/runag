@@ -71,15 +71,6 @@ EOF
   sudo sysctl --system || fail
 }
 
-linux::display_if_restart_required::is_available() {
-  if [[ "${OSTYPE}" =~ ^linux ]]; then
-    if command -v checkrestart >/dev/null; then
-      return 0
-    fi
-  fi
-  return 1
-}
-
 linux::display_if_restart_required() {
   if command -v checkrestart >/dev/null; then
     sudo checkrestart || fail
@@ -88,6 +79,19 @@ linux::display_if_restart_required() {
   if [ -x /usr/lib/update-notifier/update-motd-reboot-required ]; then
     /usr/lib/update-notifier/update-motd-reboot-required >&2 || fail
   fi
+}
+
+linux::display_if_restart_required::install::apt() {
+  apt::install debian-goodies || softfail || return $?
+}
+
+linux::display_if_restart_required::is_available() {
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    if command -v checkrestart >/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
 }
 
 linux::is_bare_metal() {
@@ -184,4 +188,25 @@ linux::get_ipv6_address() {
     softfail "Unable to obtain host ipv6 address" || return $?
   fi
   echo "${ip_address}"
+}
+
+# gnome-keyring and libsecret (for git and ssh)
+linux::install_gnome_keyring_and_libsecret::apt() {
+  apt::install \
+    gnome-keyring \
+    libsecret-tools \
+    libsecret-1-0 \
+    libsecret-1-dev \
+      || softfail || return $?
+}
+
+linux::install_sopka_essential_dependencies::apt() {
+  apt::install \
+    apt-transport-https \
+    curl \
+    git \
+    gpg \
+    jq \
+    pass \
+      || softfail || return $?
 }
