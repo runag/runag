@@ -110,6 +110,7 @@ sopka::make_local_copy() {(
 
 sopka::make_local_copy::configure_copy() {
   git config receive.denyCurrentBranch updateInstead || softfail || return $?
+  git config core.fileMode false || softfail || return $?
 
   if git remote get-url local-copy >/dev/null 2>&1; then
     git remote remove local-copy || softfail || return $?
