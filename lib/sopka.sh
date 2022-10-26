@@ -67,30 +67,59 @@ sopka::update() {
 sopka::make_local_copy() {(
   local dest_path="${1:-"sopka"}"
 
+  local source_path="${HOME}/.sopka"
+
   if [ -d "${dest_path}" ]; then
     softfail "Already exists: ${dest_path}" || return $?
   fi
 
-  cp -R "${HOME}/.sopka" "${dest_path}" || softfail || return $?
+  cp -R "${source_path}" "${dest_path}" || softfail || return $?
 
-  cd "${dest_path}" || softfail || return $?
+  local dest_full_path; dest_full_path="$(cd "${dest_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
 
-  sopka::make_local_copy::configure_repo || softfail || return $?
+  ( 
+    cd "${dest_path}" || softfail || return $?
 
-  local sopkafile_path; for sopkafile_path in sopkafiles/*; do
-    if [ -d "${sopkafile_path}" ]; then
-      (
-        cd "${sopkafile_path}" || softfail || return $?
-        sopka::make_local_copy::configure_repo || softfail || return $?
-      ) || softfail || return $?
-    fi
-  done
+    sopka::make_local_copy::configure_copy || softfail || return $?
+
+    local sopkafile_path; for sopkafile_path in sopkafiles/*; do
+      if [ -d "${sopkafile_path}" ]; then
+        (
+          cd "${sopkafile_path}" || softfail || return $?
+          sopka::make_local_copy::configure_copy || softfail || return $?
+        ) || softfail || return $?
+      fi
+    done
+  ) || softfail || return $?
+
+  ( 
+    cd "${source_path}" || softfail || return $?
+
+    sopka::make_local_copy::configure_source "${dest_full_path}" || softfail || return $?
+
+    local sopkafile_path; for sopkafile_path in sopkafiles/*; do
+      if [ -d "${sopkafile_path}" ]; then
+        (
+          cd "${sopkafile_path}" || softfail || return $?
+          sopka::make_local_copy::configure_source "${dest_full_path}/${sopkafile_path}" || softfail || return $?
+        ) || softfail || return $?
+      fi
+    done
+  ) || softfail || return $?
 )}
 
-sopka::make_local_copy::configure_repo() {
+sopka::make_local_copy::configure_copy() {
   git config receive.denyCurrentBranch updateInstead || softfail || return $?
 
-  if git remote show local-copy >/dev/null 2>&1; then
+  if git remote get-url local-copy >/dev/null 2>&1; then
     git remote remove local-copy || softfail || return $?
+  fi
+}
+
+sopka::make_local_copy::configure_source() {
+  if git remote get-url local-copy >/dev/null 2>&1; then
+    git remote set-url local-copy "$1" || softfail || return $?
+  else
+    git remote add local-copy "$1" || softfail || return $?
   fi
 }
