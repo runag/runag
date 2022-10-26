@@ -294,7 +294,6 @@ Could be set to `"true"`
 ### Internal variables, not to be used by non-library code
 
 ```
-SOPKA_APT_LAZY_UPDATE_HAPPENED
 SOPKA_NODENV_INITIALIZED
 SOPKA_RBENV_INITIALIZED
 SOPKA_TASK_OMIT_TITLE

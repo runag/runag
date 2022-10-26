@@ -20,11 +20,6 @@ bitwarden::install_cli::snap() {(
   if ! snap list bw >/dev/null 2>&1; then
     sudo snap install bw || softfail || return $?
   fi
-
-  if ! command -v jq >/dev/null; then
-    apt::lazy_update || softfail || return $?
-    apt::install jq || softfail || return $?
-  fi
 )}
 
 bitwarden::beyond_session() {(

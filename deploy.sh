@@ -337,7 +337,6 @@ apt::install ()
 }
 apt::update () 
 { 
-    SOPKA_APT_LAZY_UPDATE_HAPPENED=true;
     sudo DEBIAN_FRONTEND=noninteractive apt-get update || fail
 }
 

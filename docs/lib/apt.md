@@ -1,20 +1,10 @@
 ## Index
 
-* [apt::lazy_update](#aptlazy_update)
-* [apt::lazy_update_and_dist_upgrade](#aptlazy_update_and_dist_upgrade)
 * [apt::update](#aptupdate)
 * [apt::dist_upgrade](#aptdist_upgrade)
 * [apt::install](#aptinstall)
 * [apt::autoremove](#aptautoremove)
 * [apt::add_key_and_source](#aptadd_key_and_source)
-
-### apt::lazy_update
-
-Perform apt update once per script run
-
-### apt::lazy_update_and_dist_upgrade
-
-Perform apt update once per script run, and then perform apt dist-upgrade
 
 ### apt::update
 

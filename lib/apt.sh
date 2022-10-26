@@ -14,33 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-apt::autoremove_lazy_update_and_maybe_dist_upgrade() {
-  apt::autoremove || softfail || return $?
-
-  apt::lazy_update || softfail || return $?
-
-  if [ "${CI:-}" != "true" ]; then
-    apt::dist_upgrade || softfail || return $?
-  fi
-}
-
-# @description Perform apt update once per script run
-apt::lazy_update() {
-  if [ -z "${SOPKA_APT_LAZY_UPDATE_HAPPENED:-}" ]; then
-    SOPKA_APT_LAZY_UPDATE_HAPPENED=true
-    apt::update || fail
-  fi
-}
-
-# @description Perform apt update once per script run, and then perform apt dist-upgrade
-apt::lazy_update_and_dist_upgrade() {
-  apt::lazy_update || fail
-  apt::dist_upgrade || fail
-}
-
 # @description Perform apt update
 apt::update() {
-  SOPKA_APT_LAZY_UPDATE_HAPPENED=true
   sudo DEBIAN_FRONTEND=noninteractive apt-get update || fail
 }
 
@@ -96,7 +71,7 @@ apt::install_gnome_keyring_and_libsecret() {
 }
 
 apt::install_sopka_essential_dependencies() {
-  apt::install curl git jq pass || softfail || return $?
+  apt::install curl git jq pass apt-transport-https || softfail || return $?
 }
 
 apt::install_display_if_restart_required_dependencies() {
