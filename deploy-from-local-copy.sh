@@ -65,4 +65,4 @@ configure_repo() {
   git remote add local-copy "$1" || fail
 }
 
-deploy_local_copy "${HOME}/.sopka2"
+deploy_local_copy "${HOME}/.sopka"
