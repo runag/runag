@@ -29,20 +29,20 @@ nodejs::install_dependencies_by_apt() {
 
 # ---- install by asdf ----
 
-# nodejs::install_by_asdf() {
-#   local node_version="${1:-"latest"}"
-#
-#   asdf::add_plugin nodejs || softfail || return $?
-#
-#   asdf install nodejs "${node_version}" || softfail || return $?
-# }
-#
-# nodejs::install_by_asdf_and_set_global() {
-#   local node_version="${1:-"latest"}"
-#
-#   nodejs::install_by_asdf "${node_version}" || softfail || return $?
-#   asdf global nodejs "${node_version}" || softfail || return $?
-# }
+nodejs::install_by_asdf() {
+  local node_version="${1:-"latest"}"
+
+  asdf::add_plugin nodejs || softfail || return $?
+
+  asdf install nodejs "${node_version}" || softfail || return $?
+}
+
+nodejs::install_by_asdf_and_set_global() {
+  local node_version="${1:-"latest"}"
+
+  nodejs::install_by_asdf "${node_version}" || softfail || return $?
+  asdf global nodejs "${node_version}" || softfail || return $?
+}
 
 
 # ---- install by nodenv ----

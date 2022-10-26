@@ -28,6 +28,24 @@ ruby::install_dependencies_by_apt() {
 }
 
 
+# ---- install by asdf ----
+
+ruby::install_by_asdf() {
+  local ruby_version="${1:-"latest"}"
+
+  asdf::add_plugin ruby || softfail || return $?
+
+  asdf install ruby "${ruby_version}" || softfail || return $?
+}
+
+ruby::install_by_asdf_and_set_global() {
+  local ruby_version="${1:-"latest"}"
+
+  ruby::install_by_asdf "${ruby_version}" || softfail || return $?
+  asdf global ruby "${ruby_version}" || softfail || return $?
+}
+
+
 # ---- install by rbenv ----
 
 # To get a version number, use: rbenv install -l
