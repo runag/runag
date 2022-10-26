@@ -86,5 +86,6 @@ sopka_menu::add_defaults() {
     sopka_menu::add_header "Sopka and sopkafiles" || fail
     
     sopka_menu::add sopka::update || softfail || return $?
+    sopka_menu::add sopka::make_local_copy || softfail || return $?
   fi
 }
