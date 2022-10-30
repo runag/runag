@@ -48,7 +48,11 @@ apt::autoremove() {
 # @description Add apt source and key
 #
 # @example
-#   apt::add_key_and_source "https://packages.microsoft.com/keys/microsoft.asc" "packages.microsoft" "https://packages.microsoft.com/repos/code stable main" "vscode" || softfail || return $?
+#   apt::add_key_and_source \
+#     "https://packages.microsoft.com/keys/microsoft.asc" \
+#     "packages.microsoft" \
+#     "https://packages.microsoft.com/repos/code stable main" \
+#     "vscode" || softfail || return $?
 #
 # @arg $1 string key url
 apt::add_key_and_source() {

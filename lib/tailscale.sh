@@ -20,15 +20,12 @@ tailscale::install() {
   distributor_id="$(linux::get_distributor_id_lowercase)" || fail
   distribution_codename="$(lsb_release --codename --short)" || fail
 
-  curl --fail --silent --show-error --location \
-    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" | sudo apt-key add -
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  apt::add_key_and_source \
+    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" \
+    "tailscale" \
+    "https://pkgs.tailscale.com/stable/${distributor_id} ${distribution_codename} main" \
+    "tailscale" || softfail || return $?
 
-  curl --fail --silent --show-error --location \
-    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.list" | sudo tee /etc/apt/sources.list.d/tailscale.list
-  test "${PIPESTATUS[*]}" = "0 0" || fail
-
-  apt::update || fail
   apt::install tailscale || fail
 }
 
