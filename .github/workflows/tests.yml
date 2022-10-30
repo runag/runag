@@ -35,8 +35,8 @@ jobs:
     - name: Run workstation::macos::deploy_workstation_without_secrets
       run: bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run workstation::macos::deploy_workstation_without_secrets 2>&1
 
-  ubuntu-vm-server:
-    name: workstation::linux::deploy_vm_server
+  ubuntu-lan-server:
+    name: workstation::linux::deploy_lan_server
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -47,7 +47,7 @@ jobs:
       run: sleep 30
 
     - name: Run deploy script
-      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run workstation::linux::deploy_vm_server 2>&1
+      run: bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run workstation::linux::deploy_lan_server 2>&1
 
   ubuntu-workstation:
     name: workstation::linux::install_packages
@@ -63,8 +63,11 @@ jobs:
     - name: "Install xvfb, dbus-x11, and ubuntu-desktop"
       run: sudo apt-get update && sudo apt-get install -y xvfb dbus-x11 ubuntu-desktop 2>&1
 
-    - name: Run deploy script
+    - name: Run install_packages script
       run: DISPLAY=:42 dbus-launch xvfb-run --server-num 42 bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run workstation::linux::install_packages 2>&1
+
+    - name: Run configure script
+      run: DISPLAY=:42 dbus-launch xvfb-run --server-num 42 bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) add senotrusov/workstation-sopkafile run workstation::linux::configure 2>&1
 
   windows-workstation:
     name: workstation::windows::deploy_configuration
