@@ -19,7 +19,10 @@ vscode::install::snap() {
 }
 
 vscode::install::apt() {
-  apt::add_key_and_source "https://packages.microsoft.com/keys/microsoft.asc" "packages.microsoft" "https://packages.microsoft.com/repos/code stable main" "vscode" || softfail || return $?
+  apt::add_source_with_key "vscode" \
+    "https://packages.microsoft.com/repos/code stable main" \
+    "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
+
   apt::install code || softfail || return $?
 }
 

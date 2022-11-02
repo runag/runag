@@ -74,13 +74,17 @@ nodejs::install::apt() {
 
   local distribution_codename; distribution_codename="$(lsb_release --codename --short)" || softfail || return $?
 
-  apt::add_key_and_source "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" "nodesource" "https://deb.nodesource.com/node_${version}.x ${distribution_codename} main" "nodesource" || softfail || return $?
+  apt::add_source_with_key "nodesource" \
+    "https://deb.nodesource.com/node_${version}.x ${distribution_codename} main" \
+    "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" || softfail || return $?
 
   apt::install nodejs || softfail || return $?
 }
 
 nodejs::install_yarn::apt() {
-  apt::add_key_and_source "https://dl.yarnpkg.com/debian/pubkey.gpg" "yarnpkg" "https://dl.yarnpkg.com/debian/ stable main" "yarn" || softfail "Unable to add yarn apt source" || return $?
+  apt::add_source_with_key "yarnpkg" \
+    "https://dl.yarnpkg.com/debian/ stable main" \
+    "https://dl.yarnpkg.com/debian/pubkey.gpg" || softfail "Unable to add yarn apt source" || return $?
 
   apt::install yarn || softfail || return $?
 }

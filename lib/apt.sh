@@ -48,23 +48,19 @@ apt::autoremove() {
 # @description Add apt source and key
 #
 # @example
-#   apt::add_key_and_source \
-#     "https://packages.microsoft.com/keys/microsoft.asc" \
-#     "packages.microsoft" \
+#   apt::add_source_with_key "vscode" \
 #     "https://packages.microsoft.com/repos/code stable main" \
-#     "vscode" || softfail || return $?
+#     "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
 #
-# @arg $1 string key url
-apt::add_key_and_source() {
-  local key_url="$1"
-  local key_name="$2"
-  local source_string="$3"
-  local source_filename="$4"
+apt::add_source_with_key() {
+  local source_name="$1"
+  local source_string="$2"
+  local key_url="$3"
 
-  curl --fail --silent --show-error "${key_url}" | gpg --dearmor | file::sudo_write "/etc/apt/keyrings/${key_name}.gpg" 0644 root root
-  test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to get key from ${key_url} or to save it" || return $?
+  curl --fail --silent --show-error "${key_url}" | gpg --dearmor | file::sudo_write "/etc/apt/keyrings/${source_name}.gpg" 0644 root root
+  test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to get key or to save it: ${key_url} " || return $?
 
-  <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${key_name}.gpg] ${source_string}" file::sudo_write "/etc/apt/sources.list.d/${source_filename}.list" || softfail || return $?
+  <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${source_name}.gpg] ${source_string}" file::sudo_write "/etc/apt/sources.list.d/${source_name}.list" || softfail || return $?
 
   apt::update || softfail || return $?
 }

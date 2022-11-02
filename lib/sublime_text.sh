@@ -15,7 +15,9 @@
 #  limitations under the License.
 
 sublime_text::install::apt() {
-  apt::add_key_and_source "https://download.sublimetext.com/sublimehq-pub.gpg" "sublimehq-pub" "https://download.sublimetext.com/ apt/stable/" "sublime-text" || softfail || return $?
+  apt::add_source_with_key "sublimetext" \
+    "https://download.sublimetext.com/ apt/stable/" \
+    "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?
 
   apt::install sublime-text || softfail || return $?
 }

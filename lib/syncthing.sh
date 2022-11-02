@@ -15,13 +15,15 @@
 #  limitations under the License.
 
 syncthing::install::macos() {
-  brew install syncthing || fail
-  brew services start syncthing || fail
+  brew install syncthing || softfail || return $?
+  brew services start syncthing || softfail || return $?
 }
 
 syncthing::install::apt() {
-  # in accordance with instructions at https://apt.syncthing.net/
-  apt::add_key_and_source "https://syncthing.net/release-key.txt" "syncthing" "https://apt.syncthing.net/ syncthing stable" "syncthing" || fail "Unable to add syncthing apt source"
-  apt::install syncthing || fail
-  sudo systemctl --quiet --now enable "syncthing@${SUDO_USER}.service" || fail
+  apt::add_source_with_key "syncthing" \
+    "https://apt.syncthing.net/ syncthing stable" \
+    "https://syncthing.net/release-key.txt" || softfail "Unable to add syncthing apt source" || return $?
+
+  apt::install syncthing || softfail || return $?
+  sudo systemctl --quiet --now enable "syncthing@${SUDO_USER}.service" || softfail || return $?
 }

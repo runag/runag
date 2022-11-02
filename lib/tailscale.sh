@@ -20,11 +20,9 @@ tailscale::install() {
   distributor_id="$(linux::get_distributor_id_lowercase)" || fail
   distribution_codename="$(lsb_release --codename --short)" || fail
 
-  apt::add_key_and_source \
-    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" \
-    "tailscale" \
+  apt::add_source_with_key "tailscale" \
     "https://pkgs.tailscale.com/stable/${distributor_id} ${distribution_codename} main" \
-    "tailscale" || softfail || return $?
+    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" || softfail || return $?
 
   apt::install tailscale || fail
 }

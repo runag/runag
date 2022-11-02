@@ -4,7 +4,7 @@
 * [apt::dist_upgrade](#aptdist_upgrade)
 * [apt::install](#aptinstall)
 * [apt::autoremove](#aptautoremove)
-* [apt::add_key_and_source](#aptadd_key_and_source)
+* [apt::add_source_with_key](#aptadd_source_with_key)
 
 ### apt::update
 
@@ -22,17 +22,15 @@ Install package
 
 Perform apt autoremove
 
-### apt::add_key_and_source
+### apt::add_source_with_key
 
 Add apt source and key
 
 #### Example
 
 ```bash
-apt::add_key_and_source "https://packages.microsoft.com/keys/microsoft.asc" "packages.microsoft" "https://packages.microsoft.com/repos/code stable main" "vscode" || softfail || return $?
+apt::add_source_with_key "vscode" \
+  "https://packages.microsoft.com/repos/code stable main" \
+  "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
 ```
-
-#### Arguments
-
-* **$1** (string): key url
 

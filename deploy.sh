@@ -333,11 +333,11 @@ deploy_script::run ()
 
 apt::install () 
 { 
-    task::run sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
+    task::run_with_title "apt-get install $*" sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
 }
 apt::update () 
 { 
-    task::run sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
+    task::run_with_title "apt-get update" sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
 }
 
 git::install_git () 
