@@ -33,7 +33,7 @@ asdf::install_with_shellrc() {
 }
 
 asdf::install_shellrc() {
-  shellrc::write "asdf" <<SHELL || fail
+  shellrc::write "asdf" <<SHELL || softfail || return $?
 $(sopka::print_license)
 
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
