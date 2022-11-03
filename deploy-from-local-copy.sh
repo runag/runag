@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 if [ "${SOPKA_VERBOSE:-}" = true ]; then
-    set -o xtrace;
+  set -o xtrace;
 fi
 
 set -o nounset
