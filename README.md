@@ -302,6 +302,6 @@ SOPKA_TASK_TITLE
 
 ## Contributing
 
-Please check shell scripts before commiting any changes with `npm run lint`.
+Please use [ShellCheck](https://www.shellcheck.net/). If it is not integrated into your editor, you could run `npm run lint`.
 
-I mostly follow [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html), except for the function names. Function names here are more similar to those you would meet in LISP.
+I mostly follow [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html).
