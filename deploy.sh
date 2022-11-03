@@ -81,7 +81,7 @@ softfail_unless_good::internal ()
 task::with_verbose_task () 
 { 
     ( if [ -t 1 ]; then
-        log::notice "SOPKA_TASK_VERBOSE flag is set" || fail;
+        log::notice "SOPKA_TASK_VERBOSE flag is set" || softfail || return $?;
     fi;
     export SOPKA_TASK_VERBOSE=true;
     "$@" )
@@ -89,7 +89,7 @@ task::with_verbose_task ()
 task::with_update_secrets () 
 { 
     ( if [ -t 1 ]; then
-        log::notice "SOPKA_UPDATE_SECRETS flag is set" || fail;
+        log::notice "SOPKA_UPDATE_SECRETS flag is set" || softfail || return $?;
     fi;
     export SOPKA_UPDATE_SECRETS=true;
     "$@" )
@@ -153,10 +153,10 @@ task::run ()
         return $?;
     fi;
     if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-        log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail;
+        log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || softfail || return $?;
     fi;
     local temp_dir;
-    temp_dir="$(mktemp -d)" || fail;
+    temp_dir="$(mktemp -d)" || softfail || return $?;
     trap "task::complete_with_cleanup" EXIT;
     if [ -t 0 ]; then
         ( "$@" ) < /dev/null > "${temp_dir}/stdout" 2> "${temp_dir}/stderr";
@@ -345,14 +345,14 @@ git::install_git ()
     if [[ "${OSTYPE}" =~ ^linux ]]; then
         if ! command -v git > /dev/null; then
             if command -v apt-get > /dev/null; then
-                apt::update || fail;
-                apt::install git || fail;
+                apt::update || softfail || return $?;
+                apt::install git || softfail || return $?;
             else
                 fail "Unable to install git, apt-get not found";
             fi;
         fi;
     fi;
-    git --version > /dev/null || fail
+    git --version > /dev/null || softfail || return $?
 }
 git::place_up_to_date_clone () 
 { 
