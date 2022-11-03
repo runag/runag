@@ -43,7 +43,7 @@ bitwarden::logout_if_user_email_differs() {
 bitwarden::is_logged_in() {
   # this function is intent to use fail (and not softfail) in case of errors
 
-  local bw_status; bw_status="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
+  local bw_status; bw_status="$(bw status | jq '.status' --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail # no softfail here!
 
   if [ "${bw_status}" = "unauthenticated" ]; then
     return 1

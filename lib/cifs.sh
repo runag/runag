@@ -26,7 +26,7 @@ cifs::credentials::save() {
   local mode="${4:-"600"}"
   
   printf "username=%s\npassword=%s\n" "${cifs_username}" "${cifs_password}" | file::write "${credentials_file}" "${mode}"
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 cifs::mount() {
@@ -36,17 +36,17 @@ cifs::mount() {
   local file_mode="${4:-"0600"}" 
   local dir_mode="${5:-"0700"}" 
 
-  dir::make_if_not_exists "${mount_point}" "${dir_mode}" || fail
+  dir::make_if_not_exists "${mount_point}" "${dir_mode}" || softfail || return $?
 
   local fstab_tag="# cifs mount: ${mount_point}"
 
   if ! grep -qFx "${fstab_tag}" /etc/fstab; then
-    echo "${fstab_tag}" | sudo tee -a /etc/fstab >/dev/null || fail
-    echo "${server_path} ${mount_point} cifs credentials=${credentials_file},uid=${USER},forceuid,gid=${USER},forcegid,file_mode=${file_mode},dir_mode=${dir_mode},nosetuids,echo_interval=10,noserverino,noposix  0  0" | sudo tee -a /etc/fstab >/dev/null || fail
+    echo "${fstab_tag}" | sudo tee -a /etc/fstab >/dev/null || softfail || return $?
+    echo "${server_path} ${mount_point} cifs credentials=${credentials_file},uid=${USER},forceuid,gid=${USER},forcegid,file_mode=${file_mode},dir_mode=${dir_mode},nosetuids,echo_interval=10,noserverino,noposix  0  0" | sudo tee -a /etc/fstab >/dev/null || softfail || return $?
   fi
 
   # other mounts might fail, so we ignore exit status here
   sudo mount -a
 
-  findmnt --mountpoint "${mount_point}" >/dev/null || fail "Filesystem is not mounted: ${mount_point}"
+  findmnt --mountpoint "${mount_point}" >/dev/null || softfail "Filesystem is not mounted: ${mount_point}" || return $?
 }

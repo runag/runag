@@ -53,7 +53,7 @@ terminal::default_color() {
 }
 
 terminal::function_sources() {
-  cat <<SHELL || fail
+  cat <<SHELL || softfail || return $?
 $(declare -f terminal::have_16_colors)
 $(declare -f terminal::print_color_table)
 $(declare -f terminal::color)

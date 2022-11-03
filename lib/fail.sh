@@ -126,7 +126,7 @@ softfail_unless_good::internal() {
 # }
 
 fail::function_sources() {
-  cat <<SHELL || fail
+  cat <<SHELL || softfail || return $?
 $(declare -f fail)
 $(declare -f fail_code)
 $(declare -f fail_unless_good)

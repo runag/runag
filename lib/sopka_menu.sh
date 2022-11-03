@@ -77,13 +77,13 @@ sopka_menu::clear() {
 }
 
 sopka_menu::add_defaults() {
-  sopka_menu::add_header "Same menu with certain flags set" || fail
+  sopka_menu::add_header "Same menu with certain flags set" || softfail || return $?
 
   sopka_menu::add task::with_update_secrets sopka_menu::display || softfail || return $?
   sopka_menu::add task::with_verbose_task sopka_menu::display || softfail || return $?
 
   if [ -d "${HOME}/.sopka" ]; then
-    sopka_menu::add_header "Sopka and sopkafiles" || fail
+    sopka_menu::add_header "Sopka and sopkafiles" || softfail || return $?
     
     sopka_menu::add sopka::update || softfail || return $?
     sopka_menu::add sopka::make_local_copy || softfail || return $?

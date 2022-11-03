@@ -16,7 +16,7 @@
 
 task::with_verbose_task() {(
   if [ -t 1 ]; then
-    log::notice "SOPKA_TASK_VERBOSE flag is set" || fail
+    log::notice "SOPKA_TASK_VERBOSE flag is set" || softfail || return $?
   fi
   export SOPKA_TASK_VERBOSE=true
   "$@"
@@ -24,7 +24,7 @@ task::with_verbose_task() {(
 
 task::with_update_secrets() {(
   if [ -t 1 ]; then
-    log::notice "SOPKA_UPDATE_SECRETS flag is set" || fail
+    log::notice "SOPKA_UPDATE_SECRETS flag is set" || softfail || return $?
   fi
   export SOPKA_UPDATE_SECRETS=true
   "$@"
@@ -93,7 +93,7 @@ task::detect_fail_state() {
   "${SOPKA_TASK_FAIL_DETECTOR}" "$@"
 }
 
-# note the subshells
+# shellcheck disable=SC2030
 task::run() {(
   if [ "${SOPKA_TASK_SSH_JUMP:-}" = true ]; then
     ssh::task "$@"
@@ -101,11 +101,10 @@ task::run() {(
   fi
 
   if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-    log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || fail
+    log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || softfail || return $?
   fi
-
-  # shellcheck disable=SC2030
-  local temp_dir; temp_dir="$(mktemp -d)" || fail # temp_dir also used in task::cleanup signal handler
+  
+  local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $? # temp_dir also used in task::cleanup signal handler
 
   trap "task::complete_with_cleanup" EXIT
 
@@ -116,7 +115,6 @@ task::run() {(
     ("$@") >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"
   fi
   
-  # shellcheck disable=SC2030
   local task_status=$? # task_status also used in task::cleanup signal handler so we must assign it here
 
   task::detect_fail_state "${temp_dir}/stdout" "${temp_dir}/stderr" "${task_status}"
@@ -190,7 +188,7 @@ task::complete() {
 }
 
 task::function_sources() {
-  cat <<SHELL || fail
+  cat <<SHELL || softfail || return $?
 $(declare -f task::with_verbose_task)
 $(declare -f task::with_update_secrets)
 $(declare -f task::ssh_jump)

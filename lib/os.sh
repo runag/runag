@@ -17,7 +17,7 @@
 os::hostname() {
   if [[ "${OSTYPE}" =~ ^msys ]]; then
     echo "${HOSTNAME}" | tr '[:upper:]' '[:lower:]'
-    test "${PIPESTATUS[*]}" = "0 0" || fail
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
     hostname # TODO: check it
@@ -30,9 +30,9 @@ os::hostname() {
 os::machine_id() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     if vmware::is_inside_vm; then
-      vmware::get_machine_uuid || fail
+      vmware::get_machine_uuid || softfail || return $?
     else
-      cat /etc/machine-id || fail
+      cat /etc/machine-id || softfail || return $?
     fi
   fi
 }

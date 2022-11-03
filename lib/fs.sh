@@ -16,7 +16,7 @@
 
 path::convert_msys_to_windows() {
   echo "$1" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
-  test "${PIPESTATUS[*]}" = "0 0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
 }  
 
 dir::make_if_not_exists() {
@@ -27,10 +27,10 @@ dir::make_if_not_exists() {
 
   if mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
     if [ -n "${owner}" ]; then
-      chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
+      chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
     fi
   else
-    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
+    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
   fi
 }
 
@@ -41,12 +41,12 @@ dir::make_if_not_exists_and_set_permissions() {
   local group="${4:-}"
 
   if ! mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
-    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
-    chmod "${mode}" "${dir_path}" || fail
+    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
+    chmod "${mode}" "${dir_path}" || softfail || return $?
   fi
 
   if [ -n "${owner}" ]; then
-    chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
+    chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
   fi
 }
 
@@ -58,10 +58,10 @@ dir::sudo_make_if_not_exists() {
 
   if sudo mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
     if [ -n "${owner}" ]; then
-      sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
+      sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
     fi
   else
-    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
+    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
   fi
 }
 
@@ -72,12 +72,12 @@ dir::sudo_make_if_not_exists_and_set_permissions() {
   local group="${4:-}"
 
   if ! sudo mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
-    test -d "${dir_path}" || fail "Unable to create directory, maybe there is a file here already: ${dir_path}"
-    sudo chmod "${mode}" "${dir_path}" || fail
+    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
+    sudo chmod "${mode}" "${dir_path}" || softfail || return $?
   fi
 
   if [ -n "${owner}" ]; then
-    sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || fail
+    sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
   fi
 }
 
@@ -106,11 +106,11 @@ file::sudo_write() {
     # the use of "install" command performs that, at least on linux and macos
     # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
     # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
-    sudo install ${mode:+-m "${mode}"} ${owner:+-o "${owner}"} ${group:+-g "${group}"} /dev/null "${dest}" || fail
+    sudo install ${mode:+-m "${mode}"} ${owner:+-o "${owner}"} ${group:+-g "${group}"} /dev/null "${dest}" || softfail || return $?
   fi
 
   cat | sudo tee "${dest}" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 file::write() {
@@ -122,10 +122,10 @@ file::write() {
     # the use of "install" command performs that, at least on linux and macos
     # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
     # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
-    install -m "${mode}" /dev/null "${dest}" || fail
+    install -m "${mode}" /dev/null "${dest}" || softfail || return $?
   fi
 
-  cat >"${dest}" || fail
+  cat >"${dest}" || softfail || return $?
 }
 
 file::append() {
@@ -174,7 +174,7 @@ file::append_line_unless_present() {
   fi
 
   if ! grep -qFx "${string}" "${file}"; then
-    echo "${string}" | tee -a "${file}" >/dev/null || fail
+    echo "${string}" | tee -a "${file}" >/dev/null || softfail || return $?
   fi
 }
 
@@ -187,7 +187,7 @@ file::sudo_append_line_unless_present() {
   fi
     
   if ! sudo grep -qFx "${string}" "${file}"; then
-    echo "${string}" | sudo tee -a "${file}" >/dev/null || fail
+    echo "${string}" | sudo tee -a "${file}" >/dev/null || softfail || return $?
   fi
 }
 

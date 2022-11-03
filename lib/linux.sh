@@ -16,13 +16,13 @@
 
 linux::set_timezone() {
   local timezone="$1"
-  sudo timedatectl set-timezone "${timezone}" || fail "Unable to set timezone ($?)"
+  sudo timedatectl set-timezone "${timezone}" || softfail || return $?
 }
 
 linux::set_hostname() {
   local hostname="$1"
-  sudo hostnamectl set-hostname "${hostname}" || fail
-  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" /etc/hosts || fail
+  sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
+  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" /etc/hosts || softfail || return $?
 }
 
 linux::dangerously_set_hostname() {
@@ -31,27 +31,27 @@ linux::dangerously_set_hostname() {
   local previous_name
   local previous_name_escaped
   
-  previous_name="$(hostnamectl --static status)" || fail
-  previous_name_escaped="$(echo "${previous_name}" | sed 's/\./\\./g')" || fail
+  previous_name="$(hostnamectl --static status)" || softfail || return $?
+  previous_name_escaped="$(echo "${previous_name}" | sed 's/\./\\./g')" || softfail || return $?
 
-  sudo hostnamectl set-hostname "${hostname}" || fail
+  sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
 
   if [ -f "${hosts_file}" ]; then
     grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" | sudo tee "${hosts_file}.sopka-new" >/dev/null
-    test "${PIPESTATUS[*]}" = "0 0" || fail
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   fi
 
-  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" "${hosts_file}.sopka-new" || fail
+  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" "${hosts_file}.sopka-new" || softfail || return $?
 
-  sudo cp "${hosts_file}" "${hosts_file}.before-sopka-changes" || fail
-  sudo mv "${hosts_file}.sopka-new" "${hosts_file}" || fail
+  sudo cp "${hosts_file}" "${hosts_file}.before-sopka-changes" || softfail || return $?
+  sudo mv "${hosts_file}.sopka-new" "${hosts_file}" || softfail || return $?
 }
 
 linux::set_locale() {
   local locale="$1"
 
-  sudo locale-gen "${locale}" || fail "Unable to run locale-gen ($?)"
-  sudo update-locale "LANG=${locale}" "LANGUAGE=${locale}" "LC_CTYPE=${locale}" "LC_ALL=${locale}" || fail "Unable to run update-locale ($?)"
+  sudo locale-gen "${locale}" || softfail || return $?
+  sudo update-locale "LANG=${locale}" "LANGUAGE=${locale}" "LC_CTYPE=${locale}" "LC_ALL=${locale}" || softfail || return $?
 
   export LANG="${locale}"
   export LANGUAGE="${locale}"
@@ -63,21 +63,21 @@ linux::configure_inotify() {
   local max_user_watches="${1:-1048576}"
   local max_user_instances="${2:-2048}"
 
-  file::sudo_write /etc/sysctl.d/sopka-inotify.conf <<EOF || fail
+  file::sudo_write /etc/sysctl.d/sopka-inotify.conf <<EOF || softfail || return $?
 fs.inotify.max_user_watches=${max_user_watches}
 fs.inotify.max_user_instances=${max_user_instances}
 EOF
 
-  sudo sysctl --system || fail
+  sudo sysctl --system || softfail || return $?
 }
 
 linux::display_if_restart_required() {
   if command -v checkrestart >/dev/null; then
-    sudo checkrestart || fail
+    sudo checkrestart || softfail || return $?
   fi
 
   if [ -x /usr/lib/update-notifier/update-motd-reboot-required ]; then
-    /usr/lib/update-notifier/update-motd-reboot-required >&2 || fail
+    /usr/lib/update-notifier/update-motd-reboot-required >&2 || softfail || return $?
   fi
 }
 
@@ -102,7 +102,7 @@ linux::is_bare_metal() {
 linux::add_user() {
   local user_name="$1"
   if ! id -u "${user_name}" >/dev/null 2>&1; then
-    sudo adduser --system --group --shell /bin/bash "${user_name}" || fail
+    sudo adduser --system --group --shell /bin/bash "${user_name}" || softfail || return $?
   fi
 }
 
@@ -110,27 +110,27 @@ linux::assign_user_to_group() {
   local user_name="$1"
   local group_name="$2"
 
-  usermod --append --groups "${group_name}" "${user_name}" || fail
+  usermod --append --groups "${group_name}" "${user_name}" || softfail || return $?
 }
 
 linux::get_default_route() {
   ip route show | grep 'default via' | awk '{print $3}'
-  test "${PIPESTATUS[*]}" = "0 0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
 }
 
 linux::get_distributor_id_lowercase() {
   lsb_release --id --short | tr '[:upper:]' '[:lower:]'
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 linux::with_secure_temp_dir() {
   local secure_temp_dir
   
-  secure_temp_dir="$(mktemp -d)" || fail
+  secure_temp_dir="$(mktemp -d)" || softfail || return $?
 
   # data in tmpfs can be swapped to disk, data in ramfs can't be swapped so we are using ramfs here
-  sudo mount -t ramfs -o mode=700 ramfs "${secure_temp_dir}" || fail
-  sudo chown "${USER}.${USER}" "${secure_temp_dir}" || fail
+  sudo mount -t ramfs -o mode=700 ramfs "${secure_temp_dir}" || softfail || return $?
+  sudo chown "${USER}.${USER}" "${secure_temp_dir}" || softfail || return $?
 
   (
     export TMPDIR="${secure_temp_dir}"
@@ -139,11 +139,11 @@ linux::with_secure_temp_dir() {
 
   local result=$?
 
-  sudo umount "${secure_temp_dir}" || fail
-  rmdir "${secure_temp_dir}" || fail
+  sudo umount "${secure_temp_dir}" || softfail || return $?
+  rmdir "${secure_temp_dir}" || softfail || return $?
 
   if [ "${result}" != 0 ]; then
-    fail "Error performing ${1:-"(argument is empty)"} (${result})"
+    softfail "Error performing ${1:-"(argument is empty)"} (${result})" || return $?
   fi
 }
 

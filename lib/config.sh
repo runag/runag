@@ -19,9 +19,9 @@ config::install() {
   local dst="$2"
 
   if [ -f "${dst}" ]; then
-    config::merge "${src}" "${dst}" || fail
+    config::merge "${src}" "${dst}" || softfail || return $?
   else
-    cp "${src}" "${dst}" || fail
+    cp "${src}" "${dst}" || softfail || return $?
   fi
 }
 
@@ -51,12 +51,12 @@ config::merge() {
         echo "  2: Use file from this machine to save it to the repository"
         echo "  3 (or Enter): Ignore conflict"
 
-        IFS="" read -r action || fail
+        IFS="" read -r action || softfail || return $?
 
         if [ "${action}" = 1 ]; then
-          cp "${src}" "${dst}" || fail
+          cp "${src}" "${dst}" || softfail || return $?
         elif [ "${action}" = 2 ]; then
-          cp "${dst}" "${src}" || fail
+          cp "${dst}" "${src}" || softfail || return $?
         fi
       fi
     fi

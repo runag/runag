@@ -24,7 +24,7 @@ macos::increase_maxfiles_limit() {
   local dst="/Library/LaunchDaemons/${label}.plist"
 
   if [ ! -f "${dst}" ]; then
-    file::sudo_write "${dst}" 644 root wheel <<HTML || fail
+    file::sudo_write "${dst}" 644 root wheel <<HTML || softfail || return $?
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
         "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -53,12 +53,12 @@ HTML
 
 macos::hide_dir() {
   if [ -d "$1" ]; then
-    chflags hidden "$1" || fail
+    chflags hidden "$1" || softfail || return $?
   fi
 }
 
 macos::install_homebrew() {
   if ! command -v brew >/dev/null; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null || fail "Unable to install homebrew"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/null || softfail "Unable to install homebrew" || return $?
   fi
 }

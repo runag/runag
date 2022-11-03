@@ -51,7 +51,7 @@ rails::is_migration_pending() {
 
   local saved_pipe_status=("${PIPESTATUS[@]}")
 
-  test "${saved_pipe_status[0]}" = 0 || fail "Error performing 'bin/rails db:migrate:status'"
+  test "${saved_pipe_status[0]}" = 0 || fail "Error performing 'bin/rails db:migrate:status'" # no softfail here!
 
   test "${saved_pipe_status[1]}" = 0
 }

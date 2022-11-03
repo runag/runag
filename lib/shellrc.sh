@@ -19,16 +19,16 @@ shellrc::install_loader() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make_if_not_exists "${shellrc_dir}" 700 || fail
+  dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
 
   if [ ! -f "${shellrc_file}" ]; then
     # ubuntu default seems to be 133 (rw-r--r--)
     # I'll try 137 (rw-r-----) to see if there are any downsides of that
-    ( umask 0137 && touch "${shellrc_file}" ) || fail
+    ( umask 0137 && touch "${shellrc_file}" ) || softfail || return $?
   fi
 
   if ! grep -Fxq "# shellrc.d loader" "${shellrc_file}"; then
-    cat <<SHELL >>"${shellrc_file}" || fail
+    cat <<SHELL >>"${shellrc_file}" || softfail || return $?
 
 # shellrc.d loader
 if [ -d "\${HOME}"/.shellrc.d ]; then
@@ -48,8 +48,8 @@ shellrc::get_filename() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make_if_not_exists "${shellrc_dir}" 700 || fail
-  echo "${shellrc_dir}/${name}.sh" || fail
+  dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
+  echo "${shellrc_dir}/${name}.sh" || softfail || return $?
 }
 
 shellrc::write() {
@@ -57,8 +57,8 @@ shellrc::write() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make_if_not_exists "${shellrc_dir}" 700 || fail
-  file::write "${shellrc_dir}/${name}.sh" 600 || fail
+  dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
+  file::write "${shellrc_dir}/${name}.sh" 600 || softfail || return $?
 }
 
 shellrc::load() {
@@ -66,7 +66,7 @@ shellrc::load() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  . "${shellrc_dir}/${name}.sh" || fail
+  . "${shellrc_dir}/${name}.sh" || softfail || return $?
 }
 
 shellrc::load_if_exists() {
@@ -75,12 +75,12 @@ shellrc::load_if_exists() {
   local shellrc_dir="${HOME}/.shellrc.d"
 
   if [ -f "${shellrc_dir}/${name}.sh" ]; then
-    . "${shellrc_dir}/${name}.sh" || fail
+    . "${shellrc_dir}/${name}.sh" || softfail || return $?
   fi
 }
 
 shellrc::install_sopka_path_rc() {
-  shellrc::write "sopka-path" <<SHELL || fail
+  shellrc::write "sopka-path" <<SHELL || softfail || return $?
 $(sopka::print_license)
 
 if [ -d "\${HOME}/.sopka/bin" ]; then
@@ -90,7 +90,7 @@ SHELL
 }
 
 shellrc::install_direnv_rc() {
-  shellrc::write "direnv" <<SHELL || fail
+  shellrc::write "direnv" <<SHELL || softfail || return $?
 $(sopka::print_license)
 
 if command -v direnv >/dev/null; then
@@ -106,7 +106,7 @@ SHELL
 
 shellrc::install_editor_rc() {
   local editor_path="$1"
-  shellrc::write "editor" <<SHELL || fail
+  shellrc::write "editor" <<SHELL || softfail || return $?
 $(sopka::print_license)
 
 if [ -z "\${EDITOR:-}" ]; then

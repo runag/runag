@@ -50,8 +50,8 @@ vmware::is_inside_vm() {
 }
 
 vmware::use_hgfs_mounts() {
-  vmware::add_hgfs_automount || fail
-  vmware::symlink_hgfs_mounts || fail
+  vmware::add_hgfs_automount || softfail || return $?
+  vmware::symlink_hgfs_mounts || softfail || return $?
 }
 
 vmware::add_hgfs_automount() {
@@ -60,7 +60,7 @@ vmware::add_hgfs_automount() {
   # https://askubuntu.com/a/1051620
   # TODO: Do I really need x-systemd.device-timeout here? think it works well even without it.
   if ! grep -qF "fuse.vmhgfs-fuse" /etc/fstab; then
-    echo ".host:/  ${mount_point}  fuse.vmhgfs-fuse  defaults,allow_other,uid=1000,nofail,x-systemd.device-timeout=1s  0  0" | sudo tee -a /etc/fstab >/dev/null || fail "Unable to write to /etc/fstab ($?)"
+    echo ".host:/  ${mount_point}  fuse.vmhgfs-fuse  defaults,allow_other,uid=1000,nofail,x-systemd.device-timeout=1s  0  0" | sudo tee -a /etc/fstab >/dev/null || softfail "Unable to write to /etc/fstab ($?)" || return $?
   fi
 }
 
@@ -72,9 +72,9 @@ vmware::symlink_hgfs_mounts() {
     local dir_path dir_name
     # I use find here because for..in did not work with hgfs
     find "${mount_point}" -maxdepth 1 -mindepth 1 -type d | while IFS="" read -r dir_path; do
-      dir_name="$(basename "${dir_path}")" || fail
+      dir_name="$(basename "${dir_path}")" || softfail || return $?
       if [ ! -e "${symlinks_directory}/${dir_name}" ]; then
-        ln --symbolic "${dir_path}" "${symlinks_directory}/${dir_name}" || fail "unable to create symlink to ${dir_path}"
+        ln --symbolic "${dir_path}" "${symlinks_directory}/${dir_name}" || softfail "unable to create symlink to ${dir_path}" || return $?
       fi
     done
   fi
@@ -90,7 +90,7 @@ vmware::get_host_ip_address() {
 
 vmware::get_machine_uuid() {
   sudo dmidecode -t system | grep "^[[:blank:]]*Serial Number: VMware-" | sed "s/^[[:blank:]]*Serial Number: VMware-//" | sed "s/ //g"
-  test "${PIPESTATUS[*]}" = "0 0 0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
 }
 
 vmware::vm_network_loss_workaround() {
@@ -104,14 +104,14 @@ vmware::vm_network_loss_workaround() {
 }
 
 vmware::install_vm_network_loss_workaround() {
-  file::sudo_write /usr/local/bin/vmware-vm-network-loss-workaround 755 <<SHELL || fail
+  file::sudo_write /usr/local/bin/vmware-vm-network-loss-workaround 755 <<SHELL || softfail || return $?
 #!/usr/bin/env bash
 $(sopka::print_license)
 $(declare -f vmware::vm_network_loss_workaround)
 vmware::vm_network_loss_workaround || { echo "Unable to perform vmware::vm_network_loss_workaround" >&2; exit 1; }
 SHELL
 
-  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.service <<EOF || fail
+  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.service <<EOF || softfail || return $?
 [Unit]
 Description=vmware-vm-network-loss-workaround
 
@@ -121,7 +121,7 @@ ExecStart=/usr/local/bin/vmware-vm-network-loss-workaround
 WorkingDirectory=/
 EOF
 
-  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.timer <<EOF || fail
+  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.timer <<EOF || softfail || return $?
 [Unit]
 Description=vmware-vm-network-loss-workaround
 
@@ -133,6 +133,6 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
-  sudo systemctl --quiet reenable vmware-vm-network-loss-workaround.timer || fail
-  sudo systemctl start vmware-vm-network-loss-workaround.timer || fail
+  sudo systemctl --quiet reenable vmware-vm-network-loss-workaround.timer || softfail || return $?
+  sudo systemctl start vmware-vm-network-loss-workaround.timer || softfail || return $?
 }

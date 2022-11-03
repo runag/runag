@@ -39,7 +39,7 @@ deploy_script::run() {
 }
 
 deploy_script::function_sources() {
-  cat <<SHELL || fail
+  cat <<SHELL || softfail || return $?
 $(declare -f deploy_script)
 $(declare -f deploy_script::add)
 $(declare -f deploy_script::run)

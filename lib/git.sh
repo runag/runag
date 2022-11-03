@@ -14,9 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ssh::add_host_to_known_hosts bitbucket.org || fail
-# ssh::add_host_to_known_hosts github.com || fail
-
 git::place_up_to_date_clone() {
   local url="$1"; shift
   local dest="$1"; shift
@@ -66,19 +63,19 @@ git::place_up_to_date_clone() {
 
 git::configure_signing_key() {
   local key="$1"
-  git config --global commit.gpgsign true || fail
-  git config --global user.signingkey "${key}" || fail
+  git config --global commit.gpgsign true || softfail || return $?
+  git config --global user.signingkey "${key}" || softfail || return $?
 }
 
 # https://wiki.gnome.org/Projects/Libsecret
 git::install_libsecret_credential_helper() {
   if [ ! -f /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret ]; then
-    (cd /usr/share/doc/git/contrib/credential/libsecret && sudo make) || fail "Unable to compile libsecret"
+    (cd /usr/share/doc/git/contrib/credential/libsecret && sudo make) || softfail "Unable to compile libsecret" || return $?
   fi
 }
 
 git::use_libsecret_credential_helper() {
-  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || fail
+  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || softfail || return $?
 }
 
 git::gnome_keyring_credentials::exists() {
@@ -94,15 +91,15 @@ git::gnome_keyring_credentials::save() {
   local server="${3:-"github.com"}"
 
   echo -n "${password}" | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 git::install_git() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
     if ! command -v git >/dev/null; then
       if command -v apt-get >/dev/null; then
-        apt::update || fail
-        apt::install git || fail
+        apt::update || softfail || return $?
+        apt::install git || softfail || return $?
       else
         fail "Unable to install git, apt-get not found"
       fi
@@ -110,7 +107,7 @@ git::install_git() {
   fi
 
   # on macos that will start git install process
-  git --version >/dev/null || fail
+  git --version >/dev/null || softfail || return $?
 }
 
 git::add_or_update_remote() {

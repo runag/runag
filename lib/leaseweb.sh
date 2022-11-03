@@ -19,7 +19,7 @@ leaseweb::domains::get_short_record() {
   local record_type="$2"
 
   leaseweb::domains::list "${record}" "${record_type}" | jq --exit-status 'del(._links, .editable)'
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 leaseweb::domains::list() {(

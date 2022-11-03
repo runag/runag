@@ -15,9 +15,9 @@
 #  limitations under the License.
 
 sshd::disable_password_authentication() {
-  dir::sudo_make_if_not_exists /etc/ssh 755 || fail
-  dir::sudo_make_if_not_exists /etc/ssh/sshd_config.d 755 || fail
-  echo "PasswordAuthentication no" | file::sudo_write /etc/ssh/sshd_config.d/disable-password-authentication.conf || fail
+  dir::sudo_make_if_not_exists /etc/ssh 755 || softfail || return $?
+  dir::sudo_make_if_not_exists /etc/ssh/sshd_config.d 755 || softfail || return $?
+  echo "PasswordAuthentication no" | file::sudo_write /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
 }
 
 ssh::copy_authorized_keys_to_user() {
@@ -35,30 +35,30 @@ ssh::import_id() {
   local public_user_id="$1"
   local user_name="${2:-"${USER}"}"
 
-  local user_home; user_home="$(linux::get_user_home "${user_name}")" || fail
+  local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
   local authorized_keys="${user_home}/.ssh/authorized_keys"
 
   if [ "${user_name}" != "${USER}" ]; then
-    dir::sudo_make_if_not_exists "${user_home}/.ssh" 700 "${user_name}" "${user_name}" || fail
+    dir::sudo_make_if_not_exists "${user_home}/.ssh" 700 "${user_name}" "${user_name}" || softfail || return $?
   else
-    dir::make_if_not_exists "${user_home}/.ssh" 700 || fail
+    dir::make_if_not_exists "${user_home}/.ssh" 700 || softfail || return $?
   fi
 
-  ssh-import-id --output "${authorized_keys}" "${public_user_id}" || fail
+  ssh-import-id --output "${authorized_keys}" "${public_user_id}" || softfail || return $?
 
   if [ "${user_name}" != "${USER}" ]; then
-    sudo chown "${user_name}"."${user_name}" "${authorized_keys}" || fail
+    sudo chown "${user_name}"."${user_name}" "${authorized_keys}" || softfail || return $?
   fi
 }
 
 ssh::make_user_config_dir_if_not_exists() {
-  dir::make_if_not_exists "${HOME}/.ssh" 700 || fail
+  dir::make_if_not_exists "${HOME}/.ssh" 700 || softfail || return $?
 }
 
 ssh::get_user_public_key() {
   local file_name="${1:-"id_ed25519"}"
   if [ -r "${HOME}/.ssh/${file_name}.pub" ]; then
-    cat "${HOME}/.ssh/${file_name}.pub" || fail
+    cat "${HOME}/.ssh/${file_name}.pub" || softfail || return $?
   else
     fail "Unable to find user public key"
   fi
@@ -95,7 +95,7 @@ ssh::gnome_keyring_credentials::save() {
   local key_file_path="${HOME}/.ssh/${key_file}"
 
   echo -n "${password}" | secret-tool store --label="Unlock password for: ${key_file_path}" unique "ssh-store:${key_file_path}"
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 ssh::macos_keychain::exists() {
@@ -112,25 +112,25 @@ ssh::macos_keychain::save() {
 
   local key_file_path="${HOME}/.ssh/${key_file}"
 
-  local temp_file; temp_file="$(mktemp)" || fail
-  chmod 755 "${temp_file}" || fail
-  printf "#!/bin/sh\nexec cat\n" >"${temp_file}" || fail
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+  chmod 755 "${temp_file}" || softfail || return $?
+  printf "#!/bin/sh\nexec cat\n" >"${temp_file}" || softfail || return $?
 
   echo "${password}" | SSH_ASKPASS="${temp_file}" DISPLAY=1 ssh-add -K "${key_file_path}"
-  test "${PIPESTATUS[*]}" = "0 0" || fail
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
-  rm "${temp_file}" || fail
+  rm "${temp_file}" || softfail || return $?
 }
 
 ssh::macos_keychain::configure_use_on_all_hosts() {
   local ssh_config_file="${HOME}/.ssh/config"
 
   if [ ! -f "${ssh_config_file}" ]; then
-    ( umask 0177 && touch "${ssh_config_file}" ) || fail
+    ( umask 0177 && touch "${ssh_config_file}" ) || softfail || return $?
   fi
 
   if ! grep -q "^# Use keychain" "${ssh_config_file}"; then
-tee -a "${ssh_config_file}" <<EOF || fail "Unable to append to the file: ${ssh_config_file}"
+    tee -a "${ssh_config_file}" <<EOF || softfail "Unable to append to the file: ${ssh_config_file}" || return $?
 
 # Use keychain
 Host *
@@ -151,16 +151,16 @@ ssh::wait_for_host_ssh_to_become_available() {
       if [ -t 2 ]; then
         echo "Waiting for SSH to become available on host '${ip}'..." >&2
       fi
-      sleep 1 || fail
+      sleep 1 || softfail || return $?
     fi
   done
 }
 
 ssh::refresh_host_in_known_hosts() {
   local host_name="$1"
-  ssh::remove_host_from_known_hosts "${host_name}" || fail
-  ssh::wait_for_host_ssh_to_become_available "${host_name}" || fail
-  ssh::add_host_to_known_hosts "${host_name}" || fail
+  ssh::remove_host_from_known_hosts "${host_name}" || softfail || return $?
+  ssh::wait_for_host_ssh_to_become_available "${host_name}" || softfail || return $?
+  ssh::add_host_to_known_hosts "${host_name}" || softfail || return $?
 }
 
 ssh::add_remote_to_known_hosts_and_then() {
@@ -179,8 +179,8 @@ ssh::add_host_to_known_hosts() {
   fi
 
   if [ ! -f "${known_hosts}" ]; then
-    ssh::make_user_config_dir_if_not_exists || fail
-    ( umask 0177 && touch "${known_hosts}") || fail
+    ssh::make_user_config_dir_if_not_exists || softfail || return $?
+    ( umask 0177 && touch "${known_hosts}") || softfail || return $?
   fi
 
   if [ "${ssh_port}" = "22" ]; then
@@ -190,13 +190,13 @@ ssh::add_host_to_known_hosts() {
   fi
 
   if ! ssh-keygen -F "${keygen_host_string}" >/dev/null; then
-    ssh-keyscan -p "${ssh_port}" -T 30 "${host_name}" >> "${known_hosts}" || fail "Unable to add host ${host_name}:${ssh_port} to ssh known_hosts"
+    ssh-keyscan -p "${ssh_port}" -T 30 "${host_name}" >> "${known_hosts}" || softfail "Unable to add host ${host_name}:${ssh_port} to ssh known_hosts" || return $?
   fi
 }
 
 ssh::remove_host_from_known_hosts() {
   local host_name="$1"
-  ssh-keygen -R "${host_name}" || fail
+  ssh-keygen -R "${host_name}" || softfail || return $?
 }
 
 # shellcheck disable=2030

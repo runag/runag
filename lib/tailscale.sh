@@ -17,19 +17,19 @@
 tailscale::install() {
   local distributor_id distribution_codename
 
-  distributor_id="$(linux::get_distributor_id_lowercase)" || fail
-  distribution_codename="$(lsb_release --codename --short)" || fail
+  distributor_id="$(linux::get_distributor_id_lowercase)" || softfail || return $?
+  distribution_codename="$(lsb_release --codename --short)" || softfail || return $?
 
   apt::add_source_with_key "tailscale" \
     "https://pkgs.tailscale.com/stable/${distributor_id} ${distribution_codename} main" \
     "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" || softfail || return $?
 
-  apt::install tailscale || fail
+  apt::install tailscale || softfail || return $?
 }
 
 tailscale::is_logged_in() {
   # this function is intent to use fail (and not softfail) in case of errors
-  local backend_state; backend_state="$(tailscale status --json | jq .BackendState --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail
+  local backend_state; backend_state="$(tailscale status --json | jq .BackendState --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail # no softfail here!
 
   if [ "${backend_state}" = "NeedsLogin" ]; then
     return 1
@@ -48,14 +48,14 @@ tailscale::issue_2541_workaround() {
 }
 
 tailscale::install_issue_2541_workaround() {
-  file::sudo_write /usr/local/bin/tailscale-issue-2541-workaround 755 <<SHELL || fail
+  file::sudo_write /usr/local/bin/tailscale-issue-2541-workaround 755 <<SHELL || softfail || return $?
 #!/usr/bin/env bash
 $(sopka::print_license)
 $(declare -f tailscale::issue_2541_workaround)
 tailscale::issue_2541_workaround || { echo "Unable to perform tailscale::issue_2541_workaround" >&2; exit 1; }
 SHELL
 
-  file::sudo_write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || fail
+  file::sudo_write /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || softfail || return $?
 [Unit]
 Description=tailscale-issue-2541-workaround
 
@@ -65,7 +65,7 @@ ExecStart=/usr/local/bin/tailscale-issue-2541-workaround
 WorkingDirectory=/
 EOF
 
-  file::sudo_write /etc/systemd/system/tailscale-issue-2541-workaround.timer <<EOF || fail
+  file::sudo_write /etc/systemd/system/tailscale-issue-2541-workaround.timer <<EOF || softfail || return $?
 [Unit]
 Description=tailscale-issue-2541-workaround
 
@@ -77,6 +77,6 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
-  sudo systemctl --quiet reenable tailscale-issue-2541-workaround.timer || fail
-  sudo systemctl start tailscale-issue-2541-workaround.timer || fail
+  sudo systemctl --quiet reenable tailscale-issue-2541-workaround.timer || softfail || return $?
+  sudo systemctl start tailscale-issue-2541-workaround.timer || softfail || return $?
 }

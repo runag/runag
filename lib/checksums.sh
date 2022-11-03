@@ -19,28 +19,28 @@ checksums::create_or_update() {
   local current_checksum_file="$2"
   local checksum_algo="${3:-"sha3-256"}"
 
-  local new_checksum_file; new_checksum_file="$(mktemp)" || fail
+  local new_checksum_file; new_checksum_file="$(mktemp)" || softfail || return $?
 
   (
-    cd "${directory}" || fail
+    cd "${directory}" || softfail || return $?
 
     find . -type f \( -not -name "${current_checksum_file}" \) -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
-    test "${PIPESTATUS[*]}" = "0 0" || fail
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
     local action
 
     if [ ! -f "${current_checksum_file}" ]; then
-      cat "${new_checksum_file}" || fail
+      cat "${new_checksum_file}" || softfail || return $?
       echo ""
       echo "${directory}: Do you want to create the checksum file? (y/n)"
 
-      IFS="" read -r action || fail
+      IFS="" read -r action || softfail || return $?
 
       if [ "${action}" = y ] || [ "${action}" = Y ]; then
-        cp "${new_checksum_file}" "${current_checksum_file}" || fail
+        cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
       fi
 
-      sync || fail
+      sync || softfail || return $?
       exit 0
     fi
 
@@ -58,20 +58,20 @@ checksums::create_or_update() {
     echo ""
     echo "${directory}: Do you want to update the checksum file? (y/n)"
 
-    IFS="" read -r action || fail
+    IFS="" read -r action || softfail || return $?
 
     if [ "${action}" = y ] || [ "${action}" = Y ]; then
-      cp "${new_checksum_file}" "${current_checksum_file}" || fail
-      sync || fail
+      cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
+      sync || softfail || return $?
     fi
   )
 
   local result=$?
 
-  rm "${new_checksum_file}" || fail
+  rm "${new_checksum_file}" || softfail || return $?
 
   if [ "${result}" != 0 ]; then
-    fail "checksums::create_or_update failed (${result})"
+    softfail "checksums::create_or_update failed (${result})" || return $?
   fi
 }
 
@@ -80,17 +80,17 @@ checksums::verify() {(
   local current_checksum_file="$2"
   local checksum_algo="${3:-"sha3-256"}"
 
-  local new_checksum_file; new_checksum_file="$(mktemp)" || fail
+  local new_checksum_file; new_checksum_file="$(mktemp)" || softfail || return $?
 
   (
-    cd "${directory}" || fail
+    cd "${directory}" || softfail || return $?
 
     if [ ! -f "${current_checksum_file}" ]; then
-      fail "${directory}: Unable to find checksum file ${current_checksum_file}"
+      softfail "${directory}: Unable to find checksum file ${current_checksum_file}" || return $?
     fi
 
     find . -type f \( -not -name "${current_checksum_file}" \) -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
-    test "${PIPESTATUS[*]}" = "0 0" || fail
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
       echo "${directory}: Checksums are good"
@@ -103,14 +103,14 @@ checksums::verify() {(
       diff --strip-trailing-cr --context=6 --color "${current_checksum_file}" "${new_checksum_file}"
     fi
 
-    fail "${directory}: Checksums are different!"
+    softfail "${directory}: Checksums are different!" || return $?
   )
 
   local result=$?
 
-  rm "${new_checksum_file}" || fail
+  rm "${new_checksum_file}" || softfail || return $?
 
   if [ "${result}" != 0 ]; then
-    fail "checksums::verify failed (${result})"
+    softfail "checksums::verify failed (${result})" || return $?
   fi
 )}

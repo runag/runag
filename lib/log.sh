@@ -68,7 +68,7 @@ log::error_trace() {
 }
 
 log::function_sources() {
-  cat <<SHELL || fail
+  cat <<SHELL || softfail || return $?
 $(declare -f log::elapsed_time)
 $(declare -f log::error)
 $(declare -f log::warning)
