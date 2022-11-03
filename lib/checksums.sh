@@ -32,7 +32,7 @@ checksums::create_or_update() {
     if [ ! -f "${current_checksum_file}" ]; then
       cat "${new_checksum_file}" || softfail || return $?
       echo ""
-      echo "${directory}: Do you want to create the checksum file? (y/n)"
+      echo "Do you want to create the checksum file (Y/N)? in: ${directory}"
 
       IFS="" read -r action || softfail || return $?
 
@@ -45,7 +45,7 @@ checksums::create_or_update() {
     fi
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
-      echo "${directory}: Checksums are good"
+      echo "Checksums are good: ${directory}"
       exit 0
     fi
 
@@ -56,7 +56,7 @@ checksums::create_or_update() {
     fi
 
     echo ""
-    echo "${directory}: Do you want to update the checksum file? (y/n)"
+    echo "Do you want to update the checksum file (Y/N)? in: ${directory}"
 
     IFS="" read -r action || softfail || return $?
 
@@ -93,7 +93,7 @@ checksums::verify() {(
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
-      echo "${directory}: Checksums are good"
+      echo "Checksums are good: ${directory}"
       exit 0
     fi
 
@@ -103,7 +103,7 @@ checksums::verify() {(
       diff --strip-trailing-cr --context=6 --color "${current_checksum_file}" "${new_checksum_file}"
     fi
 
-    softfail "${directory}: Checksums are different!" || return $?
+    softfail "Checksums are different (!): ${directory}" || return $?
   )
 
   local result=$?
