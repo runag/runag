@@ -351,8 +351,11 @@ git::install_git ()
                 fail "Unable to install git, apt-get not found";
             fi;
         fi;
-    fi;
-    git --version > /dev/null || softfail || return $?
+    else
+        if [[ "${OSTYPE}" =~ ^darwin ]]; then
+            git --version > /dev/null || softfail || return $?;
+        fi;
+    fi
 }
 git::place_up_to_date_clone () 
 { 
