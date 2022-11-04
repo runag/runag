@@ -14,38 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-pass::import_git_store() {
-  local store_dir="$1"
-  if [ ! -d "${HOME}/.password-store" ]; then
-    file::wait_until_available "${store_dir}" || softfail || return $?
-    git::place_up_to_date_clone "${store_dir}" "${HOME}/.password-store" || softfail || return $?
-  fi
-}
-
-pass::import_store() {
-  local store_dir="$1"
-  if [ ! -d "${HOME}/.password-store" ]; then
-    if [[ "${OSTYPE}" =~ ^msys ]]; then
-      file::wait_until_available "${store_dir}" || softfail || return $?
-      cp -r "${store_dir}" "${HOME}/.password-store" || softfail || return $?
-    else
-      pass::sync_from "${store_dir}" || softfail || return $?
-    fi
-  fi
-}
-
-pass::sync_from() {
-  local store_dir="$1"
-  file::wait_until_available "${store_dir}" || softfail || return $?
-  rsync --recursive --times --chmod=go-rwx,Fu-x "${store_dir}"/ "${HOME}/.password-store" || softfail || return $?
-}
-
-pass::sync_to() {
-  local store_dir="$1"
-  file::wait_until_available "${store_dir}" || softfail || return $?
-  rsync --recursive --times --checksum --delete "${HOME}/.password-store/" "${store_dir}"  || softfail || return $?
-}
-
 # pass::use secret/path [arguments for pass::use]... foo::bar [arguments for foo::bar]...
 #   -b,--body # skip first line and then write the rest of the file contents to foo::bar::save stdin
 #   -f,--force # call to ::save if ::exists returns 0
