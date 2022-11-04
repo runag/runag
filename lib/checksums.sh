@@ -30,13 +30,15 @@ checksums::create_or_update() {
     local action
 
     if [ ! -f "${current_checksum_file}" ]; then
-      cat "${new_checksum_file}" || softfail || return $?
-      echo ""
-      echo "Do you want to create the checksum file (Y/N)? in: ${directory}"
-
-      IFS="" read -r action || softfail || return $?
-
-      if [ "${action}" = y ] || [ "${action}" = Y ]; then
+      if [ "${SOPKA_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" != true ]; then
+        cat "${new_checksum_file}" || softfail || return $?
+        echo ""
+        echo "Do you want to create the checksum file (Y/N)? in: ${directory}"
+        
+        IFS="" read -r action || softfail || return $?
+      fi
+      
+      if [ "${SOPKA_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || [ "${action}" = y ] || [ "${action}" = Y ]; then
         cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
       fi
 
