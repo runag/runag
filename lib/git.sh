@@ -44,11 +44,10 @@ git::mirror() {
   local dest_path="$2"
 
   if [ -d "${dest_path}" ]; then
-    echo "Destination path already exists: ${dest_path}" >&2
-    return
+    git -C "${dest_path}" remote update || softfail || return $?
+  else
+    git clone --mirror "${source_url}" "${dest_path}" || softfail || return $?
   fi
-
-  git clone --mirror "${source_url}" "${dest_path}" || softfail || return $?
 }
 
 git::place_up_to_date_clone() {
