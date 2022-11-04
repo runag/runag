@@ -33,7 +33,7 @@ checksums::create_or_update() {
       if [ "${SOPKA_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" != true ]; then
         cat "${new_checksum_file}" || softfail || return $?
         echo ""
-        echo "Do you want to create the checksum file (Y/N)? in: ${directory}"
+        echo "Do you want to create the checksum file: ${directory}/${current_checksum_file} (Y/N)?"
         
         IFS="" read -r action || softfail || return $?
       fi
@@ -47,7 +47,7 @@ checksums::create_or_update() {
     fi
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
-      echo "Checksums are good: ${directory}"
+      echo "Checksums are good: ${directory}/${current_checksum_file}"
       exit 0
     fi
 
@@ -58,7 +58,7 @@ checksums::create_or_update() {
     fi
 
     echo ""
-    echo "Do you want to update the checksum file (Y/N)? in: ${directory}"
+    echo "Do you want to update the checksum file: ${directory}/${current_checksum_file} (Y/N)?"
 
     IFS="" read -r action || softfail || return $?
 
@@ -88,14 +88,14 @@ checksums::verify() {(
     cd "${directory}" || softfail || return $?
 
     if [ ! -f "${current_checksum_file}" ]; then
-      softfail "${directory}: Unable to find checksum file ${current_checksum_file}" || return $?
+      softfail "Unable to find the checksum file: ${directory}/${current_checksum_file}" || return $?
     fi
 
     find . -type f \( -not -name "${current_checksum_file}" \) -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
-      echo "Checksums are good: ${directory}"
+      echo "Checksums are good: ${directory}/${current_checksum_file}"
       exit 0
     fi
 
@@ -105,7 +105,7 @@ checksums::verify() {(
       diff --strip-trailing-cr --context=6 --color "${current_checksum_file}" "${new_checksum_file}"
     fi
 
-    softfail "Checksums are different (!): ${directory}" || return $?
+    softfail "Checksums are different (!): ${directory}/${current_checksum_file}" || return $?
   )
 
   local result=$?
