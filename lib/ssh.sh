@@ -20,6 +20,30 @@ sshd::disable_password_authentication() {
   echo "PasswordAuthentication no" | file::sudo_write /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
 }
 
+ssh::make_config_dir_if_not_exists() {
+  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
+}
+
+ssh::make_control_sockets_dir_if_not_exists() {
+  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
+  dir::make_if_not_exists "${HOME}/.ssh/control-sockets" 0700 || softfail "Unable to create ssh control sockets directory" || return $?
+}
+
+ssh::make_keys_dir_if_not_exists() {
+  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
+  dir::make_if_not_exists "${HOME}/.ssh/keys" 0700 || softfail "Unable to create ssh keys directory" || return $?
+}
+
+ssh::make_config_d_dir_if_not_exists() {
+  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
+  dir::make_if_not_exists_and_set_permissions "${HOME}/.ssh/ssh_config.d" 0700 || softfail "Unable to create ssh user config.d directory" || return $?
+}
+
+ssh::add_ssh_config_d_include_directive() {
+  ssh::make_config_d_dir_if_not_exists || softfail || return $?
+  <<<"Include ~/.ssh/ssh_config.d/*.conf" file::update_block "${HOME}/.ssh/config" "include files from ssh_config.d" --mode 0600 || softfail "Unable to add configuration to user ssh config" || return $?
+}
+
 ssh::copy_authorized_keys_to_user() {
   local user_name="$1"
 
@@ -39,9 +63,9 @@ ssh::import_id() {
   local authorized_keys="${user_home}/.ssh/authorized_keys"
 
   if [ "${user_name}" != "${USER}" ]; then
-    dir::sudo_make_if_not_exists "${user_home}/.ssh" 700 "${user_name}" "${user_name}" || softfail || return $?
+    dir::sudo_make_if_not_exists "${user_home}/.ssh" 0700 "${user_name}" "${user_name}" || softfail || return $?
   else
-    dir::make_if_not_exists "${user_home}/.ssh" 700 || softfail || return $?
+    dir::make_if_not_exists "${user_home}/.ssh" 0700 || softfail || return $?
   fi
 
   ssh-import-id --output "${authorized_keys}" "${public_user_id}" || softfail || return $?
@@ -49,10 +73,6 @@ ssh::import_id() {
   if [ "${user_name}" != "${USER}" ]; then
     sudo chown "${user_name}"."${user_name}" "${authorized_keys}" || softfail || return $?
   fi
-}
-
-ssh::make_user_config_dir_if_not_exists() {
-  dir::make_if_not_exists "${HOME}/.ssh" 700 || softfail || return $?
 }
 
 ssh::get_user_public_key() {
@@ -64,53 +84,79 @@ ssh::get_user_public_key() {
   fi
 }
 
+ssh::install_ssh_profile_from_pass() {
+  local profile_path="$1"
+  local profile_name="$2"
+
+  ssh::make_config_d_dir_if_not_exists || softfail || return $?
+  ssh::make_keys_dir_if_not_exists || softfail || return $?
+
+  local key_directory="${HOME}/.ssh/keys/${profile_name}"
+  dir::make_if_not_exists "${key_directory}" 0700 || softfail || return $?
+
+  # ssh key
+  if pass::secret_exists "${profile_path}/id_ed25519"; then
+    ssh::install_ssh_key_from_pass "${profile_path}/id_ed25519" "${key_directory}/id_ed25519" || softfail || return $?
+  fi
+
+  # ssh config
+  local profile_config_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
+  if pass::secret_exists "${profile_path}/config"; then
+    pass::use "${profile_path}/config" --body pass::file "${profile_config_path}" --mode 0600 || softfail || return $?
+  else
+    if pass::secret_exists "${profile_path}/id_ed25519"; then
+      file::write "${profile_config_path}" 0600 <<< "IdentityFile ${key_directory}/id_ed25519" || softfail || return $?
+    fi
+  fi
+
+  # known hosts
+  if pass::secret_exists "${profile_path}/known_hosts"; then
+    pass::use "${profile_path}/known_hosts" --body pass::file_with_block "${HOME}/.ssh/known_hosts" "# ${profile_name}" --mode 0600 || softfail || return $?
+  fi
+}
+
+# ssh private key should be in body, password may be in password, separate .pub secret may contain public key in 1st line (password field)
 ssh::install_ssh_key_from_pass() {
   local secret_path="$1"
-  local key_file; key_file="${2:-"$(basename "${secret_path}")"}" || softfail || return $?
+  local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
-  ssh::make_user_config_dir_if_not_exists || softfail || return $?
+  ssh::make_config_dir_if_not_exists || softfail || return $?
+  pass::use "${secret_path}" --body pass::file "${key_file_path}" --mode 0600 || softfail || return $?
 
-  pass::use "${secret_path}" --body pass::file "${HOME}/.ssh/${key_file}" --mode 0600 || softfail || return $?
-  pass::use "${secret_path}.pub" pass::file "${HOME}/.ssh/${key_file}.pub" --mode 0600 || softfail || return $?
+  if pass::secret_exists "${secret_path}.pub"; then
+    pass::use "${secret_path}.pub" pass::file "${key_file_path}.pub" --mode 0600 || softfail || return $?
+  fi
 
   if [[ "${OSTYPE}" =~ ^linux ]]; then
-    pass::use "${secret_path}" --skip-if-empty ssh::gnome_keyring_credentials "${key_file}" || softfail || return $?
+    pass::use "${secret_path}" --skip-if-empty ssh::gnome_keyring_credentials "${key_file_path}" || softfail || return $?
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
-    pass::use "${secret_path}" --skip-if-empty ssh::macos_keychain "${key_file}" || softfail || return $?
+    pass::use "${secret_path}" --skip-if-empty ssh::macos_keychain "${key_file_path}" || softfail || return $?
   fi
 }
 
 ssh::gnome_keyring_credentials::exists() {
-  local key_file="${1:-"id_ed25519"}"
-
-  local key_file_path="${HOME}/.ssh/${key_file}"
+  local key_file_path="${1:-"${HOME}/.ssh/id_ed25519"}"
 
   secret-tool lookup unique "ssh-store:${key_file_path}" >/dev/null
 }
 
 ssh::gnome_keyring_credentials::save() {
   local password="$1"
-  local key_file="${2:-"id_ed25519"}"
-
-  local key_file_path="${HOME}/.ssh/${key_file}"
+  local key_file_path="${2:-"${HOME}/.ssh/id_ed25519"}"
 
   echo -n "${password}" | secret-tool store --label="Unlock password for: ${key_file_path}" unique "ssh-store:${key_file_path}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 ssh::macos_keychain::exists() {
-  local key_file="${1:-"id_ed25519"}"
-
-  local key_file_path="${HOME}/.ssh/${key_file}"
+  local key_file_path="${1:-"${HOME}/.ssh/id_ed25519"}"
 
   ssh-add -L | grep -qF "${key_file_path}"
 }
 
 ssh::macos_keychain::save() {
   local password="$1"
-  local key_file="${2:-"id_ed25519"}"
-
-  local key_file_path="${HOME}/.ssh/${key_file}"
+  local key_file_path="${2:-"${HOME}/.ssh/id_ed25519"}"
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
   chmod 755 "${temp_file}" || softfail || return $?
@@ -179,7 +225,7 @@ ssh::add_host_to_known_hosts() {
   fi
 
   if [ ! -f "${known_hosts}" ]; then
-    ssh::make_user_config_dir_if_not_exists || softfail || return $?
+    ssh::make_config_dir_if_not_exists || softfail || return $?
     ( umask 0177 && touch "${known_hosts}") || softfail || return $?
   fi
 
@@ -235,10 +281,12 @@ ssh::with_ssh_args() {(
 ssh::set_args() {
   # Please note: ssh_args variable is not function-local for this function
 
+  ssh::make_control_sockets_dir_if_not_exists || softfail || return $?
+
   # shellcheck disable=2031
   if ! [[ "${OSTYPE}" =~ ^msys ]] && [ "${REMOTE_CONTROL_MASTER:-}" != "no" ]; then
     ssh_args+=("-o" "ControlMaster=${REMOTE_CONTROL_MASTER:-"auto"}")
-    ssh_args+=("-S" "${REMOTE_CONTROL_PATH:-"${HOME}/.ssh/control-socket.%C"}")
+    ssh_args+=("-S" "${REMOTE_CONTROL_PATH:-"${HOME}/.ssh/control-sockets/%C"}")
     ssh_args+=("-o" "ControlPersist=${REMOTE_CONTROL_PERSIST:-"600"}")
   fi
 
@@ -328,8 +376,6 @@ ssh::before-run() {
   if [ -z "${REMOTE_HOST:-}" ]; then
     softfail "REMOTE_HOST should be set" || return $?
   fi
-
-  ssh::make_user_config_dir_if_not_exists || softfail "Unable to create ssh user config directory" || return $?
 
   ssh::set_args || softfail "Unable to set ssh args" || return $?
 

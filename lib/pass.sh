@@ -31,6 +31,39 @@
 # Example:
 #   pass::use secret/path pass::file file/path
 
+pass::exists() {
+  local secret_path="$1"
+  local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
+
+  if [ -d "${password_store_dir}/${secret_path}" ] || [ -f "${password_store_dir}/${secret_path}".gpg ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+pass::dir_exists() {
+  local secret_path="$1"
+  local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
+
+  if [ -d "${password_store_dir}/${secret_path}" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+pass::secret_exists() {
+  local secret_path="$1"
+  local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
+
+  if [ -f "${password_store_dir}/${secret_path}".gpg ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 pass::use() {
   local secret_path="$1"; shift
 

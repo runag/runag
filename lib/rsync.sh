@@ -56,8 +56,6 @@ rsync::sync() {
 }
 
 rsync::run() {
-  ssh::make_user_config_dir_if_not_exists || softfail || return $?
-
   local ssh_args=()
   ssh::set_args || softfail || return $?
 
