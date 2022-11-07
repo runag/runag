@@ -14,6 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+github::install_profile_from_pass() {
+  local pass_path="$1"
+  
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+    git::use_libsecret_credential_helper || fail
+
+    local github_username; github_username="$(pass::use "${pass_path}/username")" || softfail || return $?
+
+    pass::use "${pass_path}/personal-access-token" git::gnome_keyring_credentials "${github_username}" || fail
+  fi
+}
+
 github::get_release_by_label() {
   local repo_path="$1"
   local label="$2"

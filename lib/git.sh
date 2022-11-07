@@ -14,6 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+git::install_profile_from_pass() {
+  local pass_path="$1"
+  
+  if pass::exists "${pass_path}/user-name"; then
+    local user_name; user_name="$(pass::use "${pass_path}/user-name")" || softfail || return $?
+    git config --global user.name "${user_name}" || softfail || return $?
+  fi
+
+  if pass::exists "${pass_path}/user-email"; then
+    local user_email; user_email="$(pass::use "${pass_path}/user-email")" || softfail || return $?
+    git config --global user.email "${user_email}" || softfail || return $?
+  fi
+
+  if pass::exists "${pass_path}/signing-key"; then
+    local signing_key; signing_key="$(pass::use "${pass_path}/signing-key")" || softfail || return $?
+    git::configure_signing_key "${signing_key}!" || softfail || return $?
+  fi
+}
+
 git::install::apt() {
   if ! command -v git >/dev/null; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
