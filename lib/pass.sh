@@ -14,23 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# pass::use secret/path [arguments for pass::use]... foo::bar [arguments for foo::bar]...
-#   -b,--body # skip first line and then write the rest of the file contents to foo::bar::save stdin
-#   -f,--force # call to ::save if ::exists returns 0
-#   -g,--get url # get metadata instead of password
-#   -m,--multiline # write all file contents to foo::bar::save stdin
-#   -p,--pipe # write secret to foo::bar::save stdin
-#   -s,--skip-if-empty
-#
-# If no foo::bar is provided then write output to stdout
-#
-# By default it uses only the first line from secret file
-#
-# At one point I might add support for multiple "--get" and "--get-password"
-#
-# Example:
-#   pass::use secret/path pass::file file/path
-
 pass::exists() {
   local secret_path="$1"
   local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
@@ -63,6 +46,23 @@ pass::secret_exists() {
     return 1
   fi
 }
+
+# pass::use secret/path [arguments for pass::use]... foo::bar [arguments for foo::bar]...
+#   -b,--body # skip first line and then write the rest of the file contents to foo::bar::save stdin
+#   -f,--force # call to ::save if ::exists returns 0
+#   -g,--get url # get metadata instead of password
+#   -m,--multiline # write all file contents to foo::bar::save stdin
+#   -p,--pipe # write secret to foo::bar::save stdin
+#   -s,--skip-if-empty
+#
+# If no foo::bar is provided then write output to stdout
+#
+# By default it uses only the first line from secret file
+#
+# At one point I might add support for multiple "--get" and "--get-password"
+#
+# Example:
+#   pass::use secret/path pass::file file/path
 
 pass::use() {
   local secret_path="$1"; shift
