@@ -24,7 +24,7 @@ sopka::deploy_sh_main() {
 
   task::run_with_install_filter git::install_git || softfail || return $?
 
-  task::run_with_install_filter git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
+  task::run_with_install_filter git::place_up_to_date_clone "${SOPKA_DIST_REPO}" "${HOME}/.sopka" || softfail || return $?
 
   deploy_script "$@"
   softfail_unless_good_code $?
@@ -40,11 +40,11 @@ $(sopka::print_license)
 
 __xVhMyefCbBnZFUQtwqCs() {
 
-$(fail::function_sources)
-$(task::function_sources)
-$(log::function_sources)
-$(terminal::function_sources)
 $(deploy_script::function_sources)
+$(fail::function_sources)
+$(log::function_sources)
+$(task::function_sources)
+$(terminal::function_sources)
 
 $(declare -f apt::install)
 $(declare -f apt::update)
@@ -55,6 +55,8 @@ $(declare -f git::place_up_to_date_clone)
 $(declare -f sopkafile::add)
 
 $(declare -f sopka::deploy_sh_main)
+
+export SOPKA_DIST_REPO="\${SOPKA_DIST_REPO:-$(printf "%q" "$(git remote get-url origin | sed 's/^https:\/\/[[:alnum:]_]\+@/https:\/\//')")}"
 
 sopka::deploy_sh_main "\$@"
 

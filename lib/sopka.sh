@@ -32,10 +32,6 @@ sopka::print_license() {
 SHELL
 }
 
-sopka::install_as_repository_clone() {
-  git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?
-}
-
 sopka::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || softfail || return $?

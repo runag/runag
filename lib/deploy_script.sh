@@ -20,7 +20,7 @@ deploy_script() {
       "deploy_script::$1" "${@:2}"
       softfail_unless_good_code $? || return $?
     else
-      softfail "Sopka deploy_script: command not found: $1"
+      softfail "deploy_script: command not found: $1"
       return $?
     fi
   fi

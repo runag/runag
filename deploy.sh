@@ -19,6 +19,29 @@
 
 __xVhMyefCbBnZFUQtwqCs() {
 
+deploy_script () 
+{ 
+    if [ -n "${1:-}" ]; then
+        if declare -f "deploy_script::$1" > /dev/null; then
+            "deploy_script::$1" "${@:2}";
+            softfail_unless_good_code $? || return $?;
+        else
+            softfail "deploy_script: command not found: $1";
+            return $?;
+        fi;
+    fi
+}
+deploy_script::add () 
+{ 
+    task::run_with_install_filter sopkafile::add "$1" || softfail || return $?;
+    deploy_script "${@:2}";
+    softfail_unless_good_code $?
+}
+deploy_script::run () 
+{ 
+    "${HOME}/.sopka/bin/sopka" "$@";
+    softfail_unless_good_code $?
+}
 fail () 
 { 
     softfail::internal "$@";
@@ -77,6 +100,56 @@ softfail_unless_good::internal ()
         log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
     fi;
     return "${exit_status}"
+}
+log::elapsed_time () 
+{ 
+    echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
+}
+log::error () 
+{ 
+    local message="$1";
+    log::with_color "${message}" 9 1>&2
+}
+log::warning () 
+{ 
+    local message="$1";
+    log::with_color "${message}" 11 1>&2
+}
+log::notice () 
+{ 
+    local message="$1";
+    log::with_color "${message}" 14
+}
+log::success () 
+{ 
+    local message="$1";
+    log::with_color "${message}" 10
+}
+log::with_color () 
+{ 
+    local message="$1";
+    local foreground_color="$2";
+    local background_color="${3:-}";
+    local color_seq="" default_color_seq="";
+    if [ -t 1 ]; then
+        color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        default_color_seq="$(terminal::default_color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+    fi;
+    echo "${color_seq}${message}${default_color_seq}"
+}
+log::error_trace () 
+{ 
+    local message="${1:-""}";
+    local start_trace_from="${2:-1}";
+    if [ -n "${message}" ]; then
+        log::error "${message}" || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    fi;
+    local line i end_at=$((${#BASH_LINENO[@]}-1));
+    for ((i=start_trace_from; i<=end_at; i++))
+    do
+        line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
+        log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" 1>&2;
+    done
 }
 task::with_verbose_task () 
 { 
@@ -221,56 +294,6 @@ task::complete ()
         softfail "task::cleanup error state ${error_state}" || return $?;
     fi
 }
-log::elapsed_time () 
-{ 
-    echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-log::error () 
-{ 
-    local message="$1";
-    log::with_color "${message}" 9 1>&2
-}
-log::warning () 
-{ 
-    local message="$1";
-    log::with_color "${message}" 11 1>&2
-}
-log::notice () 
-{ 
-    local message="$1";
-    log::with_color "${message}" 14
-}
-log::success () 
-{ 
-    local message="$1";
-    log::with_color "${message}" 10
-}
-log::with_color () 
-{ 
-    local message="$1";
-    local foreground_color="$2";
-    local background_color="${3:-}";
-    local color_seq="" default_color_seq="";
-    if [ -t 1 ]; then
-        color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        default_color_seq="$(terminal::default_color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-    fi;
-    echo "${color_seq}${message}${default_color_seq}"
-}
-log::error_trace () 
-{ 
-    local message="${1:-""}";
-    local start_trace_from="${2:-1}";
-    if [ -n "${message}" ]; then
-        log::error "${message}" || echo "Sopka: Unable to log error: ${message}" 1>&2;
-    fi;
-    local line i end_at=$((${#BASH_LINENO[@]}-1));
-    for ((i=start_trace_from; i<=end_at; i++))
-    do
-        line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
-        log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" 1>&2;
-    done
-}
 terminal::have_16_colors () 
 { 
     local amount;
@@ -306,29 +329,6 @@ terminal::default_color ()
     if command -v tput > /dev/null; then
         tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
     fi
-}
-deploy_script () 
-{ 
-    if [ -n "${1:-}" ]; then
-        if declare -f "deploy_script::$1" > /dev/null; then
-            "deploy_script::$1" "${@:2}";
-            softfail_unless_good_code $? || return $?;
-        else
-            softfail "Sopka deploy_script: command not found: $1";
-            return $?;
-        fi;
-    fi
-}
-deploy_script::add () 
-{ 
-    task::run_with_install_filter sopkafile::add "$1" || softfail || return $?;
-    deploy_script "${@:2}";
-    softfail_unless_good_code $?
-}
-deploy_script::run () 
-{ 
-    "${HOME}/.sopka/bin/sopka" "$@";
-    softfail_unless_good_code $?
 }
 
 apt::install () 
@@ -422,10 +422,12 @@ sopka::deploy_sh_main ()
     fi;
     set -o nounset;
     task::run_with_install_filter git::install_git || softfail || return $?;
-    task::run_with_install_filter git::place_up_to_date_clone "https://github.com/senotrusov/sopka.git" "${HOME}/.sopka" || softfail || return $?;
+    task::run_with_install_filter git::place_up_to_date_clone "${SOPKA_DIST_REPO}" "${HOME}/.sopka" || softfail || return $?;
     deploy_script "$@";
     softfail_unless_good_code $?
 }
+
+export SOPKA_DIST_REPO="${SOPKA_DIST_REPO:-https://github.com/senotrusov/sopka.git}"
 
 sopka::deploy_sh_main "$@"
 
