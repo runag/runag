@@ -169,3 +169,9 @@ git::add_or_update_remote() {
     git config "remote.${remote_name}.url" "${remote_url}" || softfail || return $?
   fi
 }
+
+git::get_remote_url_without_username() {
+  local remote_name="${1:-"origin"}"
+  git remote get-url "${remote_name}" | sed 's/^https:\/\/[[:alnum:]_]\+@/https:\/\//'
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}

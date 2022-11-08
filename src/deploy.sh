@@ -30,6 +30,8 @@ sopka::deploy_sh_main() {
   softfail_unless_good_code $?
 }
 
+sopka_remote_url="$(git::get_remote_url_without_username)" || fail
+
 file::write deploy.sh <<SHELL || fail
 #!/usr/bin/env bash
 
@@ -56,7 +58,7 @@ $(declare -f sopkafile::add)
 
 $(declare -f sopka::deploy_sh_main)
 
-export SOPKA_DIST_REPO="\${SOPKA_DIST_REPO:-$(printf "%q" "$(git remote get-url origin | sed 's/^https:\/\/[[:alnum:]_]\+@/https:\/\//')")}"
+export SOPKA_DIST_REPO="\${SOPKA_DIST_REPO:-$(printf "%q" "${sopka_remote_url}")}"
 
 sopka::deploy_sh_main "\$@"
 

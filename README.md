@@ -46,6 +46,17 @@ add user/repo
 run [function-name [function-arguments]]
 ```
 
+## Offline install
+
+```sh
+# create offline install
+mkdir sopka-offline-install && cd sopka-offline-install
+sopka offline_sopka_install::create_or_update
+
+# install from it
+bash deploy-offline.sh
+```
+
 ## Sopkafile
 
 Sopka is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Sopka into your scripts with `. sopka` or you could make a file called `sopkafile` and then run `sopka`.
@@ -74,6 +85,7 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
+* [offline_sopka_install](lib/offline_sopka_install.sh)
 * [sopka_menu](lib/sopka_menu.sh)
 * [sopka](lib/sopka.sh)
 * [sopkafile](lib/sopkafile.sh)
