@@ -30,15 +30,19 @@ fi
 clone_local_mirror_perhaps() {
   local source_path="$1"
   local dest_path="$2"
+  local remote_name="${3:-}"
 
   local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || fail
 
   if [ ! -d "${dest_path}" ]; then
     git clone "${source_path}" "${dest_path}" || fail
-    git -C "${dest_path}" remote add local-mirror "${source_path_full}" || fail
 
     local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail
     git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail
+
+    if [ -n "${remote_name}" ]; then
+      git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail
+    fi
   fi
 }
 
@@ -48,12 +52,12 @@ fi
 
 install_path="${HOME}"/.sopka
 
-clone_local_mirror_perhaps sopka.git "${install_path}" || fail
+clone_local_mirror_perhaps sopka.git "${install_path}" "offline-install" || fail
 
 if cd sopkafiles >/dev/null 2>&1; then
   for sopkafile in *; do
     if [ -d "${sopkafile}" ]; then
-      clone_local_mirror_perhaps "${sopkafile}" "${install_path}/sopkafiles/${sopkafile}" || fail  
+      clone_local_mirror_perhaps "${sopkafile}" "${install_path}/sopkafiles/${sopkafile}" "offline-install" || fail  
     fi
   done
 fi

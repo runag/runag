@@ -33,22 +33,22 @@ git::install_profile_from_pass() {
   fi
 }
 
-git::clone_local_mirror() {
-  local source_path="$1"
-  local dest_path="$2"
-
-  local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
-
-  if [ -d "${dest_path}" ]; then
-    softfail "Destination path already exists: ${dest_path}" || return $?
-  fi
-
-  git clone "${source_path}" "${dest_path}" || softfail || return $?
-  git -C "${dest_path}" remote add local-mirror "${source_path_full}" || softfail || return $?
-
-  local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || softfail || return $?
-  git -C "${dest_path}" remote set-url origin "${mirror_origin}" || softfail || return $?
-}
+# git::clone_local_mirror() {
+#   local source_path="$1"
+#   local dest_path="$2"
+#
+#   local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
+#
+#   if [ -d "${dest_path}" ]; then
+#     softfail "Destination path already exists: ${dest_path}" || return $?
+#   fi
+#
+#   git clone "${source_path}" "${dest_path}" || softfail || return $?
+#   git -C "${dest_path}" remote add local-mirror "${source_path_full}" || softfail || return $?
+#
+#   local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || softfail || return $?
+#   git -C "${dest_path}" remote set-url origin "${mirror_origin}" || softfail || return $?
+# }
 
 git::create_or_update_mirror() {
   local source_url="$1"
