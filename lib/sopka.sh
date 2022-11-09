@@ -40,6 +40,34 @@ sopka::update() {
   sopkafile::update-everything-in-sopka || softfail || return $?
 }
 
+sopka::create_or_update_offline_install() {
+  local sopka_path="${HOME}"/.sopka
+
+  if [ ! -d "${sopka_path}/.git" ]; then
+    softfail "Unable to find sopka checkout" || return $?
+  fi
+
+  local sopka_remote_url; sopka_remote_url="$(git -C "${sopka_path}" remote get-url origin)" || softfail || return $?
+
+  git::create_or_update_mirror "${sopka_remote_url}" sopka.git || softfail || return $?
+
+  dir::make_if_not_exists "sopkafiles" || softfail || return $?
+
+  local sopkafile_path; for sopkafile_path in "${sopka_path}/sopkafiles"/*; do
+    if [ -d "${sopkafile_path}" ]; then
+      local sopkafile_dir_name; sopkafile_dir_name="$(basename "${sopkafile_path}")" || softfail || return $?
+      local sopkafile_remote_url; sopkafile_remote_url="$(git -C "${sopkafile_path}" remote get-url origin)" || softfail || return $?
+
+      git::create_or_update_mirror "${sopkafile_remote_url}" "sopkafiles/${sopkafile_dir_name}" || softfail || return $?
+    fi
+  done
+
+  if [ ! -f deploy-offline.sh ] && [ ! -f deploy-offline.sh.asc ]; then
+    cp "${sopka_path}/src/deploy-offline.sh" . || softfail || return $?
+    cp "${sopka_path}/src/deploy-offline.sh.asc" . || softfail || return $?
+  fi
+}
+
 # it will dump all current sopkafiles, not a good idea
 # is systemwide-install the good idea at all?
 #

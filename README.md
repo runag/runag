@@ -85,7 +85,6 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
-* [offline_sopka_install](lib/offline_sopka_install.sh)
 * [sopka_menu](lib/sopka_menu.sh)
 * [sopka](lib/sopka.sh)
 * [sopkafile](lib/sopkafile.sh)

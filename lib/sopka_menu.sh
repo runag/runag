@@ -85,6 +85,7 @@ sopka_menu::add_defaults() {
   if [ -d "${HOME}/.sopka" ]; then
     sopka_menu::add_header "Sopka and sopkafiles" || softfail || return $?
     
+    sopka_menu::add sopka::create_or_update_offline_install || softfail || return $?
     sopka_menu::add sopka::update || softfail || return $?
   fi
 }
