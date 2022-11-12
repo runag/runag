@@ -17,14 +17,15 @@
 checksums::create_or_update() {
   local directory="$1"
   local current_checksum_file="$2"
-  local checksum_algo="${3:-"sha3-256"}"
+
+  local checksum_algo="sha3-256"
 
   local new_checksum_file; new_checksum_file="$(mktemp)" || softfail || return $?
 
   (
     cd "${directory}" || softfail || return $?
 
-    find . -type f \( -not -name "${current_checksum_file}" \) -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
+    find . -type f ! -path "./${current_checksum_file}" "${@:3}" -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
     local action
@@ -80,7 +81,8 @@ checksums::create_or_update() {
 checksums::verify() {(
   local directory="$1"
   local current_checksum_file="$2"
-  local checksum_algo="${3:-"sha3-256"}"
+
+  local checksum_algo="sha3-256"
 
   local new_checksum_file; new_checksum_file="$(mktemp)" || softfail || return $?
 
@@ -91,7 +93,7 @@ checksums::verify() {(
       softfail "Unable to find the checksum file: ${directory}/${current_checksum_file}" || return $?
     fi
 
-    find . -type f \( -not -name "${current_checksum_file}" \) -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
+    find . -type f ! -path "./${current_checksum_file}" "${@:3}" -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
     if diff --strip-trailing-cr "${current_checksum_file}" "${new_checksum_file}" >/dev/null 2>&1; then
