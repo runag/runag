@@ -88,6 +88,12 @@ vmware::get_host_ip_address() {
   echo "${ip_address}"
 }
 
+vmware::if_inside_vm_allow_passwordless_sudo_for_dmidecode() {
+  if vmware::is_inside_vm; then
+    echo "${USER} ALL=NOPASSWD: /usr/sbin/dmidecode" | file::sudo_write /etc/sudoers.d/dmidecode 440 || softfail || return $?
+  fi
+}
+
 vmware::get_machine_uuid() {
   sudo dmidecode -t system | grep "^[[:blank:]]*Serial Number: VMware-" | sed "s/^[[:blank:]]*Serial Number: VMware-//" | sed "s/ //g"
   test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
