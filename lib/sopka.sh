@@ -69,7 +69,6 @@ sopka::create_or_update_offline_install() {
   done
 
   cp -f "${sopka_path}/src/deploy-offline.sh" . || softfail || return $?
-  cp -f "${sopka_path}/src/deploy-offline.sh.asc" . || softfail || return $?
 }
 
 # it will dump all current sopkafiles, not a good idea

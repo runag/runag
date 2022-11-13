@@ -61,3 +61,5 @@ if cd sopkafiles >/dev/null 2>&1; then
     fi
   done
 fi
+
+"${install_path}"/bin/sopka
