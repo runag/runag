@@ -116,3 +116,14 @@ if [ -z "\${EDITOR:-}" ]; then
 fi
 SHELL
 }
+
+shellrc::install_append_to_bash_history_file_after_each_command_rc() {
+  shellrc::write "append-to-bash-history-file-after-each-command" <<SHELL || softfail || return $?
+$(sopka::print_license)
+
+if [ -n "\${BASH_VERSION:-}" ]; then
+  export PROMPT_COMMAND="history -a"
+fi
+SHELL
+}
+  
