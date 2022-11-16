@@ -80,7 +80,7 @@ app-release::make() {
   local owner="${2:-}"
   local group="${3:-}"
 
-  local current_date; current_date="$(date "+%Y%m%dT%H%M%SZ")" || softfail || return $?
+  local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
   local releases_path="${app_dir}/releases"
   
   dir::make_if_not_exists "${releases_path}" "${mode}" "${owner}" "${group}" || softfail || return $?
