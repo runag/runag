@@ -65,7 +65,7 @@ vscode::install_extensions() {
       if [[ "${OSTYPE}" =~ ^msys ]]; then
         local ifs_value=$'\r'
       else
-        export ifs_value=""
+        local ifs_value=""
       fi
 
       while IFS="${ifs_value}" read -r extension; do
