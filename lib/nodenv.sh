@@ -36,7 +36,7 @@ nodenv::install_shellrc() {
     local output; output="$(shellrc::get_filename "nodenv")" || softfail || return $?
   fi
 
-  file::write "${output}" 600 <<SHELL || softfail || return $?
+  file::write --mode 0600 "${output}" <<SHELL || softfail || return $?
 $(sopka::print_license)
 
 if [ -d "\${HOME}/.nodenv/bin" ]; then

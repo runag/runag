@@ -50,7 +50,7 @@ rbenv::install_shellrc() {
     openssl_line="export RUBY_CONFIGURE_OPTS="\${RUBY_CONFIGURE_OPTS:+"\${RUBY_CONFIGURE_OPTS} "}--with-openssl-dir=$(printf "%q" "${openssl_dir}")"" || softfail || return $?
   fi
 
-  file::write "${output}" 600 <<SHELL || softfail || return $?
+  file::write --mode 0600 "${output}" <<SHELL || softfail || return $?
 $(sopka::print_license)
 
 if [ -d "\${HOME}/.rbenv/bin" ]; then

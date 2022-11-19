@@ -20,9 +20,7 @@ direnv::write_file() {
   local dir_name=".direnv.d"
   dir::make_if_not_exists "${dir_name}" 700 || softfail || return $?
 
-  cat | file::write "${dir_name}/${name}.sh" 600 || softfail || return $?
-
-  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+  file::write --mode 0600 "${dir_name}/${name}.sh" || softfail || return $?
 }
 
 direnv::write_block() {

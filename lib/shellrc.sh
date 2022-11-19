@@ -58,7 +58,7 @@ shellrc::write() {
   local shellrc_dir="${HOME}/.shellrc.d"
 
   dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
-  file::write "${shellrc_dir}/${name}.sh" 600 || softfail || return $?
+  file::write --mode 0600 "${shellrc_dir}/${name}.sh" || softfail || return $?
 }
 
 shellrc::load() {

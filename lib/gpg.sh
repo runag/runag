@@ -28,11 +28,11 @@ gpg::import_key_with_ultimate_ownertrust() {
 gpg::decrypt_and_install_file() {
   local source_path="$1"
   local dest_path="$2"
-  local mode="${3:-"600"}"
+  local mode="${3:-"0600"}"
 
   if [ ! -f "${dest_path}" ]; then
     file::wait_until_available "${source_path}" || softfail || return $?
-    gpg --decrypt "${source_path}" | file::write "${dest_path}" "${mode}"
+    gpg --decrypt "${source_path}" | file::write --mode "${mode}" "${dest_path}"
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   fi
 }

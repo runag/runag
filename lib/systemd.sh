@@ -23,7 +23,7 @@ systemd::write_user_unit() {
   dir::make_if_not_exists "${HOME}/.config/systemd" 700 || softfail || return $?
   dir::make_if_not_exists "${user_units_dir}" 700 || softfail || return $?
 
-  file::write "${user_units_dir}/${name}" 600 || softfail || return $?
+  file::write --mode 0600 "${user_units_dir}/${name}" || softfail || return $?
 }
 
 systemd::write_system_unit() {

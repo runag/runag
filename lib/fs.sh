@@ -114,18 +114,39 @@ file::sudo_write() {
 }
 
 file::write() {
-  local dest="$1"
-  local mode="${2:-}"
+  local file_mode="0600"
 
-  if [ -n "${mode}" ]; then
-    # I want to create a file with the right mode right away
-    # the use of "install" command performs that, at least on linux and macos
-    # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
-    # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
-    install -m "${mode}" /dev/null "${dest}" || softfail || return $?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -m|--mode)
+      file_mode="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local file_path="$1"
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  cat >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+
+  if [ ! -s "${temp_file}" ]; then
+    rm "${temp_file}" || softfail || return $?
+    softfail "Zero-length input" || return $?
   fi
 
-  cat >"${dest}" || softfail || return $?
+  if [ -n "${file_mode}" ]; then
+    chmod "${file_mode}" "${temp_file}" || softfail || return $?
+  fi
+  
+  mv "${temp_file}" "${file_path}" || softfail || return $?
 }
 
 file::append() {
@@ -141,28 +162,6 @@ file::append() {
   fi
 
   tee -a "${dest}" >/dev/null || softfail "Unable to write to file" || return $?
-}
-
-file::write-if-non-zero() {
-  local dest="$1"
-  local mode="${2:-}"
-
-  if [ -n "${mode}" ]; then
-    # I want to create a file with the right mode right away
-    # the use of "install" command performs that, at least on linux and macos
-    # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
-    # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
-    install -m "${mode}" /dev/null "${dest}.sopka-temp" || softfail "Unable to create temp file" || return $?
-  fi
-
-  cat >"${dest}.sopka-temp" || softfail "Unable to write to temp file" || return $?
-
-  if [ -s "${dest}.sopka-temp" ]; then
-    mv "${dest}.sopka-temp" "${dest}" || softfail "Unable to move temp file to the output file" || return $?
-  else
-    rm "${dest}.sopka-temp" || softfail "Unable to remove temp file" || return $?
-    softfail "Zero-length input writing file" || return $?
-  fi
 }
 
 file::append_line_unless_present() {

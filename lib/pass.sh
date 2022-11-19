@@ -213,7 +213,7 @@ pass::file::save() {
     esac
   done
 
-  file::write-if-non-zero "${file_path}" "${file_mode}" || softfail "Unable to write secret to file" || return $?
+  file::write --mode "${file_mode}" "${file_path}" || softfail "Unable to write secret to file" || return $?
 }
 
 pass::file::pipeonly() {
@@ -249,7 +249,7 @@ pass::remote_file::save() {
     esac
   done
 
-  ssh::call file::write-if-non-zero "${file_path}" "${file_mode}" || softfail "Unable to write secret to file" || return $?
+  ssh::call file::write --mode "${file_mode}" "${file_path}" || softfail "Unable to write secret to file" || return $?
 }
 
 pass::remote_file::pipeonly() {

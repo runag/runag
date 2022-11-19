@@ -113,7 +113,7 @@ bitwarden::write_notes_to_file_if_not_exists() {
 bitwarden::write_notes_to_file() {
   local bitwarden_object_id="$1"
   local output_file="$2"
-  local mode="${3:-"600"}"
+  local mode="${3:-"0600"}"
 
   bitwarden::unlock_and_sync || softfail "Unable to unlock and sync bitwarden" || return $?
   local item_data; item_data="$(bw --nointeraction get item "${bitwarden_object_id}")" || softfail "Unable to get item from bitwarden" || return $?
@@ -123,7 +123,7 @@ bitwarden::write_notes_to_file() {
 
     local notes_data; notes_data="$(jq '.notes' --raw-output --exit-status <<< "${item_data}")" || softfail "Unable to extract notes from bitwarden data" || return $?
 
-    file::write "${output_file}" "${mode}" <<< "${notes_data}" || softfail "Unable to write to file: ${output_file}" || return $?
+    <<<"${notes_data}" file::write --mode "${mode}" "${output_file}" || softfail "Unable to write to file: ${output_file}" || return $?
     
   ) || softfail || return $?
 }
@@ -141,7 +141,7 @@ bitwarden::write_password_to_file_if_not_exists() {
 bitwarden::write_password_to_file() {
   local bitwarden_object_id="$1"
   local output_file="$2"
-  local mode="${3:-"600"}"
+  local mode="${3:-"0600"}"
 
   bitwarden::unlock_and_sync "Unable to unlock and sync bitwarden" || softfail || return $?
   local password_data; password_data="$(bw --nointeraction get password "${bitwarden_object_id}")" || softfail "Unable to get password from bitwarden" || return $?
@@ -149,7 +149,7 @@ bitwarden::write_password_to_file() {
   (
     unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
 
-    file::write "${output_file}" "${mode}" <<< "${password_data}" || softfail "Unable to write to file: ${output_file}" || return $?
+    <<<"${password_data}" file::write --mode "${mode}" "${output_file}" || softfail "Unable to write to file: ${output_file}" || return $?
 
   ) || softfail || return $?
 }
@@ -205,9 +205,9 @@ bitwarden::remote_file::save() {(
 
   local secret_key="$1"
   local file_path="$2"
-  local mode="${3:-"600"}"
+  local mode="${3:-"0600"}"
 
-  ssh::call file::write "${file_path}" "${mode}" <<< "${secret_key}" || softfail "Unable to write remote file" || return $?
+  <<<"${secret_key}" ssh::call file::write --mode "${mode}" "${file_path}" || softfail "Unable to write remote file" || return $?
 )}
 
 # sopka bitwarden::use username password uri "test record" bitwarden::test hello there

@@ -105,7 +105,7 @@ ssh::install_ssh_profile_from_pass() {
     pass::use "${profile_path}/config" --body pass::file "${profile_config_path}" --mode 0600 || softfail || return $?
   else
     if pass::secret_exists "${profile_path}/id_ed25519"; then
-      file::write "${profile_config_path}" 0600 <<< "IdentityFile ${key_directory}/id_ed25519" || softfail || return $?
+      <<<"IdentityFile ${key_directory}/id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
     fi
   fi
 

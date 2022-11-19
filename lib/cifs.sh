@@ -23,9 +23,9 @@ cifs::credentials::save() {
   local cifs_password="$1"
   local credentials_file="$2"
   local cifs_username="$3"
-  local mode="${4:-"600"}"
+  local mode="${4:-"0600"}"
   
-  printf "username=%s\npassword=%s\n" "${cifs_username}" "${cifs_password}" | file::write "${credentials_file}" "${mode}"
+  printf "username=%s\npassword=%s\n" "${cifs_username}" "${cifs_password}" | file::write --mode "${mode}" "${credentials_file}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
