@@ -164,7 +164,9 @@ app_release::cleanup() {
   local remove_this_release
 
   for release in "${app_releases_collection_path:?}"/*; do
-    echo "${release}"
+    if [ -d "${release}" ]; then
+      echo "${release}"
+    fi
   done | sort | head "--lines=-${keep_amount}" | \
   while IFS="" read -r remove_this_release; do
     echo "Removing ${remove_this_release}..."

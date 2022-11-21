@@ -39,7 +39,9 @@ archival_snapshots::cleanup() {
   fi
 
   for snapshot_path in "${snapshots_dir:?}"/*; do # :? here is to make sure we don't accidentally cleanup root directory
-    echo "${snapshot_path:?}"
+    if [ -d "${snapshot_path:?}" ]; then
+      echo "${snapshot_path:?}"
+    fi
   done | sort | head "--lines=-${keep_amount:?}" | \
   while IFS="" read -r remove_this_snapshot; do
     echo "Removing ${remove_this_snapshot}..."

@@ -62,7 +62,9 @@ direnv::save_variables_to_file() {
 direnv::directory_loader() {
   cat <<'SHELL'
 for file in .direnv.d/*.sh; do
-  . "${file}" || echo "Unable to load ${file} ($?)" >&2
+  if [ -f "${file}" ]; then
+    . "${file}" || echo "Unable to load ${file} ($?)" >&2
+  fi
 done
 SHELL
 }
