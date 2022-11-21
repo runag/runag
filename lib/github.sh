@@ -22,7 +22,7 @@ github::install_profile_from_pass() {
 
     local github_username; github_username="$(pass::use "${pass_path}/username")" || softfail || return $?
 
-    pass::use "${pass_path}/personal-access-token" git::gnome_keyring_credentials "${github_username}" || fail
+    pass::use "${pass_path}/personal-access-token" git::gnome_keyring_credentials "github.com" "${github_username}" || fail
   fi
 }
 

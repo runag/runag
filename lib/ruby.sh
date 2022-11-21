@@ -80,6 +80,7 @@ rubygems::credentials::exists() {
 
 rubygems::credentials::save() {
   local api_key="$1"
+  
   local file_path="${HOME}/.gem/credentials"
 
   file::write --mode 0600 "${file_path}" <<YAML || softfail "Unable to write secret to file" || return $?

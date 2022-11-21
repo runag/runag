@@ -135,7 +135,11 @@ file::write() {
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
-  cat >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+  if [ "${2+true}" = true ]; then
+    printf "%s" "$2" >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+  else
+    cat >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+  fi
 
   if [ ! -s "${temp_file}" ]; then
     rm "${temp_file}" || softfail || return $?
@@ -191,9 +195,6 @@ file::sudo_append_line_unless_present() {
 }
 
 file::update_block() {
-  local file_name="$1"; shift
-  local block_name="$1"; shift
-
   local file_mode=""
   local file_owner=""
   local file_group=""
@@ -220,6 +221,9 @@ file::update_block() {
       ;;
     esac
   done
+
+  local file_name="$1"
+  local block_name="$2"
 
   if [ -z "${file_mode}" ] && [ -f "${file_name}" ]; then
     file_mode="$(stat -c "%a" "${file_name}")" || softfail || return $?

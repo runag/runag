@@ -20,12 +20,11 @@ cifs::credentials::exists() {
 }
 
 cifs::credentials::save() {
-  local cifs_password="$1"
-  local credentials_file="$2"
-  local cifs_username="$3"
-  local mode="${4:-"0600"}"
-  
-  printf "username=%s\npassword=%s\n" "${cifs_username}" "${cifs_password}" | file::write --mode "${mode}" "${credentials_file}"
+  local credentials_file="$1"
+  local cifs_username="$2"
+  local cifs_password="$3"
+
+  printf "username=%s\npassword=%s\n" "${cifs_username}" "${cifs_password}" | file::write --mode 0600 "${credentials_file}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 

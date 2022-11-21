@@ -99,7 +99,7 @@ npm::update_globally_installed_packages() {
 # bitwarden::use password "test record" npm::auth_token registry.npmjs.org
 #
 npm::auth_token::exists() {
-  local registry="${1:-"registry.npmjs.org"}"
+  local registry="registry.npmjs.org"
 
   test -f "${HOME}/.npmrc" || return 1
   grep -qF "//${registry}/:_authToken" "${HOME}/.npmrc"
@@ -107,7 +107,8 @@ npm::auth_token::exists() {
 
 npm::auth_token::save() {
   local token="$1"
-  local registry="${2:-"registry.npmjs.org"}"
+
+  local registry="registry.npmjs.org" # TODO: optional argument
   
   npm set "//${registry}/:_authToken" "${token}" || softfail || return $?
 }

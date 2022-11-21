@@ -62,9 +62,6 @@ git::create_or_update_mirror() {
 }
 
 git::place_up_to_date_clone() {
-  local url="$1"; shift
-  local dest="$1"; shift
-
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -b|--branch)
@@ -79,6 +76,9 @@ git::place_up_to_date_clone() {
       ;;
     esac
   done
+
+  local url="$1"
+  local dest="$2"
 
   if [ -d "${dest}" ]; then
     local current_url; current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?
@@ -126,16 +126,16 @@ git::use_libsecret_credential_helper() {
 }
 
 git::gnome_keyring_credentials::exists() {
-  local login="$1"
-  local server="${2:-"github.com"}"
+  local server="$1"
+  local login="$2"
 
   secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null
 }
 
 git::gnome_keyring_credentials::save() {
-  local password="$1"
+  local server="$1"
   local login="$2"
-  local server="${3:-"github.com"}"
+  local password="$3"
 
   echo -n "${password}" | secret-tool store --label="Git: https://${server}/" server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?

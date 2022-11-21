@@ -41,7 +41,7 @@ ssh::make_config_d_dir_if_not_exists() {
 
 ssh::add_ssh_config_d_include_directive() {
   ssh::make_config_d_dir_if_not_exists || softfail || return $?
-  <<<"Include ~/.ssh/ssh_config.d/*.conf" file::update_block "${HOME}/.ssh/config" "include files from ssh_config.d" --mode 0600 || softfail "Unable to add configuration to user ssh config" || return $?
+  <<<"Include ~/.ssh/ssh_config.d/*.conf" file::update_block --mode 0600 "${HOME}/.ssh/config" "include files from ssh_config.d" || softfail "Unable to add configuration to user ssh config" || return $?
 }
 
 ssh::copy_authorized_keys_to_user() {
@@ -102,7 +102,7 @@ ssh::install_ssh_profile_from_pass() {
   # ssh config
   local profile_config_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
   if pass::secret_exists "${profile_path}/config"; then
-    pass::use "${profile_path}/config" --body pass::file "${profile_config_path}" --mode 0600 || softfail || return $?
+    pass::use --body "${profile_path}/config" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
   else
     if pass::secret_exists "${profile_path}/id_ed25519"; then
       <<<"IdentityFile ${key_directory}/id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
@@ -111,7 +111,7 @@ ssh::install_ssh_profile_from_pass() {
 
   # known hosts
   if pass::secret_exists "${profile_path}/known_hosts"; then
-    pass::use "${profile_path}/known_hosts" --body pass::file_with_block "${HOME}/.ssh/known_hosts" "# ${profile_name}" --mode 0600 || softfail || return $?
+    pass::use --body "${profile_path}/known_hosts" file::update_block --mode 0600 "${HOME}/.ssh/known_hosts" "# ${profile_name}" || softfail || return $?
   fi
 }
 
@@ -121,42 +121,42 @@ ssh::install_ssh_key_from_pass() {
   local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
   ssh::make_config_dir_if_not_exists || softfail || return $?
-  pass::use "${secret_path}" --body pass::file "${key_file_path}" --mode 0600 || softfail || return $?
+  pass::use --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
-    pass::use "${secret_path}.pub" pass::file "${key_file_path}.pub" --mode 0600 || softfail || return $?
+    pass::use "${secret_path}.pub" file::write --mode 0600 "${key_file_path}.pub" || softfail || return $?
   fi
 
   if [[ "${OSTYPE}" =~ ^linux ]]; then
-    pass::use "${secret_path}" --skip-if-empty ssh::gnome_keyring_credentials "${key_file_path}" || softfail || return $?
+    pass::use --skip-if-empty "${secret_path}" ssh::gnome_keyring_credentials "${key_file_path}" || softfail || return $?
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
-    pass::use "${secret_path}" --skip-if-empty ssh::macos_keychain "${key_file_path}" || softfail || return $?
+    pass::use --skip-if-empty "${secret_path}" ssh::macos_keychain "${key_file_path}" || softfail || return $?
   fi
 }
 
 ssh::gnome_keyring_credentials::exists() {
-  local key_file_path="${1:-"${HOME}/.ssh/id_ed25519"}"
+  local key_file_path="$1"
 
   secret-tool lookup unique "ssh-store:${key_file_path}" >/dev/null
 }
 
 ssh::gnome_keyring_credentials::save() {
-  local password="$1"
-  local key_file_path="${2:-"${HOME}/.ssh/id_ed25519"}"
+  local key_file_path="$1"
+  local password="$2"
 
   echo -n "${password}" | secret-tool store --label="Unlock password for: ${key_file_path}" unique "ssh-store:${key_file_path}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 ssh::macos_keychain::exists() {
-  local key_file_path="${1:-"${HOME}/.ssh/id_ed25519"}"
+  local key_file_path="$1"
 
   ssh-add -L | grep -qF "${key_file_path}"
 }
 
 ssh::macos_keychain::save() {
-  local password="$1"
-  local key_file_path="${2:-"${HOME}/.ssh/id_ed25519"}"
+  local key_file_path="$1"
+  local password="$2"
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
   chmod 755 "${temp_file}" || softfail || return $?
