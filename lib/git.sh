@@ -132,7 +132,7 @@ git::gnome_keyring_credentials::exists() {
   secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword >/dev/null
 }
 
-git::gnome_keyring_credentials::save() {
+git::gnome_keyring_credentials() {
   local server="$1"
   local login="$2"
   local password="$3"

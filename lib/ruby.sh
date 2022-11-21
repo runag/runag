@@ -78,7 +78,7 @@ rubygems::credentials::exists() {
   test -s "${file_path}"
 }
 
-rubygems::credentials::save() {
+rubygems::credentials() {
   local api_key="$1"
   
   local file_path="${HOME}/.gem/credentials"

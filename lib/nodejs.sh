@@ -105,7 +105,7 @@ npm::auth_token::exists() {
   grep -qF "//${registry}/:_authToken" "${HOME}/.npmrc"
 }
 
-npm::auth_token::save() {
+npm::auth_token() {
   local token="$1"
 
   local registry="registry.npmjs.org" # TODO: optional argument

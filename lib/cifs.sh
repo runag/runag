@@ -19,7 +19,7 @@ cifs::credentials::exists() {
   test -f "${credentials_file}"
 }
 
-cifs::credentials::save() {
+cifs::credentials() {
   local credentials_file="$1"
   local cifs_username="$2"
   local cifs_password="$3"

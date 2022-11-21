@@ -140,7 +140,7 @@ ssh::gnome_keyring_credentials::exists() {
   secret-tool lookup unique "ssh-store:${key_file_path}" >/dev/null
 }
 
-ssh::gnome_keyring_credentials::save() {
+ssh::gnome_keyring_credentials() {
   local key_file_path="$1"
   local password="$2"
 
@@ -154,7 +154,7 @@ ssh::macos_keychain::exists() {
   ssh-add -L | grep -qF "${key_file_path}"
 }
 
-ssh::macos_keychain::save() {
+ssh::macos_keychain() {
   local key_file_path="$1"
   local password="$2"
 
