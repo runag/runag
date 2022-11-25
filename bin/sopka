@@ -31,31 +31,31 @@ fi
 sopka::load_sopka_library() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
-    local bin_path; bin_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
+    local bin_path; bin_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
   else
     local bin_path; bin_path="${BASH_SOURCE[0]}"
   fi
 
   # get basename of binary
-  local bin_name; bin_name="$(basename "${bin_path}")" || { echo "Sopka: Unable to get a basename of '${bin_path}' ($?)" >&2; return 1; }
+  local bin_name; bin_name="$(basename "${bin_path}")" || { echo "Unable to get a basename of '${bin_path}' ($?)" >&2; return 1; }
 
   # get dirname that yet may result to relative path
-  local unresolved_bin_dir; unresolved_bin_dir="$(dirname "${bin_path}")" || { echo "Sopka: Unable to get a dirname of '${bin_path}' ($?)" >&2; return 1; }
+  local unresolved_bin_dir; unresolved_bin_dir="$(dirname "${bin_path}")" || { echo "Unable to get a dirname of '${bin_path}' ($?)" >&2; return 1; }
 
   # get absolute path to dirname
-  local bin_dir; bin_dir="$(cd "${unresolved_bin_dir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolved_bin_dir}' ($?)" >&2; return 1; }
+  local bin_dir; bin_dir="$(cd "${unresolved_bin_dir}" >/dev/null 2>&1 && pwd)" || { echo "Unable to determine absolute path for '${unresolved_bin_dir}' ($?)" >&2; return 1; }
 
   # set SOPKA_BIN_PATH if needed
   if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${bin_dir}/${bin_name}" ] && [ -x "${bin_dir}/${bin_name}" ]; then
     export SOPKA_BIN_PATH="${bin_dir}/${bin_name}"
   fi
 
-  . "${bin_dir}/../index.sh" || { echo "Sopka: Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }
+  . "${bin_dir}/../index.sh" || { echo "Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }
 }
 
 # Load sopka library index file
 sopka::load_sopka_library || {
-  echo "Sopka: Unable to load sopka library index file ($?)" >&2
+  echo "Unable to load sopka library index file ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
   else
@@ -74,24 +74,24 @@ sopka::load_sopka_library || {
 # Load sopkafile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
   sopkafile::load
-  softfail_unless_good "Sopka: Unable to load sopkafile ($?)" $? || return $?
+  softfail_unless_good "Unable to load sopkafile ($?)" $? || return $?
 else # we are not sourced
   sopkafile::load
-  softfail_unless_good "Sopka: Unable to load sopkafile ($?)" $? || exit $?
+  softfail_unless_good "Unable to load sopkafile ($?)" $? || exit $?
 fi
 
 # if there is something in the first argument, run it
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
-    softfail_unless_good "Sopka: Error performing $1 ($?)" $? || return $?
+    softfail_unless_good "Error performing $1 ($?)" $? || return $?
     if [ -t 1 ]; then
       log::success "Done: $*"
     fi
     return 0
   else # we are not sourced
     "$@"
-    softfail_unless_good "Sopka: Error performing $1 ($?)" $? || exit $?
+    softfail_unless_good "Error performing $1 ($?)" $? || exit $?
     if [ -t 1 ]; then
       log::success "Done: $*"
     fi
@@ -103,15 +103,15 @@ fi
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -f sopkafile::main >/dev/null; then
     sopkafile::main
-    softfail_unless_good "Sopka: Error performing sopkafile::main ($?)" $?
+    softfail_unless_good "Error performing sopkafile::main ($?)" $?
     exit $?
   elif sopkafile_menu::present && [ -t 0 ] && [ -t 1 ]; then
     sopkafile_menu::display
-    softfail_unless_good "Sopka: Error performing sopkafile_menu::display ($?)" $?
+    softfail_unless_good "Error performing sopkafile_menu::display ($?)" $?
     exit $?
   fi
 
-  log::error "Sopka: Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu to see it if you run sopka in terminal"
+  log::error "Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu to see it if you run sopka in terminal"
   exit 1
 fi
 

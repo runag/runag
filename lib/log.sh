@@ -45,8 +45,8 @@ log::with_color() {
 
   local color_seq="" default_color_seq=""
   if [ -t 1 ]; then
-    color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
-    default_color_seq="$(terminal::default_color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
+    color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" >&2
+    default_color_seq="$(terminal::default_color)" || echo "Unable to get terminal sequence from tput ($?)" >&2
   fi
 
   echo "${color_seq}${message}${default_color_seq}"
@@ -57,13 +57,13 @@ log::error_trace() {
   local start_trace_from="${2:-1}"
 
   if [ -n "${message}" ]; then
-    log::error "${message}" || echo "Sopka: Unable to log error: ${message}" >&2
+    log::error "${message}" || echo "Unable to log error: ${message}" >&2
   fi
 
   local line i end_at=$((${#BASH_LINENO[@]}-1))
   for ((i=start_trace_from; i<=end_at; i++)); do
     line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
-    log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" >&2
+    log::error "  ${line}" || echo "Unable to log stack trace: ${line}" >&2
   done
 }
 

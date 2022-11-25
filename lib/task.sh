@@ -172,12 +172,12 @@ task::complete() {
   if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
 
     if [ -s "${temp_dir}/stdout" ]; then
-      cat "${temp_dir}/stdout" || { echo "Sopka: Unable to display task stdout ($?)" >&2; error_state=1; }
+      cat "${temp_dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=1; }
     fi
 
     if [ -s "${temp_dir}/stderr" ]; then
       test -t 2 && terminal::color 9 >&2
-      cat "${temp_dir}/stderr" >&2 || { echo "Sopka: Unable to display task stderr ($?)" >&2; error_state=2; }
+      cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=2; }
       test -t 2 && terminal::default_color >&2
     fi
   fi

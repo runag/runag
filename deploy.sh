@@ -83,7 +83,7 @@ softfail::internal ()
     if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
         exit_status=1;
     fi;
-    log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+    log::error_trace "${message}" 3 || echo "Unable to log error: ${message}" 1>&2;
     if [ "${exit_status}" != 0 ]; then
         return "${exit_status}";
     fi;
@@ -97,7 +97,7 @@ softfail_unless_good::internal ()
         exit_status=1;
     fi;
     if [ "${exit_status}" != 0 ]; then
-        log::error_trace "${message}" 3 || echo "Sopka: Unable to log error: ${message}" 1>&2;
+        log::error_trace "${message}" 3 || echo "Unable to log error: ${message}" 1>&2;
     fi;
     return "${exit_status}"
 }
@@ -132,8 +132,8 @@ log::with_color ()
     local background_color="${3:-}";
     local color_seq="" default_color_seq="";
     if [ -t 1 ]; then
-        color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
-        default_color_seq="$(terminal::default_color)" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+        default_color_seq="$(terminal::default_color)" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
     fi;
     echo "${color_seq}${message}${default_color_seq}"
 }
@@ -142,13 +142,13 @@ log::error_trace ()
     local message="${1:-""}";
     local start_trace_from="${2:-1}";
     if [ -n "${message}" ]; then
-        log::error "${message}" || echo "Sopka: Unable to log error: ${message}" 1>&2;
+        log::error "${message}" || echo "Unable to log error: ${message}" 1>&2;
     fi;
     local line i end_at=$((${#BASH_LINENO[@]}-1));
     for ((i=start_trace_from; i<=end_at; i++))
     do
         line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
-        log::error "  ${line}" || echo "Sopka: Unable to log stack trace: ${line}" 1>&2;
+        log::error "  ${line}" || echo "Unable to log stack trace: ${line}" 1>&2;
     done
 }
 task::with_verbose_task () 
@@ -252,7 +252,7 @@ task::is_stderr_empty_after_filtering ()
 { 
     local stderr_file="$1";
     local stderr_size;
-    stderr_size="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
+    stderr_size="$("${SOPKA_TASK_STDERR_FILTER}" < "${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
     if [ "${stderr_size}" != 0 ]; then
         return 1;
     fi
@@ -277,14 +277,14 @@ task::complete ()
     if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
         if [ -s "${temp_dir}/stdout" ]; then
             cat "${temp_dir}/stdout" || { 
-                echo "Sopka: Unable to display task stdout ($?)" 1>&2;
+                echo "Unable to display task stdout ($?)" 1>&2;
                 error_state=1
             };
         fi;
         if [ -s "${temp_dir}/stderr" ]; then
             test -t 2 && terminal::color 9 1>&2;
             cat "${temp_dir}/stderr" 1>&2 || { 
-                echo "Sopka: Unable to display task stderr ($?)" 1>&2;
+                echo "Unable to display task stderr ($?)" 1>&2;
                 error_state=2
             };
             test -t 2 && terminal::default_color 1>&2;
@@ -297,7 +297,7 @@ task::complete ()
 terminal::have_16_colors () 
 { 
     local amount;
-    command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
+    command -v tput > /dev/null && amount="$(tput colors 2> /dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
 }
 terminal::print_color_table () 
 { 
@@ -315,19 +315,19 @@ terminal::color ()
     local foreground="$1";
     local background="${2:-}";
     local amount;
-    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
+    if command -v tput > /dev/null && amount="$(tput colors 2> /dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
         if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
-            tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+            tput setaf "${foreground}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
         if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
-            tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+            tput setab "${background}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
     fi
 }
 terminal::default_color () 
 { 
     if command -v tput > /dev/null; then
-        tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" 1>&2;
+        tput sgr 0 || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
     fi
 }
 
@@ -359,10 +359,6 @@ git::install_git ()
 }
 git::place_up_to_date_clone () 
 { 
-    local url="$1";
-    shift;
-    local dest="$1";
-    shift;
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -b | --branch)
@@ -378,12 +374,14 @@ git::place_up_to_date_clone ()
             ;;
         esac;
     done;
+    local url="$1";
+    local dest="$2";
     if [ -d "${dest}" ]; then
         local current_url;
         current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?;
         if [ "${current_url}" != "${url}" ]; then
             local dest_full_path;
-            dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?;
+            dest_full_path="$(cd "${dest}" > /dev/null 2>&1 && pwd)" || softfail || return $?;
             local dest_parent_dir;
             dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
             local dest_dir_name;
@@ -409,9 +407,9 @@ git::place_up_to_date_clone ()
 sopkafile::add () 
 { 
     local user_name;
-    user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?;
+    user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;
     local repo_name;
-    repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?;
+    repo_name="$(cut -d "/" -f 2 <<< "$1")" || softfail || return $?;
     git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/sopkafiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 

@@ -327,15 +327,15 @@ fs::get_absolute_path() {
   
   # get basename
   local path_basename; path_basename="$(basename "${relative_path}")" \
-    || softfail "Sopka: Unable to get a basename of '${relative_path}' ($?)" || return $?
+    || softfail "Unable to get a basename of '${relative_path}' ($?)" || return $?
 
   # get dirname that yet may result to relative path
   local unresolved_dir; unresolved_dir="$(dirname "${relative_path}")" \
-    || softfail "Sopka: Unable to get a dirname of '${relative_path}'" || return $?
+    || softfail "Unable to get a dirname of '${relative_path}'" || return $?
 
   # get absolute path
   local resolved_dir; resolved_dir="$(cd "${unresolved_dir}" >/dev/null 2>&1 && pwd)" \
-    || softfail "Sopka: Unable to determine absolute path for '${unresolved_dir}'" || return $?
+    || softfail "Unable to determine absolute path for '${unresolved_dir}'" || return $?
 
   echo "${resolved_dir}/${path_basename}"
 }

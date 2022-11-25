@@ -37,18 +37,18 @@ terminal::color() {
 
   if command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
     if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
-      tput setaf "${foreground}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
+      tput setaf "${foreground}" || echo "Unable to get terminal sequence from tput ($?)" >&2
     fi
 
     if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
-      tput setab "${background}" || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
+      tput setab "${background}" || echo "Unable to get terminal sequence from tput ($?)" >&2
     fi
   fi
 }
 
 terminal::default_color() {
   if command -v tput >/dev/null; then
-    tput sgr 0 || echo "Sopka: Unable to get terminal sequence from tput ($?)" >&2
+    tput sgr 0 || echo "Unable to get terminal sequence from tput ($?)" >&2
   fi
 }
 

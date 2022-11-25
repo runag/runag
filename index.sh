@@ -17,16 +17,16 @@
 sopka::load_lib() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
-    local index_path; index_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Sopka: Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
+    local index_path; index_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
   else
     local index_path; index_path="${BASH_SOURCE[0]}"
   fi
 
   # get dirname that yet may result to relative path
-  local unresolved_sopka_dir; unresolved_sopka_dir="$(dirname "${index_path}")" || { echo "Sopka: Unable to get a dirname of '${index_path}' ($?)" >&2; return 1; }
+  local unresolved_sopka_dir; unresolved_sopka_dir="$(dirname "${index_path}")" || { echo "Unable to get a dirname of '${index_path}' ($?)" >&2; return 1; }
 
   # get absolute path to dirname
-  local sopka_dir; sopka_dir="$(cd "${unresolved_sopka_dir}" >/dev/null 2>&1 && pwd)" || { echo "Sopka: Unable to determine absolute path for '${unresolved_sopka_dir}' ($?)" >&2; return 1; }
+  local sopka_dir; sopka_dir="$(cd "${unresolved_sopka_dir}" >/dev/null 2>&1 && pwd)" || { echo "Unable to determine absolute path for '${unresolved_sopka_dir}' ($?)" >&2; return 1; }
 
   # set SOPKA_BIN_PATH if needed
   if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${sopka_dir}/bin/sopka" ] && [ -x "${sopka_dir}/bin/sopka" ]; then
@@ -36,13 +36,13 @@ sopka::load_lib() {
   # load all lib/*.sh
   local file_path; for file_path in "${sopka_dir}"/lib/*.sh; do
     if [ -f "${file_path}" ]; then
-      . "${file_path}" || { echo "Sopka: Unable to load '${file_path}' ($?)" >&2; return 1; }
+      . "${file_path}" || { echo "Unable to load '${file_path}' ($?)" >&2; return 1; }
     fi
   done
 }
 
 sopka::load_lib || {
-  echo "Sopka: Unable to perform sopka::load_lib' ($?)" >&2
+  echo "Unable to perform sopka::load_lib' ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
   else

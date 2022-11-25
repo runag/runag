@@ -85,13 +85,14 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
-* [sopka_menu](lib/sopka_menu.sh)
 * [sopka](lib/sopka.sh)
+* [sopkafile_menu](lib/sopkafile_menu.sh)
 * [sopkafile](lib/sopkafile.sh)
 * [terminal](lib/terminal.sh)
 
 ### General utility
 
+* [archival_snapshots](lib/archival_snapshots.sh)
 * [bash](lib/bash.sh)
 * [config](lib/config.sh)
 * [fs](lib/fs.sh)
