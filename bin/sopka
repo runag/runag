@@ -105,7 +105,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     sopkafile::main
     softfail_unless_good "Sopka: Error performing sopkafile::main ($?)" $?
     exit $?
-  elif sopka_menu::is_present && [ -t 0 ] && [ -t 1 ]; then
+  elif sopka_menu::present && [ -t 0 ] && [ -t 1 ]; then
     sopka_menu::display
     softfail_unless_good "Sopka: Error performing sopka_menu::display ($?)" $?
     exit $?

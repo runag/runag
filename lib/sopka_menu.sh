@@ -68,7 +68,7 @@ sopka_menu::display() {
   softfail_unless_good_code $?
 }
 
-sopka_menu::is_present() {
+sopka_menu::present() {
   test -n "${SOPKA_MENU:+x}"
 }
 
