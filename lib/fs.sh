@@ -295,21 +295,31 @@ mount::wait_until_available() {
   done
 }
 
-fs::source() {
-  local self_dir
-  self_dir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
+fs::source_related_to_file() {
+  local self_dir; self_dir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
 
   . "${self_dir}/$2" || softfail "Unable to load: ${self_dir}/$2" || return $?
 }
 
-fs::recursive_source() {
-  local self_dir file_path
-  
-  self_dir="$(dirname "$1")" || softfail "Unable to get dirname of $1" || return $?
+fs::source_recursive_related_to_file() {
+  local file_name="$1"
+  local start_from="$2"
 
-  while IFS= read -r -d '' file_path; do
-    . "${file_path}" || softfail "Unable to load: ${file_path}" || return $?
-  done < <(find "${self_dir}/$2" -type f -name '*.sh' -print0)
+  local file_dir; file_dir="$(dirname "${file_name}")" || softfail "Unable to get dirname of ${file_name}" || return $?
+
+  fs::source_recursive "${file_dir}/${start_from}" || softfail || return $?
+}
+
+fs::source_recursive() {
+  local directory_path="$1"
+
+  local item_path; for item_path in "${directory_path}"/*; do
+    if [ -d "${item_path}" ]; then
+      fs::source_recursive "${item_path}" || softfail || return $?
+    elif [ -f "${item_path}" ] && [[ "${item_path}" =~ \.sh$ ]]; then
+      . "${item_path}" || softfail "Unable to load: ${file_path}" || return $?
+    fi
+  done
 }
 
 fs::get_absolute_path() {
