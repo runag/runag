@@ -15,13 +15,25 @@
 #  limitations under the License.
 
 gpg::import_key_with_ultimate_ownertrust() {
-  local key="$1"
+  local gpg_key_id="$1"
   local source_path="$2"
 
-  if ! gpg --list-keys "${key}" >/dev/null 2>&1; then
+  if ! gpg --list-keys "${gpg_key_id}" >/dev/null 2>&1; then
     file::wait_until_available "${source_path}" || softfail || return $?
+
+    local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || fail
+    local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || fail
+
+    echo "You are about to import key: ${key_with_spaces} (${key_base64})"
+    echo "Please confirm that this is the key you expected to use by entering \"YES\""
+    local action; IFS="" read -r action || fail
+
+    if [ "${action}" != yes ] && [ "${action}" != YES ]; then
+      fail
+    fi
+
     gpg --import "${source_path}" || softfail || return $?
-    echo "${key}:6:" | gpg --import-ownertrust || softfail || return $?
+    echo "${gpg_key_id}:6:" | gpg --import-ownertrust || softfail || return $?
   fi
 }
 
