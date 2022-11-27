@@ -101,12 +101,15 @@ ssh::install_ssh_profile_from_pass() {
 
   # ssh config
   local profile_config_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
-  if pass::secret_exists "${profile_path}/config"; then
+
+  if [[ "${OSTYPE}" =~ ^linux ]] && pass::secret_exists "${profile_path}/config.linux"; then
+    pass::use --body "${profile_path}/config.linux" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+
+  elif pass::secret_exists "${profile_path}/config"; then
     pass::use --body "${profile_path}/config" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
-  else
-    if pass::secret_exists "${profile_path}/id_ed25519"; then
-      <<<"IdentityFile ${key_directory}/id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
-    fi
+    
+  elif pass::secret_exists "${profile_path}/id_ed25519"; then
+    <<<"IdentityFile ${key_directory}/id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
   fi
 
   # known hosts
