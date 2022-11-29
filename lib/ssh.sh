@@ -28,12 +28,6 @@ ssh::make_control_sockets_dir_if_not_exists() {
   dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
   dir::make_if_not_exists "${HOME}/.ssh/control-sockets" 0700 || softfail "Unable to create ssh control sockets directory" || return $?
 }
-
-ssh::make_keys_dir_if_not_exists() {
-  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
-  dir::make_if_not_exists "${HOME}/.ssh/keys" 0700 || softfail "Unable to create ssh keys directory" || return $?
-}
-
 ssh::make_config_d_dir_if_not_exists() {
   dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
   dir::make_if_not_exists_and_set_permissions "${HOME}/.ssh/ssh_config.d" 0700 || softfail "Unable to create ssh user config.d directory" || return $?
@@ -89,14 +83,10 @@ ssh::install_ssh_profile_from_pass() {
   local profile_name="$2"
 
   ssh::make_config_d_dir_if_not_exists || softfail || return $?
-  ssh::make_keys_dir_if_not_exists || softfail || return $?
-
-  local key_directory="${HOME}/.ssh/keys/${profile_name}"
-  dir::make_if_not_exists "${key_directory}" 0700 || softfail || return $?
 
   # ssh key
   if pass::secret_exists "${profile_path}/id_ed25519"; then
-    ssh::install_ssh_key_from_pass "${profile_path}/id_ed25519" "${key_directory}/id_ed25519" || softfail || return $?
+    ssh::install_ssh_key_from_pass "${profile_path}/id_ed25519" "${HOME}/.ssh/${profile_name}.id_ed25519" || softfail || return $?
   fi
 
   # ssh config
@@ -109,7 +99,7 @@ ssh::install_ssh_profile_from_pass() {
     pass::use --body "${profile_path}/config" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
     
   elif pass::secret_exists "${profile_path}/id_ed25519"; then
-    <<<"IdentityFile ${key_directory}/id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+    <<<"IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
   fi
 
   # known hosts
