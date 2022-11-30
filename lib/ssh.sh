@@ -401,8 +401,15 @@ ssh::run() {
 
   ssh::before-run "$@" || softfail "Unable to perform ssh::before-run" $? || ssh::remove_temp_files $? || return $?
 
+  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+    # shellcheck disable=2016
+    local temp_file_cleanup_command='rm -fd "${temp_dir}/script" "${temp_dir}";'
+  else
+    local temp_file_cleanup_command=''
+  fi
+
   # shellcheck disable=2029,2016
-  ssh "${ssh_args[@]}" "${REMOTE_HOST}" "$(printf "sh -c %q" "$(printf 'temp_dir=%q; bash "${temp_dir}/script"; script_status=$?; rm -fd "${temp_dir}/script" "${temp_dir}"; exit "${script_status}"' "${remote_temp_dir}")")"
+  ssh "${ssh_args[@]}" "${REMOTE_HOST}" "$(printf "sh -c %q" "$(printf 'temp_dir=%q; bash "${temp_dir}/script"; script_status=$?; %s exit "${script_status}"' "${remote_temp_dir}" "${temp_file_cleanup_command}")")"
 
   local ssh_result=$?
 
