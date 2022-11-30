@@ -339,7 +339,16 @@ ssh::script() {
   ssh::shell_options || softfail "Unable to produce shell-options" || return $?
   ssh::remote_env || softfail "Unable to produce remote-env" || return $?
 
-  declare -f || softfail "Unable to produce source code dump of functions" || return $?
+  if [ -z "${PS1}" ]; then
+    declare -f || softfail "Unable to produce source code dump of functions" || return $?
+  else
+    local function_name
+    declare -F | while IFS="" read -r function_name; do
+      if [ "${function_name:11:1}" != "_" ] && [[ ! "${function_name:11}" =~ ^(asdf|command_not_found_handle|dequote|quote|quote_readline)$ ]]; then
+        declare -f "${function_name:11}" || softfail "Unable to produce source code dump of function: ${function_name:11}" || return $?
+      fi
+    done
+  fi
 
   if [ -n "${REMOTE_DIR:-}" ]; then
     printf "cd %q || exit \$?\n" "${REMOTE_DIR}"
