@@ -31,7 +31,7 @@ benchmark::run() {
   local hostname_string; hostname_string="$(os::hostname)" || softfail || return $?
   local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
 
-  local result_file; result_file="$(mktemp -u "${HOME}/sopka-benchmark ${hostname_string} ${current_date} XXXXXXXXXX")" || softfail || return $?
+  local result_file; result_file="$(mktemp -u "${HOME}/benchmark ${hostname_string} ${current_date} XXXXXXXXXX")" || softfail || return $?
 
   benchmark::actually_run "${result_file}.txt" || softfail || return $?
 
@@ -51,7 +51,7 @@ benchmark::actually_run() {
   sysbench memory run --memory-block-size=4096 >> "${result_file}" || softfail || return $?
 
   (
-    local temp_dir; temp_dir="$(mktemp -d "${HOME}/sopka-benchmark-XXXXXXXXXX")" || softfail || return $?
+    local temp_dir; temp_dir="$(mktemp -d "${HOME}/benchmark-XXXXXXXXXX")" || softfail || return $?
     cd "${temp_dir}" || softfail || return $?
 
     benchmark::fileio "${result_file}" || softfail || return $?
