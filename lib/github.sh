@@ -26,23 +26,23 @@ github::install_profile_from_pass() {
   fi
 }
 
-github::get_release_by_label() {
+github::download_release_by_label() {
   local repo_path="$1"
   local label="$2"
   local release="${3:-latest}"
 
-  github::get-release "${repo_path}" ".label == \"${label}\"" "${release}" || softfail || return $?
+  github::download_release "${repo_path}" ".label == \"${label}\"" "${release}" || softfail || return $?
 }
 
-github::get_release_by_name() {
+github::download_release_by_name() {
   local repo_path="$1"
   local label="$2"
   local release="${3:-latest}"
 
-  github::get-release "${repo_path}" ".name | test(\"${label}\")" "${release}" || softfail || return $?
+  github::download_release "${repo_path}" ".name | test(\"${label}\")" "${release}" || softfail || return $?
 }
 
-github::get_release() {
+github::download_release() {
   local repo_path="$1"
   local query="$2"
   local release="${3:-latest}"
@@ -55,7 +55,7 @@ github::get_release() {
     fail "Can't find release URL for ${repo_path} that matched ${query} and release ${release}"
   fi
 
-  local temp_file; temp_file="$(mktemp "${HOME}/sopka-github-get-release-XXXXXXXXXX")" || softfail "Unable to create temp file" || return $?
+  local temp_file; temp_file="$(mktemp)" || softfail "Unable to create temp file" || return $?
 
   curl \
     --location \
