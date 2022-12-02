@@ -23,44 +23,44 @@ runagfile_menu::necessary() {
 
 runagfile_menu::add() {
   local command_string; printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?
-  SOPKAFILE_MENU+=("${command_string:1}")
+  RUNAGFILE_MENU+=("${command_string:1}")
 }
 
 runagfile_menu::add_raw() {
-  SOPKAFILE_MENU+=("$1")
+  RUNAGFILE_MENU+=("$1")
 }
 
 runagfile_menu::add_delimiter() {
-  SOPKAFILE_MENU+=("")
+  RUNAGFILE_MENU+=("")
 }
 
 runagfile_menu::add_header() {
-  SOPKAFILE_MENU+=("#$1")
+  RUNAGFILE_MENU+=("#$1")
 }
 
 runagfile_menu::add_subheader() {
-  SOPKAFILE_MENU+=("##$1")
+  RUNAGFILE_MENU+=("##$1")
 }
 
 runagfile_menu::add_note() {
-  SOPKAFILE_MENU+=("#/$1")
+  RUNAGFILE_MENU+=("#/$1")
 }
 
 runagfile_menu::display() {
-  if [ -z ${SOPKAFILE_MENU:+x} ]; then
+  if [ -z ${RUNAGFILE_MENU:+x} ]; then
     softfail "Menu is empty"
     return $?
   fi
-  menu::select_and_run "${SOPKAFILE_MENU[@]}"
+  menu::select_and_run "${RUNAGFILE_MENU[@]}"
   softfail_unless_good_code $?
 }
 
 runagfile_menu::present() {
-  test -n "${SOPKAFILE_MENU:+x}"
+  test -n "${RUNAGFILE_MENU:+x}"
 }
 
 runagfile_menu::clear() {
-  SOPKAFILE_MENU=()
+  RUNAGFILE_MENU=()
 }
 
 runagfile_menu::add_defaults() {

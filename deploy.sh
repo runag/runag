@@ -387,7 +387,7 @@ git::place_up_to_date_clone ()
             local dest_dir_name;
             dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?;
             local backup_path;
-            backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
+            backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
             mv "${dest_full_path}" "${backup_path}" || softfail || return $?;
             git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?;
         fi;

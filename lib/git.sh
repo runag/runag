@@ -87,7 +87,7 @@ git::place_up_to_date_clone() {
       local dest_full_path; dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?
       local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?
       local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?
-      local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-SOPKA-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
+      local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
 
       mv "${dest_full_path}" "${backup_path}" || softfail || return $?
 
