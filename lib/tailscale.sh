@@ -50,7 +50,7 @@ tailscale::issue_2541_workaround() {
 tailscale::install_issue_2541_workaround() {
   file::sudo_write /usr/local/bin/tailscale-issue-2541-workaround 755 <<SHELL || softfail || return $?
 #!/usr/bin/env bash
-$(sopka::print_license)
+$(runag::print_license)
 $(declare -f tailscale::issue_2541_workaround)
 tailscale::issue_2541_workaround || { echo "Unable to perform tailscale::issue_2541_workaround" >&2; exit 1; }
 SHELL

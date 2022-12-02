@@ -28,7 +28,7 @@ fi
 
 # BEGIN load_sopka_library
 
-sopka::load_sopka_library() {
+runag::load_sopka_library() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
     local bin_path; bin_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
@@ -54,7 +54,7 @@ sopka::load_sopka_library() {
 }
 
 # Load sopka library index file
-sopka::load_sopka_library || {
+runag::load_sopka_library || {
   echo "Unable to load sopka library index file ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced

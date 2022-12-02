@@ -81,7 +81,7 @@ shellrc::load_if_exists() {
 
 shellrc::install_sopka_path_rc() {
   shellrc::write "sopka-path" <<SHELL || softfail || return $?
-$(sopka::print_license)
+$(runag::print_license)
 
 if [ -d "\${HOME}/.sopka/bin" ]; then
   export PATH="\${HOME}/.sopka/bin:\${PATH}"
@@ -91,7 +91,7 @@ SHELL
 
 shellrc::install_direnv_rc() {
   shellrc::write "direnv" <<SHELL || softfail || return $?
-$(sopka::print_license)
+$(runag::print_license)
 
 if command -v direnv >/dev/null; then
   export DIRENV_LOG_FORMAT=""
@@ -107,7 +107,7 @@ SHELL
 shellrc::install_editor_rc() {
   local editor_path="$1"
   shellrc::write "editor" <<SHELL || softfail || return $?
-$(sopka::print_license)
+$(runag::print_license)
 
 if [ -z "\${EDITOR:-}" ]; then
   if command -v ${editor_path} >/dev/null; then
@@ -119,7 +119,7 @@ SHELL
 
 shellrc::install_append_to_bash_history_file_after_each_command_rc() {
   shellrc::write "append-to-bash-history-file-after-each-command" <<SHELL || softfail || return $?
-$(sopka::print_license)
+$(runag::print_license)
 
 if [ -n "\${BASH_VERSION:-}" ]; then
   export PROMPT_COMMAND="history -a"

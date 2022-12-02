@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopka::load_lib() {
+runag::load_lib() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
     local index_path; index_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
@@ -41,8 +41,8 @@ sopka::load_lib() {
   done
 }
 
-sopka::load_lib || {
-  echo "Unable to perform sopka::load_lib' ($?)" >&2
+runag::load_lib || {
+  echo "Unable to perform runag::load_lib' ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
   else

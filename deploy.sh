@@ -413,7 +413,7 @@ sopkafile::add ()
     git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
-sopka::deploy_sh_main () 
+runag::deploy_sh_main () 
 { 
     if [ "${RUNAG_VERBOSE:-}" = true ]; then
         set -o xtrace;
@@ -427,6 +427,6 @@ sopka::deploy_sh_main ()
 
 export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/senotrusov/sopka.git}"
 
-sopka::deploy_sh_main "$@"
+runag::deploy_sh_main "$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "$@"

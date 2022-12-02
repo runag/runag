@@ -16,7 +16,7 @@
 
 . bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
 
-sopka::deploy_sh_main() {
+runag::deploy_sh_main() {
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
     set -o xtrace
   fi
@@ -35,7 +35,7 @@ sopka_remote_url="$(git::get_remote_url_without_username)" || fail
 file::write deploy.sh <<SHELL || fail
 #!/usr/bin/env bash
 
-$(sopka::print_license)
+$(runag::print_license)
 
 # Script is wrapped inside a function with a random name to lower the chance
 # of "curl | bash" to run some unexpected command in case if script download fails in the middle.
@@ -56,11 +56,11 @@ $(declare -f git::place_up_to_date_clone)
 
 $(declare -f sopkafile::add)
 
-$(declare -f sopka::deploy_sh_main)
+$(declare -f runag::deploy_sh_main)
 
 export RUNAG_DIST_REPO="\${RUNAG_DIST_REPO:-$(printf "%q" "${sopka_remote_url}")}"
 
-sopka::deploy_sh_main "\$@"
+runag::deploy_sh_main "\$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "\$@"
 SHELL

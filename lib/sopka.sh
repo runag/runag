@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopka::print_license() {
+runag::print_license() {
   cat <<SHELL
 #  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
 #
@@ -32,7 +32,7 @@ sopka::print_license() {
 SHELL
 }
 
-sopka::update() {
+runag::update() {
   if [ -d "${HOME}/.sopka/.git" ]; then
     git -C "${HOME}/.sopka" pull || softfail || return $?
   fi
@@ -40,7 +40,7 @@ sopka::update() {
   sopkafile::update-everything-in-sopka || softfail || return $?
 }
 
-sopka::create_or_update_offline_install() {
+runag::create_or_update_offline_install() {
   local sopka_path="${HOME}"/.sopka
 
   if [ ! -d "${sopka_path}/.git" ]; then
@@ -74,7 +74,7 @@ sopka::create_or_update_offline_install() {
 # it will dump all current runagfiles, not a good idea
 # is systemwide-install the good idea at all?
 #
-# sopka::install_systemwide() {
+# runag::install_systemwide() {
 #   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 #
 #   file::get_block "${RUNAG_BIN_PATH}" set_shell_options >>"${temp_file}" || softfail || return $?

@@ -110,7 +110,7 @@ vmware::vm_network_loss_workaround() {
 vmware::install_vm_network_loss_workaround() {
   file::sudo_write /usr/local/bin/vmware-vm-network-loss-workaround 755 <<SHELL || softfail || return $?
 #!/usr/bin/env bash
-$(sopka::print_license)
+$(runag::print_license)
 $(declare -f vmware::vm_network_loss_workaround)
 vmware::vm_network_loss_workaround || { echo "Unable to perform vmware::vm_network_loss_workaround" >&2; exit 1; }
 SHELL

@@ -51,7 +51,7 @@ rbenv::install_shellrc() {
   fi
 
   file::write --mode 0600 "${output}" <<SHELL || softfail || return $?
-$(sopka::print_license)
+$(runag::print_license)
 
 if [ -d "\${HOME}/.rbenv/bin" ]; then
   if ! [[ ":\${PATH}:" == *":\${HOME}/.rbenv/bin:"* ]]; then

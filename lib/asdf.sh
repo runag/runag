@@ -34,7 +34,7 @@ asdf::install_with_shellrc() {
 
 asdf::install_shellrc() {
   shellrc::write "asdf" <<SHELL || softfail || return $?
-$(sopka::print_license)
+$(runag::print_license)
 
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
   . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
