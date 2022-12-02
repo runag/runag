@@ -314,18 +314,11 @@ Please use [ShellCheck](https://www.shellcheck.net/). If it is not integrated in
 
 We mostly follow [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html).
 
-To help us track contributions, we use [Developer Certificate of Origin](https://en.wikipedia.org/wiki/Developer_Certificate_of_Origin).
+Licensed under the [Apache License, Version 2.0](LICENSE).
+
+Inspired by practices of [the Linux Foundation](https://www.linuxfoundation.org/) we use [Developer Certificate of Origin](https://developercertificate.org/) to help us track contributions. 
 
 If you can certify the below:
-
-Developer Certificate of Origin
-Version 1.1
-
-Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
-
-Everyone is permitted to copy and distribute verbatim copies of this
-license document, but changing it is not allowed.
-
 
 Developer's Certificate of Origin 1.1
 
@@ -357,4 +350,8 @@ then please add a line saying:
 
 Signed-off-by: Your Name <your_email@example.org>
 
-to each of your commit messages. You could use `git commit -s` to help you with that.
+to each of your commit messages using your real name. You could use `git commit -s` to help you with that.
+
+In some cases, we may agree that you use a pseudonym for a contributions. You will be required to provide us with your real name using private channels with the agreement that we will make your real name public after some time. Upon our agreement, this can be a significant period, for example, 10 years after the initial contribution, maybe more. The use of pseudonyms for the contributions must not be a means to hide unauthorized use of intellectual property or to circumvent contractual obligations. We may accept contributions under the pseudonyms if the author has reason to be concerned for their safety or feels restricted in their freedom of expression as a result of societal pressure.
+
+We want as much of the project as possible to be self-contained in the form of a collection of source code and data. Keeping the private list of contributors requires some ongoing effort of people or organizations, that is such a resource that we do not always have in sufficient quantity. However, we understand that sometimes this may be necessary and will try to help you.
