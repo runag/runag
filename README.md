@@ -68,7 +68,7 @@ Possible sopkafile locations are:
 ~/.sopkafile.sh
 ~/.sopkafile/index.sh
 
-~/.sopka/sopkafiles/*/index.sh
+~/.sopka/runagfiles/*/index.sh
 ```
 
 ## API docs

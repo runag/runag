@@ -410,7 +410,7 @@ sopkafile::add ()
     user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;
     local repo_name;
     repo_name="$(cut -d "/" -f 2 <<< "$1")" || softfail || return $?;
-    git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/sopkafiles/${repo_name}-${user_name}-github" || softfail || return $?
+    git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
 sopka::deploy_sh_main () 

@@ -55,23 +55,23 @@ sopka::create_or_update_offline_install() {
 
   ( cd "${sopka_path}" && git::add_or_update_remote "offline-install" "${current_directory}/sopka.git" && git fetch "offline-install" ) || softfail || return $?
 
-  dir::make_if_not_exists "sopkafiles" || softfail || return $?
+  dir::make_if_not_exists "runagfiles" || softfail || return $?
 
-  local sopkafile_path; for sopkafile_path in "${sopka_path}/sopkafiles"/*; do
+  local sopkafile_path; for sopkafile_path in "${sopka_path}/runagfiles"/*; do
     if [ -d "${sopkafile_path}" ]; then
       local sopkafile_dir_name; sopkafile_dir_name="$(basename "${sopkafile_path}")" || softfail || return $?
       local sopkafile_remote_url; sopkafile_remote_url="$(git -C "${sopkafile_path}" remote get-url origin)" || softfail || return $?
 
-      git::create_or_update_mirror "${sopkafile_remote_url}" "sopkafiles/${sopkafile_dir_name}" || softfail || return $?
+      git::create_or_update_mirror "${sopkafile_remote_url}" "runagfiles/${sopkafile_dir_name}" || softfail || return $?
 
-      ( cd "${sopkafile_path}" && git::add_or_update_remote "offline-install" "${current_directory}/sopkafiles/${sopkafile_dir_name}" && git fetch "offline-install" ) || softfail || return $?
+      ( cd "${sopkafile_path}" && git::add_or_update_remote "offline-install" "${current_directory}/runagfiles/${sopkafile_dir_name}" && git fetch "offline-install" ) || softfail || return $?
     fi
   done
 
   cp -f "${sopka_path}/src/deploy-offline.sh" . || softfail || return $?
 }
 
-# it will dump all current sopkafiles, not a good idea
+# it will dump all current runagfiles, not a good idea
 # is systemwide-install the good idea at all?
 #
 # sopka::install_systemwide() {

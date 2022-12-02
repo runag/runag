@@ -20,17 +20,17 @@ sopkafile::add_from_list() {
       echo "Adding sopkafile from ${line}..."
       sopkafile::add "${line}" || softfail "Unable to add sopkafile ${line}" || return $?
     fi
-  done || softfail "Unable to add sopkafiles from list" || return $?
+  done || softfail "Unable to add runagfiles from list" || return $?
 }
 
 sopkafile::add() {
   local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
   local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
-  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/sopkafiles/${repo_name}-${user_name}-github" || softfail || return $?
+  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
 sopkafile::update-everything-in-sopka() {
-  local sopkafile_dir; for sopkafile_dir in "${HOME}"/.sopka/sopkafiles/*; do
+  local sopkafile_dir; for sopkafile_dir in "${HOME}"/.sopka/runagfiles/*; do
     if [ -d "${sopkafile_dir}/.git" ]; then
       git -C "${sopkafile_dir}" pull || softfail || return $?
     fi
@@ -47,7 +47,7 @@ sopkafile::update-everything-in-sopka() {
 # ~/.sopkafile
 # ~/.sopkafile/index.sh
 #
-# ~/.sopka/sopkafiles/*/index.sh
+# ~/.sopka/runagfiles/*/index.sh
 #
 sopkafile::load() {
   if [ -f "./sopkafile.sh" ]; then
@@ -72,12 +72,12 @@ sopkafile::load() {
 
   else
     sopkafile::load-everything-from-sopka
-    softfail_unless_good "Unable to load sopkafiles from .sopka ($?)" $? || return $?
+    softfail_unless_good "Unable to load runagfiles from .sopka ($?)" $? || return $?
   fi
 }
 
 sopkafile::load-everything-from-sopka() {
-  local file_path; for file_path in "${HOME}"/.sopka/sopkafiles/*/index.sh; do
+  local file_path; for file_path in "${HOME}"/.sopka/runagfiles/*/index.sh; do
     if [ -f "${file_path}" ]; then
       . "${file_path}"
       softfail_unless_good "Unable to load '${file_path}' ($?)" $? || return $?
