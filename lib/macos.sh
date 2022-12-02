@@ -20,7 +20,7 @@ macos::increase_maxfiles_limit() {
   local soft_limit="${1:-"262144"}"
   local hard_limit="${2:-"524288"}"
 
-  local label="sopka.limit.maxfiles"
+  local label="runag.limit.maxfiles"
   local dst="/Library/LaunchDaemons/${label}.plist"
 
   if [ ! -f "${dst}" ]; then
@@ -47,7 +47,7 @@ macos::increase_maxfiles_limit() {
   </dict>
 </plist>
 HTML
-    echo "increase-maxfiles-limit: Please reboot your computer" >&2
+    echo "increase_maxfiles_limit: Please reboot your computer" >&2
   fi
 }
 
