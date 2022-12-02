@@ -54,7 +54,7 @@ $(declare -f apt::update)
 $(declare -f git::install_git)
 $(declare -f git::place_up_to_date_clone)
 
-$(declare -f sopkafile::add)
+$(declare -f runagfile::add)
 
 $(declare -f runag::deploy_sh_main)
 

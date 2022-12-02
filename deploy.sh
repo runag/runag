@@ -33,7 +33,7 @@ deploy_script ()
 }
 deploy_script::add () 
 { 
-    task::run_with_install_filter sopkafile::add "$1" || softfail || return $?;
+    task::run_with_install_filter runagfile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
     softfail_unless_good_code $?
 }
@@ -404,7 +404,7 @@ git::place_up_to_date_clone ()
     fi
 }
 
-sopkafile::add () 
+runagfile::add () 
 { 
     local user_name;
     user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;

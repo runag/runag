@@ -14,69 +14,69 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sopkafile::add_from_list() {
+runagfile::add_from_list() {
   local line; while IFS="" read -r line; do
     if [ -n "${line}" ]; then
-      echo "Adding sopkafile from ${line}..."
-      sopkafile::add "${line}" || softfail "Unable to add sopkafile ${line}" || return $?
+      echo "Adding runagfile from ${line}..."
+      runagfile::add "${line}" || softfail "Unable to add runagfile ${line}" || return $?
     fi
   done || softfail "Unable to add runagfiles from list" || return $?
 }
 
-sopkafile::add() {
+runagfile::add() {
   local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
   local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
   git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
-sopkafile::update-everything-in-sopka() {
-  local sopkafile_dir; for sopkafile_dir in "${HOME}"/.sopka/runagfiles/*; do
-    if [ -d "${sopkafile_dir}/.git" ]; then
-      git -C "${sopkafile_dir}" pull || softfail || return $?
+runagfile::update-everything-in-sopka() {
+  local runagfile_dir; for runagfile_dir in "${HOME}"/.sopka/runagfiles/*; do
+    if [ -d "${runagfile_dir}/.git" ]; then
+      git -C "${runagfile_dir}" pull || softfail || return $?
     fi
   done
 }
 
-# Find and load sopkafile.
+# Find and load runagfile.
 #
 # Possible locations are:
 #
-# ./sopkafile
-# ./sopkafile/index.sh
+# ./runagfile
+# ./runagfile/index.sh
 #
-# ~/.sopkafile
-# ~/.sopkafile/index.sh
+# ~/.runagfile
+# ~/.runagfile/index.sh
 #
 # ~/.sopka/runagfiles/*/index.sh
 #
-sopkafile::load() {
-  if [ -f "./sopkafile.sh" ]; then
-    . "./sopkafile.sh"
-    softfail_unless_good "Unable to load './sopkafile.sh' ($?)" $?
+runagfile::load() {
+  if [ -f "./runagfile.sh" ]; then
+    . "./runagfile.sh"
+    softfail_unless_good "Unable to load './runagfile.sh' ($?)" $?
     return $?
 
-  elif [ -f "./sopkafile/index.sh" ]; then
-    . "./sopkafile/index.sh"
-    softfail_unless_good "Unable to load './sopkafile/index.sh' ($?)" $?
+  elif [ -f "./runagfile/index.sh" ]; then
+    . "./runagfile/index.sh"
+    softfail_unless_good "Unable to load './runagfile/index.sh' ($?)" $?
     return $?
 
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile.sh" ]; then
-    . "${HOME:-}/.sopkafile.sh"
-    softfail_unless_good "Unable to load '${HOME:-}/.sopkafile.sh' ($?)" $?
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile.sh" ]; then
+    . "${HOME:-}/.runagfile.sh"
+    softfail_unless_good "Unable to load '${HOME:-}/.runagfile.sh' ($?)" $?
     return $?
 
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.sopkafile/index.sh" ]; then
-    . "${HOME:-}/.sopkafile/index.sh"
-    softfail_unless_good "Unable to load '${HOME:-}/.sopkafile/index.sh' ($?)" $?
+  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile/index.sh" ]; then
+    . "${HOME:-}/.runagfile/index.sh"
+    softfail_unless_good "Unable to load '${HOME:-}/.runagfile/index.sh' ($?)" $?
     return $?
 
   else
-    sopkafile::load-everything-from-sopka
+    runagfile::load-everything-from-sopka
     softfail_unless_good "Unable to load runagfiles from .sopka ($?)" $? || return $?
   fi
 }
 
-sopkafile::load-everything-from-sopka() {
+runagfile::load-everything-from-sopka() {
   local file_path; for file_path in "${HOME}"/.sopka/runagfiles/*/index.sh; do
     if [ -f "${file_path}" ]; then
       . "${file_path}"

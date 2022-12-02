@@ -55,9 +55,9 @@ install_path="${HOME}"/.sopka
 clone_local_mirror_perhaps sopka.git "${install_path}" "offline-install" || fail
 
 ( if cd runagfiles >/dev/null 2>&1; then
-  for sopkafile in *; do
-    if [ -d "${sopkafile}" ]; then
-      clone_local_mirror_perhaps "${sopkafile}" "${install_path}/runagfiles/${sopkafile}" "offline-install" || fail
+  for runagfile in *; do
+    if [ -d "${runagfile}" ]; then
+      clone_local_mirror_perhaps "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail
     fi
   done
 fi ) || fail

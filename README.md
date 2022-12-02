@@ -24,7 +24,7 @@ You are looking at the repository which mostly contains a standard library. For 
 
   * [🚞 Runagfile to configure my workstation](https://github.com/senotrusov/workstation-runagfile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
 
-  * [🚋 Example sopkafile with rails and node](https://github.com/senotrusov/example-sopkafile-with-rails-and-node). That I use to deploy my Rails/Node.js projects to Linux servers. I usually put that into the project directory to extend with project-specific stuff.
+  * [🚋 Example runagfile with rails and node](https://github.com/senotrusov/example-runagfile-with-rails-and-node). That I use to deploy my Rails/Node.js projects to Linux servers. I usually put that into the project directory to extend with project-specific stuff.
 
 ## One-liner to deploy sopka an a new machine
 
@@ -57,16 +57,16 @@ bash deploy-offline.sh
 
 ## Runagfile
 
-Runag is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Runag into your scripts with `. sopka` or you could make a file called `sopkafile` and then run `sopka`.
+Runag is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Runag into your scripts with `. sopka` or you could make a file called `runagfile` and then run `sopka`.
 
-Possible sopkafile locations are:
+Possible runagfile locations are:
 
 ```sh
-./sopkafile.sh
-./sopkafile/index.sh
+./runagfile.sh
+./runagfile/index.sh
 
-~/.sopkafile.sh
-~/.sopkafile/index.sh
+~/.runagfile.sh
+~/.runagfile/index.sh
 
 ~/.sopka/runagfiles/*/index.sh
 ```
@@ -84,8 +84,8 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
 * [sopka](lib/sopka.sh)
-* [sopkafile_menu](lib/sopkafile_menu.sh)
-* [sopkafile](lib/sopkafile.sh)
+* [runagfile_menu](lib/runagfile_menu.sh)
+* [runagfile](lib/runagfile.sh)
 * [terminal](lib/terminal.sh)
 
 ### General utility

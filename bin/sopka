@@ -65,19 +65,19 @@ runag::load_sopka_library || {
 
 # END load_sopka_library
 
-# BEGIN invoke_sopkafile
+# BEGIN invoke_runagfile
 
 # == we should have all library functions available by now ==
 
 # I don't use "user-function || fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
 
-# Load sopkafile
+# Load runagfile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
-  sopkafile::load
-  softfail_unless_good "Unable to load sopkafile ($?)" $? || return $?
+  runagfile::load
+  softfail_unless_good "Unable to load runagfile ($?)" $? || return $?
 else # we are not sourced
-  sopkafile::load
-  softfail_unless_good "Unable to load sopkafile ($?)" $? || exit $?
+  runagfile::load
+  softfail_unless_good "Unable to load runagfile ($?)" $? || exit $?
 fi
 
 # if there is something in the first argument, run it
@@ -99,11 +99,11 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
-# if we are not sourced, try to run sopkafile::main or display sopka-menu 
+# if we are not sourced, try to run runagfile::main or display sopka-menu 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  if declare -f sopkafile::main >/dev/null; then
-    sopkafile::main
-    softfail_unless_good "Error performing sopkafile::main ($?)" $?
+  if declare -f runagfile::main >/dev/null; then
+    runagfile::main
+    softfail_unless_good "Error performing runagfile::main ($?)" $?
     exit $?
   elif runagfile_menu::present && [ -t 0 ] && [ -t 1 ]; then
     runagfile_menu::display
@@ -111,8 +111,8 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     exit $?
   fi
 
-  log::error "Please specify a function name or command to run, or define a sopkafile::main, or add one or more items to sopka-menu to see it if you run sopka in terminal"
+  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to sopka-menu to see it if you run sopka in terminal"
   exit 1
 fi
 
-# END invoke_sopkafile
+# END invoke_runagfile
