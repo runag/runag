@@ -14,9 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# Script is wrapped inside a function with a random name to lower the chance
-# of "curl | bash" to run some unexpected command in case if script download fails in the middle.
 
+# This script is wrapped inside a function with a random name to lower the chance for the bash to run some 
+# unexpected commands in case if "curl | bash" fails in the middle of download.
 __xVhMyefCbBnZFUQtwqCs() {
 
 deploy_script () 
