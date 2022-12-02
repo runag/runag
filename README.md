@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# 🏔️ Runag
+# 🛼 Runag
 
 Runag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell was used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
 
@@ -22,20 +22,18 @@ It probably won't help you to deploy some complex cloud setups, but it can confi
 
 You are looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with it please check those other repositories:
 
-  * [🚞 Runagfile to configure my workstation](https://github.com/senotrusov/workstation-runagfile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
-
-  * [🚋 Example runagfile with rails and node](https://github.com/senotrusov/example-runagfile-with-rails-and-node). That I use to deploy my Rails/Node.js projects to Linux servers. I usually put that into the project directory to extend with project-specific stuff.
+  * [🛷 Runagfile to configure my workstation](https://github.com/runag/workstation-runagfile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
 
 ## One-liner to deploy runag an a new machine
 
 ### Linux
 ```sh
-bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/runag/main/deploy.sh) [commands...]
+bash <(wget -qO- https://raw.githubusercontent.com/runag/runag/main/deploy.sh) [commands...]
 ```
 
 ### MacOS
 ```sh
-bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/runag/main/deploy.sh) [commands...]
+bash <(curl -Ssf https://raw.githubusercontent.com/runag/runag/main/deploy.sh) [commands...]
 ```
 
 ### Commands: 

@@ -425,7 +425,7 @@ runag::deploy_sh_main ()
     softfail_unless_good_code $?
 }
 
-export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/senotrusov/runag.git}"
+export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"
 
 runag::deploy_sh_main "$@"
 
