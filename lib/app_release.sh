@@ -129,7 +129,7 @@ app_release::link_shared_file() {
   fi
 
   if [ -e "${link_path}" ]; then
-    local backup_name; backup_name="$(mktemp -d "${app_release_path}/.sopka-app-release-link-backup-XXXXXXXXXX")" || softfail || return $?
+    local backup_name; backup_name="$(mktemp -d "${app_release_path}/.app-release-link-backup-XXXXXXXXXX")" || softfail || return $?
     mv "${link_path}" "${backup_name}" || softfail || return $?
   fi
 
