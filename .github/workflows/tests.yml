@@ -69,6 +69,7 @@ jobs:
     - name: Run configure script
       run: DISPLAY=:42 dbus-launch xvfb-run --server-num 42 bash <(wget -qO- https://raw.githubusercontent.com/runag/runag/main/deploy.sh) add runag/workstation-runagfile run workstation::linux::configure 2>&1
 
+
   windows-workstation:
     name: workstation::windows::deploy_configuration
     runs-on: ${{ matrix.os }}
