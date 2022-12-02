@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 runag::print_license() {
   cat <<SHELL
-#  Copyright 2012-2022 Stanislav Senotrusov <stan@senotrusov.com>
+#  Copyright 2012-2022 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.

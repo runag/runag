@@ -4,7 +4,7 @@
   "homepage": "https://github.com/senotrusov/runag",
   "bugs": "https://github.com/senotrusov/runag/issues",
   "license": "Apache-2.0",
-  "author": "Stanislav Senotrusov",
+  "author": "Runag project contributors",
   "bin": {
     "runag": "bin/runag"
   },
