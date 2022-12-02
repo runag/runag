@@ -72,7 +72,7 @@ runag::create_or_update_offline_install() {
 }
 
 # it will dump all current runagfiles, not a good idea
-# is systemwide-install the good idea at all?
+# is systemwide-install a good idea at all?
 #
 # runag::install_systemwide() {
 #   local temp_file; temp_file="$(mktemp)" || softfail || return $?
