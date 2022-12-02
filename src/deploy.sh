@@ -17,14 +17,14 @@
 . bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
 
 sopka::deploy_sh_main() {
-  if [ "${SOPKA_VERBOSE:-}" = true ]; then
+  if [ "${RUNAG_VERBOSE:-}" = true ]; then
     set -o xtrace
   fi
   set -o nounset
 
   task::run_with_install_filter git::install_git || softfail || return $?
 
-  task::run_with_install_filter git::place_up_to_date_clone "${SOPKA_DIST_REPO}" "${HOME}/.sopka" || softfail || return $?
+  task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.sopka" || softfail || return $?
 
   deploy_script "$@"
   softfail_unless_good_code $?
@@ -58,7 +58,7 @@ $(declare -f sopkafile::add)
 
 $(declare -f sopka::deploy_sh_main)
 
-export SOPKA_DIST_REPO="\${SOPKA_DIST_REPO:-$(printf "%q" "${sopka_remote_url}")}"
+export RUNAG_DIST_REPO="\${RUNAG_DIST_REPO:-$(printf "%q" "${sopka_remote_url}")}"
 
 sopka::deploy_sh_main "\$@"
 

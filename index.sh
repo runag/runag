@@ -28,9 +28,9 @@ sopka::load_lib() {
   # get absolute path to dirname
   local sopka_dir; sopka_dir="$(cd "${unresolved_sopka_dir}" >/dev/null 2>&1 && pwd)" || { echo "Unable to determine absolute path for '${unresolved_sopka_dir}' ($?)" >&2; return 1; }
 
-  # set SOPKA_BIN_PATH if needed
-  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${sopka_dir}/bin/sopka" ] && [ -x "${sopka_dir}/bin/sopka" ]; then
-    export SOPKA_BIN_PATH="${sopka_dir}/bin/sopka"
+  # set RUNAG_BIN_PATH if needed
+  if [ -z "${RUNAG_BIN_PATH:-}" ] && [ -f "${sopka_dir}/bin/sopka" ] && [ -x "${sopka_dir}/bin/sopka" ]; then
+    export RUNAG_BIN_PATH="${sopka_dir}/bin/sopka"
   fi
 
   # load all lib/*.sh

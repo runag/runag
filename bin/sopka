@@ -18,7 +18,7 @@
 
 # set shell options if we are not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  if [ "${SOPKA_VERBOSE:-}" = true ]; then
+  if [ "${RUNAG_VERBOSE:-}" = true ]; then
     set -o xtrace
   fi
   set -o nounset
@@ -45,9 +45,9 @@ sopka::load_sopka_library() {
   # get absolute path to dirname
   local bin_dir; bin_dir="$(cd "${unresolved_bin_dir}" >/dev/null 2>&1 && pwd)" || { echo "Unable to determine absolute path for '${unresolved_bin_dir}' ($?)" >&2; return 1; }
 
-  # set SOPKA_BIN_PATH if needed
-  if [ -z "${SOPKA_BIN_PATH:-}" ] && [ -f "${bin_dir}/${bin_name}" ] && [ -x "${bin_dir}/${bin_name}" ]; then
-    export SOPKA_BIN_PATH="${bin_dir}/${bin_name}"
+  # set RUNAG_BIN_PATH if needed
+  if [ -z "${RUNAG_BIN_PATH:-}" ] && [ -f "${bin_dir}/${bin_name}" ] && [ -x "${bin_dir}/${bin_name}" ]; then
+    export RUNAG_BIN_PATH="${bin_dir}/${bin_name}"
   fi
 
   . "${bin_dir}/../index.sh" || { echo "Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }

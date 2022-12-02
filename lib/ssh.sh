@@ -307,7 +307,7 @@ ssh::set_args() {
 }
 
 ssh::shell_options() {
-  if shopt -o -q xtrace || [ "${SOPKA_VERBOSE:-}" = true ]; then
+  if shopt -o -q xtrace || [ "${RUNAG_VERBOSE:-}" = true ]; then
     echo "set -o xtrace"
   fi
 
@@ -317,7 +317,7 @@ ssh::shell_options() {
 }
 
 ssh::remote_env::base_list() {
-  echo "SOPKA_UPDATE_SECRETS SOPKA_TASK_VERBOSE SOPKA_VERBOSE SOPKA_STDOUT_IS_TERMINAL SOPKA_STDERR_IS_TERMINAL"
+  echo "RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE RUNAG_STDOUT_IS_TERMINAL RUNAG_STDERR_IS_TERMINAL"
 }
 
 ssh::remote_env() {
@@ -365,7 +365,7 @@ ssh::script() {
 ssh::remove_temp_files() {
   local exit_status="${1:-0}"
 
-  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ] && [ -n "${temp_dir:-}" ]; then
+  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ] && [ -n "${temp_dir:-}" ]; then
     rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail "Unable to remote temp files" || return $?
   fi
 
@@ -385,12 +385,12 @@ ssh::before-run() {
 
   # shellcheck disable=2034
   if [ -t 1 ]; then
-    local SOPKA_STDOUT_IS_TERMINAL=true
+    local RUNAG_STDOUT_IS_TERMINAL=true
   fi
 
   # shellcheck disable=2034
   if [ -t 2 ]; then
-    local SOPKA_STDERR_IS_TERMINAL=true
+    local RUNAG_STDERR_IS_TERMINAL=true
   fi
 
   ssh::script "$@" >"${temp_dir}/script" || softfail "Unable to produce script" || return $?
@@ -410,7 +410,7 @@ ssh::run() {
 
   ssh::before-run "$@" || softfail "Unable to perform ssh::before-run" $? || ssh::remove_temp_files $? || return $?
 
-  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
     # shellcheck disable=2016
     local temp_file_cleanup_command='rm -fd "${temp_dir}/script" "${temp_dir}";'
   else
@@ -430,49 +430,49 @@ ssh::run() {
 
 ssh::task_with_install_filter() {
   # shellcheck disable=2034
-  local SOPKA_TASK_STDERR_FILTER=task::install_filter
+  local RUNAG_TASK_STDERR_FILTER=task::install_filter
   ssh::task "$@"
 }
 
 ssh::task_with_rubygems_fail_detector() {
   # shellcheck disable=2034
-  local SOPKA_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
+  local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
   ssh::task "$@"
 }
 
 ssh::task_without_title() {
   # shellcheck disable=2034
-  local SOPKA_TASK_OMIT_TITLE=true
+  local RUNAG_TASK_OMIT_TITLE=true
   ssh::task "$@"
 }
 
 ssh::task_with_title() {
   # shellcheck disable=2034
-  local SOPKA_TASK_TITLE="$1"
+  local RUNAG_TASK_TITLE="$1"
   ssh::task "${@:2}"
 }
 
 ssh::task_with_short_title() {
   # shellcheck disable=2034
-  local SOPKA_TASK_TITLE="$1"
+  local RUNAG_TASK_TITLE="$1"
   ssh::task "$@"
 }
 
 ssh::task_verbose() {
   # shellcheck disable=2034
-  local SOPKA_TASK_VERBOSE=true
+  local RUNAG_TASK_VERBOSE=true
   ssh::task "$@"
 }
 
 ssh::call() {
   # shellcheck disable=2034
-  local SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true
+  local RUNAG_TASK_VERBOSE=true RUNAG_TASK_OMIT_TITLE=true
   ssh::task "$@"
 }
 
 ssh::call_with_remote_temp_copy() {
   # shellcheck disable=2034
-  local SOPKA_TASK_VERBOSE=true SOPKA_TASK_OMIT_TITLE=true
+  local RUNAG_TASK_VERBOSE=true RUNAG_TASK_OMIT_TITLE=true
   ssh::task_with_remote_temp_copy "$@"
 }
 
@@ -557,8 +557,8 @@ ssh::task::information_message() {
 ssh::task() {
   local ssh_args=() temp_dir script_checksum remote_temp_dir information_message_state
 
-  if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-    log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || ssh::task::softfail "Unable to display title" || return $?
+  if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
+    log::notice "Performing '${RUNAG_TASK_TITLE:-"$*"}'..." || ssh::task::softfail "Unable to display title" || return $?
   fi
 
   ssh::before-run "$@" || ssh::task::softfail "Unable to perform ssh::before-run" $? || ssh::remove_temp_files $? || return $?
@@ -575,7 +575,7 @@ ssh::task() {
     ssh::task::information_message "Got 255 as an exit status from local ssh command. That could be transport error or remote command may actually return 255. Will now attempt to reconnect to get a real remote command exit status and stdio streams..."
   fi
 
-  local max_retries="${SOPKA_TASK_RECONNECT_ATTEMPTS:-120}"
+  local max_retries="${RUNAG_TASK_RECONNECT_ATTEMPTS:-120}"
   local i; for ((i=1; i<=max_retries; i++)); do
 
     ssh::task::get_result
@@ -592,7 +592,7 @@ ssh::task() {
     fi
 
     information_message_state=clean_state
-    sleep "${SOPKA_TASK_RECONNECT_DELAY:-5}"
+    sleep "${RUNAG_TASK_RECONNECT_DELAY:-5}"
   done
 
   if [ "${get_result_result}" = 255 ]; then
@@ -613,7 +613,7 @@ ssh::task() {
   task::complete || ssh::task::softfail "Unable to perform task::complete" || ssh::remove_temp_files $? || return $?
 
   # Note, that after that point we don't return any exit status other than task_status
-  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
     ssh::task::invoke 'rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}/output_concat_good" "${temp_dir}/exit_status" "${temp_dir}/done" "${temp_dir}"' || ssh::task::softfail "Unable to remove remote temp files"
 
     ssh::remove_temp_files || ssh::task::softfail "Unable to remove temp files"

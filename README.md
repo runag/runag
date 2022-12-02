@@ -166,18 +166,18 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 ### General
 
-#### `SOPKA_BIN_PATH`
+#### `RUNAG_BIN_PATH`
 
 That variable is here to help you to generate scripts or systemd units that might need to use sopka.
 Anywhere you put sopka, the variable will reflect it actual location.
 If you put sopka into your home directory them value will be `"${HOME}/.sopka/bin"`.
 You could use that file as an executable or you could source that file in your scripts.
 
-#### `SOPKA_UPDATE_SECRETS`
+#### `RUNAG_UPDATE_SECRETS`
 
 Could be set to `"true"`
 
-#### `SOPKA_VERBOSE`
+#### `RUNAG_VERBOSE`
 
 Could be set to `"true"`
 
@@ -210,7 +210,7 @@ Space-separated list of environment variable names, to be set in remote script
 with the values present in the calling sopka instance at the moment of ssh call.
 Example list is: `"FOO BAR QUX"`.
 For any provided names (or for absence of them),
-sopka will internaly add `"SOPKA_UPDATE_SECRETS SOPKA_TASK_VERBOSE SOPKA_VERBOSE"`.
+sopka will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE"`.
 
 #### `REMOTE_HOST`
 
@@ -251,22 +251,22 @@ By default sopka will not provide any user name so ssh could use it's defaults.
 
 ### Rsync-related variables
 
-#### `SOPKA_RSYNC_ARGS`
+#### `RUNAG_RSYNC_ARGS`
 
 Array of strings, for example `("--archive")`
 
-#### `SOPKA_RSYNC_DELETE_AND_BACKUP`
+#### `RUNAG_RSYNC_DELETE_AND_BACKUP`
 
 Could be set to `"true"`
 
-#### `SOPKA_RSYNC_WITHOUT_CHECKSUMS`
+#### `RUNAG_RSYNC_WITHOUT_CHECKSUMS`
 
 Could be set to `"true"`
 
 
 ### Tasks-related variables
 
-#### `SOPKA_TASK_FAIL_DETECTOR`
+#### `RUNAG_TASK_FAIL_DETECTOR`
 
 Could be set to function name. The function will be called with 3 arguments:
 
@@ -278,27 +278,27 @@ $3 # task_status (integer exit status)
 
 The function must return new exit status which will be assumed to be an exit status of the task.
 
-#### `SOPKA_TASK_KEEP_TEMP_FILES`
+#### `RUNAG_TASK_KEEP_TEMP_FILES`
 
 Could be set to `"true"`
 
-#### `SOPKA_TASK_RECONNECT_ATTEMPTS`
+#### `RUNAG_TASK_RECONNECT_ATTEMPTS`
 
 Integer
 
-#### `SOPKA_TASK_RECONNECT_DELAY`
+#### `RUNAG_TASK_RECONNECT_DELAY`
 
 Integer (could be float but that depends on your `sleep` command implementation).
 
-#### `SOPKA_TASK_SSH_JUMP`
+#### `RUNAG_TASK_SSH_JUMP`
 
 Run tasks on remote machine through ssh
 
-#### `SOPKA_TASK_STDERR_FILTER`
+#### `RUNAG_TASK_STDERR_FILTER`
 
 Could be set to function name. Function is expected to filter it's input. If function output is empty then stderr will not be displayed.
 
-#### `SOPKA_TASK_VERBOSE`
+#### `RUNAG_TASK_VERBOSE`
 
 Could be set to `"true"`
 
@@ -306,10 +306,10 @@ Could be set to `"true"`
 ### Internal variables, not to be used by non-library code
 
 ```
-SOPKA_NODENV_INITIALIZED
-SOPKA_RBENV_INITIALIZED
-SOPKA_TASK_OMIT_TITLE
-SOPKA_TASK_TITLE
+RUNAG_NODENV_INITIALIZED
+RUNAG_RBENV_INITIALIZED
+RUNAG_TASK_OMIT_TITLE
+RUNAG_TASK_TITLE
 ```
 
 ## Contributing

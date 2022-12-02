@@ -16,59 +16,59 @@
 
 task::with_verbose_task() {(
   if [ -t 1 ]; then
-    log::notice "SOPKA_TASK_VERBOSE flag is set" || softfail || return $?
+    log::notice "RUNAG_TASK_VERBOSE flag is set" || softfail || return $?
   fi
-  export SOPKA_TASK_VERBOSE=true
+  export RUNAG_TASK_VERBOSE=true
   "$@"
 )}
 
 task::with_update_secrets() {(
   if [ -t 1 ]; then
-    log::notice "SOPKA_UPDATE_SECRETS flag is set" || softfail || return $?
+    log::notice "RUNAG_UPDATE_SECRETS flag is set" || softfail || return $?
   fi
-  export SOPKA_UPDATE_SECRETS=true
+  export RUNAG_UPDATE_SECRETS=true
   "$@"
 )}
 
 task::ssh_jump() {
   # shellcheck disable=2034
-  local SOPKA_TASK_SSH_JUMP=true
+  local RUNAG_TASK_SSH_JUMP=true
   "$@"
 }
 
 task::run_with_install_filter() {
   # shellcheck disable=2034
-  local SOPKA_TASK_STDERR_FILTER=task::install_filter
+  local RUNAG_TASK_STDERR_FILTER=task::install_filter
   task::run "$@"
 }
 
 task::run_with_rubygems_fail_detector() {
   # shellcheck disable=2034
-  local SOPKA_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
+  local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
   task::run "$@"
 }
 
 task::run_without_title() {
   # shellcheck disable=2034
-  local SOPKA_TASK_OMIT_TITLE=true
+  local RUNAG_TASK_OMIT_TITLE=true
   task::run "$@"
 }
 
 task::run_with_title() {
   # shellcheck disable=2034
-  local SOPKA_TASK_TITLE="$1"
+  local RUNAG_TASK_TITLE="$1"
   task::run "${@:2}"
 }
 
 task::run_with_short_title() {
   # shellcheck disable=2034
-  local SOPKA_TASK_TITLE="$1"
+  local RUNAG_TASK_TITLE="$1"
   task::run "$@"
 }
 
 task::run_verbose() {
   # shellcheck disable=2034
-  local SOPKA_TASK_VERBOSE=true
+  local RUNAG_TASK_VERBOSE=true
   task::run "$@"
 }
 
@@ -86,22 +86,22 @@ task::rubygems_fail_detector() {
 task::detect_fail_state() {
   local task_status="$3"
 
-  if [ -z "${SOPKA_TASK_FAIL_DETECTOR:-}" ]; then
+  if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
     return "${task_status}"
   fi
 
-  "${SOPKA_TASK_FAIL_DETECTOR}" "$@"
+  "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
 }
 
 # shellcheck disable=SC2030
 task::run() {(
-  if [ "${SOPKA_TASK_SSH_JUMP:-}" = true ]; then
+  if [ "${RUNAG_TASK_SSH_JUMP:-}" = true ]; then
     ssh::task "$@"
     return $?
   fi
 
-  if [ "${SOPKA_TASK_OMIT_TITLE:-}" != true ]; then
-    log::notice "Performing '${SOPKA_TASK_TITLE:-"$*"}'..." || softfail || return $?
+  if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
+    log::notice "Performing '${RUNAG_TASK_TITLE:-"$*"}'..." || softfail || return $?
   fi
   
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $? # temp_dir also used in task::cleanup signal handler
@@ -141,7 +141,7 @@ task::install_filter() {
 task::is_stderr_empty_after_filtering() {
   local stderr_file="$1"
 
-  local stderr_size; stderr_size="$("${SOPKA_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+  local stderr_size; stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
 
   if [ "${stderr_size}" != 0 ]; then
     return 1
@@ -152,7 +152,7 @@ task::is_stderr_empty_after_filtering() {
 task::complete_with_cleanup() {
   task::complete || softfail || return $?
 
-  if [ "${SOPKA_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
     rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?
   fi
 }
@@ -164,12 +164,12 @@ task::complete() {
 
   if [ "${task_status:-1}" = 0 ] && [ -s "${temp_dir}/stderr" ]; then
     stderr_present=true
-    if [ -n "${SOPKA_TASK_STDERR_FILTER:-}" ] && task::is_stderr_empty_after_filtering "${temp_dir}/stderr"; then
+    if [ -n "${RUNAG_TASK_STDERR_FILTER:-}" ] && task::is_stderr_empty_after_filtering "${temp_dir}/stderr"; then
       stderr_present=false
     fi
   fi
 
-  if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${SOPKA_VERBOSE:-}" = true ] || [ "${SOPKA_TASK_VERBOSE:-}" = true ]; then
+  if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${RUNAG_VERBOSE:-}" = true ] || [ "${RUNAG_TASK_VERBOSE:-}" = true ]; then
 
     if [ -s "${temp_dir}/stdout" ]; then
       cat "${temp_dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=1; }

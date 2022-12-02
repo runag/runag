@@ -46,9 +46,9 @@ if [ -d "\${HOME}/.nodenv/bin" ]; then
 fi
 
 if command -v nodenv >/dev/null; then
-  if [ -z \${SOPKA_NODENV_INITIALIZED+x} ]; then
+  if [ -z \${RUNAG_NODENV_INITIALIZED+x} ]; then
     eval "\$(nodenv init -)" || { echo "Unable to init nodenv" >&2; return 1; }
-    export SOPKA_NODENV_INITIALIZED=true
+    export RUNAG_NODENV_INITIALIZED=true
   fi
 fi
 SHELL

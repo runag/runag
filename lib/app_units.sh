@@ -23,7 +23,7 @@ app_units::run() {
     units_list+=("${APP_NAME}-${item}") || softfail || return $?
   done
 
-  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+  if [ "${RUNAG_STDOUT_IS_TERMINAL:-}" = true ]; then
     local systemd_colors=1
   else
     local systemd_colors=0
@@ -39,7 +39,7 @@ app_units::run_if_exists() {
     units_list+=("${APP_NAME}-${item}") || softfail || return $?
   done
 
-  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+  if [ "${RUNAG_STDOUT_IS_TERMINAL:-}" = true ]; then
     local systemd_colors=1
   else
     local systemd_colors=0
@@ -61,7 +61,7 @@ app_units::run_for_services_only() {
     fi
   done
 
-  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+  if [ "${RUNAG_STDOUT_IS_TERMINAL:-}" = true ]; then
     local systemd_colors=1
   else
     local systemd_colors=0
@@ -77,7 +77,7 @@ app_units::run_with_units() {
     units_list+=(--unit "${APP_NAME}-${item}") || softfail || return $?
   done
 
-  if [ "${SOPKA_STDOUT_IS_TERMINAL:-}" = true ]; then
+  if [ "${RUNAG_STDOUT_IS_TERMINAL:-}" = true ]; then
     local systemd_colors=1
   else
     local systemd_colors=0

@@ -60,11 +60,11 @@ if [ -d "\${HOME}/.rbenv/bin" ]; then
 fi
 
 if command -v rbenv >/dev/null; then
-  if [ -z \${SOPKA_RBENV_INITIALIZED+x} ]; then
+  if [ -z \${RUNAG_RBENV_INITIALIZED+x} ]; then
     eval "\$(rbenv init -)" || { echo "Unable to init rbenv" >&2; return 1; }
     ${ruby_configure_opts_line}
     ${openssl_line}
-    export SOPKA_RBENV_INITIALIZED=true
+    export RUNAG_RBENV_INITIALIZED=true
   fi
 fi
 SHELL

@@ -120,7 +120,7 @@ pass::use() {
       softfail "${callback_function}::exists should be available as function or command" || return $?
     fi
 
-    if [ "${SOPKA_UPDATE_SECRETS:-}" != "true" ] && "${callback_function}::exists" "$@"; then
+    if [ "${RUNAG_UPDATE_SECRETS:-}" != "true" ] && "${callback_function}::exists" "$@"; then
       return
     fi
   fi

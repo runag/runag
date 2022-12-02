@@ -109,7 +109,7 @@ bitwarden::write_notes_to_file_if_not_exists() {
   local output_file="$2"
   local mode="${3:-"600"}"
 
-  if [ ! -f "${output_file}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
+  if [ ! -f "${output_file}" ] || [ "${RUNAG_UPDATE_SECRETS:-}" = "true" ]; then
     bitwarden::write_notes_to_file "${bitwarden_object_id}" "${output_file}" "${mode}" || softfail || return $?
   fi
 }
@@ -137,7 +137,7 @@ bitwarden::write_password_to_file_if_not_exists() {
   local output_file="$2"
   local mode="${3:-"600"}"
 
-  if [ ! -f "${output_file}" ] || [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ]; then
+  if [ ! -f "${output_file}" ] || [ "${RUNAG_UPDATE_SECRETS:-}" = "true" ]; then
     bitwarden::write_password_to_file "${bitwarden_object_id}" "${output_file}" "${mode}" || softfail || return $?
   fi
 }
@@ -184,7 +184,7 @@ bitwarden::use() {
     return $?
   fi
 
-  if [ "${SOPKA_UPDATE_SECRETS:-}" = "true" ] || ! ( unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD && "${function_prefix}::exists" "${@:3}" ); then
+  if [ "${RUNAG_UPDATE_SECRETS:-}" = "true" ] || ! ( unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD && "${function_prefix}::exists" "${@:3}" ); then
     bitwarden::unlock_and_sync || softfail || return $?
     
     local secrets_list=()

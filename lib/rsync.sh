@@ -23,7 +23,7 @@ rsync::sync_from_remote() {
 }
 
 rsync::set_args() {
-  if [ "${SOPKA_RSYNC_DELETE_AND_BACKUP:-}" = "true" ]; then
+  if [ "${RUNAG_RSYNC_DELETE_AND_BACKUP:-}" = "true" ]; then
     local timestamp; timestamp="$(date --utc +"%Y%m%dT%H%M%SZ")" || softfail || return $?
 
     rsync_args+=("--delete")
@@ -32,12 +32,12 @@ rsync::set_args() {
     rsync_args+=("--filter=protect_.sopka-rsync-backups")
   fi
 
-  if [ "${SOPKA_RSYNC_WITHOUT_CHECKSUMS:-}" != "true" ]; then
+  if [ "${RUNAG_RSYNC_WITHOUT_CHECKSUMS:-}" != "true" ]; then
     rsync_args+=("--checksum")
   fi
 
-  if declare -p SOPKA_RSYNC_ARGS >/dev/null 2>&1; then
-    rsync_args=("${rsync_args[@]}" "${SOPKA_RSYNC_ARGS[@]}")
+  if declare -p RUNAG_RSYNC_ARGS >/dev/null 2>&1; then
+    rsync_args=("${rsync_args[@]}" "${RUNAG_RSYNC_ARGS[@]}")
   fi
 }
 
