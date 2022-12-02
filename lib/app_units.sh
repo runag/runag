@@ -148,16 +148,16 @@ app_units::follow_journal() {
   app_units::run_with_units journalctl --lines=1000 --follow "$@" || softfail_code $? || return $?
 }
 
-app_units::sopkafile_menu::add_all::remote() {
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::enable || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::enable_now || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::disable || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::disable_now || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::start || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::stop || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::restart || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task "$2" app_units::restart_services || softfail || return $?
-  sopkafile_menu::add "$1" ssh::task_verbose "$2" app_units::statuses || softfail || return $?
-  sopkafile_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
-  sopkafile_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
+app_units::runagfile_menu::add_all::remote() {
+  runagfile_menu::add "$1" ssh::task "$2" app_units::enable || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::enable_now || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::disable || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::disable_now || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::start || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::stop || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::restart || softfail || return $?
+  runagfile_menu::add "$1" ssh::task "$2" app_units::restart_services || softfail || return $?
+  runagfile_menu::add "$1" ssh::task_verbose "$2" app_units::statuses || softfail || return $?
+  runagfile_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
+  runagfile_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
 }
