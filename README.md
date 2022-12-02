@@ -22,7 +22,7 @@ It probably won't help you to deploy some complex cloud setups, but it can confi
 
 You are looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with it please check those other repositories:
 
-  * [🚞 Runagfile to configure my workstation](https://github.com/senotrusov/workstation-sopkafile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
+  * [🚞 Runagfile to configure my workstation](https://github.com/senotrusov/workstation-runagfile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
 
   * [🚋 Example sopkafile with rails and node](https://github.com/senotrusov/example-sopkafile-with-rails-and-node). That I use to deploy my Rails/Node.js projects to Linux servers. I usually put that into the project directory to extend with project-specific stuff.
 
