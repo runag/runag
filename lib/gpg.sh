@@ -57,7 +57,7 @@ gpg::decrypt_and_source_script() {
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?
 
   # I don't want to put data in file system here so I'll use fifo
-  # I want sopka code to be bash-3.2 compatible so I can't use coproc
+  # I want runag code to be bash-3.2 compatible so I can't use coproc
   mkfifo -m 600 "${temp_dir}/fifo" || softfail || return $?
 
   gpg --decrypt "${source_path}" >"${temp_dir}/fifo" &

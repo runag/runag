@@ -33,31 +33,31 @@ SHELL
 }
 
 runag::update() {
-  if [ -d "${HOME}/.sopka/.git" ]; then
-    git -C "${HOME}/.sopka" pull || softfail || return $?
+  if [ -d "${HOME}/.runag/.git" ]; then
+    git -C "${HOME}/.runag" pull || softfail || return $?
   fi
 
-  runagfile::update-everything-in-sopka || softfail || return $?
+  runagfile::update-everything-in-runag || softfail || return $?
 }
 
 runag::create_or_update_offline_install() {
-  local sopka_path="${HOME}"/.sopka
+  local runag_path="${HOME}"/.runag
 
-  if [ ! -d "${sopka_path}/.git" ]; then
-    softfail "Unable to find sopka checkout" || return $?
+  if [ ! -d "${runag_path}/.git" ]; then
+    softfail "Unable to find runag checkout" || return $?
   fi
 
   local current_directory; current_directory="$(pwd)" || softfail || return $?
 
-  local sopka_remote_url; sopka_remote_url="$(git -C "${sopka_path}" remote get-url origin)" || softfail || return $?
+  local runag_remote_url; runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?
 
-  git::create_or_update_mirror "${sopka_remote_url}" sopka.git || softfail || return $?
+  git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?
 
-  ( cd "${sopka_path}" && git::add_or_update_remote "offline-install" "${current_directory}/sopka.git" && git fetch "offline-install" ) || softfail || return $?
+  ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${current_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?
 
   dir::make_if_not_exists "runagfiles" || softfail || return $?
 
-  local runagfile_path; for runagfile_path in "${sopka_path}/runagfiles"/*; do
+  local runagfile_path; for runagfile_path in "${runag_path}/runagfiles"/*; do
     if [ -d "${runagfile_path}" ]; then
       local runagfile_dir_name; runagfile_dir_name="$(basename "${runagfile_path}")" || softfail || return $?
       local runagfile_remote_url; runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?
@@ -68,7 +68,7 @@ runag::create_or_update_offline_install() {
     fi
   done
 
-  cp -f "${sopka_path}/src/deploy-offline.sh" . || softfail || return $?
+  cp -f "${runag_path}/src/deploy-offline.sh" . || softfail || return $?
 }
 
 # it will dump all current runagfiles, not a good idea
@@ -83,9 +83,9 @@ runag::create_or_update_offline_install() {
 #
 #   file::get_block "${RUNAG_BIN_PATH}" invoke_runagfile >>"${temp_file}" || softfail || return $?
 #
-#   sudo install -m 755 -o root -g root "${temp_file}" /usr/local/bin/sopka.tmp || softfail || return $?
+#   sudo install -m 755 -o root -g root "${temp_file}" /usr/local/bin/runag.tmp || softfail || return $?
 #
-#   sudo mv /usr/local/bin/sopka.tmp /usr/local/bin/sopka || softfail || return $?
+#   sudo mv /usr/local/bin/runag.tmp /usr/local/bin/runag || softfail || return $?
 #
 #   rm "${temp_file}" || softfail || return $?
 # }

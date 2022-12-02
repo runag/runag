@@ -214,7 +214,7 @@ bitwarden::remote_file::save() {(
   <<<"${secret_key}" ssh::call file::write --mode "${mode}" "${file_path}" || softfail "Unable to write remote file" || return $?
 )}
 
-# sopka bitwarden::use username password uri "test record" bitwarden::test hello there
+# runag bitwarden::use username password uri "test record" bitwarden::test hello there
 
 # bitwarden::test::exists() {
 #   local item index=1

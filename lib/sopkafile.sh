@@ -26,11 +26,11 @@ runagfile::add_from_list() {
 runagfile::add() {
   local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
   local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
-  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
+  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
-runagfile::update-everything-in-sopka() {
-  local runagfile_dir; for runagfile_dir in "${HOME}"/.sopka/runagfiles/*; do
+runagfile::update-everything-in-runag() {
+  local runagfile_dir; for runagfile_dir in "${HOME}"/.runag/runagfiles/*; do
     if [ -d "${runagfile_dir}/.git" ]; then
       git -C "${runagfile_dir}" pull || softfail || return $?
     fi
@@ -47,7 +47,7 @@ runagfile::update-everything-in-sopka() {
 # ~/.runagfile
 # ~/.runagfile/index.sh
 #
-# ~/.sopka/runagfiles/*/index.sh
+# ~/.runag/runagfiles/*/index.sh
 #
 runagfile::load() {
   if [ -f "./runagfile.sh" ]; then
@@ -71,13 +71,13 @@ runagfile::load() {
     return $?
 
   else
-    runagfile::load-everything-from-sopka
-    softfail_unless_good "Unable to load runagfiles from .sopka ($?)" $? || return $?
+    runagfile::load-everything-from-runag
+    softfail_unless_good "Unable to load runagfiles from .runag ($?)" $? || return $?
   fi
 }
 
-runagfile::load-everything-from-sopka() {
-  local file_path; for file_path in "${HOME}"/.sopka/runagfiles/*/index.sh; do
+runagfile::load-everything-from-runag() {
+  local file_path; for file_path in "${HOME}"/.runag/runagfiles/*/index.sh; do
     if [ -f "${file_path}" ]; then
       . "${file_path}"
       softfail_unless_good "Unable to load '${file_path}' ($?)" $? || return $?

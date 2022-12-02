@@ -79,12 +79,12 @@ shellrc::load_if_exists() {
   fi
 }
 
-shellrc::install_sopka_path_rc() {
-  shellrc::write "sopka-path" <<SHELL || softfail || return $?
+shellrc::install_runag_path_rc() {
+  shellrc::write "runag-path" <<SHELL || softfail || return $?
 $(runag::print_license)
 
-if [ -d "\${HOME}/.sopka/bin" ]; then
-  export PATH="\${HOME}/.sopka/bin:\${PATH}"
+if [ -d "\${HOME}/.runag/bin" ]; then
+  export PATH="\${HOME}/.runag/bin:\${PATH}"
 fi
 SHELL
 }

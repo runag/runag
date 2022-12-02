@@ -95,7 +95,7 @@ softfail_unless_good::internal() {
   return "${exit_status}"
 }
 
-# sopka test::fail-foo; echo exit status: $?
+# runag test::fail-foo; echo exit status: $?
 
 # test::fail-foo() {
 #   test::fail-bar

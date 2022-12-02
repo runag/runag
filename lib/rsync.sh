@@ -28,8 +28,8 @@ rsync::set_args() {
 
     rsync_args+=("--delete")
     rsync_args+=("--backup")
-    rsync_args+=("--backup-dir=.sopka-rsync-backups/${timestamp}")
-    rsync_args+=("--filter=protect_.sopka-rsync-backups")
+    rsync_args+=("--backup-dir=.runag-rsync-backups/${timestamp}")
+    rsync_args+=("--filter=protect_.runag-rsync-backups")
   fi
 
   if [ "${RUNAG_RSYNC_WITHOUT_CHECKSUMS:-}" != "true" ]; then
@@ -65,4 +65,4 @@ rsync::run() {
   rsync --rsh "ssh ${ssh_args_string:1}" "$@" || softfail || return $?
 }
 
-# REMOTE_HOST=example.com sopka rsync::upload ~/.sopka/ .sopka
+# REMOTE_HOST=example.com runag rsync::upload ~/.runag/ .runag

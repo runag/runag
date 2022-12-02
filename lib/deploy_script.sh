@@ -34,7 +34,7 @@ deploy_script::add() {
 }
 
 deploy_script::run() {
-  "${HOME}/.sopka/bin/sopka" "$@"
+  "${HOME}/.runag/bin/runag" "$@"
   softfail_unless_good_code $?
 }
 

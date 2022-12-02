@@ -46,13 +46,13 @@ clone_local_mirror_perhaps() {
   fi
 }
 
-if [ ! -d sopka.git ]; then
-  fail "Unable to find sopka.git directory"
+if [ ! -d runag.git ]; then
+  fail "Unable to find runag.git directory"
 fi
 
-install_path="${HOME}"/.sopka
+install_path="${HOME}"/.runag
 
-clone_local_mirror_perhaps sopka.git "${install_path}" "offline-install" || fail
+clone_local_mirror_perhaps runag.git "${install_path}" "offline-install" || fail
 
 ( if cd runagfiles >/dev/null 2>&1; then
   for runagfile in *; do
@@ -62,4 +62,4 @@ clone_local_mirror_perhaps sopka.git "${install_path}" "offline-install" || fail
   done
 fi ) || fail
 
-"${install_path}"/bin/sopka
+"${install_path}"/bin/runag

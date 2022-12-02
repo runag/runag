@@ -39,7 +39,7 @@ deploy_script::add ()
 }
 deploy_script::run () 
 { 
-    "${HOME}/.sopka/bin/sopka" "$@";
+    "${HOME}/.runag/bin/runag" "$@";
     softfail_unless_good_code $?
 }
 fail () 
@@ -410,7 +410,7 @@ runagfile::add ()
     user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;
     local repo_name;
     repo_name="$(cut -d "/" -f 2 <<< "$1")" || softfail || return $?;
-    git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.sopka/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
+    git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
 runag::deploy_sh_main () 
@@ -420,12 +420,12 @@ runag::deploy_sh_main ()
     fi;
     set -o nounset;
     task::run_with_install_filter git::install_git || softfail || return $?;
-    task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.sopka" || softfail || return $?;
+    task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     deploy_script "$@";
     softfail_unless_good_code $?
 }
 
-export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/senotrusov/sopka.git}"
+export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/senotrusov/runag.git}"
 
 runag::deploy_sh_main "$@"
 

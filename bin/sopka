@@ -26,9 +26,9 @@ fi
 
 # END set_shell_options
 
-# BEGIN load_sopka_library
+# BEGIN load_runag_library
 
-runag::load_sopka_library() {
+runag::load_runag_library() {
   # resolve symlink if needed
   if [ -L "${BASH_SOURCE[0]}" ]; then
     local bin_path; bin_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
@@ -53,9 +53,9 @@ runag::load_sopka_library() {
   . "${bin_dir}/../index.sh" || { echo "Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }
 }
 
-# Load sopka library index file
-runag::load_sopka_library || {
-  echo "Unable to load sopka library index file ($?)" >&2
+# Load runag library index file
+runag::load_runag_library || {
+  echo "Unable to load runag library index file ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
   else
@@ -63,7 +63,7 @@ runag::load_sopka_library || {
   fi
 }
 
-# END load_sopka_library
+# END load_runag_library
 
 # BEGIN invoke_runagfile
 
@@ -99,7 +99,7 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
-# if we are not sourced, try to run runagfile::main or display sopka-menu 
+# if we are not sourced, try to run runagfile::main or display runag-menu 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -f runagfile::main >/dev/null; then
     runagfile::main
@@ -111,7 +111,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     exit $?
   fi
 
-  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to sopka-menu to see it if you run sopka in terminal"
+  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to runag-menu to see it if you run runag in terminal"
   exit 1
 fi
 

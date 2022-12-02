@@ -37,14 +37,14 @@ linux::dangerously_set_hostname() {
   sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
 
   if [ -f "${hosts_file}" ]; then
-    grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" | sudo tee "${hosts_file}.sopka-new" >/dev/null
+    grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" | sudo tee "${hosts_file}.runag-new" >/dev/null
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   fi
 
-  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" "${hosts_file}.sopka-new" || softfail || return $?
+  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" "${hosts_file}.runag-new" || softfail || return $?
 
-  sudo cp "${hosts_file}" "${hosts_file}.before-sopka-changes" || softfail || return $?
-  sudo mv "${hosts_file}.sopka-new" "${hosts_file}" || softfail || return $?
+  sudo cp "${hosts_file}" "${hosts_file}.before-runag-changes" || softfail || return $?
+  sudo mv "${hosts_file}.runag-new" "${hosts_file}" || softfail || return $?
 }
 
 linux::set_locale() {
@@ -63,7 +63,7 @@ linux::configure_inotify() {
   local max_user_watches="${1:-1048576}"
   local max_user_instances="${2:-2048}"
 
-  file::sudo_write /etc/sysctl.d/sopka-inotify.conf <<EOF || softfail || return $?
+  file::sudo_write /etc/sysctl.d/runag-inotify.conf <<EOF || softfail || return $?
 fs.inotify.max_user_watches=${max_user_watches}
 fs.inotify.max_user_instances=${max_user_instances}
 EOF
@@ -200,7 +200,7 @@ linux::install_gnome_keyring_and_libsecret::apt() {
       || softfail || return $?
 }
 
-linux::install_sopka_essential_dependencies::apt() {
+linux::install_runag_essential_dependencies::apt() {
   apt::install \
     apt-transport-https \
     curl \

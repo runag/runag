@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
+. bin/runag || { echo "Unable to load runag" >&2; exit 1; }
 
 shdoc::install() {
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?

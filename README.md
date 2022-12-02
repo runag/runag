@@ -26,16 +26,16 @@ You are looking at the repository which mostly contains a standard library. For 
 
   * [🚋 Example runagfile with rails and node](https://github.com/senotrusov/example-runagfile-with-rails-and-node). That I use to deploy my Rails/Node.js projects to Linux servers. I usually put that into the project directory to extend with project-specific stuff.
 
-## One-liner to deploy sopka an a new machine
+## One-liner to deploy runag an a new machine
 
 ### Linux
 ```sh
-bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [commands...]
+bash <(wget -qO- https://raw.githubusercontent.com/senotrusov/runag/main/deploy.sh) [commands...]
 ```
 
 ### MacOS
 ```sh
-bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/sopka/main/deploy.sh) [commands...]
+bash <(curl -Ssf https://raw.githubusercontent.com/senotrusov/runag/main/deploy.sh) [commands...]
 ```
 
 ### Commands: 
@@ -48,8 +48,8 @@ run [function-name [function-arguments]]
 
 ```sh
 # create offline install
-mkdir sopka-offline-install && cd sopka-offline-install
-sopka offline_sopka_install::create_or_update
+mkdir runag-offline-install && cd runag-offline-install
+runag offline_runag_install::create_or_update
 
 # install from it
 bash deploy-offline.sh
@@ -57,7 +57,7 @@ bash deploy-offline.sh
 
 ## Runagfile
 
-Runag is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Runag into your scripts with `. sopka` or you could make a file called `runagfile` and then run `sopka`.
+Runag is a collection of functions that you might just load into your bash terminal with `. runag`, but most of the time you operate with scripts in files. You could source Runag into your scripts with `. runag` or you could make a file called `runagfile` and then run `runag`.
 
 Possible runagfile locations are:
 
@@ -68,7 +68,7 @@ Possible runagfile locations are:
 ~/.runagfile.sh
 ~/.runagfile/index.sh
 
-~/.sopka/runagfiles/*/index.sh
+~/.runag/runagfiles/*/index.sh
 ```
 
 ## API docs
@@ -83,7 +83,7 @@ I slowly try to document that thing. Please refer to the source code for now.
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
-* [sopka](lib/sopka.sh)
+* [runag](lib/runag.sh)
 * [runagfile_menu](lib/runagfile_menu.sh)
 * [runagfile](lib/runagfile.sh)
 * [terminal](lib/terminal.sh)
@@ -166,9 +166,9 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 #### `RUNAG_BIN_PATH`
 
-That variable is here to help you to generate scripts or systemd units that might need to use sopka.
-Anywhere you put sopka, the variable will reflect it actual location.
-If you put sopka into your home directory them value will be `"${HOME}/.sopka/bin"`.
+That variable is here to help you to generate scripts or systemd units that might need to use runag.
+Anywhere you put runag, the variable will reflect it actual location.
+If you put runag into your home directory them value will be `"${HOME}/.runag/bin"`.
 You could use that file as an executable or you could source that file in your scripts.
 
 #### `RUNAG_UPDATE_SECRETS`
@@ -184,19 +184,19 @@ Could be set to `"true"`
 
 #### `REMOTE_CONTROL_MASTER`
 
-Session sharing is enabled by default in sopka (except when running on Windows).
+Session sharing is enabled by default in runag (except when running on Windows).
 By default ControlMaster will be set to `"auto"`.
 To disable session sharing, set this to `"no"`.
 
 #### `REMOTE_CONTROL_PATH`
 
 Path to the control socket.
-By default sopka will use `"${HOME}/.ssh/control-socket.%C"`.
+By default runag will use `"${HOME}/.ssh/control-socket.%C"`.
 
 #### `REMOTE_CONTROL_PERSIST`
 
 To disable `ControlPersist` set this to `"no"`.
-By default sopka will use `600` seconds.
+By default runag will use `600` seconds.
 
 #### `REMOTE_DIR`
 
@@ -205,10 +205,10 @@ Remote directory to run script in.
 #### `REMOTE_ENV`
 
 Space-separated list of environment variable names, to be set in remote script
-with the values present in the calling sopka instance at the moment of ssh call.
+with the values present in the calling runag instance at the moment of ssh call.
 Example list is: `"FOO BAR QUX"`.
 For any provided names (or for absence of them),
-sopka will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE"`.
+runag will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE"`.
 
 #### `REMOTE_HOST`
 
@@ -218,19 +218,19 @@ This variable is required to be set.
 #### `REMOTE_IDENTITY_FILE`
 
 Path to identity file, for example `"${HOME}/.ssh/id_ed25519"`.
-By default sopka will not provide any identity file path so ssh could use it's defaults.
+By default runag will not provide any identity file path so ssh could use it's defaults.
 
 #### `REMOTE_PORT`
 
 Port number. 
-By default sopka will not provide any port number so ssh could use it's defaults.
+By default runag will not provide any port number so ssh could use it's defaults.
 
 #### `REMOTE_SERVER_ALIVE_INTERVAL`
 
 Will set `ServerAliveInterval`.
-By default sopka will set `"20"` as `ServerAliveInterval`.
+By default runag will set `"20"` as `ServerAliveInterval`.
 You could set this to `"0"` to tell ssh to disable server alive messages.
-You could set this to `"no"` then sopka will not set that variable at all,
+You could set this to `"no"` then runag will not set that variable at all,
 thus ssh could potentially use a value from your ssh config file.
 
 #### `REMOTE_SSH_ARGS`
@@ -244,7 +244,7 @@ Umask for remote commands
 #### `REMOTE_USER`
 
 User name.
-By default sopka will not provide any user name so ssh could use it's defaults.
+By default runag will not provide any user name so ssh could use it's defaults.
 
 
 ### Rsync-related variables

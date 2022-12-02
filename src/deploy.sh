@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/sopka || { echo "Unable to load sopka" >&2; exit 1; }
+. bin/runag || { echo "Unable to load runag" >&2; exit 1; }
 
 runag::deploy_sh_main() {
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
@@ -24,13 +24,13 @@ runag::deploy_sh_main() {
 
   task::run_with_install_filter git::install_git || softfail || return $?
 
-  task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.sopka" || softfail || return $?
+  task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
 
   deploy_script "$@"
   softfail_unless_good_code $?
 }
 
-sopka_remote_url="$(git::get_remote_url_without_username)" || fail
+runag_remote_url="$(git::get_remote_url_without_username)" || fail
 
 file::write deploy.sh <<SHELL || fail
 #!/usr/bin/env bash
@@ -58,7 +58,7 @@ $(declare -f runagfile::add)
 
 $(declare -f runag::deploy_sh_main)
 
-export RUNAG_DIST_REPO="\${RUNAG_DIST_REPO:-$(printf "%q" "${sopka_remote_url}")}"
+export RUNAG_DIST_REPO="\${RUNAG_DIST_REPO:-$(printf "%q" "${runag_remote_url}")}"
 
 runag::deploy_sh_main "\$@"
 

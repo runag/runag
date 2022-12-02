@@ -69,7 +69,7 @@ runagfile_menu::add_defaults() {
   runagfile_menu::add task::with_update_secrets runagfile_menu::display || softfail || return $?
   runagfile_menu::add task::with_verbose_task runagfile_menu::display || softfail || return $?
 
-  if [ -d "${HOME}/.sopka" ]; then
+  if [ -d "${HOME}/.runag" ]; then
     runagfile_menu::add_header "Runag and runagfiles" || softfail || return $?
     
     runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
