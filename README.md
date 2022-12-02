@@ -16,13 +16,13 @@ limitations under the License.
 
 # 🛼 Runag
 
-Runag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell was used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
+Runag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell is used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
 
-It probably won't help you to deploy some complex cloud setups, but it can configure a pretty solid workstation and bootstrap some simple servers.
+It probably won't help you to deploy some complex setups, but it can configure a pretty solid workstation and bootstrap some simple servers.
 
-You are looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with it please check those other repositories:
+You are now looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with the library please check "runagfiles", that resides in other repositories:
 
-  * [🛷 Runagfile to configure my workstation](https://github.com/runag/workstation-runagfile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
+  * [🛷 Runagfile to configure a workstation](https://github.com/runag/workstation-runagfile). With one command it creates a computer that I could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
 
 ## One-liner to deploy runag an a new machine
 
@@ -39,7 +39,7 @@ bash <(curl -Ssf https://raw.githubusercontent.com/runag/runag/main/deploy.sh) [
 ### Commands: 
 ```sh
 add user/repo
-run [function-name [function-arguments]]
+run [function_name [function_arguments]]
 ```
 
 ## Offline install
@@ -53,25 +53,32 @@ runag offline_runag_install::create_or_update
 bash deploy-offline.sh
 ```
 
+## Use of the library in scripts or interactive use
+
+Runag is a collection of functions that you might load into your interactive bash terminal or in your scripts with the `. runag` or `source runag` command.
+
 ## Runagfile
 
-Runag is a collection of functions that you might just load into your bash terminal with `. runag`, but most of the time you operate with scripts in files. You could source Runag into your scripts with `. runag` or you could make a file called `runagfile` and then run `runag`.
+You could make a file called `runagfile` and then run `runag` to execute commands from it. You could also have a directory called `runagfile` that must contain an `index.sh` file. At your convenience you could organise the rest of the files in that directory.
 
 Possible runagfile locations are:
 
 ```sh
+# in current working directory
 ./runagfile.sh
 ./runagfile/index.sh
 
+# in users home directory
 ~/.runagfile.sh
 ~/.runagfile/index.sh
 
+# inside of the collection of runagfiles that were added to a runag installation
 ~/.runag/runagfiles/*/index.sh
 ```
 
 ## API docs
 
-I slowly try to document that thing. Please refer to the source code for now.
+Please refer to the source code for now.
 
 <!-- API TOC BEGIN -->
 
