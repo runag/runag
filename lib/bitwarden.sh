@@ -14,6 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+
+# TODO: remove ::exists/::save
+# I deprecated ::exists/::save api and don't have time to update bitwarden code right now as I use pass right now
+
 bitwarden::install_cli::snap() {(
   unset BW_SESSION BW_CLIENTID BW_CLIENTSECRET BW_PASSWORD
 
