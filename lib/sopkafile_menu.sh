@@ -70,7 +70,7 @@ runagfile_menu::add_defaults() {
   runagfile_menu::add task::with_verbose_task runagfile_menu::display || softfail || return $?
 
   if [ -d "${HOME}/.sopka" ]; then
-    runagfile_menu::add_header "Sopka and sopkafiles" || softfail || return $?
+    runagfile_menu::add_header "Runag and sopkafiles" || softfail || return $?
     
     runagfile_menu::add sopka::create_or_update_offline_install || softfail || return $?
     runagfile_menu::add sopka::update || softfail || return $?

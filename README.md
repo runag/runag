@@ -14,17 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# 🏔️ Sopka
+# 🏔️ Runag
 
-Sopka is my attempt to tame the complexity of deploying software.
+Runag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell was used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
 
-I do not try to solve all problems that might arise in that enormous field. On the contrary, I keep a narrow scope to solve just my own problems. But, doing that, I spent lot of my time to coin an API and scripting environment that might help other people too.
-
-Those people might never come, but it brightens my mood then I solve my own software problems by writing nice, declarative scripts in the meantime.
+It probably won't help you to deploy some complex cloud setups, but it can configure a pretty solid workstation and bootstrap some simple servers.
 
 You are looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with it please check those other repositories:
 
-  * [🚞 Sopkafile to configure my workstation](https://github.com/senotrusov/workstation-sopkafile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
+  * [🚞 Runagfile to configure my workstation](https://github.com/senotrusov/workstation-sopkafile). With one command it creates me a computer that I could use in my daily works without much additional configuration and setup required. It installs and configures software, keys, backup service.
 
   * [🚋 Example sopkafile with rails and node](https://github.com/senotrusov/example-sopkafile-with-rails-and-node). That I use to deploy my Rails/Node.js projects to Linux servers. I usually put that into the project directory to extend with project-specific stuff.
 
@@ -57,9 +55,9 @@ sopka offline_sopka_install::create_or_update
 bash deploy-offline.sh
 ```
 
-## Sopkafile
+## Runagfile
 
-Sopka is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Sopka into your scripts with `. sopka` or you could make a file called `sopkafile` and then run `sopka`.
+Runag is a collection of functions that you might just load into your bash terminal with `. sopka`, but most of the time you operate with scripts in files. You could source Runag into your scripts with `. sopka` or you could make a file called `sopkafile` and then run `sopka`.
 
 Possible sopkafile locations are:
 
@@ -79,7 +77,7 @@ I slowly try to document that thing. Please refer to the source code for now.
 
 <!-- API TOC BEGIN -->
 
-### Sopka core
+### Runag core
 
 * [deploy_script](lib/deploy_script.sh)
 * [fail](lib/fail.sh)
