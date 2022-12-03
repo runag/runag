@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# 🛼 Runag
+# Runag
 
-Runag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell is used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
+💜 Runag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell is used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
 
 It probably won't help you to deploy some complex setups, but it can configure a pretty solid workstation and bootstrap some simple servers.
 
 You are now looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with the library please check "runagfiles", that resides in other repositories:
 
-  * [🛷 Runagfile to configure a workstation](https://github.com/runag/workstation-runagfile). It creates a computer that I could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
+  * [💚 Runagfile to configure a workstation](https://github.com/runag/workstation-runagfile). It creates a computer that I could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
 
-  * [🧳 Workstation deploy script runagfile](https://github.com/runag/workstation-deploy-script-runagfile). This short script may contain personal identifiable information that you may wish to keep private. It works in tandem with the first runagfile. It provides one command to encompass the whole workstation deployment process.
+  * [🧡 Workstation deploy script runagfile](https://github.com/runag/workstation-deploy-script-runagfile). This short script may contain personal identifiable information that you may wish to keep private. It works in tandem with the first runagfile. It provides one command to encompass the whole workstation deployment process.
 
 ## One-liner to deploy runag an a new machine
 
