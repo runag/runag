@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 runag::print_license() {
   cat <<SHELL
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ runag::create_or_update_offline_install() {
   local runag_path="${HOME}"/.runag
 
   if [ ! -d "${runag_path}/.git" ]; then
-    softfail "Unable to find runag checkout" || return $?
+    softfail "Unable to find rùnag checkout" || return $?
   fi
 
   local current_directory; current_directory="$(pwd)" || softfail || return $?

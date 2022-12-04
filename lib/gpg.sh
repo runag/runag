@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ gpg::decrypt_and_source_script() {
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?
 
   # I don't want to put data in file system here so I'll use fifo
-  # I want runag code to be bash-3.2 compatible so I can't use coproc
+  # I want rùnag code to be bash-3.2 compatible so I can't use coproc
   mkfifo -m 600 "${temp_dir}/fifo" || softfail || return $?
 
   gpg --decrypt "${source_path}" >"${temp_dir}/fifo" &

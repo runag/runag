@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/runag || { echo "Unable to load runag" >&2; exit 1; }
+. bin/runag || { echo "Unable to load rùnag" >&2; exit 1; }
 
 shdoc::install() {
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?

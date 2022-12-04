@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 runagfile::add_from_list() {
   local line; while IFS="" read -r line; do
     if [ -n "${line}" ]; then
-      echo "Adding runagfile from ${line}..."
-      runagfile::add "${line}" || softfail "Unable to add runagfile ${line}" || return $?
+      echo "Adding rùnagfile from ${line}..."
+      runagfile::add "${line}" || softfail "Unable to add rùnagfile ${line}" || return $?
     fi
-  done || softfail "Unable to add runagfiles from list" || return $?
+  done || softfail "Unable to add rùnagfiles from list" || return $?
 }
 
 runagfile::add() {
@@ -37,7 +37,7 @@ runagfile::update-everything-in-runag() {
   done
 }
 
-# Find and load runagfile.
+# Find and load rùnagfile.
 #
 # Possible locations are:
 #
@@ -72,7 +72,7 @@ runagfile::load() {
 
   else
     runagfile::load-everything-from-runag
-    softfail_unless_good "Unable to load runagfiles from .runag ($?)" $? || return $?
+    softfail_unless_good "Unable to load rùnagfiles from .runag ($?)" $? || return $?
   fi
 }
 

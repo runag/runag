@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ runagfile_menu::add_defaults() {
   runagfile_menu::add task::with_verbose_task runagfile_menu::display || softfail || return $?
 
   if [ -d "${HOME}/.runag" ]; then
-    runagfile_menu::add_header "Runag and runagfiles" || softfail || return $?
+    runagfile_menu::add_header "Rùnag and rùnagfiles" || softfail || return $?
     
     runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
     runagfile_menu::add runag::update || softfail || return $?

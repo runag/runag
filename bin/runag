@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2022 Runag project contributors
+#  Copyright 2012-2022 Rùnag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -53,9 +53,9 @@ runag::load_runag_library() {
   . "${bin_dir}/../index.sh" || { echo "Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }
 }
 
-# Load runag library index file
+# Load rùnag library index file
 runag::load_runag_library || {
-  echo "Unable to load runag library index file ($?)" >&2
+  echo "Unable to load rùnag library index file ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
   else
@@ -71,13 +71,13 @@ runag::load_runag_library || {
 
 # I don't use "user-function || fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
 
-# Load runagfile
+# Load rùnagfile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
   runagfile::load
-  softfail_unless_good "Unable to load runagfile ($?)" $? || return $?
+  softfail_unless_good "Unable to load rùnagfile ($?)" $? || return $?
 else # we are not sourced
   runagfile::load
-  softfail_unless_good "Unable to load runagfile ($?)" $? || exit $?
+  softfail_unless_good "Unable to load rùnagfile ($?)" $? || exit $?
 fi
 
 # if there is something in the first argument, run it
@@ -111,7 +111,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     exit $?
   fi
 
-  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to runag-menu to see it if you run runag in terminal"
+  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to runag_menu to see it if you run rùnag in terminal"
   exit 1
 fi
 
