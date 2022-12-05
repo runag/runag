@@ -98,10 +98,10 @@ softfail_unless_good::internal() {
 # runag test::fail_example; echo exit status: $?
 
 # test::fail_example() {
-#   test::fail-bar
+#   test::fail_inner_function
 # }
 
-# test::fail-bar() {
+# test::fail_inner_function() {
 #   # fail
 #   # fail_code 12
 #   # fail "error message" 12
