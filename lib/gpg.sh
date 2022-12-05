@@ -24,11 +24,15 @@ gpg::import_key_with_ultimate_ownertrust() {
     local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || fail
     local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || fail
 
-    echo "You are about to import key: ${key_with_spaces} (${key_base64})"
-    echo "Please confirm that this is the key you expected to use by entering \"YES\""
+    echo "You are about to import GPG key with id: ${gpg_key_id} and set trust level for that key to \"I trust ultimately\"."
+    echo "Space-separated key id: ${key_with_spaces}"
+    echo "Base64-encoded key id: ${key_base64}"
+    echo "Please prepare the key password if needed."
+    echo "Please confirm that it is your intention to do so by entering \"yes\":"
+
     local action; IFS="" read -r action || fail
 
-    if [ "${action}" != yes ] && [ "${action}" != YES ]; then
+    if [ "${action}" != yes ]; then
       fail
     fi
 
