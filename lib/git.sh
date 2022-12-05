@@ -19,17 +19,21 @@ git::install_profile_from_pass() {
   
   if pass::exists "${pass_path}/user-name"; then
     local user_name; user_name="$(pass::use "${pass_path}/user-name")" || softfail || return $?
-    git config --global user.name "${user_name}" || softfail || return $?
+
+    git config "${@:2}" user.name "${user_name}" || softfail || return $?
   fi
 
   if pass::exists "${pass_path}/user-email"; then
     local user_email; user_email="$(pass::use "${pass_path}/user-email")" || softfail || return $?
-    git config --global user.email "${user_email}" || softfail || return $?
+
+    git config "${@:2}" user.email "${user_email}" || softfail || return $?
   fi
 
   if pass::exists "${pass_path}/signing-key"; then
     local signing_key; signing_key="$(pass::use "${pass_path}/signing-key")" || softfail || return $?
-    git::configure_signing_key "${signing_key}!" || softfail || return $?
+
+    git config "${@:2}" commit.gpgsign true || softfail || return $?
+    git config "${@:2}" user.signingkey "${signing_key}" || softfail || return $?
   fi
 }
 
@@ -106,12 +110,6 @@ git::place_up_to_date_clone() {
   if [ -n "${branch:-}" ]; then
     git -C "${dest}" checkout "${branch}" || softfail "Unable to git checkout ${branch} in ${dest}" || return $?
   fi
-}
-
-git::configure_signing_key() {
-  local key="$1"
-  git config --global commit.gpgsign true || softfail || return $?
-  git config --global user.signingkey "${key}" || softfail || return $?
 }
 
 # https://wiki.gnome.org/Projects/Libsecret
