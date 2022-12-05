@@ -14,45 +14,45 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# foo || fail ["error message" [<error code>]]
+# example-command || fail ["error message" [<error code>]]
 fail() {
   softfail::internal "$@"
   exit $?
 }
 
-# foo || fail_code <error code>
+# example-command || fail_code <error code>
 fail_code() {
   softfail::internal "" "$1"
   exit $?
 }
 
-# foo || fail_unless_good ["error message" [<error code>]]
+# example-command || fail_unless_good ["error message" [<error code>]]
 fail_unless_good() {
   softfail_unless_good::internal "$@" || exit $?
 }
 
-# foo || fail_unless_good_code <error code>
+# example-command || fail_unless_good_code <error code>
 fail_unless_good_code() {
   softfail_unless_good::internal "" "$1" || exit $?
 }
 
 
-# foo || softfail ["error message" [<error code>]] || return $?
+# example-command || softfail ["error message" [<error code>]] || return $?
 softfail() {
   softfail::internal "$@"
 }
 
-# foo || softfail_code <error code> || return $?
+# example-command || softfail_code <error code> || return $?
 softfail_code() {
   softfail::internal "" "$1"
 }
 
-# foo || softfail_unless_good ["error message" [<error code>]] || return $?
+# example-command || softfail_unless_good ["error message" [<error code>]] || return $?
 softfail_unless_good() {
   softfail_unless_good::internal "$@"
 }
 
-# foo || softfail_unless_good_code <error code> || return $?
+# example-command || softfail_unless_good_code <error code> || return $?
 softfail_unless_good_code() {
   softfail_unless_good::internal "" "$1"
 }
@@ -95,30 +95,30 @@ softfail_unless_good::internal() {
   return "${exit_status}"
 }
 
-# runag test::fail-foo; echo exit status: $?
+# runag test::fail_example; echo exit status: $?
 
-# test::fail-foo() {
+# test::fail_example() {
 #   test::fail-bar
 # }
 
 # test::fail-bar() {
 #   # fail
 #   # fail_code 12
-#   # fail "foo" 12
+#   # fail "error message" 12
 #   # fail_unless_good
-#   # fail_unless_good "foo"
-#   # fail_unless_good "foo" 12
-#   # fail_unless_good "foo" 0
+#   # fail_unless_good "error message"
+#   # fail_unless_good "error message" 12
+#   # fail_unless_good "error message" 0
 #   # fail_unless_good_code 12
 #   # fail_unless_good_code 0
 
 #   # softfail || return $?
 #   # softfail_code 12 || return $?
-#   # softfail "foo" 12 || return $?
+#   # softfail "error message" 12 || return $?
 #   # softfail_unless_good || return $?
-#   # softfail_unless_good "foo" || return $?
-#   # softfail_unless_good "foo" 12 || return $?
-#   # softfail_unless_good "foo" 0 || return $?
+#   # softfail_unless_good "error message" || return $?
+#   # softfail_unless_good "error message" 12 || return $?
+#   # softfail_unless_good "error message" 0 || return $?
 #   # softfail_unless_good_code 12 || return $?
 #   # softfail_unless_good_code 0 || return $?
 
