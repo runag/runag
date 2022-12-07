@@ -313,11 +313,17 @@ fs::source_recursive_related_to_file() {
 fs::source_recursive() {
   local directory_path="$1"
 
+  # we require files first in order for the runagfile_menu:: items to be sorted in a top-down manner
+
+  local item_path; for item_path in "${directory_path}"/*; do
+    if [ -f "${item_path}" ] && [[ "${item_path}" =~ \.sh$ ]]; then
+      . "${item_path}" || softfail "Unable to load: ${file_path}" || return $?
+    fi
+  done
+
   local item_path; for item_path in "${directory_path}"/*; do
     if [ -d "${item_path}" ]; then
       fs::source_recursive "${item_path}" || softfail || return $?
-    elif [ -f "${item_path}" ] && [[ "${item_path}" =~ \.sh$ ]]; then
-      . "${item_path}" || softfail "Unable to load: ${file_path}" || return $?
     fi
   done
 }
