@@ -1,0 +1,11 @@
+# Can't follow non-constant source. Use a directive to specify location.
+disable=SC1090
+
+# Not following: <file>
+disable=SC1091
+
+# <function> references arguments, but none are ever passed.
+disable=SC2120
+
+# See if you can use ${variable//search/replace} instead.
+disable=SC2001

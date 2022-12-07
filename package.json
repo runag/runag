@@ -1,0 +1,16 @@
+{
+  "name": "runag",
+  "version": "0.1.0",
+  "homepage": "https://github.com/runag/runag",
+  "bugs": "https://github.com/runag/runag/issues",
+  "license": "Apache-2.0",
+  "author": "Rùnag project contributors",
+  "bin": {
+    "runag": "bin/runag"
+  },
+  "repository": "runag/runag",
+  "scripts": {
+    "build": "bash src/deploy.sh; bash docs/make.sh",
+    "lint": "shellcheck index.sh bin/* $(find lib -name '*.sh')"
+  }
+}

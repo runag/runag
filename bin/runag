@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+#  Copyright 2012-2022 Rùnag project contributors
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# BEGIN set_shell_options
+
+# set shell options if we are not sourced
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  if [ "${RUNAG_VERBOSE:-}" = true ]; then
+    set -o xtrace
+  fi
+  set -o nounset
+fi
+
+# END set_shell_options
+
+# BEGIN load_runag_library
+
+runag::load_runag_library() {
+  # resolve symlink if needed
+  if [ -L "${BASH_SOURCE[0]}" ]; then
+    local bin_path; bin_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to readlink '${BASH_SOURCE[0]}' ($?)" >&2; return 1; }
+  else
+    local bin_path; bin_path="${BASH_SOURCE[0]}"
+  fi
+
+  # get basename of binary
+  local bin_name; bin_name="$(basename "${bin_path}")" || { echo "Unable to get a basename of '${bin_path}' ($?)" >&2; return 1; }
+
+  # get dirname that yet may result to relative path
+  local unresolved_bin_dir; unresolved_bin_dir="$(dirname "${bin_path}")" || { echo "Unable to get a dirname of '${bin_path}' ($?)" >&2; return 1; }
+
+  # get absolute path to dirname
+  local bin_dir; bin_dir="$(cd "${unresolved_bin_dir}" >/dev/null 2>&1 && pwd)" || { echo "Unable to determine absolute path for '${unresolved_bin_dir}' ($?)" >&2; return 1; }
+
+  # set RUNAG_BIN_PATH if needed
+  if [ -z "${RUNAG_BIN_PATH:-}" ] && [ -f "${bin_dir}/${bin_name}" ] && [ -x "${bin_dir}/${bin_name}" ]; then
+    export RUNAG_BIN_PATH="${bin_dir}/${bin_name}"
+  fi
+
+  . "${bin_dir}/../index.sh" || { echo "Unable to load '${bin_dir}/../index.sh' ($?)" >&2; return 1; }
+}
+
+# Load rùnag library index file
+runag::load_runag_library || {
+  echo "Unable to load rùnag library index file ($?)" >&2
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    return 1 # use return if we are sourced
+  else
+    exit 1 # use exit if not
+  fi
+}
+
+# END load_runag_library
+
+# BEGIN invoke_runagfile
+
+# == we should have all library functions available by now ==
+
+# I don't use "user-function || fail" here in case if someone wants to use "set -o errexit" in their functions that I may call here
+
+# Load rùnagfile
+if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
+  runagfile::load
+  softfail_unless_good "Unable to load rùnagfile ($?)" $? || return $?
+else # we are not sourced
+  runagfile::load
+  softfail_unless_good "Unable to load rùnagfile ($?)" $? || exit $?
+fi
+
+# if there is something in the first argument, run it
+if [ -n "${1:-}" ]; then
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
+    "$@"
+    softfail_unless_good "Error performing $1 ($?)" $? || return $?
+    if [ -t 1 ]; then
+      log::success "Done: $*"
+    fi
+    return 0
+  else # we are not sourced
+    "$@"
+    softfail_unless_good "Error performing $1 ($?)" $? || exit $?
+    if [ -t 1 ]; then
+      log::success "Done: $*"
+    fi
+    exit 0
+  fi
+fi
+
+# if we are not sourced, try to run runagfile::main or display runag-menu 
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  if declare -f runagfile::main >/dev/null; then
+    runagfile::main
+    softfail_unless_good "Error performing runagfile::main ($?)" $?
+    exit $?
+  elif runagfile_menu::present && [ -t 0 ] && [ -t 1 ]; then
+    runagfile_menu::display
+    softfail_unless_good "Error performing runagfile_menu::display ($?)" $?
+    exit $?
+  fi
+
+  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to runag_menu to see it if you run rùnag in terminal"
+  exit 1
+fi
+
+# END invoke_runagfile
