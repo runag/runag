@@ -24,8 +24,6 @@ You are now looking at the repository which mostly contains a standard library. 
 
   * [💚 Rùnagfile to configure a workstation](https://github.com/runag/workstation-runagfile). It creates a computer that I could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
 
-  * [🧡 Workstation deploy script rùnagfile](https://github.com/runag/workstation-deploy-script-runagfile). This short script may contain personal identifiable information that you may wish to keep private. It works in tandem with the first rùnagfile. It provides one command to encompass the whole workstation deployment process.
-
 ## One-liner to deploy rùnag an a new machine
 
 ### Linux
