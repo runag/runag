@@ -8,9 +8,5 @@
   "bin": {
     "runag": "bin/runag"
   },
-  "repository": "runag/runag",
-  "scripts": {
-    "build": "bash src/deploy.sh; bash docs/make.sh",
-    "lint": "shellcheck index.sh bin/* $(find lib -name '*.sh')"
-  }
+  "repository": "runag/runag"
 }
