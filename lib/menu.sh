@@ -76,7 +76,13 @@ menu::select_and_run() {
 
 menu::display_menu() {
   local color_a; color_a="$(terminal::color 13)" || softfail || return $?
+  local color_a_slight_accent; color_a_slight_accent="$(terminal::color 13)" || softfail || return $?
+  local color_a_notable_accent; color_a_notable_accent="$(terminal::color 0 5)" || softfail || return $?
+  
   local color_b; color_b="$(terminal::color 15)" || softfail || return $?
+  local color_b_slight_accent; color_b_slight_accent="$(terminal::color 15 8)" || softfail || return $?
+  local color_b_notable_accent; color_b_notable_accent="$(terminal::color 15 8)" || softfail || return $?
+
   local header_color; header_color="$(terminal::color 14)" || softfail || return $?
   local comment_color; comment_color="$(terminal::color 10)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
@@ -84,6 +90,9 @@ menu::display_menu() {
   local index=1
   local item
   local current_color=""
+  local current_color_slight_accent=""
+  local current_color_notable_accent=""
+  local endline_sticker=""
 
   for item in "$@"; do
     if [ -z "${item}" ]; then
@@ -108,12 +117,22 @@ menu::display_menu() {
     else
       if [ "${current_color}" = "${color_a}" ]; then
         current_color="${color_b}"
+        current_color_slight_accent="${color_b_slight_accent}"
+        current_color_notable_accent="${color_b_notable_accent}"
       else
         current_color="${color_a}"
+        current_color_slight_accent="${color_a_slight_accent}"
+        current_color_notable_accent="${color_a_notable_accent}"
       fi
 
-      echo "  ${current_color}$((index))) ${item}${default_color}"
-      
+      if [ ${#item} -gt 80 ]; then
+        endline_sticker=" ${current_color_notable_accent} #$((index))${default_color}"
+      else
+        endline_sticker=""
+      fi
+
+      echo "  ${current_color_slight_accent} $((index)))${default_color} ${current_color}${item}${default_color}${endline_sticker}"
+
       ((index+=1))
     fi
   done
