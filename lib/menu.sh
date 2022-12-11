@@ -64,6 +64,9 @@ menu::select_and_run() {
 
   local selected_item="${commands_list[$((input_text-1))]}"
 
+  # Reset SECONDS to get an accurate elapsed time
+  SECONDS=0
+
   # I use "test" instead of "|| fail" here in case if someone wants
   # to use "set -o errexit" in their functions
 
