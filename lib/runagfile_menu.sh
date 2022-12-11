@@ -63,6 +63,13 @@ runagfile_menu::clear() {
   RUNAGFILE_MENU=()
 }
 
+runagfile_menu::display_for() {(
+  runagfile_menu::clear || softfail || return $?
+  "$@" || softfail || return $?
+  runagfile_menu::display
+  softfail_unless_good "Error performing runagfile_menu::display ($?)" $?
+)}
+
 runagfile_menu::add_defaults() {
   runagfile_menu::add_header "Same menu with certain flags set" || softfail || return $?
 
