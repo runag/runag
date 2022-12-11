@@ -339,7 +339,7 @@ ssh::script() {
   ssh::shell_options || softfail "Unable to produce shell-options" || return $?
   ssh::remote_env || softfail "Unable to produce remote-env" || return $?
 
-  if [ -z "${PS1}" ]; then
+  if [ -z "${PS1:-}" ]; then
     declare -f || softfail "Unable to produce source code dump of functions" || return $?
   else
     local function_name
