@@ -15,9 +15,9 @@
 #  limitations under the License.
 
 btrfs::scrub() {
-  sudo btrfs scrub start -B -d "$1" || softfail || return $?
+  sudo btrfs scrub start -B -d "$@" || softfail || return $?
 }
 
 btrfs::check() {
-  sudo btrfs check --readonly --progress "$1" || softfail || return $?
+  sudo btrfs check --readonly --progress "$@" || softfail || return $?
 }
