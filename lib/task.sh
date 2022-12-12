@@ -207,20 +207,3 @@ $(declare -f task::complete_with_cleanup)
 $(declare -f task::complete)
 SHELL
 }
-
-# weird stuff
-# -----------
-# onexit() {
-#   echo hello
-#   cat out
-#   cat err
-# }
-#
-# trap "onexit" EXIT
-#
-# thing() {
-#   echo ok
-#   sleep 30
-# }
-#
-# (thing) </dev/null >out 2>err
