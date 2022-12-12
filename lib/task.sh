@@ -223,4 +223,4 @@ SHELL
 #   sleep 30
 # }
 #
-# (thing) </dev/null >out >err
+# (thing) </dev/null >out 2>err
