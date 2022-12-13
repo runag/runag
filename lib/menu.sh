@@ -99,18 +99,25 @@ menu::display_menu() {
 
   for item in "$@"; do
     if [ -z "${item}" ]; then
+      # delimiter
       echo ""
       current_color=""
 
     elif [[ "${item}" =~ ^\# ]]; then
+      # subheader, note, or header
 
       if [[ "${item}" =~ ^\#\# ]]; then
+        # subheader
         echo ""
         echo "  ${header_color}### ${item:2}${default_color}"
         echo ""
+
       elif [[ "${item}" =~ ^\#\/ ]]; then
+        # note
         echo "  ${comment_color}> ${item:2}${default_color}"
-      else
+
+      else 
+        # header
         echo ""
         echo "  ${header_color}## ${item:1}${default_color}"
         echo ""
@@ -118,6 +125,7 @@ menu::display_menu() {
       current_color=""
 
     else
+      # menu item
       if [ "${current_color}" = "${color_a}" ]; then
         current_color="${color_b}"
         current_color_slight_accent="${color_b_slight_accent}"
