@@ -25,7 +25,7 @@ runagfile_menu::necessary() {
       shift; shift
       ;;
     -*)
-      softfail "Unknown argument: $1" || return $?
+      fail "Unknown argument: $1"
       ;;
     *)
       break
