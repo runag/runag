@@ -81,23 +81,24 @@ menu::select_and_run() {
 }
 
 menu::display_menu() {
-  local color_a; color_a="$(terminal::color 13)" || softfail || return $?
-  local color_a_slight_accent; color_a_slight_accent="$(terminal::color 13)" || softfail || return $?
-  local color_a_notable_accent; color_a_notable_accent="$(terminal::color 0 5)" || softfail || return $?
-  
-  local color_b; color_b="$(terminal::color 15)" || softfail || return $?
-  local color_b_slight_accent; color_b_slight_accent="$(terminal::color 15 8)" || softfail || return $?
-  local color_b_notable_accent; color_b_notable_accent="$(terminal::color 15 8)" || softfail || return $?
+  local color_a color_a_slight_accent color_a_notable_accent
+  local color_b color_b_slight_accent color_b_notable_accent
 
-  local header_color; header_color="$(terminal::color 14)" || softfail || return $?
+  color_a="$(terminal::color 13)" || softfail || return $?
+  color_b="$(terminal::color 15)" || softfail || return $?
+
+  color_a_slight_accent="$(terminal::color 13)" || softfail || return $?
+  color_b_slight_accent="$(terminal::color 15 8)" || softfail || return $?
+
+  color_a_notable_accent="$(terminal::color 0 5)" || softfail || return $?
+  color_b_notable_accent="$(terminal::color 15 8)" || softfail || return $?
+
+  local header_color;  header_color="$(terminal::color 14)" || softfail || return $?
   local comment_color; comment_color="$(terminal::color 10)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
-  local index=1
-  local item
-  local current_color=""
-  local current_color_slight_accent=""
-  local current_color_notable_accent=""
+  local item index=1
+  local current_color="" current_color_slight_accent="" current_color_notable_accent=""
   local endline_sticker=""
 
   for item in "$@"; do
