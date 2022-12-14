@@ -46,8 +46,9 @@ runagfile_menu::add() {
   fi
 
   local quote=true
-  local delimiter=false
+  local add_delimiter=false
   local prefix=""
+  local add_menu=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -63,7 +64,7 @@ runagfile_menu::add() {
         shift
         ;;
       -d|--delimiter)
-        delimiter=true
+        add_delimiter=true
         shift
         ;;
       -h|--header)
@@ -81,6 +82,10 @@ runagfile_menu::add() {
         quote=false
         shift
         ;;
+      -m|--menu)
+        add_menu=true
+        shift
+        ;;
       -*)
         fail "Unknown argument: $1"
         ;;
@@ -91,9 +96,12 @@ runagfile_menu::add() {
   done
 
   local operand_string
-  if [ "${delimiter}" = true ]; then
+  if [ "${add_delimiter}" = true ]; then
     operand_string=""
   else
+    if [ "${add_menu}" = true ]; then
+      set -- runagfile_menu::display_for "$1"::runagfile_menu "${@:2}"
+    fi
     if [ "${quote}" = true ]; then
       printf -v operand_string " %q" "$@" || softfail "Unable to produce operand string" || return $?
       operand_string="${operand_string:1}"
