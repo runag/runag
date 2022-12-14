@@ -148,7 +148,7 @@ app_units::follow_journal() {
   app_units::run_with_units journalctl --lines=1000 --follow "$@" || softfail_code $? || return $?
 }
 
-app_units::runagfile_menu::add_all::remote() {
+app_units::runagfile_menu() {
   runagfile_menu::add "$1" ssh::task "$2" app_units::enable || softfail || return $?
   runagfile_menu::add "$1" ssh::task "$2" app_units::enable_now || softfail || return $?
   runagfile_menu::add "$1" ssh::task "$2" app_units::disable || softfail || return $?
@@ -158,6 +158,6 @@ app_units::runagfile_menu::add_all::remote() {
   runagfile_menu::add "$1" ssh::task "$2" app_units::restart || softfail || return $?
   runagfile_menu::add "$1" ssh::task "$2" app_units::restart_services || softfail || return $?
   runagfile_menu::add "$1" ssh::task_verbose "$2" app_units::statuses || softfail || return $?
-  runagfile_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
-  runagfile_menu::add_raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
+  runagfile_menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
+  runagfile_menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
 }

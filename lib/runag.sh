@@ -32,6 +32,15 @@ runag::print_license() {
 SHELL
 }
 
+runag::runagfile_menu() {
+  if [ -d "${HOME}/.runag" ]; then
+    runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
+    
+    runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
+    runagfile_menu::add runag::update || softfail || return $?
+  fi
+}
+
 runag::update() {
   if [ -d "${HOME}/.runag/.git" ]; then
     git -C "${HOME}/.runag" pull || softfail || return $?

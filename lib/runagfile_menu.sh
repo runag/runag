@@ -32,36 +32,84 @@ runagfile_menu::necessary() {
       ;;
     esac
   done
+
   [ -t 0 ] && [ -t 1 ]
 }
 
+runagfile_menu::clear() {
+  RUNAGFILE_MENU=()
+}
+
 runagfile_menu::add() {
-  local command_string; printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?
-  RUNAGFILE_MENU+=("${command_string:1}")
-}
+  local quote=true
+  local delimiter=false
+  local prefix=""
 
-runagfile_menu::add_raw() {
-  RUNAGFILE_MENU+=("$1")
-}
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+      -o|--os)
+        local os_type="$2"
+        if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
+          return
+        fi
+        shift; shift
+        ;;
+      -i|--if-necessary)
+        if [ ! -t 0 ] || [ ! -t 1 ]; then
+          return
+        fi
+        shift
+        ;;
+      -r|--raw)
+        quote=false
+        shift
+        ;;
+      -d|--delimiter)
+        delimiter=true
+        shift
+        ;;
+      -h|--header)
+        prefix="#"
+        quote=false
+        shift
+        ;;
+      -s|--subheader)
+        prefix="##"
+        quote=false
+        shift
+        ;;
+      -n|--note)
+        prefix="#>"
+        quote=false
+        shift
+        ;;
+      -*)
+        fail "Unknown argument: $1"
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
 
-runagfile_menu::add_delimiter() {
-  RUNAGFILE_MENU+=("")
-}
+  local operand_string
+  if [ "${delimiter}" = true ]; then
+    operand_string=""
+  else
+    if [ "${quote}" = true ]; then
+      printf -v operand_string " %q" "$@" || softfail "Unable to produce operand string" || return $?
+      operand_string="${operand_string:1}"
+    else
+      printf -v operand_string " %s" "$@" || softfail "Unable to produce operand string" || return $?
+      operand_string="${operand_string:1}"
+    fi
+  fi
 
-runagfile_menu::add_header() {
-  RUNAGFILE_MENU+=("#$1")
-}
-
-runagfile_menu::add_subheader() {
-  RUNAGFILE_MENU+=("##$1")
-}
-
-runagfile_menu::add_note() {
-  RUNAGFILE_MENU+=("#/$1")
+  RUNAGFILE_MENU+=("${prefix}${operand_string}")
 }
 
 runagfile_menu::display() {
-  if [ -z ${RUNAGFILE_MENU:+x} ]; then
+  if ! runagfile_menu::present; then
     softfail "Menu is empty"
     return $?
   fi
@@ -73,27 +121,9 @@ runagfile_menu::present() {
   test -n "${RUNAGFILE_MENU:+x}"
 }
 
-runagfile_menu::clear() {
-  RUNAGFILE_MENU=()
-}
-
 runagfile_menu::display_for() {(
   runagfile_menu::clear || softfail || return $?
   "$@" || softfail || return $?
   runagfile_menu::display
   softfail_unless_good "Error performing runagfile_menu::display ($?)" $?
 )}
-
-runagfile_menu::add_defaults() {
-  runagfile_menu::add_header "Same menu with certain flags set" || softfail || return $?
-
-  runagfile_menu::add task::with_update_secrets runagfile_menu::display || softfail || return $?
-  runagfile_menu::add task::with_verbose_task runagfile_menu::display || softfail || return $?
-
-  if [ -d "${HOME}/.runag" ]; then
-    runagfile_menu::add_header "Rùnag and rùnagfiles" || softfail || return $?
-    
-    runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
-    runagfile_menu::add runag::update || softfail || return $?
-  fi
-}

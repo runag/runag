@@ -313,7 +313,7 @@ fs::source_recursive_related_to_file() {
 fs::source_recursive() {
   local directory_path="$1"
 
-  # we require files first in order for the runagfile_menu:: items to be sorted in a top-down manner
+  # we require files first in order for the runagfile_menu items to be sorted in a top-down manner
 
   local item_path; for item_path in "${directory_path}"/*; do
     if [ -f "${item_path}" ] && [[ "${item_path}" =~ \.sh$ ]]; then

@@ -30,11 +30,14 @@ menu::select_and_run() {
     fi
   done
 
+  local prompt_color; prompt_color="$(terminal::color 11)" || softfail || return $?
+  local default_color; default_color="$(terminal::default_color)" || softfail || return $?
+
   menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
   local input_text read_status
-  IFS="" read -p "${PS3:-"Please select number: "}" -e -r input_text
+  IFS="" read -p "${prompt_color}${PS3:-"Please select number: "}${default_color}" -e -r input_text
   read_status=$?
 
   if [ ${read_status} != 0 ]; then
@@ -112,7 +115,7 @@ menu::display_menu() {
         echo "  ${header_color}### ${item:2}${default_color}"
         echo ""
 
-      elif [[ "${item}" =~ ^\#\/ ]]; then
+      elif [[ "${item}" =~ ^\#\> ]]; then
         # note
         echo "  ${comment_color}> ${item:2}${default_color}"
 
