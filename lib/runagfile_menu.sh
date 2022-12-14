@@ -48,7 +48,7 @@ runagfile_menu::add() {
   local quote=true
   local add_delimiter=false
   local prefix=""
-  local postfix=""
+  local comment_postfix="" signal_message=""
   local add_menu=false
 
   while [[ "$#" -gt 0 ]]; do
@@ -84,12 +84,16 @@ runagfile_menu::add() {
         shift
         ;;
       -c|--comment)
-        postfix=" # $2"
+        comment_postfix=" # $2"
         shift; shift
         ;;
       -m|--menu)
         add_menu=true
         shift
+        ;;
+      -t|--title)
+        signal_message="#* $2"
+        shift; shift
         ;;
       -*)
         fail "Unknown argument: $1"
@@ -105,6 +109,9 @@ runagfile_menu::add() {
     operand_string=""
   else
     if [ "${add_menu}" = true ]; then
+      if [ -z "${signal_message}" ]; then
+        signal_message="#* Menu for $*"
+      fi
       set -- runagfile_menu::display_for "$1"::runagfile_menu "${@:2}"
     fi
     if [ "${quote}" = true ]; then
@@ -116,7 +123,11 @@ runagfile_menu::add() {
     fi
   fi
 
-  RUNAGFILE_MENU+=("${prefix}${operand_string}${postfix}")
+  if [ -n "${signal_message}" ]; then
+    signal_message=" ${signal_message}#${#signal_message}#"
+  fi
+
+  RUNAGFILE_MENU+=("${prefix}${operand_string}${comment_postfix}${signal_message}")
 }
 
 runagfile_menu::display() {

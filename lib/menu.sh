@@ -143,6 +143,15 @@ menu::display_menu() {
         current_color_notable_accent="${color_a_notable_accent}"
       fi
 
+      if [[ "${item}" =~ [^\\]\#([[:digit:]]+)\#$ ]]; then
+        local signal_length="${BASH_REMATCH[1]}"
+        local signal_message="${item: -$((signal_length+${#signal_length}+2)):${signal_length}}"
+
+        if [[ "${signal_message}" =~ ^\#\*\  ]]; then
+          item="${signal_message:3}"
+        fi
+      fi
+
       if [ ${#item} -gt 80 ]; then
         endline_sticker=" ${current_color_notable_accent} #$((index))${default_color}"
       else
