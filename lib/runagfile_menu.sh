@@ -41,6 +41,10 @@ runagfile_menu::clear() {
 }
 
 runagfile_menu::add() {
+  if [ ! -t 0 ] || [ ! -t 1 ]; then
+    return
+  fi
+
   local quote=true
   local delimiter=false
   local prefix=""
@@ -53,12 +57,6 @@ runagfile_menu::add() {
           return
         fi
         shift; shift
-        ;;
-      -i|--if-necessary)
-        if [ ! -t 0 ] || [ ! -t 1 ]; then
-          return
-        fi
-        shift
         ;;
       -r|--raw)
         quote=false
