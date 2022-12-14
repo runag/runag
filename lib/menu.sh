@@ -107,26 +107,29 @@ menu::display_menu() {
       echo ""
       current_color=""
 
-    elif [[ "${item}" =~ ^\#\  ]]; then
+    elif [[ "${item}" =~ ^\# ]]; then
       # subheader, note, or header
 
       if [[ "${item}" =~ ^\#\#\  ]]; then
+        # header
+        echo ""
+        echo "  ${header_color}## ${item:3}${default_color}"
+        echo ""
+        current_color=""
+
+      elif [[ "${item}" =~ ^\#\#\#\  ]]; then
         # subheader
         echo ""
-        echo "  ${header_color}### ${item:3}${default_color}"
+        echo "  ${header_color}### ${item:4}${default_color}"
         echo ""
+        current_color=""
 
       elif [[ "${item}" =~ ^\#\>\  ]]; then
         # note
         echo "  ${comment_color}> ${item:3}${default_color}"
+        current_color=""
 
-      else 
-        # header
-        echo ""
-        echo "  ${header_color}## ${item:2}${default_color}"
-        echo ""
       fi
-      current_color=""
 
     else
       # menu item
