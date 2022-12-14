@@ -41,6 +41,11 @@ checksums::create_or_update() {
       
       if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || [ "${action}" = y ] || [ "${action}" = Y ]; then
         cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
+
+        if [ -d .git ]; then
+          git add "${current_checksum_file}" || softfail || return $?
+          git commit -m "Creates checksum file" "${current_checksum_file}" || softfail || return $?
+        fi
       fi
 
       sync || softfail || return $?
@@ -65,6 +70,12 @@ checksums::create_or_update() {
 
     if [ "${action}" = y ] || [ "${action}" = Y ]; then
       cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
+
+      if [ -d .git ]; then
+        git add "${current_checksum_file}" || softfail || return $?
+        git commit -m "Updates checksum file" "${current_checksum_file}" || softfail || return $?
+      fi
+
       sync || softfail || return $?
     fi
   )
