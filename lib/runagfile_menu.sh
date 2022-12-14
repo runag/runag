@@ -48,6 +48,7 @@ runagfile_menu::add() {
   local quote=true
   local add_delimiter=false
   local prefix=""
+  local postfix=""
   local add_menu=false
 
   while [[ "$#" -gt 0 ]]; do
@@ -82,6 +83,10 @@ runagfile_menu::add() {
         quote=false
         shift
         ;;
+      -c|--comment)
+        postfix=" # $2"
+        shift; shift
+        ;;
       -m|--menu)
         add_menu=true
         shift
@@ -111,7 +116,7 @@ runagfile_menu::add() {
     fi
   fi
 
-  RUNAGFILE_MENU+=("${prefix}${operand_string}")
+  RUNAGFILE_MENU+=("${prefix}${operand_string}${postfix}")
 }
 
 runagfile_menu::display() {
