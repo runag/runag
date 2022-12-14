@@ -68,17 +68,17 @@ runagfile_menu::add() {
         shift
         ;;
       -h|--header)
-        prefix="#"
+        prefix="# "
         quote=false
         shift
         ;;
       -s|--subheader)
-        prefix="##"
+        prefix="## "
         quote=false
         shift
         ;;
       -n|--note)
-        prefix="#>"
+        prefix="#> "
         quote=false
         shift
         ;;
