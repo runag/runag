@@ -96,19 +96,30 @@ npm::update_globally_installed_packages() {
 
 # ---- npm auth_token ----
 
-# bitwarden::use password "test record" npm::auth_token registry.npmjs.org
-#
-npm::auth_token::exists() {
-  local registry="registry.npmjs.org"
-
-  test -f "${HOME}/.npmrc" || return 1
-  grep -qF "//${registry}/:_authToken" "${HOME}/.npmrc"
-}
-
 npm::auth_token() {
+  local registry="registry.npmjs.org"
+  local project_config
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -r|--registry)
+      registry="$2"
+      shift; shift
+      ;;
+    -l|--project)
+      project_config=true
+      shift
+      ;;
+    -*)
+      fail "Unknown argument: $1"
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   local token="$1"
 
-  local registry="registry.npmjs.org" # TODO: optional argument
-  
-  npm set "//${registry}/:_authToken" "${token}" || softfail || return $?
+  npm config set ${project_config:+"--location" "project"} "//${registry}/:_authToken" "${token}" || softfail || return $?
 }
