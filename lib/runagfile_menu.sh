@@ -143,9 +143,15 @@ runagfile_menu::present() {
   test -n "${RUNAGFILE_MENU:+x}"
 }
 
-runagfile_menu::display_for() {(
-  runagfile_menu::clear || softfail || return $?
-  "$@" || softfail || return $?
-  runagfile_menu::display
-  softfail_unless_good "Error performing runagfile_menu::display ($?)" $?
-)}
+runagfile_menu::display_for() {
+  (
+    runagfile_menu::clear || softfail || return $?
+    "$@" || softfail || return $?
+    runagfile_menu::display
+    softfail_unless_good "Error performing runagfile_menu::display ($?)" $?
+  )
+  local status_code=$?
+  # shellcheck disable=SC2034
+  RUNAG_MENU_REFRAIN_FROM_SUCCESS_LOGGING=true
+  return "${status_code}"
+}
