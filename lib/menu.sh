@@ -17,6 +17,9 @@
 menu::select_and_run() {
   local commands_list=()
 
+  # shellcheck disable=SC2034
+  local RUNAG_MENU_REFRAIN_FROM_SUCCESS_LOGGING
+
   if ! [ -t 0 ] || ! [ -t 1 ]; then
     softfail "Menu was called while not in terminal"
     return $?
@@ -76,7 +79,10 @@ menu::select_and_run() {
   eval "${selected_item}"
   softfail_unless_good "Error performing ${selected_item}" $? || return $?
 
-  log::success "Done: ${selected_item}"
+  if [ "${RUNAG_MENU_REFRAIN_FROM_SUCCESS_LOGGING:-}" != true ]; then
+    log::success "Done: ${selected_item}"
+  fi
+
   return 0
 }
 
