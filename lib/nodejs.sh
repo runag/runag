@@ -121,5 +121,18 @@ npm::auth_token() {
 
   local token="$1"
 
+  if [ "${project_config:-}" = true ]; then
+    file::append_line_unless_present ".gitignore" ".npmrc" || softfail || return $?
+    file::append_line_unless_present ".npmignore" ".npmrc" || softfail || return $?
+  fi
+
   npm config set ${project_config:+"--location" "project"} "//${registry}/:_authToken" "${token}" || softfail || return $?
+
+  # According to that documentation, .npmrc should have mode 0600
+  # https://npm.github.io/installation-setup-docs/customizing/the-npmrc-file.html
+  #
+  # "npm config set" creates a file with mode rw-rw-rw- and I don't know how to prevent that
+  # setting umask 0177 for "npm config set" does not help
+
+  chmod 0600 ".npmrc" || softfail || return $?
 }
