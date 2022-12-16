@@ -169,27 +169,19 @@ file::append() {
 }
 
 file::append_line_unless_present() {
-  local string="$1"
-  local file="$2"
+  local file="$1"
+  local string="$2"
 
-  if ! test -f "${file}"; then
-    fail "File not found: ${file}"
-  fi
-
-  if ! grep -qFx "${string}" "${file}"; then
+  if ! test -f "${file}" || ! grep -qFx "${string}" "${file}"; then
     echo "${string}" | tee -a "${file}" >/dev/null || softfail || return $?
   fi
 }
 
 file::sudo_append_line_unless_present() {
-  local string="$1"
-  local file="$2"
+  local file="$1"
+  local string="$2"
 
-  if ! sudo test -f "${file}"; then
-    fail "File not found: ${file}"
-  fi
-    
-  if ! sudo grep -qFx "${string}" "${file}"; then
+  if ! sudo test -f "${file}" || ! sudo grep -qFx "${string}" "${file}"; then
     echo "${string}" | sudo tee -a "${file}" >/dev/null || softfail || return $?
   fi
 }

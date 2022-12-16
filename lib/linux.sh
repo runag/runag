@@ -22,7 +22,7 @@ linux::set_timezone() {
 linux::set_hostname() {
   local hostname="$1"
   sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
-  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" /etc/hosts || softfail || return $?
+  file::sudo_append_line_unless_present /etc/hosts "127.0.1.1	${hostname}" || softfail || return $?
 }
 
 linux::dangerously_set_hostname() {
@@ -41,7 +41,7 @@ linux::dangerously_set_hostname() {
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   fi
 
-  file::sudo_append_line_unless_present "127.0.1.1	${hostname}" "${hosts_file}.runag-new" || softfail || return $?
+  file::sudo_append_line_unless_present "${hosts_file}.runag-new" "127.0.1.1	${hostname}" || softfail || return $?
 
   sudo cp "${hosts_file}" "${hosts_file}.before-runag-changes" || softfail || return $?
   sudo mv "${hosts_file}.runag-new" "${hosts_file}" || softfail || return $?

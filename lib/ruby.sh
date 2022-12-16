@@ -99,7 +99,7 @@ ruby::without-docs() {
 ruby::dangerously_append_nodocument_to_gemrc() {
   local gemrc_file="${HOME}/.gemrc"
   ( umask 0177 && touch "${gemrc_file}" ) || softfail || return $?
-  file::append_line_unless_present "gem: --no-document" "${gemrc_file}" || softfail || return $?
+  file::append_line_unless_present "${gemrc_file}" "gem: --no-document" || softfail || return $?
 }
 
 ruby::disable_spring() {
