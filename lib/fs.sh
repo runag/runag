@@ -187,9 +187,7 @@ file::sudo_append_line_unless_present() {
 }
 
 file::update_block() {
-  local file_mode=""
-  local file_owner=""
-  local file_group=""
+  local file_mode file_owner file_group
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -217,7 +215,7 @@ file::update_block() {
   local file_name="$1"
   local block_name="$2"
 
-  if [ -z "${file_mode}" ] && [ -f "${file_name}" ]; then
+  if [ -z "${file_mode:-}" ] && [ -f "${file_name}" ]; then
     file_mode="$(stat -c "%a" "${file_name}")" || softfail || return $?
   fi
 
