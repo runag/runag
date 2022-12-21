@@ -104,6 +104,7 @@ Please refer to the source code for now.
 ### Interfacing with OS anv VMs
 
 * [apt](lib/apt.sh)
+* [btrfs](lib/btrfs.sh)
 * [linux](lib/linux.sh)
 * [macos](lib/macos.sh)
 * [os](lib/os.sh)
