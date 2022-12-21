@@ -103,7 +103,7 @@ softfail_unless_good::internal ()
 }
 log::elapsed_time () 
 { 
-    echo "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
+    log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
 log::error () 
 { 
@@ -252,7 +252,7 @@ task::is_stderr_empty_after_filtering ()
 { 
     local stderr_file="$1";
     local stderr_size;
-    stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" < "${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
+    stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
     if [ "${stderr_size}" != 0 ]; then
         return 1;
     fi
@@ -297,7 +297,7 @@ task::complete ()
 terminal::have_16_colors () 
 { 
     local amount;
-    command -v tput > /dev/null && amount="$(tput colors 2> /dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
+    command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
 }
 terminal::print_color_table () 
 { 
@@ -315,7 +315,7 @@ terminal::color ()
     local foreground="$1";
     local background="${2:-}";
     local amount;
-    if command -v tput > /dev/null && amount="$(tput colors 2> /dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
+    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
         if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
             tput setaf "${foreground}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
@@ -381,7 +381,7 @@ git::place_up_to_date_clone ()
         current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?;
         if [ "${current_url}" != "${url}" ]; then
             local dest_full_path;
-            dest_full_path="$(cd "${dest}" > /dev/null 2>&1 && pwd)" || softfail || return $?;
+            dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?;
             local dest_parent_dir;
             dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
             local dest_dir_name;
@@ -407,9 +407,9 @@ git::place_up_to_date_clone ()
 runagfile::add () 
 { 
     local user_name;
-    user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;
+    user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?;
     local repo_name;
-    repo_name="$(cut -d "/" -f 2 <<< "$1")" || softfail || return $?;
+    repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?;
     git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
