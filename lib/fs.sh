@@ -91,6 +91,11 @@ dir::default_mode() {
   printf "%o" "$(( 0777 ^ "${umask_value}" ))" || softfail || return $?
 }
 
+file::default_mode() {
+  local umask_value; umask_value="$(umask)" || softfail || return $?
+  printf "%o" "$(( 0666 ^ "${umask_value}" ))" || softfail || return $?
+}
+
 dir::default_mode_with_remote_umask() {
   printf "%o" "$(( 0777 ^ "0${REMOTE_UMASK}" ))" || softfail || return $?
 }
@@ -217,6 +222,8 @@ file::update_block() {
 
   if [ -z "${file_mode:-}" ] && [ -f "${file_name}" ]; then
     file_mode="$(stat -c "%a" "${file_name}")" || softfail || return $?
+  else
+    file_mode="$(file::default_mode)" || softfail || return $?
   fi
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
