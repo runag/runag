@@ -89,6 +89,15 @@ rubygems::credentials() {
 YAML
 }
 
+# shellcheck disable=SC2034
+rubygems::direnv_credentials() {
+  local GEM_HOST_API_KEY="$1"
+  direnv::save_variables_to_block rubygems-credentials GEM_HOST_API_KEY || softfail || return $?
+
+  file::append_line_unless_present ".gitignore" ".envrc" || softfail || return $?
+  file::append_line_unless_present ".npmignore" ".envrc" || softfail || return $?
+}
+
 
 # ---- configuration ----
 
