@@ -150,7 +150,7 @@ app_release::link_as_current() {
 app_release::link_as_current::perform() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
 
-  symlink::update_link_to_current "releases/${APP_RELEASE:?}" "${app_dir}/current" || softfail || return $?
+  fs::update_symlink "releases/${APP_RELEASE:?}" "${app_dir}/current" || softfail || return $?
 }
 
 app_release::cleanup() {
