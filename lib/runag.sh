@@ -36,9 +36,9 @@ runag::runagfile_menu() {
   if [ -d "${HOME}/.runag" ]; then
     runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
+    runagfile_menu::add runag::update || softfail || return $?
     runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
     runagfile_menu::add runag::update_current_offline_install_if_connected || softfail || return $?
-    runagfile_menu::add runag::update || softfail || return $?
   fi
 }
 
