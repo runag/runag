@@ -62,4 +62,6 @@ clone_local_mirror_perhaps runag.git "${install_path}" "offline-install" || fail
   done
 fi ) || fail
 
+cd "${HOME}" || fail
+
 "${install_path}"/bin/runag
