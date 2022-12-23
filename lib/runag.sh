@@ -37,6 +37,7 @@ runag::runagfile_menu() {
     runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
     runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
+    runagfile_menu::add runag::update_current_offline_install_if_connected || softfail || return $?
     runagfile_menu::add runag::update || softfail || return $?
   fi
 }
@@ -49,8 +50,24 @@ runag::update() {
   runagfile::update-everything-in-runag || softfail || return $?
 }
 
+runag::update_current_offline_install_if_connected() {(
+  local runag_path="${HOME}/.runag"
+
+  if [ ! -d "${runag_path}/.git" ]; then
+    softfail "Unable to find rùnag checkout" || return $?
+  fi
+
+  local remote_path
+  if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
+    if [ -d "${remote_path}" ]; then
+      cd "${remote_path}/.." || softfail || return $?
+      runag::create_or_update_offline_install || softfail || return $?
+    fi
+  fi
+)}
+
 runag::create_or_update_offline_install() {
-  local runag_path="${HOME}"/.runag
+  local runag_path="${HOME}/.runag"
 
   if [ ! -d "${runag_path}/.git" ]; then
     softfail "Unable to find rùnag checkout" || return $?
@@ -59,6 +76,8 @@ runag::create_or_update_offline_install() {
   local current_directory; current_directory="$(pwd)" || softfail || return $?
 
   local runag_remote_url; runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?
+
+  git -C "${runag_path}" push origin main || softfail || return $?
 
   git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?
 
@@ -70,6 +89,8 @@ runag::create_or_update_offline_install() {
     if [ -d "${runagfile_path}" ]; then
       local runagfile_dir_name; runagfile_dir_name="$(basename "${runagfile_path}")" || softfail || return $?
       local runagfile_remote_url; runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?
+
+      git -C "${runagfile_path}" push origin main || softfail || return $?
 
       git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?
 
