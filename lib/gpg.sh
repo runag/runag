@@ -14,30 +14,80 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-gpg::import_key_with_ultimate_ownertrust() {
+gpg::import_key() {
+  local skip_if_exists trust_level
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+      -s|--skip-if-exists)
+        skip_if_exists=true
+        shift
+        ;;
+      -m|--trust-marginally)
+        trust_level=4
+        shift
+        ;;
+      -f|--trust-fully)
+        trust_level=5
+        shift
+        ;;
+      -u|--trust-ultimately)
+        trust_level=6
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   local gpg_key_id="$1"
   local source_path="$2"
 
-  if ! gpg --list-keys "${gpg_key_id}" >/dev/null 2>&1; then
-    file::wait_until_available "${source_path}" || softfail || return $?
+  local trust_levels=(- - - - marginally fully ultimately)
 
-    local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || fail
-    local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || fail
+  if [ "${skip_if_exists:-}" = true ] && gpg --list-keys "${gpg_key_id}" >/dev/null 2>&1; then
+    return
+  fi
 
-    echo "You are about to import GPG key with id: ${gpg_key_id} and set trust level for that key to \"I trust ultimately\"."
-    echo "Space-separated key id: ${key_with_spaces}"
-    echo "Base64-encoded key id: ${key_base64}"
-    echo "Please prepare the key password if needed."
-    echo "Please confirm that it is your intention to do so by entering \"yes\":"
+  local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?
+  local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
 
-    local action; IFS="" read -r action || fail
+  echo "You are about to import GPG key with id: ${gpg_key_id}."
 
-    if [ "${action}" != yes ]; then
-      fail
-    fi
+  if [ -n "${trust_level:-}" ]; then
+    echo "Trust level for that key will be set to \"Trust ${trust_levels[${trust_level}]}\""
+  fi
 
-    gpg --import "${source_path}" || softfail || return $?
-    echo "${gpg_key_id}:6:" | gpg --import-ownertrust || softfail || return $?
+  echo "Space-separated key id: ${key_with_spaces}"
+  echo "Base64-encoded key id: ${key_base64}"
+
+  echo ""
+  echo "Data to be imported:"
+  echo ""
+  gpg --import --import-options show-only "${source_path}" || softfail || return $?
+
+  echo "Please confirm that it is your intention to do so by entering \"yes\""
+  echo "Please prepare the key password if needed"
+  echo "Please enter \"no\" if you want to continue without this key being imported."
+
+  local action; IFS="" read -r action || softfail || return $?
+
+  if [ "${action}" == no ]; then
+    echo "Key is ignored"
+    return
+  fi
+
+  if [ "${action}" != yes ]; then
+    softfail || return $?
+  fi
+
+  gpg --import "${source_path}" || softfail || return $?
+
+  if [ -n "${trust_level:-}" ]; then
+    echo "${gpg_key_id}:${trust_level}:" | gpg --import-ownertrust || softfail || return $?
   fi
 }
 
@@ -78,4 +128,10 @@ gpg::decrypt_and_source_script() {
 
   test "${source_status}" = "0" || softfail || return $?
   test "${gpg_status}" = "0" || softfail || return $?
+}
+
+gpg::get_key_uid() {
+  local source_path="$1"
+  gpg --import --import-options show-only "${source_path}" | grep '^uid ' | head -n 1 | sed -E 's/^uid[[:space:]]+(.*)/\1/'
+  test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
 }
