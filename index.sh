@@ -34,7 +34,7 @@ runag::load_lib() {
   fi
 
   # load all lib/*.sh
-  local file_path; for file_path in "${runag_dir}"/lib/*.sh; do
+  local file_path; for file_path in "${runag_dir}/lib"/*.sh; do
     if [ -f "${file_path}" ]; then
       . "${file_path}" || { echo "Unable to load '${file_path}' ($?)" >&2; return 1; }
     fi

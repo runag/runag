@@ -32,7 +32,7 @@ shellrc::install_loader() {
 
 # shellrc.d loader
 if [ -d "\${HOME}"/.shellrc.d ]; then
-  for file_bb21go6nkCN82Gk9XeY2 in "\${HOME}"/.shellrc.d/*.sh; do
+  for file_bb21go6nkCN82Gk9XeY2 in "\${HOME}/.shellrc.d"/*.sh; do
     if [ -f "\${file_bb21go6nkCN82Gk9XeY2}" ]; then
       . "\${file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${file_bb21go6nkCN82Gk9XeY2} (\$?)" >&2; }
     fi

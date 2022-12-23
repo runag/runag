@@ -30,7 +30,7 @@ runagfile::add() {
 }
 
 runagfile::update-everything-in-runag() {
-  local runagfile_dir; for runagfile_dir in "${HOME}"/.runag/runagfiles/*; do
+  local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
     if [ -d "${runagfile_dir}/.git" ]; then
       git -C "${runagfile_dir}" pull || softfail || return $?
     fi
@@ -77,7 +77,7 @@ runagfile::load() {
 }
 
 runagfile::load-everything-from-runag() {
-  local file_path; for file_path in "${HOME}"/.runag/runagfiles/*/index.sh; do
+  local file_path; for file_path in "${HOME}/.runag/runagfiles"/*/index.sh; do
     if [ -f "${file_path}" ]; then
       . "${file_path}"
       softfail_unless_good "Unable to load '${file_path}' ($?)" $? || return $?
