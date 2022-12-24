@@ -15,9 +15,13 @@
 #  limitations under the License.
 
 gpg::import_key() {
-  local skip_if_exists trust_level
+  local skip_if_exists trust_level should_confirm
   while [[ "$#" -gt 0 ]]; do
     case $1 in
+      -c|--confirm)
+        should_confirm=true
+        shift
+        ;;
       -s|--skip-if-exists)
         skip_if_exists=true
         shift
@@ -52,36 +56,38 @@ gpg::import_key() {
     return
   fi
 
-  local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?
-  local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
+  if [ "${should_confirm:-}" = true ]; then
+    local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?
+    local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
 
-  echo "You are about to import GPG key with id: ${gpg_key_id}."
+    echo "You are about to import GPG key with id: ${gpg_key_id}."
 
-  if [ -n "${trust_level:-}" ]; then
-    echo "Trust level for that key will be set to \"Trust ${trust_levels[${trust_level}]}\""
-  fi
+    if [ -n "${trust_level:-}" ]; then
+      echo "Trust level for that key will be set to \"Trust ${trust_levels[${trust_level}]}\""
+    fi
 
-  echo "Space-separated key id: ${key_with_spaces}"
-  echo "Base64-encoded key id: ${key_base64}"
+    echo "Space-separated key id: ${key_with_spaces}"
+    echo "Base64-encoded key id: ${key_base64}"
 
-  echo ""
-  echo "Data to be imported:"
-  echo ""
-  gpg --import --import-options show-only "${source_path}" || softfail || return $?
+    echo ""
+    echo "Data to be imported:"
+    echo ""
+    gpg --import --import-options show-only "${source_path}" || softfail || return $?
 
-  echo "Please confirm that it is your intention to do so by entering \"yes\""
-  echo "Please prepare the key password if needed"
-  echo "Please enter \"no\" if you want to continue without this key being imported."
+    echo "Please confirm that it is your intention to do so by entering \"yes\""
+    echo "Please prepare the key password if needed"
+    echo "Please enter \"no\" if you want to continue without this key being imported."
 
-  local action; IFS="" read -r action || softfail || return $?
+    local action; IFS="" read -r action || softfail || return $?
 
-  if [ "${action}" == no ]; then
-    echo "Key is ignored"
-    return
-  fi
+    if [ "${action}" == no ]; then
+      echo "Key is ignored"
+      return
+    fi
 
-  if [ "${action}" != yes ]; then
-    softfail || return $?
+    if [ "${action}" != yes ]; then
+      softfail || return $?
+    fi
   fi
 
   gpg --import "${source_path}" || softfail || return $?
