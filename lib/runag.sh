@@ -77,6 +77,7 @@ runag::create_or_update_offline_install() {
 
   local runag_remote_url; runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?
 
+  git -C "${runag_path}" pull origin main || softfail || return $?
   git -C "${runag_path}" push origin main || softfail || return $?
 
   git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?
@@ -90,6 +91,7 @@ runag::create_or_update_offline_install() {
       local runagfile_dir_name; runagfile_dir_name="$(basename "${runagfile_path}")" || softfail || return $?
       local runagfile_remote_url; runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?
 
+      git -C "${runagfile_path}" pull origin main || softfail || return $?
       git -C "${runagfile_path}" push origin main || softfail || return $?
 
       git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?
