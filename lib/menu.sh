@@ -106,12 +106,14 @@ menu::display_menu() {
   local item index=1
   local current_color="" current_color_slight_accent="" current_color_notable_accent=""
   local endline_sticker=""
+  local last_line_was_header=false
 
   for item in "$@"; do
     if [ -z "${item}" ]; then
       # delimiter
       echo ""
       current_color=""
+      last_line_was_header=false
 
     elif [[ "${item}" =~ ^\# ]]; then
       # subheader, note, or header
@@ -122,6 +124,7 @@ menu::display_menu() {
         echo "  ${header_color}## ${item:3}${default_color}"
         echo ""
         current_color=""
+        last_line_was_header=true
 
       elif [[ "${item}" =~ ^\#\#\#\  ]]; then
         # subheader
@@ -129,12 +132,16 @@ menu::display_menu() {
         echo "  ${header_color}### ${item:4}${default_color}"
         echo ""
         current_color=""
+        last_line_was_header=true
 
       elif [[ "${item}" =~ ^\#\>\  ]]; then
         # note
-        echo "  ${comment_color}> ${item:3}${default_color}"
+        if [ "${last_line_was_header}" = false ]; then
+          echo ""
+        fi
+        echo "   ${comment_color}> ${item:3}${default_color}"
         current_color=""
-
+        last_line_was_header=false
       fi
 
     else
@@ -165,6 +172,8 @@ menu::display_menu() {
       fi
 
       echo "  ${current_color_slight_accent} $((index)))${default_color} ${current_color}${item}${default_color}${endline_sticker}"
+
+      last_line_was_header=false
 
       ((index+=1))
     fi
