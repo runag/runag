@@ -160,7 +160,7 @@ git::install_git() {
 git::is_local_remote_connected() {
   local remote_name="${1:-"origin"}"
 
-  local remote_path; remote_path="$(git config "remote.${remote_name}.url")" || softfail "Remote not found" || return $?
+  local remote_path; remote_path="$(git config "remote.${remote_name}.url")" || softfail "Remote url not found" || return $?
 
   if [[ ! "${remote_path}" =~ / ]]; then
     softfail "Remote path should be an absolute path: ${remote_path}" || return $?
