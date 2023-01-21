@@ -166,7 +166,7 @@ git::is_local_remote_connected() {
     fail "Remote path should be an absolute path: ${remote_path}" # fail here in intentional, as function is called from if..then block
   fi
 
-  [ -d "${remote_path}" ] && [ -d "${remote_path}/config" ]
+  [ -d "${remote_path}" ] && [ -f "${remote_path}/config" ]
 }
 
 git::add_or_update_remote() {
