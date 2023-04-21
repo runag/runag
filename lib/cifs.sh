@@ -37,6 +37,8 @@ cifs::mount() {
 
   dir::make_if_not_exists "${mount_point}" "${dir_mode}" || softfail || return $?
 
+  # TODO: file::read_with_updated_block /etc/fstab SOMETHING | fstab::verify_and_write
+
   local fstab_tag="# cifs mount: ${mount_point}"
 
   if ! grep -qFx "${fstab_tag}" /etc/fstab; then
