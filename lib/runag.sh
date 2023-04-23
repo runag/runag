@@ -37,7 +37,7 @@ runag::runagfile_menu() {
     runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
     runagfile_menu::add runag::update || softfail || return $?
-    runagfile_menu::add runag::create_or_update_offline_install || softfail || return $?
+    runagfile_menu::add --comment "Current directory will be used" runag::create_or_update_offline_install || softfail || return $?
     runagfile_menu::add runag::update_current_offline_install_if_connected || softfail || return $?
   fi
 }
