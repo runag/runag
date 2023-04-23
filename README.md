@@ -22,7 +22,8 @@ It probably won't help you to deploy some complex setups, but it can configure a
 
 You are now looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with the library please check "rùnagfiles", that resides in other repositories:
 
-  * [💚 Rùnagfile to configure a workstation](https://github.com/runag/workstation-runagfile). It creates a computer that I could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
+* [💚 Rùnagfile to configure a workstation](https://github.com/runag/workstation-runagfile). It creates a computer that could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
+
 
 ## One-liner to deploy rùnag an a new machine
 
@@ -42,6 +43,7 @@ add user/repo
 run [function_name [function_arguments]]
 ```
 
+
 ## Offline install
 
 ```sh
@@ -53,13 +55,10 @@ runag offline_runag_install::create_or_update
 bash deploy-offline.sh
 ```
 
-## Use of the library in scripts or interactive use
-
-Rùnag is a collection of functions that you might load into your interactive bash terminal or in your scripts with the `. runag` or `source runag` command.
 
 ## Rùnagfile
 
-You could make a file called `runagfile` and then run `runag` to execute commands from it. You could also have a directory called `runagfile` that must contain an `index.sh` file. At your convenience you could organise the rest of the files in that directory.
+You could make a file called `runagfile` and then run `runag` to execute commands from it. You could also have a directory called `runagfile` that must contain an `index.sh` file. You could organise the rest of the files in that directory at your convenience.
 
 Possible rùnagfile locations are:
 
@@ -75,6 +74,12 @@ Possible rùnagfile locations are:
 # inside of the collection of rùnagfiles that were added to a rùnag installation
 ~/.runag/runagfiles/*/index.sh
 ```
+
+
+## Interactive use or use in scripts besides rùnagfiles
+
+You may load Rùnag into your interactive bash terminal or in your scripts with the `. runag` or `source runag` command.
+
 
 ## API docs
 
@@ -98,13 +103,17 @@ Please refer to the source code for now.
 * [archival_snapshots](lib/archival_snapshots.sh)
 * [bash](lib/bash.sh)
 * [config](lib/config.sh)
+* [dir](lib/dir.sh)
+* [file](lib/file.sh)
 * [fs](lib/fs.sh)
+* [source](lib/source.sh)
 * [task](lib/task.sh)
 
 ### Interfacing with OS anv VMs
 
 * [apt](lib/apt.sh)
 * [btrfs](lib/btrfs.sh)
+* [fstab](lib/fstab.sh)
 * [linux](lib/linux.sh)
 * [macos](lib/macos.sh)
 * [os](lib/os.sh)
@@ -122,6 +131,7 @@ Please refer to the source code for now.
 ### Development
 
 * [asdf](lib/asdf.sh)
+* [erlang](lib/erlang.sh)
 * [git](lib/git.sh)
 * [imagemagick](lib/imagemagick.sh)
 * [nodejs](lib/nodejs.sh)
@@ -165,8 +175,8 @@ Please refer to the source code for now.
 
 <!-- API TOC END -->
 
-## Environment variables
 
+## Environment variables
 
 ### General
 
@@ -184,7 +194,6 @@ Could be set to `"true"`
 #### `RUNAG_VERBOSE`
 
 Could be set to `"true"`
-
 
 ### SSH-related variables
 
@@ -251,7 +260,6 @@ Umask for remote commands
 User name.
 By default rùnag will not provide any user name so ssh could use it's defaults.
 
-
 ### Rsync-related variables
 
 #### `RUNAG_RSYNC_ARGS`
@@ -265,7 +273,6 @@ Could be set to `"true"`
 #### `RUNAG_RSYNC_WITHOUT_CHECKSUMS`
 
 Could be set to `"true"`
-
 
 ### Tasks-related variables
 
@@ -305,7 +312,6 @@ Could be set to function name. Function is expected to filter it's input. If fun
 
 Could be set to `"true"`
 
-
 ### Internal variables, not to be used by non-library code
 
 ```
@@ -315,9 +321,11 @@ RUNAG_TASK_OMIT_TITLE
 RUNAG_TASK_TITLE
 ```
 
+
 ## License
 
 [Apache License, Version 2.0](LICENSE).
+
 
 ## Contributing
 
