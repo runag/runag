@@ -128,7 +128,9 @@ menu::display_menu() {
 
       elif [[ "${item}" =~ ^\#\#\#\  ]]; then
         # subheader
-        echo ""
+        if [ "${last_line_was_header}" = false ]; then
+          echo ""
+        fi
         echo "  ${header_color}### ${item:4}${default_color}"
         echo ""
         current_color=""
