@@ -128,7 +128,7 @@ menu::display_menu() {
 
       elif [[ "${item}" =~ ^\#\#\#\  ]]; then
         # subheader
-        if [ "${last_line_was_header}" = false ]; then
+        if [ "${last_line_was_header}" != true ]; then
           echo ""
         fi
         echo "  ${header_color}### ${item:4}${default_color}"
@@ -138,9 +138,6 @@ menu::display_menu() {
 
       elif [[ "${item}" =~ ^\#\>\  ]]; then
         # note
-        if [ "${last_line_was_header}" = false ]; then
-          echo ""
-        fi
         echo "   ${comment_color}> ${item:3}${default_color}"
         current_color=""
         last_line_was_header=false
