@@ -38,14 +38,20 @@ archival_snapshots::cleanup() {
     return $? # the expression takes a line of its own, because if softfail fails to set non-zero exit status, then we still need to make sure a return from the function will happen here
   fi
 
-  for snapshot_path in "${snapshots_dir:?}"/*; do # :? here is to make sure we don't accidentally cleanup root directory
+  for snapshot_path in "${snapshots_dir:?}"/*; do # :?}" here is to make sure we don't accidentally cleanup root directory
     if [ -d "${snapshot_path:?}" ]; then
       echo "${snapshot_path:?}"
     fi
   done | sort | head "--lines=-${keep_amount:?}" | \
   while IFS="" read -r remove_this_snapshot; do
-    echo "Removing ${remove_this_snapshot}..."
-    sudo btrfs subvolume delete "${remove_this_snapshot:?}" || softfail || return $? # :? here is for no reason
+    # :?}" down here is for no reason?
+    echo "Removing ${remove_this_snapshot:?}..."
+
+    if [ "$(stat --format=%i "${remove_this_snapshot:?}")" -eq 256 ]; then
+      sudo btrfs subvolume delete "${remove_this_snapshot:?}" || softfail || return $?
+    else
+      rm -rf "${remove_this_snapshot:?}" || softfail || return $? # TODO: is it good idea to use rm here? maybe create another function or add --allow-rm flag?
+    fi
   done
 
   if [[ "${PIPESTATUS[*]}" =~ [^0[:space:]] ]]; then
