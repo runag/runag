@@ -36,7 +36,7 @@ source::recursive() {
 
   local item_path; for item_path in "${directory_path}"/*; do
     if [ -f "${item_path}" ] && [[ "${item_path}" =~ \.sh$ ]]; then
-      . "${item_path}" || softfail "Unable to load: ${file_path}" || return $?
+      . "${item_path}" || softfail "Unable to load: ${item_path}" || return $?
     fi
   done
 
