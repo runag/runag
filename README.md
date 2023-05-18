@@ -89,18 +89,18 @@ Please refer to the source code for now.
 
 ### Rùnag core
 
-* [deploy_script](lib/deploy_script.sh)
+* [deploy-script](lib/deploy-script.sh)
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
 * [runag](lib/runag.sh)
-* [runagfile_menu](lib/runagfile_menu.sh)
+* [runagfile-menu](lib/runagfile-menu.sh)
 * [runagfile](lib/runagfile.sh)
 * [terminal](lib/terminal.sh)
 
 ### General utility
 
-* [archival_snapshots](lib/archival_snapshots.sh)
+* [archival-snapshots](lib/archival-snapshots.sh)
 * [bash](lib/bash.sh)
 * [config](lib/config.sh)
 * [dir](lib/dir.sh)
@@ -158,15 +158,15 @@ Please refer to the source code for now.
 
 ### Application deployment
 
-* [app_release](lib/app_release.sh)
-* [app_units](lib/app_units.sh)
+* [app-release](lib/app-release.sh)
+* [app-units](lib/app-units.sh)
 * [direnv](lib/direnv.sh)
 
 ### Desktop applications
 
 * [firefox](lib/firefox.sh)
-* [sublime_merge](lib/sublime_merge.sh)
-* [sublime_text](lib/sublime_text.sh)
+* [sublime-merge](lib/sublime-merge.sh)
+* [sublime-text](lib/sublime-text.sh)
 * [vscode](lib/vscode.sh)
 
 ### Hard to define a category
