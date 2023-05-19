@@ -169,9 +169,10 @@ Please refer to the source code for now.
 * [sublime-text](lib/sublime-text.sh)
 * [vscode](lib/vscode.sh)
 
-### Hard to define a category
+### Miscellaneous tools
 
 * [benchmark](lib/benchmark.sh)
+* [restic](lib/restic.sh)
 
 <!-- API TOC END -->
 
