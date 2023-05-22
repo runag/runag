@@ -50,6 +50,14 @@ runag::update() {
   runagfile::update-everything-in-runag || softfail || return $?
 }
 
+runag::push() {
+  if [ -d "${HOME}/.runag/.git" ]; then
+    git -C "${HOME}/.runag" push || softfail || return $?
+  fi
+
+  runagfile::push-everything-in-runag || softfail || return $?
+}
+
 runag::update_current_offline_install_if_connected() {(
   local runag_path="${HOME}/.runag"
 
