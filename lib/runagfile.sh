@@ -37,6 +37,14 @@ runagfile::update-everything-in-runag() {
   done
 }
 
+runagfile::push-everything-in-runag() {
+  local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
+    if [ -d "${runagfile_dir}/.git" ]; then
+      git -C "${runagfile_dir}" push || softfail || return $?
+    fi
+  done
+}
+
 # Find and load rùnagfile.
 #
 # Possible locations are:
