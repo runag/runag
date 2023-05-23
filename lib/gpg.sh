@@ -80,7 +80,7 @@ gpg::import_key() {
 
     local action; IFS="" read -r action || softfail || return $?
 
-    if [ "${action}" == no ]; then
+    if [ "${action}" = no ]; then
       echo "Key is ignored"
       return
     fi

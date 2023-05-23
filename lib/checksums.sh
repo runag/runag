@@ -34,12 +34,12 @@ checksums::create_or_update() {
       if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" != true ]; then
         cat "${new_checksum_file}" || softfail || return $?
         echo ""
-        echo "Do you want to create the checksum file: ${directory}/${current_checksum_file} (Y/N)?"
+        echo "Do you want to create the checksum file: ${directory}/${current_checksum_file} (yes/no)?"
         
         IFS="" read -r action || softfail || return $?
       fi
       
-      if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || [ "${action}" = y ] || [ "${action}" = Y ]; then
+      if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || [ "${action}" = yes ]; then
         cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
 
         if [ -d .git ]; then
@@ -64,11 +64,11 @@ checksums::create_or_update() {
     fi
 
     echo ""
-    echo "Do you want to update the checksum file: ${directory}/${current_checksum_file} (Y/N)?"
+    echo "Do you want to update the checksum file: ${directory}/${current_checksum_file} (yes/no)?"
 
     IFS="" read -r action || softfail || return $?
 
-    if [ "${action}" = y ] || [ "${action}" = Y ]; then
+    if [ "${action}" = yes ]; then
       cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
 
       if [ -d .git ]; then
