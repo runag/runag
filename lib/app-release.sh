@@ -52,7 +52,7 @@ app_release::push_local_repo_to_remote() {
 
   git::add_or_update_remote "${remote_name}" "${git_remote_url}" || softfail || return $?
 
-  git push "${remote_name}" master || softfail || return $?
+  git push "${remote_name}" main || softfail || return $?
 }
 
 app_release::pull_remote_to_local_repo() {
@@ -62,7 +62,7 @@ app_release::pull_remote_to_local_repo() {
 
   git::add_or_update_remote "${remote_name}" "${git_remote_url}" || softfail || return $?
 
-  git pull "${remote_name}" master || softfail || return $?
+  git pull "${remote_name}" main || softfail || return $?
 }
 
 app_release::make_with_group() {
