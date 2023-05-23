@@ -34,9 +34,7 @@ clone_or_update_local_mirror() {
 
   local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || fail
 
-  if [ -d "${dest_path}" ]; then
-    git -C "${dest_path}" pull "${remote_name}" main || fail
-  else
+  if [ ! -d "${dest_path}" ]; then
     git clone "${source_path}" "${dest_path}" || fail
 
     local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail
@@ -45,6 +43,8 @@ clone_or_update_local_mirror() {
     if [ -n "${remote_name}" ]; then
       git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail
     fi
+  else
+    git -C "${dest_path}" pull "${remote_name}" main || fail
   fi
 }
 
