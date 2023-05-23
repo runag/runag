@@ -27,14 +27,16 @@ if ! command -v git >/dev/null; then
   sudo DEBIAN_FRONTEND=noninteractive apt-get -y install git || fail
 fi
 
-clone_local_mirror_perhaps() {
+clone_or_update_local_mirror() {
   local source_path="$1"
   local dest_path="$2"
   local remote_name="${3:-}"
 
   local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || fail
 
-  if [ ! -d "${dest_path}" ]; then
+  if [ -d "${dest_path}" ]; then
+    git -C "${dest_path}" pull "${remote_name}" main || fail
+  else
     git clone "${source_path}" "${dest_path}" || fail
 
     local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail
@@ -52,12 +54,12 @@ fi
 
 install_path="${HOME}"/.runag
 
-clone_local_mirror_perhaps runag.git "${install_path}" "offline-install" || fail
+clone_or_update_local_mirror runag.git "${install_path}" "offline-install" || fail
 
 ( if cd runagfiles >/dev/null 2>&1; then
   for runagfile in *; do
     if [ -d "${runagfile}" ]; then
-      clone_local_mirror_perhaps "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail
+      clone_or_update_local_mirror "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail
     fi
   done
 fi ) || fail
