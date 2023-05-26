@@ -19,7 +19,7 @@ shellrc::install_loader() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${shellrc_dir}" || softfail || return $?
 
   if [ ! -f "${shellrc_file}" ]; then
     # ubuntu default seems to be 133 (rw-r--r--)
@@ -48,7 +48,7 @@ shellrc::get_filename() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${shellrc_dir}" || softfail || return $?
   echo "${shellrc_dir}/${name}.sh" || softfail || return $?
 }
 
@@ -57,7 +57,7 @@ shellrc::write() {
 
   local shellrc_dir="${HOME}/.shellrc.d"
 
-  dir::make_if_not_exists "${shellrc_dir}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${shellrc_dir}" || softfail || return $?
   file::write --mode 0600 "${shellrc_dir}/${name}.sh" || softfail || return $?
 }
 
@@ -106,6 +106,7 @@ SHELL
 
 shellrc::install_editor_rc() {
   local editor_path="$1"
+  
   shellrc::write "editor" <<SHELL || softfail || return $?
 $(runag::print_license)
 

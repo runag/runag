@@ -176,7 +176,7 @@ task::complete() {
     fi
 
     if [ -s "${temp_dir}/stderr" ]; then
-      test -t 2 && terminal::color 9 >&2
+      test -t 2 && terminal::color --foreground 9 >&2
       cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=2; }
       test -t 2 && terminal::default_color >&2
     fi

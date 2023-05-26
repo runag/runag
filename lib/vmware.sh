@@ -66,8 +66,27 @@ vmware::add_hgfs_automount() {
 }
 
 vmware::symlink_hgfs_mounts() {
-  local mount_point="${1:-"/mnt/hgfs"}"
-  local symlinks_directory="${1:-"${HOME}"}"
+  local mount_point="/mnt/hgfs"
+  local symlinks_directory="${HOME}"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -m|--mount-point)
+      mount_point="$2"
+      shift; shift
+      ;;
+    -s|--symlinks-directory)
+      symlinks_directory="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
 
   if findmnt --mountpoint "${mount_point}" >/dev/null; then
     local dir_path dir_name
@@ -90,7 +109,7 @@ vmware::get_host_ip_address() {
 }
 
 vmware::configure_passwordless_sudo_for_dmidecode_in_get_machine_uuid() {
-  echo "${USER} ALL=NOPASSWD: /usr/sbin/dmidecode" | file::sudo_write /etc/sudoers.d/dmidecode 440 || softfail || return $?
+  <<<"${USER} ALL=NOPASSWD: /usr/sbin/dmidecode" file::write --sudo --mode 0440 /etc/sudoers.d/dmidecode || softfail || return $?
 }
 
 vmware::get_machine_uuid() {
@@ -109,14 +128,14 @@ vmware::vm_network_loss_workaround() {
 }
 
 vmware::install_vm_network_loss_workaround() {
-  file::sudo_write /usr/local/bin/vmware-vm-network-loss-workaround 755 <<SHELL || softfail || return $?
+  file::write --sudo --mode 0755 /usr/local/bin/vmware-vm-network-loss-workaround <<SHELL || softfail || return $?
 #!/usr/bin/env bash
 $(runag::print_license)
 $(declare -f vmware::vm_network_loss_workaround)
 vmware::vm_network_loss_workaround || { echo "Unable to perform vmware::vm_network_loss_workaround" >&2; exit 1; }
 SHELL
 
-  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.service <<EOF || softfail || return $?
+  file::write --sudo --mode 0644 /etc/systemd/system/vmware-vm-network-loss-workaround.service <<EOF || softfail || return $?
 [Unit]
 Description=vmware-vm-network-loss-workaround
 
@@ -126,7 +145,7 @@ ExecStart=/usr/local/bin/vmware-vm-network-loss-workaround
 WorkingDirectory=/
 EOF
 
-  file::sudo_write /etc/systemd/system/vmware-vm-network-loss-workaround.timer <<EOF || softfail || return $?
+  file::write --sudo --mode 0644 /etc/systemd/system/vmware-vm-network-loss-workaround.timer <<EOF || softfail || return $?
 [Unit]
 Description=vmware-vm-network-loss-workaround
 

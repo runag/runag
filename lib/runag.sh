@@ -92,7 +92,7 @@ runag::create_or_update_offline_install() {
 
   ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${current_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?
 
-  dir::make_if_not_exists "runagfiles" || softfail || return $?
+  dir::should_exists --mode 0700 "runagfiles" || softfail || return $?
 
   local runagfile_path; for runagfile_path in "${runag_path}/runagfiles"/*; do
     if [ -d "${runagfile_path}" ]; then

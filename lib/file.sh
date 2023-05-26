@@ -15,36 +15,75 @@
 #  limitations under the License.
 
 file::default_mode() {
-  local umask_value; umask_value="$(umask)" || softfail || return $?
+  local perhaps_sudo=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -s|--sudo)
+      perhaps_sudo=sudo
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local umask_value
+  
+  if [ "${perhaps_sudo}" = sudo ]; then
+    umask_value="$(sudo /usr/bin/sh -c umask)" || softfail || return $?
+  else
+    umask_value="$(umask)" || softfail || return $?
+  fi
+
   printf "%o" "$(( 0666 ^ "${umask_value}" ))" || softfail || return $?
 }
 
-file::sudo_write() {
-  local dest="$1"
-  local mode="${2:-}"
-  local owner="${3:-}"
-  local group="${4:-}"
-
-  if [ -n "${mode}" ] || [ -n "${owner}" ] || [ -n "${group}" ]; then
-    # I want to create a file with the right mode right away
-    # the use of "install" command performs that, at least on linux and macos
-    # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
-    # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
-    sudo install ${mode:+-m "${mode}"} ${owner:+-o "${owner}"} ${group:+-g "${group}"} /dev/null "${dest}" || softfail || return $?
-  fi
-
-  cat | sudo tee "${dest}" >/dev/null
-  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
-}
-
+# --mode
+# --owner
+# --group
+# --sudo
+# --keep-permissions
+# --allow-empty
 file::write() {
-  local file_mode="0600"
+  local file_mode=""
+  local file_owner=""
+  local file_group=""
+  local perhaps_sudo=""
+  local keep_permissions=false
+  local allow_empty=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -m|--mode)
       file_mode="$2"
       shift; shift
+      ;;
+    -o|--owner)
+      file_owner="$2"
+      perhaps_sudo=sudo
+      shift; shift
+      ;;
+    -g|--group)
+      file_group="$2"
+      perhaps_sudo=sudo
+      shift; shift
+      ;;
+    -s|--sudo)
+      perhaps_sudo=sudo
+      shift
+      ;;
+    -k|--keep-permissions)
+      keep_permissions=true
+      shift
+      ;;
+    -e|--allow-empty)
+      allow_empty=true
+      shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -56,6 +95,19 @@ file::write() {
   done
 
   local file_path="$1"
+  # $2 may also be used further in the function
+
+  if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
+    file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
+  fi
+
+  if [ -z "${file_mode}" ]; then
+    if ${perhaps_sudo} test -f "${file_path}"; then
+      file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
+    else
+      file_mode="$(file::default_mode ${perhaps_sudo:+"--sudo"})" || softfail || return $?
+    fi
+  fi
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
@@ -65,53 +117,45 @@ file::write() {
     cat >"${temp_file}" || softfail "Unable to write to temp file" || return $?
   fi
 
-  if [ ! -s "${temp_file}" ]; then
+  if [ ! -s "${temp_file}" ] && [ "${allow_empty}" = false ]; then
     rm "${temp_file}" || softfail || return $?
-    softfail "Zero-length input" || return $?
+    softfail "Empty input for file::write" || return $?
   fi
 
-  if [ -n "${file_mode}" ]; then
-    chmod "${file_mode}" "${temp_file}" || softfail || return $?
-  fi
-  
-  mv "${temp_file}" "${file_path}" || softfail || return $?
-}
-
-file::append() {
-  local dest="$1"
-  local mode="${2:-}"
-
-  if [ -n "${mode}" ] && [ ! -f "${dest}" ]; then
-    # I want to create a file with the right mode right away
-    # the use of "install" command performs that, at least on linux and macos
-    # it creates a file with the mode 600, which is good, and then it changes the mode to the one provided in the argument
-    # it's probably better to make it different, like calculate umask and then "cat" to it, but I don't have time to think about that right now
-    install -m "${mode}" /dev/null "${dest}" || softfail "Unable to create file" || return $?
-  fi
-
-  tee -a "${dest}" >/dev/null || softfail "Unable to write to file" || return $?
+  ${perhaps_sudo} install ${file_owner:+-o "${file_owner}"} ${file_group:+-g "${file_group}"} ${file_mode:+-m "${file_mode}"} -C "${temp_file}" "${file_path}" || softfail || return $?
 }
 
 file::append_line_unless_present() {
+  local perhaps_sudo=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -s|--sudo)
+      perhaps_sudo=sudo
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+  
   local file="$1"
   local string="$2"
 
-  if ! test -f "${file}" || ! grep -qFx "${string}" "${file}"; then
-    echo "${string}" | tee -a "${file}" >/dev/null || softfail || return $?
-  fi
-}
-
-file::sudo_append_line_unless_present() {
-  local file="$1"
-  local string="$2"
-
-  if ! sudo test -f "${file}" || ! sudo grep -qFx "${string}" "${file}"; then
-    echo "${string}" | sudo tee -a "${file}" >/dev/null || softfail || return $?
+  if ! ${perhaps_sudo} test -f "${file}" || ! ${perhaps_sudo} grep -qFx "${string}" "${file}"; then
+    <<<"${string}" ${perhaps_sudo} tee -a "${file}" >/dev/null || softfail || return $?
   fi
 }
 
 file::update_block() {
-  local file_mode file_owner file_group
+  local file_mode=""
+  local file_owner=""
+  local file_group=""
+  local perhaps_sudo=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -121,11 +165,17 @@ file::update_block() {
       ;;
     -o|--owner)
       file_owner="$2"
+      perhaps_sudo=sudo
       shift; shift
       ;;
     -g|--group)
       file_group="$2"
+      perhaps_sudo=sudo
       shift; shift
+      ;;
+    -s|--sudo)
+      perhaps_sudo=sudo
+      shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -136,34 +186,45 @@ file::update_block() {
     esac
   done
 
-  local file_name="$1"
+  local file_path="$1"
   local block_name="$2"
 
-  if [ -z "${file_mode:-}" ] && [ -f "${file_name}" ]; then
-    file_mode="$(stat -c "%a" "${file_name}")" || softfail || return $?
+  if [ -z "${file_mode}" ] && ${perhaps_sudo} test -f "${file_path}"; then
+    file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
   else
-    file_mode="$(file::default_mode)" || softfail || return $?
+    file_mode="$(file::default_mode ${perhaps_sudo:+"--sudo"})" || softfail || return $?
   fi
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
-  file::read_with_updated_block "${file_name}" "${block_name}" ${file_owner:+"--sudo"} >"${temp_file}" || softfail || return $?
+  file::read_with_updated_block ${perhaps_sudo:+"--sudo"} "${file_path}" "${block_name}" >"${temp_file}" || softfail || return $?
 
-  ${file_owner:+"sudo"} install ${file_owner:+-o "${file_owner}"} ${file_group:+-g "${file_group}"} ${file_mode:+-m "${file_mode}"} -C "${temp_file}" "${file_name}" || softfail || return $?
+  ${perhaps_sudo} install ${file_owner:+-o "${file_owner}"} ${file_group:+-g "${file_group}"} ${file_mode:+-m "${file_mode}"} -C "${temp_file}" "${file_path}" || softfail || return $?
 }
 
 file::read_with_updated_block() {
-  local file_name="$1"
-  local block_name="$2"
-
   local perhaps_sudo=""
 
-  if [ "${3:-}" = "--sudo" ]; then
-    perhaps_sudo=sudo
-  fi
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -s|--sudo)
+      perhaps_sudo=sudo
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
 
-  if [ -f "${file_name}" ]; then
-    ${perhaps_sudo} cat "${file_name}" | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
+  local file_path="$1"
+  local block_name="$2"
+
+  if ${perhaps_sudo} test -f "${file_path}"; then
+    ${perhaps_sudo} cat "${file_path}" | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   fi
 
@@ -175,11 +236,11 @@ file::read_with_updated_block() {
 }
 
 file::get_block() {
-  local file_name="$1"
+  local file_path="$1"
   local block_name="$2"
 
-  if [ -f "${file_name}" ]; then
-    <"${file_name}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" || softfail || return $?
+  if [ -f "${file_path}" ]; then
+    <"${file_path}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" || softfail || return $?
   fi
 }
 

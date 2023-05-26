@@ -15,22 +15,22 @@
 #  limitations under the License.
 
 sshd::disable_password_authentication() {
-  dir::sudo_make_if_not_exists /etc/ssh 755 || softfail || return $?
-  dir::sudo_make_if_not_exists /etc/ssh/sshd_config.d 755 || softfail || return $?
-  echo "PasswordAuthentication no" | file::sudo_write /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
+  dir::should_exists --sudo --mode 0755 /etc/ssh  || softfail || return $?
+  dir::should_exists --sudo --mode 0755 /etc/ssh/sshd_config.d || softfail || return $?
+  <<<"PasswordAuthentication no" file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
 }
 
 ssh::make_config_dir_if_not_exists() {
-  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
 }
 
 ssh::make_control_sockets_dir_if_not_exists() {
-  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
-  dir::make_if_not_exists "${HOME}/.ssh/control-sockets" 0700 || softfail "Unable to create ssh control sockets directory" || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh/control-sockets" || softfail "Unable to create ssh control sockets directory" || return $?
 }
 ssh::make_config_d_dir_if_not_exists() {
-  dir::make_if_not_exists "${HOME}/.ssh" 0700 || softfail "Unable to create ssh user config directory" || return $?
-  dir::make_if_not_exists_and_set_permissions "${HOME}/.ssh/ssh_config.d" 0700 || softfail "Unable to create ssh user config.d directory" || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh/ssh_config.d" || softfail "Unable to create ssh user config.d directory" || return $?
 }
 
 ssh::add_ssh_config_d_include_directive() {
@@ -44,8 +44,8 @@ ssh::copy_authorized_keys_to_user() {
   local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
 
   if [ ! -f "${user_home}/.ssh/authorized_keys" ]; then
-    dir::sudo_make_if_not_exists "${user_home}/.ssh" 700 "${user_name}" "${user_name}" || softfail || return $?
-    file::sudo_write "${user_home}/.ssh/authorized_keys" 600 "${user_name}" "${user_name}" <"${HOME}/.ssh/authorized_keys" || softfail || return $?
+    dir::should_exists --sudo --mode 0700 --owner "${user_name}" --group "${user_name}" "${user_home}/.ssh" || softfail || return $?
+    file::write --sudo --mode 0600 --owner "${user_name}" --group "${user_name}" "${user_home}/.ssh/authorized_keys" <"${HOME}/.ssh/authorized_keys" || softfail || return $?
   fi
 }
 
@@ -57,9 +57,9 @@ ssh::import_id() {
   local authorized_keys="${user_home}/.ssh/authorized_keys"
 
   if [ "${user_name}" != "${USER}" ]; then
-    dir::sudo_make_if_not_exists "${user_home}/.ssh" 0700 "${user_name}" "${user_name}" || softfail || return $?
+    dir::should_exists --sudo --mode 0700 --owner "${user_name}" --group "${user_name}" "${user_home}/.ssh" || softfail || return $?
   else
-    dir::make_if_not_exists "${user_home}/.ssh" 0700 || softfail || return $?
+    dir::should_exists --mode 0700 "${user_home}/.ssh" || softfail || return $?
   fi
 
   ssh-import-id --output "${authorized_keys}" "${public_user_id}" || softfail || return $?
@@ -547,7 +547,7 @@ ssh::task::nohup_raw_invoke() {
 ssh::task::information_message() {
   local message="$1"
   if [ -t 2 ]; then
-    test -t 2 && terminal::color 12 >&2
+    test -t 2 && terminal::color --foreground 12 >&2
     echo "${message}" >&2
     test -t 2 && terminal::default_color >&2
   fi

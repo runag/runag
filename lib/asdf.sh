@@ -22,7 +22,7 @@ asdf::install_dependencies::apt() {
 }
 
 asdf::install() {
-  local asdf_version; asdf_version="${1:-"$(github::get_release_tag_name asdf-vm/asdf)"}" || softfail || return $?
+  local asdf_version; asdf_version="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" || softfail || return $?
   git::place_up_to_date_clone --branch "${asdf_version}" "https://github.com/asdf-vm/asdf.git" "${HOME}/.asdf" || softfail || return $?
   asdf::load || softfail || return $?
 }

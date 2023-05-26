@@ -68,7 +68,7 @@ softfail::internal() {
 
   # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
   # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
-  log::error_trace "${message}" 3 || echo "Unable to log error: ${message}" >&2
+  log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" >&2
 
   if [ "${exit_status}" != 0 ]; then
     return "${exit_status}"
@@ -89,7 +89,7 @@ softfail_unless_good::internal() {
   if [ "${exit_status}" != 0 ]; then
     # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
     # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
-    log::error_trace "${message}" 3 || echo "Unable to log error: ${message}" >&2
+    log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" >&2
   fi
 
   return "${exit_status}"

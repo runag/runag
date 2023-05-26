@@ -37,23 +37,6 @@ git::install_profile_from_pass() {
   fi
 }
 
-# git::clone_local_mirror() {
-#   local source_path="$1"
-#   local dest_path="$2"
-#
-#   local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
-#
-#   if [ -d "${dest_path}" ]; then
-#     softfail "Destination path already exists: ${dest_path}" || return $?
-#   fi
-#
-#   git clone "${source_path}" "${dest_path}" || softfail || return $?
-#   git -C "${dest_path}" remote add local-mirror "${source_path_full}" || softfail || return $?
-#
-#   local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || softfail || return $?
-#   git -C "${dest_path}" remote set-url origin "${mirror_origin}" || softfail || return $?
-# }
-
 git::create_or_update_mirror() {
   local source_url="$1"
   local dest_path="$2"
@@ -66,10 +49,12 @@ git::create_or_update_mirror() {
 }
 
 git::place_up_to_date_clone() {
+  local branch_name=""
+
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -b|--branch)
-      local branch="$2"
+      local branch_name="$2"
       shift; shift
       ;;
     -*)
@@ -81,35 +66,41 @@ git::place_up_to_date_clone() {
     esac
   done
 
-  local url="$1"
-  local dest="$2"
+  local remote_url="$1"
+  local dest_path="$2"
 
-  if [ -d "${dest}" ]; then
-    local current_url; current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?
+  if [ -d "${dest_path}" ]; then
+    local current_url; current_url="$(git -C "${dest_path}" config remote.origin.url)" || softfail || return $?
 
-    if [ "${current_url}" != "${url}" ]; then
-      local dest_full_path; dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?
-      local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?
-      local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?
-      local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
-
-      mv "${dest_full_path}" "${backup_path}" || softfail || return $?
-
-      git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
+    if [ "${current_url}" != "${remote_url}" ]; then
+      git::remove_current_clone "${dest_path}" || softfail || return $?
     fi
+  fi
 
-    if [ -n "${branch:-}" ]; then
-      git -C "${dest}" pull origin "${branch}" || softfail "Unable to git pull in ${dest}" || return $?
-    else
-      git -C "${dest}" pull || softfail "Unable to git pull in ${dest}" || return $?
-    fi
+  if [ ! -d "${dest_path}" ]; then
+    git clone "${remote_url}" "${dest_path}" || softfail "Unable to clone ${remote_url}" || return $?
+  fi
+
+  if [ -n "${branch_name}" ]; then
+    git -C "${dest_path}" pull origin "${branch_name}" || softfail "Unable to pull branch ${branch_name}" || return $?
+    git -C "${dest_path}" checkout "${branch_name}" || softfail "Unable to git checkout ${branch_name}" || return $?
   else
-    git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?
+    git -C "${dest_path}" pull || softfail "Unable to pull in ${dest_path}" || return $?
   fi
+}
 
-  if [ -n "${branch:-}" ]; then
-    git -C "${dest}" checkout "${branch}" || softfail "Unable to git checkout ${branch} in ${dest}" || return $?
-  fi
+git::remove_current_clone() {
+  local dest_path="$1"
+
+  local dest_full_path; dest_full_path="$(cd "${dest_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
+
+  local dest_parent_dir; dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?
+
+  local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?
+
+  local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
+
+  mv "${dest_full_path}" "${backup_path}" || softfail || return $?
 }
 
 # https://wiki.gnome.org/Projects/Libsecret

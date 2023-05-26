@@ -22,9 +22,9 @@
 app_release::init() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
 
-  dir::make_if_not_exists "${app_dir}" || softfail || return $?
-  dir::make_if_not_exists "${app_dir}/repo" || softfail || return $?
-  dir::make_if_not_exists "${app_dir}/shared" || softfail || return $?
+  dir::should_exists --mode 0700 "${app_dir}" || softfail || return $?
+  dir::should_exists --mode 0700 "${app_dir}/repo" || softfail || return $?
+  dir::should_exists --mode 0700 "${app_dir}/shared" || softfail || return $?
 
   git --bare init "${app_dir}/repo" || softfail || return $?
 }
@@ -83,7 +83,8 @@ app-release::make() {
   local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
   local releases_path="${app_dir}/releases"
   
-  dir::make_if_not_exists "${releases_path}" "${mode}" "${owner}" "${group}" || softfail || return $?
+  # TODO: check how --arguments pass through
+  dir::should_exists --mode "${mode}" --owner "${owner}" --group "${group}" "${releases_path}" || softfail || return $?
 
   local release_dir; release_dir="$(cd "${releases_path}" >/dev/null 2>&1 && mktemp -d "${current_date}-XXXX")" || softfail "Unable to make release directory" || return $?
 

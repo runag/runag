@@ -52,7 +52,7 @@ if [ ! -d runag.git ]; then
   fail "Unable to find runag.git directory"
 fi
 
-install_path="${HOME}"/.runag
+install_path="${HOME}/.runag"
 
 clone_or_update_local_mirror runag.git "${install_path}" "offline-install" || fail
 

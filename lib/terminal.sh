@@ -30,18 +30,37 @@ terminal::print_color_table() {
 }
 
 terminal::color() {
-  local foreground="$1"
-  local background="${2:-}"
+  local foreground_color
+  local background_color
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -f|--foreground)
+      foreground_color="$2"
+      shift; shift
+      ;;
+    -b|--background)
+      background_color="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
 
   local amount
 
   if command -v tput >/dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
-    if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
-      tput setaf "${foreground}" || echo "Unable to get terminal sequence from tput ($?)" >&2
+    if [[ "${foreground_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground_color:-}" ]; then
+      tput setaf "${foreground_color}" || echo "Unable to get terminal sequence from tput ($?)" >&2
     fi
 
-    if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
-      tput setab "${background}" || echo "Unable to get terminal sequence from tput ($?)" >&2
+    if [[ "${background_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background_color:-}" ]; then
+      tput setab "${background_color}" || echo "Unable to get terminal sequence from tput ($?)" >&2
     fi
   fi
 }

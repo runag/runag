@@ -15,9 +15,25 @@
 #  limitations under the License.
 
 imagemagick::set_policy::resource() {
+  local policy_path="/etc/ImageMagick-6/policy.xml"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -p|--policy-path)
+      policy_path="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   local name="$1"
   local value="$2"
-  local file_path="${4:-"/etc/ImageMagick-6/policy.xml"}"
 
-  sudo sed --in-place "s/^.*\(<policy domain=\"resource\" name=\"${name}\" value=\"\).*\(\"\/>\)$/\1${value}\2/g" "${file_path}" || softfail || return $?
+  sudo sed --in-place "s/^.*\(<policy domain=\"resource\" name=\"${name}\" value=\"\).*\(\"\/>\)$/\1${value}\2/g" "${policy_path}" || softfail || return $?
 }

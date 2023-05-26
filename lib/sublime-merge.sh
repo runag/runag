@@ -32,11 +32,11 @@ sublime_merge::get_config_path() {
     config_path="${APPDATA}/Sublime Merge"
 
   else
-    dir::make_if_not_exists "${HOME}/.config" 755 || softfail || return $?
+    dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?
     config_path="${HOME}/.config/sublime-merge"
   fi
 
-  dir::make_if_not_exists "${config_path}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${config_path}" || softfail || return $?
   echo "${config_path}"
 }
 
@@ -46,8 +46,8 @@ sublime_merge::install_config_file() {
   local file_name; file_name="$(basename "${src_path}")" || softfail || return $?
   local config_path; config_path="$(sublime_merge::get_config_path)" || softfail || return $?
 
-  dir::make_if_not_exists "${config_path}/Packages" 700 || softfail || return $?
-  dir::make_if_not_exists "${config_path}/Packages/User" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${config_path}/Packages" || softfail || return $?
+  dir::should_exists --mode 0700 "${config_path}/Packages/User" || softfail || return $?
 
   config::install "${src_path}" "${config_path}/Packages/User/${file_name}" || softfail || return $?
 }
