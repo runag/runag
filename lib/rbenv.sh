@@ -25,7 +25,7 @@ rbenv::install_repositories() {
 
   git::place_up_to_date_clone "https://github.com/sstephenson/rbenv.git" "${rbenv_root}" || softfail || return $?
 
-  dir::make_if_not_exists "${rbenv_root}/plugins" || softfail || return $?
+  dir::should_exists --mode 0700 "${rbenv_root}/plugins" || softfail || return $?
   git::place_up_to_date_clone "https://github.com/sstephenson/ruby-build.git" "${rbenv_root}/plugins/ruby-build" || softfail || return $?
 }
 

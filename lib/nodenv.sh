@@ -25,7 +25,7 @@ nodenv::install_repositories() {
 
   git::place_up_to_date_clone "https://github.com/nodenv/nodenv.git" "${nodenv_root}" || softfail || return $?
 
-  dir::make_if_not_exists "${nodenv_root}/plugins" || softfail || return $?
+  dir::should_exists --mode 0700 "${nodenv_root}/plugins" || softfail || return $?
   git::place_up_to_date_clone "https://github.com/nodenv/node-build.git" "${nodenv_root}/plugins/node-build" || softfail || return $?
 }
 

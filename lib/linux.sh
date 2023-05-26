@@ -22,7 +22,7 @@ linux::set_timezone() {
 linux::set_hostname() {
   local hostname="$1"
   sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
-  file::sudo_append_line_unless_present /etc/hosts "127.0.1.1	${hostname}" || softfail || return $?
+  file::append_line_unless_present --sudo /etc/hosts "127.0.1.1	${hostname}" || softfail || return $?
 }
 
 linux::dangerously_set_hostname() {
@@ -41,7 +41,7 @@ linux::dangerously_set_hostname() {
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   fi
 
-  file::sudo_append_line_unless_present "${hosts_file}.runag-new" "127.0.1.1	${hostname}" || softfail || return $?
+  file::append_line_unless_present --sudo "${hosts_file}.runag-new" "127.0.1.1	${hostname}" || softfail || return $?
 
   sudo cp "${hosts_file}" "${hosts_file}.before-runag-changes" || softfail || return $?
   sudo mv "${hosts_file}.runag-new" "${hosts_file}" || softfail || return $?
@@ -60,10 +60,29 @@ linux::set_locale() {
 }
 
 linux::configure_inotify() {
-  local max_user_watches="${1:-1048576}"
-  local max_user_instances="${2:-2048}"
+  local max_user_watches="1048576"
+  local max_user_instances="2048"
 
-  file::sudo_write /etc/sysctl.d/runag-inotify.conf <<EOF || softfail || return $?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -w|--max-user-watches)
+      max_user_watches="$2"
+      shift; shift
+      ;;
+    -i|--max-user-instances)
+      max_user_instances="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  file::write --sudo --mode 0644 /etc/sysctl.d/runag-inotify.conf <<EOF || softfail || return $?
 fs.inotify.max_user_watches=${max_user_watches}
 fs.inotify.max_user_instances=${max_user_instances}
 EOF

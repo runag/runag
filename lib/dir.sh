@@ -14,65 +14,69 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-dir::make_if_not_exists() {
-  local dir_path="$1"
-  local mode="${2:-}"
-  local owner="${3:-}"
-  local group="${4:-}"
+# --mode
+# --owner
+# --group
+# --sudo
+# --keep-permissions
+dir::should_exists() {
+  local dir_mode=""
+  local dir_owner=""
+  local dir_group=""
+  local perhaps_sudo=""
+  local keep_permissions=false
 
-  if mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
-    if [ -n "${owner}" ]; then
-      chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -m|--mode)
+      dir_mode="$2"
+      shift; shift
+      ;;
+    -o|--owner)
+      dir_owner="$2"
+      shift; shift
+      ;;
+    -g|--group)
+      dir_group="$2"
+      shift; shift
+      ;;
+    -s|--sudo)
+      perhaps_sudo=sudo
+      shift
+      ;;
+    -k|--keep-permissions)
+      keep_permissions=true
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local dir_path="$1"
+
+  if ${perhaps_sudo} mkdir ${dir_mode:+-m "${dir_mode}"} "${dir_path}" 2>/dev/null; then
+    if [ -n "${dir_owner}" ]; then
+      ${perhaps_sudo} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
     fi
   else
-    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
-  fi
-}
-
-dir::make_if_not_exists_and_set_permissions() {
-  local dir_path="$1"
-  local mode="${2:-}"
-  local owner="${3:-}"
-  local group="${4:-}"
-
-  if ! mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
-    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
-    chmod "${mode}" "${dir_path}" || softfail || return $?
-  fi
-
-  if [ -n "${owner}" ]; then
-    chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
-  fi
-}
-
-dir::sudo_make_if_not_exists() {
-  local dir_path="$1"
-  local mode="${2:-}"
-  local owner="${3:-}"
-  local group="${4:-}"
-
-  if sudo mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
-    if [ -n "${owner}" ]; then
-      sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
+    if ${perhaps_sudo} test ! -d "${dir_path}"; then
+      softfail "Unable to create directory" || return $?
     fi
-  else
-    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
-  fi
-}
 
-dir::sudo_make_if_not_exists_and_set_permissions() {
-  local dir_path="$1"
-  local mode="${2:-}"
-  local owner="${3:-}"
-  local group="${4:-}"
+    if [ "${keep_permissions}" = false ]; then
+      if [ -n "${dir_mode}" ]; then
+        ${perhaps_sudo} chmod "${dir_mode}" "${dir_path}" || softfail || return $?
+      fi
 
-  if ! sudo mkdir ${mode:+-m "${mode}"} "${dir_path}" 2>/dev/null; then
-    test -d "${dir_path}" || softfail "Unable to create directory, maybe there is a file here already: ${dir_path}" || return $?
-    sudo chmod "${mode}" "${dir_path}" || softfail || return $?
-  fi
-
-  if [ -n "${owner}" ]; then
-    sudo chown "${owner}${group:+".${group}"}" "${dir_path}" || softfail || return $?
+      if [ -n "${dir_owner}" ]; then
+        ${perhaps_sudo} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
+      fi
+    fi
   fi
 }
 

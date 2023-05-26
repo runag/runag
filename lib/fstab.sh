@@ -15,8 +15,24 @@
 #  limitations under the License.
 
 fstab::add_mount_option() {
-  local fstype="$1"
-  local option="$2"
+  local fstype
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -f|--filesystem-type)
+      fstype="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local option="$1"
 
   local skip; skip="$(<<<"${option}" sed 's/^\([[:alnum:]]\+\).*/\1/')" || softfail || return $?
 

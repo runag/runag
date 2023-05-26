@@ -23,7 +23,7 @@ archival_snapshots::create() {
 
   local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
 
-  btrfs subvolume snapshot -r "${source}" "${dest}/${current_date}${parameter:+"-${snapshot_name}"}" || softfail || return $?
+  btrfs subvolume snapshot -r "${source}" "${dest}/${current_date}${snapshot_name:+"-${snapshot_name}"}" || softfail || return $?
 }
 
 archival_snapshots::cleanup() {

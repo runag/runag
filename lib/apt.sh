@@ -21,14 +21,25 @@ apt::update() {
 
 # @description Perform apt dist-upgrade
 apt::dist_upgrade() {
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -s|--skip-in-ci|--skip-in-continuous-integration)
+      if [ "${CI:-}" = "true" ]; then
+        return 0
+      fi
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   # TODO: Check if this Dpkg::Options are good defaults
   task::run_with_title "apt-get dist-upgrade" sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y dist-upgrade || softfail || return $?
-}
-
-apt::dist_upgrade_unless_ci() {
-  if [ "${CI:-}" != "true" ]; then
-    apt::dist_upgrade || softfail || return $?
-  fi
 }
 
 # @description Install package
@@ -57,10 +68,10 @@ apt::add_source_with_key() {
   local source_string="$2"
   local key_url="$3"
 
-  curl --fail --silent --show-error "${key_url}" | gpg --dearmor | file::sudo_write "/etc/apt/keyrings/${source_name}.gpg" 0644 root root
+  curl --fail --silent --show-error "${key_url}" | gpg --dearmor | file::write --sudo --mode 0644 --owner root --group root "/etc/apt/keyrings/${source_name}.gpg"
   test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to get key or to save it: ${key_url} " || return $?
 
-  <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${source_name}.gpg] ${source_string}" file::sudo_write "/etc/apt/sources.list.d/${source_name}.list" || softfail || return $?
+  <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${source_name}.gpg] ${source_string}" file::write --sudo --mode 0644 "/etc/apt/sources.list.d/${source_name}.list" || softfail || return $?
 
   apt::update || softfail || return $?
 }

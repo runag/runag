@@ -53,6 +53,7 @@ $(declare -f apt::update)
 
 $(declare -f git::install_git)
 $(declare -f git::place_up_to_date_clone)
+$(declare -f git::remove_current_clone)
 
 $(declare -f runagfile::add)
 

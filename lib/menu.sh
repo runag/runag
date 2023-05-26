@@ -33,7 +33,7 @@ menu::select_and_run() {
     fi
   done
 
-  local prompt_color; prompt_color="$(terminal::color 11)" || softfail || return $?
+  local prompt_color; prompt_color="$(terminal::color --foreground 11)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
   menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
@@ -90,17 +90,17 @@ menu::display_menu() {
   local color_a color_a_slight_accent color_a_notable_accent
   local color_b color_b_slight_accent color_b_notable_accent
 
-  color_a="$(terminal::color 13)" || softfail || return $?
-  color_b="$(terminal::color 15)" || softfail || return $?
+  color_a="$(terminal::color --foreground 13)" || softfail || return $?
+  color_b="$(terminal::color --foreground 15)" || softfail || return $?
 
-  color_a_slight_accent="$(terminal::color 13)" || softfail || return $?
-  color_b_slight_accent="$(terminal::color 15 8)" || softfail || return $?
+  color_a_slight_accent="$(terminal::color --foreground 13)" || softfail || return $?
+  color_b_slight_accent="$(terminal::color --foreground 15 --background 8)" || softfail || return $?
 
-  color_a_notable_accent="$(terminal::color 0 5)" || softfail || return $?
-  color_b_notable_accent="$(terminal::color 15 8)" || softfail || return $?
+  color_a_notable_accent="$(terminal::color --foreground 0 --background 5)" || softfail || return $?
+  color_b_notable_accent="$(terminal::color --foreground 15 --background 8)" || softfail || return $?
 
-  local header_color;  header_color="$(terminal::color 14)" || softfail || return $?
-  local comment_color; comment_color="$(terminal::color 10)" || softfail || return $?
+  local header_color;  header_color="$(terminal::color --foreground 14)" || softfail || return $?
+  local comment_color; comment_color="$(terminal::color --foreground 10)" || softfail || return $?
   local default_color; default_color="$(terminal::default_color)" || softfail || return $?
 
   local item index=1

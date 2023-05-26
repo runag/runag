@@ -29,13 +29,33 @@ cifs::credentials() {
 }
 
 cifs::mount() {
+  local file_mode="0600"
+  local dir_mode="0700"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -f|--file-mode)
+      file_mode="$2"
+      shift; shift
+      ;;
+    -d|--dir-mode)
+      dir_mode="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   local server_path="$1"
   local mount_point="$2"
   local credentials_file="$3"
-  local file_mode="${4:-"0600"}" 
-  local dir_mode="${5:-"0700"}" 
 
-  dir::make_if_not_exists "${mount_point}" "${dir_mode}" || softfail || return $?
+  dir::should_exists --mode "${dir_mode}" "${mount_point}" || softfail || return $?
 
   # TODO: file::read_with_updated_block /etc/fstab SOMETHING | fstab::verify_and_write
 

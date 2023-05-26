@@ -54,7 +54,6 @@ nodejs::install_by_nodenv() {
 
   nodenv::install_nodejs "${node_version:-}" || softfail || return $?
 
-  # this will set NODENV_VERSION to the last element of ARGV array
   # shellcheck disable=2124
   NODENV_VERSION="${node_version:-"${NODENV_VERSION:-}"}" nodenv::configure_mismatched_binaries_workaround || softfail || return $?
 }

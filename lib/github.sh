@@ -26,33 +26,80 @@ github::install_profile_from_pass() {
   fi
 }
 
-github::download_release_by_label() {
+# github::query_release --get tag_name asdf-vm/asdf
+github::query_release() {
+  local release_id="latest"
+  local query_string=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -r|--release-id)
+      release_id="$2"
+      shift; shift
+      ;;
+    -g|--get)
+      query_string=".$2"
+      shift; shift
+      ;;
+    -q|--query)
+      query_string="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   local repo_path="$1"
-  local label="$2"
-  local release="${3:-latest}"
 
-  github::download_release "${repo_path}" ".label == \"${label}\"" "${release}" || softfail || return $?
-}
+  local api_url="https://api.github.com/repos/${repo_path}/releases/${release_id}"
 
-github::download_release_by_name() {
-  local repo_path="$1"
-  local label="$2"
-  local release="${3:-latest}"
+  curl --fail --silent --show-error "${api_url}" | jq --raw-output --exit-status "${query_string}"
 
-  github::download_release "${repo_path}" ".name | test(\"${label}\")" "${release}" || softfail || return $?
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
 github::download_release() {
-  local repo_path="$1"
-  local query="$2"
-  local release="${3:-latest}"
+  local release_id="latest"
+  local query_string=""
 
-  local api_url="https://api.github.com/repos/${repo_path}/releases/${release}"
-  local jq_filter=".assets[] | select(${query}).browser_download_url"
-  local file_url; file_url="$(curl --fail --silent --show-error "${api_url}" | jq --raw-output --exit-status "${jq_filter}"; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -r|--release-id)
+      release_id="$2"
+      shift; shift
+      ;;
+    -q|--query)
+      query_string="$2"
+      shift; shift
+      ;;
+    -l|--asset-label)
+      query_string=".assets[] | select(.label == \"$2\").browser_download_url"
+      shift; shift
+      ;;
+    -n|--asset-name)
+      query_string=".assets[] | select(.name | test(\"$2\")).browser_download_url"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local repo_path="$1"
+
+  local file_url; file_url="$(github::query_release --release-id "${release_id}" --query "${query_string}" "${repo_path}")" || softfail || return $?
 
   if [ -z "${file_url}" ]; then
-    fail "Can't find release URL for ${repo_path} that matched ${query} and release ${release}"
+    fail "Can't find release URL for ${repo_path} that matched ${query_string} and release ${release_id}"
   fi
 
   local temp_file; temp_file="$(mktemp)" || softfail "Unable to create temp file" || return $?
@@ -66,15 +113,4 @@ github::download_release() {
     "${file_url}" >/dev/null || softfail "Unable to download ${file_url}" || return $?
 
   echo "${temp_file}"
-}
-
-github::get_release_tag_name() {
-  local repo_path="$1"
-  local release="${2:-latest}"
-
-  local api_url="https://api.github.com/repos/${repo_path}/releases/${release}"
-
-  curl --fail --silent --show-error "${api_url}" | jq --raw-output --exit-status ".tag_name"
-
-  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }

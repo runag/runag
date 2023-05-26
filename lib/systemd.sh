@@ -19,9 +19,9 @@ systemd::write_user_unit() {
 
   local user_units_dir="${HOME}/.config/systemd/user"
 
-  dir::make_if_not_exists "${HOME}/.config" 755 || softfail || return $?
-  dir::make_if_not_exists "${HOME}/.config/systemd" 700 || softfail || return $?
-  dir::make_if_not_exists "${user_units_dir}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?
+  dir::should_exists --mode 0700 "${HOME}/.config/systemd" || softfail || return $?
+  dir::should_exists --mode 0700 "${user_units_dir}" || softfail || return $?
 
   file::write --mode 0600 "${user_units_dir}/${name}" || softfail || return $?
 }
@@ -29,5 +29,5 @@ systemd::write_user_unit() {
 systemd::write_system_unit() {
   local name="$1"
 
-  file::sudo_write /etc/systemd/system/"${name}" 644 || softfail || return $?
+  file::write --sudo --mode 0644 "/etc/systemd/system/${name}" || softfail || return $?
 }

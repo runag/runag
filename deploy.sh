@@ -83,7 +83,7 @@ softfail::internal ()
     if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
         exit_status=1;
     fi;
-    log::error_trace "${message}" 3 || echo "Unable to log error: ${message}" 1>&2;
+    log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" 1>&2;
     if [ "${exit_status}" != 0 ]; then
         return "${exit_status}";
     fi;
@@ -97,7 +97,7 @@ softfail_unless_good::internal ()
         exit_status=1;
     fi;
     if [ "${exit_status}" != 0 ]; then
-        log::error_trace "${message}" 3 || echo "Unable to log error: ${message}" 1>&2;
+        log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" 1>&2;
     fi;
     return "${exit_status}"
 }
@@ -108,44 +108,79 @@ log::elapsed_time ()
 log::error () 
 { 
     local message="$1";
-    log::with_color "${message}" 9 1>&2
+    log::message --foreground-color 9 "${message}" 1>&2
 }
 log::warning () 
 { 
     local message="$1";
-    log::with_color "${message}" 11 1>&2
+    log::message --foreground-color 11 "${message}" 1>&2
 }
 log::notice () 
 { 
     local message="$1";
-    log::with_color "${message}" 14
+    log::message --foreground-color 14 "${message}"
 }
 log::success () 
 { 
     local message="$1";
-    log::with_color "${message}" 10
+    log::message --foreground-color 10 "${message}"
 }
-log::with_color () 
+log::message () 
 { 
+    local foreground_color;
+    local background_color;
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -f | --foreground-color)
+                foreground_color="$2";
+                shift;
+                shift
+            ;;
+            -b | --background-color)
+                background_color="$2";
+                shift;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
     local message="$1";
-    local foreground_color="$2";
-    local background_color="${3:-}";
     local color_seq="" default_color_seq="";
     if [ -t 1 ]; then
-        color_seq="$(terminal::color "${foreground_color}" "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+        color_seq="$(terminal::color --foreground "${foreground_color:-}" --background "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
         default_color_seq="$(terminal::default_color)" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
     fi;
     echo "${color_seq}${message}${default_color_seq}"
 }
-log::error_trace () 
+log::trace () 
 { 
+    local trace_start=1;
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -s | --start)
+                trace_start="$2";
+                shift;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
     local message="${1:-""}";
-    local start_trace_from="${2:-1}";
     if [ -n "${message}" ]; then
         log::error "${message}" || echo "Unable to log error: ${message}" 1>&2;
     fi;
-    local line i end_at=$((${#BASH_LINENO[@]}-1));
-    for ((i=start_trace_from; i<=end_at; i++))
+    local line i trace_end=$((${#BASH_LINENO[@]}-1));
+    for ((i=trace_start; i<=trace_end; i++))
     do
         line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
         log::error "  ${line}" || echo "Unable to log stack trace: ${line}" 1>&2;
@@ -282,7 +317,7 @@ task::complete ()
             };
         fi;
         if [ -s "${temp_dir}/stderr" ]; then
-            test -t 2 && terminal::color 9 1>&2;
+            test -t 2 && terminal::color --foreground 9 1>&2;
             cat "${temp_dir}/stderr" 1>&2 || { 
                 echo "Unable to display task stderr ($?)" 1>&2;
                 error_state=2
@@ -312,15 +347,35 @@ terminal::print_color_table ()
 }
 terminal::color () 
 { 
-    local foreground="$1";
-    local background="${2:-}";
+    local foreground_color;
+    local background_color;
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -f | --foreground)
+                foreground_color="$2";
+                shift;
+                shift
+            ;;
+            -b | --background)
+                background_color="$2";
+                shift;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
     local amount;
     if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
-        if [[ "${foreground}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground}" ]; then
-            tput setaf "${foreground}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+        if [[ "${foreground_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground_color:-}" ]; then
+            tput setaf "${foreground_color}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
-        if [[ "${background}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background}" ]; then
-            tput setab "${background}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+        if [[ "${background_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background_color:-}" ]; then
+            tput setab "${background_color}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
         fi;
     fi
 }
@@ -359,10 +414,11 @@ git::install_git ()
 }
 git::place_up_to_date_clone () 
 { 
+    local branch_name="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -b | --branch)
-                local branch="$2";
+                local branch_name="$2";
                 shift;
                 shift
             ;;
@@ -374,34 +430,37 @@ git::place_up_to_date_clone ()
             ;;
         esac;
     done;
-    local url="$1";
-    local dest="$2";
-    if [ -d "${dest}" ]; then
+    local remote_url="$1";
+    local dest_path="$2";
+    if [ -d "${dest_path}" ]; then
         local current_url;
-        current_url="$(git -C "${dest}" config remote.origin.url)" || softfail || return $?;
-        if [ "${current_url}" != "${url}" ]; then
-            local dest_full_path;
-            dest_full_path="$(cd "${dest}" >/dev/null 2>&1 && pwd)" || softfail || return $?;
-            local dest_parent_dir;
-            dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
-            local dest_dir_name;
-            dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?;
-            local backup_path;
-            backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
-            mv "${dest_full_path}" "${backup_path}" || softfail || return $?;
-            git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?;
+        current_url="$(git -C "${dest_path}" config remote.origin.url)" || softfail || return $?;
+        if [ "${current_url}" != "${remote_url}" ]; then
+            git::remove_current_clone "${dest_path}" || softfail || return $?;
         fi;
-        if [ -n "${branch:-}" ]; then
-            git -C "${dest}" pull origin "${branch}" || softfail "Unable to git pull in ${dest}" || return $?;
-        else
-            git -C "${dest}" pull || softfail "Unable to git pull in ${dest}" || return $?;
-        fi;
-    else
-        git clone "${url}" "${dest}" || softfail "Unable to git clone ${url} to ${dest}" || return $?;
     fi;
-    if [ -n "${branch:-}" ]; then
-        git -C "${dest}" checkout "${branch}" || softfail "Unable to git checkout ${branch} in ${dest}" || return $?;
+    if [ ! -d "${dest_path}" ]; then
+        git clone "${remote_url}" "${dest_path}" || softfail "Unable to clone ${remote_url}" || return $?;
+    fi;
+    if [ -n "${branch_name}" ]; then
+        git -C "${dest_path}" pull origin "${branch_name}" || softfail "Unable to pull branch ${branch_name}" || return $?;
+        git -C "${dest_path}" checkout "${branch_name}" || softfail "Unable to git checkout ${branch_name}" || return $?;
+    else
+        git -C "${dest_path}" pull || softfail "Unable to pull in ${dest_path}" || return $?;
     fi
+}
+git::remove_current_clone () 
+{ 
+    local dest_path="$1";
+    local dest_full_path;
+    dest_full_path="$(cd "${dest_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?;
+    local dest_parent_dir;
+    dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
+    local dest_dir_name;
+    dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?;
+    local backup_path;
+    backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
+    mv "${dest_full_path}" "${backup_path}" || softfail || return $?
 }
 
 runagfile::add () 

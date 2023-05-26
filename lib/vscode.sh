@@ -36,11 +36,11 @@ vscode::get_config_path() {
     config_path="${APPDATA}/Code"
 
   else
-    dir::make_if_not_exists "${HOME}/.config" 755 || softfail || return $?
+    dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?
     config_path="${HOME}/.config/Code"
   fi
 
-  dir::make_if_not_exists "${config_path}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${config_path}" || softfail || return $?
   echo "${config_path}"
 }
 

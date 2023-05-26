@@ -18,19 +18,39 @@ direnv::write_file() {
   local name="$1"
 
   local dir_name=".direnv.d"
-  dir::make_if_not_exists "${dir_name}" 700 || softfail || return $?
+  dir::should_exists --mode 0700 "${dir_name}" || softfail || return $?
 
   file::write --mode 0600 "${dir_name}/${name}.sh" || softfail || return $?
 }
 
 direnv::write_block() {
-  local block_name="$1"
-  local file_name="${2:-".envrc"}"
-  local mode="${3:-"0600"}"
+  local file_mode="0600"
+  local file_name=".envrc"
 
-  if [ -n "${mode}" ]; then
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -m|--mode)
+      file_mode="$2"
+      shift; shift
+      ;;
+    -e|--env-file)
+      file_name="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local block_name="$1"
+
+  if [ -n "${file_mode}" ]; then
     local umask_value
-    printf -v umask_value "%o" "$(( 0777 ^ "0${mode}" ))" || softfail || return $?
+    printf -v umask_value "%o" "$(( 0777 ^ "0${file_mode}" ))" || softfail || return $?
     ( umask "${umask_value}" && touch "${file_name}" ) || softfail || return $?
   fi
 
