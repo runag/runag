@@ -123,7 +123,6 @@ Please refer to the source code for now.
 
 ### Managment of keys, passwords, and other secrets
 
-* [bitwarden](lib/bitwarden.sh)
 * [checksums](lib/checksums.sh)
 * [gpg](lib/gpg.sh)
 * [pass](lib/pass.sh)
