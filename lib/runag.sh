@@ -14,6 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+runag::with_update_secrets() {(
+  export RUNAG_UPDATE_SECRETS=true
+  "$@"
+)}
+
+runag::with_verbose() {(
+  export RUNAG_VERBOSE=true
+  "$@"
+)}
+
 runag::print_license() {
   cat <<SHELL
 #  Copyright 2012-2022 Rùnag project contributors
