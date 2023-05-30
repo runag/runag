@@ -24,7 +24,7 @@ deploy_script ()
     if [ -n "${1:-}" ]; then
         if declare -f "deploy_script::$1" > /dev/null; then
             "deploy_script::$1" "${@:2}";
-            softfail --code $? --unless-good || return $?;
+            softfail --exit-status $? --unless-good || return $?;
         else
             softfail "deploy_script: command not found: $1";
             return $?;
@@ -35,12 +35,12 @@ deploy_script::add ()
 { 
     task::run_with_install_filter runagfile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
-    softfail --code $? --unless-good
+    softfail --exit-status $? --unless-good
 }
 deploy_script::run () 
 { 
     "${HOME}/.runag/bin/runag" "$@";
-    softfail --code $? --unless-good
+    softfail --exit-status $? --unless-good
 }
 fail () 
 { 
@@ -48,9 +48,10 @@ fail ()
     local unless_good=false;
     local perform_softfail=false;
     local trace_start=2;
+    local message="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
-            -c | --code)
+            -e | --exit-status)
                 exit_status="$2";
                 shift;
                 shift
@@ -63,20 +64,26 @@ fail ()
                 perform_softfail=true;
                 shift
             ;;
-            --wrapped-softfail)
+            -w | --wrapped-softfail)
                 perform_softfail=true;
                 trace_start=3;
                 shift
             ;;
             -*)
-                fail "Unknown argument: $1"
+                log::error "Unknown argument for fail: $1" || echo "(unable to log by usual means) Unknown argument for fail: $1" 1>&2;
+                shift;
+                message="$*";
+                break
             ;;
             *)
+                message="$1";
                 break
             ;;
         esac;
     done;
-    local message="${1:-"Abnormal termination"}";
+    if [ -z "${message}" ]; then
+        message="Abnormal termination";
+    fi;
     if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
         exit_status=1;
     else
@@ -125,6 +132,7 @@ log::message ()
 { 
     local foreground_color;
     local background_color;
+    local message="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -f | --foreground-color)
@@ -138,14 +146,20 @@ log::message ()
                 shift
             ;;
             -*)
-                softfail "Unknown argument: $1" || return $?
+                echo "Unknown argument for log::message: $1" 1>&2;
+                shift;
+                message="$*";
+                break
             ;;
             *)
+                message="$1";
                 break
             ;;
         esac;
     done;
-    local message="$1";
+    if [ -z "${message}" ]; then
+        message="(empty message)";
+    fi;
     local color_seq="" default_color_seq="";
     if [ -t 1 ]; then
         color_seq="$(terminal::color --foreground "${foreground_color:-}" --background "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
@@ -156,6 +170,7 @@ log::message ()
 log::trace () 
 { 
     local trace_start=1;
+    local message="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -s | --start)
@@ -164,22 +179,25 @@ log::trace ()
                 shift
             ;;
             -*)
-                softfail "Unknown argument: $1" || return $?
+                echo "Unknown argument for log::trace: $1" 1>&2;
+                shift;
+                message="$*";
+                break
             ;;
             *)
+                message="$1";
                 break
             ;;
         esac;
     done;
-    local message="${1:-""}";
     if [ -n "${message}" ]; then
-        log::error "${message}" || echo "Unable to log error: ${message}" 1>&2;
+        log::error "${message}" || echo "(unable to log by usual means) ${message}" 1>&2;
     fi;
     local line i trace_end=$((${#BASH_LINENO[@]}-1));
     for ((i=trace_start; i<=trace_end; i++))
     do
         line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
-        log::error "  ${line}" || echo "Unable to log stack trace: ${line}" 1>&2;
+        log::error "  ${line}" || echo "(unable to log by usual means) ${line}" 1>&2;
     done
 }
 task::with_verbose_task () 
@@ -477,7 +495,7 @@ runag::deploy_sh_main ()
     task::run_with_install_filter git::install_git || softfail || return $?;
     task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     deploy_script "$@";
-    softfail --code $? --unless-good
+    softfail --exit-status $? --unless-good
 }
 
 export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"

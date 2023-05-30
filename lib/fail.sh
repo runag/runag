@@ -14,8 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# fail --code $? --unless-good "msg"
-# softfail --code $? --unless-good "msg"
+# fail --exit-status $? --unless-good "msg"
+# softfail --exit-status $? --unless-good "msg"
 
 fail() {
   local exit_status=""
@@ -26,7 +26,7 @@ fail() {
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
-    -c|--code)
+    -e|--exit-status)
       exit_status="$2"
       shift; shift
       ;;
@@ -38,7 +38,7 @@ fail() {
       perform_softfail=true
       shift
       ;;
-    --wrapped-softfail)
+    -w|--wrapped-softfail)
       perform_softfail=true
       trace_start=3
       shift
