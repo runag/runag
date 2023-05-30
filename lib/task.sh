@@ -14,19 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::with_verbose_task() {(
-  if [ -t 1 ]; then
-    log::notice "RUNAG_TASK_VERBOSE flag is set" || softfail || return $?
-  fi
+task::with_task_verbose() {(
   export RUNAG_TASK_VERBOSE=true
-  "$@"
-)}
-
-task::with_update_secrets() {(
-  if [ -t 1 ]; then
-    log::notice "RUNAG_UPDATE_SECRETS flag is set" || softfail || return $?
-  fi
-  export RUNAG_UPDATE_SECRETS=true
   "$@"
 )}
 
@@ -70,27 +59,6 @@ task::run_verbose() {
   # shellcheck disable=2034
   local RUNAG_TASK_VERBOSE=true
   task::run "$@"
-}
-
-task::rubygems_fail_detector() {
-  local stderr_file="$2"
-  local task_status="$3"
-
-  if [ "${task_status}" = 0 ] && [ -s "${stderr_file}" ] && grep -q "^ERROR:" "${stderr_file}"; then
-    return 1
-  fi
-
-  return "${task_status}"
-}
-
-task::detect_fail_state() {
-  local task_status="$3"
-
-  if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
-    return "${task_status}"
-  fi
-
-  "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
 }
 
 # shellcheck disable=SC2030
@@ -148,13 +116,25 @@ task::is_stderr_empty_after_filtering() {
   fi
 }
 
-# shellcheck disable=SC2031
-task::complete_with_cleanup() {
-  task::complete || softfail || return $?
+task::detect_fail_state() {
+  local task_status="$3"
 
-  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
-    rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?
+  if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
+    return "${task_status}"
   fi
+
+  "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
+}
+
+task::rubygems_fail_detector() {
+  local stderr_file="$2"
+  local task_status="$3"
+
+  if [ "${task_status}" = 0 ] && [ -s "${stderr_file}" ] && grep -q "^ERROR:" "${stderr_file}"; then
+    return 1
+  fi
+
+  return "${task_status}"
 }
 
 # shellcheck disable=SC2031
@@ -187,10 +167,18 @@ task::complete() {
   fi
 }
 
+# shellcheck disable=SC2031
+task::complete_with_cleanup() {
+  task::complete || softfail || return $?
+
+  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+    rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?
+  fi
+}
+
 task::function_sources() {
   cat <<SHELL || softfail || return $?
-$(declare -f task::with_verbose_task)
-$(declare -f task::with_update_secrets)
+$(declare -f task::with_task_verbose)
 $(declare -f task::ssh_jump)
 $(declare -f task::run_with_install_filter)
 $(declare -f task::run_with_rubygems_fail_detector)
@@ -198,12 +186,12 @@ $(declare -f task::run_without_title)
 $(declare -f task::run_with_title)
 $(declare -f task::run_with_short_title)
 $(declare -f task::run_verbose)
-$(declare -f task::rubygems_fail_detector)
-$(declare -f task::detect_fail_state)
 $(declare -f task::run)
 $(declare -f task::install_filter)
 $(declare -f task::is_stderr_empty_after_filtering)
-$(declare -f task::complete_with_cleanup)
+$(declare -f task::detect_fail_state)
+$(declare -f task::rubygems_fail_detector)
 $(declare -f task::complete)
+$(declare -f task::complete_with_cleanup)
 SHELL
 }
