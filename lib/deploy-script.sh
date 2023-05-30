@@ -18,7 +18,7 @@ deploy_script() {
   if [ -n "${1:-}" ]; then  
     if declare -f "deploy_script::$1" >/dev/null; then
       "deploy_script::$1" "${@:2}"
-      softfail_unless_good_code $? || return $?
+      softfail --code $? --unless-good || return $?
     else
       softfail "deploy_script: command not found: $1"
       return $?
@@ -30,12 +30,12 @@ deploy_script::add() {
   task::run_with_install_filter runagfile::add "$1" || softfail || return $?
 
   deploy_script "${@:2}"
-  softfail_unless_good_code $?
+  softfail --code $? --unless-good
 }
 
 deploy_script::run() {
   "${HOME}/.runag/bin/runag" "$@"
-  softfail_unless_good_code $?
+  softfail --code $? --unless-good
 }
 
 deploy_script::function_sources() {

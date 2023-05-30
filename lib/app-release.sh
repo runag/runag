@@ -70,10 +70,10 @@ app_release::make_with_group() {
 
   local dir_mode; dir_mode="$(dir::default_mode)" || softfail || return $?
 
-  app-release::make "${dir_mode}" "${APP_USER}" "${group_name}" || softfail || return $?
+  app_release::make "${dir_mode}" "${APP_USER}" "${group_name}" || softfail || return $?
 }
 
-app-release::make() {
+app_release::make() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
 
   local mode="${1:-}"

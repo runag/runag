@@ -27,7 +27,7 @@ runag::deploy_sh_main() {
   task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
 
   deploy_script "$@"
-  softfail_unless_good_code $?
+  softfail --code $? --unless-good
 }
 
 runag_remote_url="$(git::get_remote_url_without_username)" || fail

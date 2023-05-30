@@ -110,7 +110,7 @@ npm::auth_token() {
       shift
       ;;
     -*)
-      fail "Unknown argument: $1"
+      softfail "Unknown argument: $1" || return $?
       ;;
     *)
       break

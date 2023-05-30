@@ -74,7 +74,7 @@ ssh::get_user_public_key() {
   if [ -r "${HOME}/.ssh/${file_name}.pub" ]; then
     cat "${HOME}/.ssh/${file_name}.pub" || softfail || return $?
   else
-    fail "Unable to find user public key"
+    softfail "Unable to find user public key" || return $?
   fi
 }
 
@@ -214,7 +214,7 @@ ssh::add_host_to_known_hosts() {
   local known_hosts="${HOME}/.ssh/known_hosts"
 
   if ! command -v ssh-keygen >/dev/null; then
-    fail "ssh-keygen not found"
+    softfail "ssh-keygen not found" || return $?
   fi
 
   if [ ! -f "${known_hosts}" ]; then
@@ -372,7 +372,7 @@ ssh::remove_temp_files() {
   return "${exit_status}"
 }
 
-ssh::before-run() {
+ssh::before_run() {
   # Please note: temp_dir, script_checksum, and remote_temp_dir variables are not function-local for this function
 
   if [ -z "${REMOTE_HOST:-}" ]; then
@@ -398,7 +398,7 @@ ssh::before-run() {
   script_checksum="$(cksum <"${temp_dir}/script")" || softfail "Unable to calculate script checksum" || return $?
 
   # shellcheck disable=2029,2016
-  remote_temp_dir="$(ssh "${ssh_args[@]}" "${REMOTE_HOST}" "$(printf "sh -c %q" "$(printf 'temp_dir="$(mktemp -d)" && cat>"${temp_dir}/script" && { if [ "$(cksum <"${temp_dir}/script")" != %q ]; then exit 254; fi; } && echo "${temp_dir}"' "${script_checksum}")")" <"${temp_dir}/script")" || softfail "Unable to put script to remote" $? || return $?
+  remote_temp_dir="$(ssh "${ssh_args[@]}" "${REMOTE_HOST}" "$(printf "sh -c %q" "$(printf 'temp_dir="$(mktemp -d)" && cat>"${temp_dir}/script" && { if [ "$(cksum <"${temp_dir}/script")" != %q ]; then exit 254; fi; } && echo "${temp_dir}"' "${script_checksum}")")" <"${temp_dir}/script")" || softfail --code $? "Unable to put script to remote" || return $?
 
   if [ -z "${remote_temp_dir}" ]; then
     softfail "Unable to get remote temp file name" || return $?
@@ -408,7 +408,7 @@ ssh::before-run() {
 ssh::run() {
   local ssh_args=() temp_dir script_checksum remote_temp_dir
 
-  ssh::before-run "$@" || softfail "Unable to perform ssh::before-run" $? || ssh::remove_temp_files $? || return $?
+  ssh::before_run "$@" || softfail --code $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
 
   if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
     # shellcheck disable=2016
@@ -503,13 +503,43 @@ ssh::task_with_remote_temp_copy() {
 }
 
 ssh::task::softfail() {
+  local exit_status=""
+  local unless_good=""
+  local message=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -c|--code)
+      exit_status="$2"
+      shift; shift
+      ;;
+    -u|--unless-good)
+      unless_good=true
+      shift
+      ;;
+    -*)
+      log::error "Unknown argument for fail: $1" || echo "(unable to log by usual means) Unknown argument for fail: $1" >&2
+      shift
+      message="$*"
+      break
+      ;;
+    *)
+      message="$1"
+      break
+      ;;
+    esac
+  done
+
+  if [ -z "${message}" ]; then
+    message="Abnormal termination"
+  fi
+
   # Please note: temp_dir and remote_temp_dir variables are not function-local for this function
-  local message="$1"
-  softfail "${message}${temp_dir:+". Local task: ${temp_dir}."}${remote_temp_dir:+". Remote task: ${remote_temp_dir}"}" "${@:2}"
+  echo softfail ${exit_status:+--code "${exit_status}"} ${unless_good:+--unless-good} "${message}${temp_dir:+" (local task: ${temp_dir})"}${remote_temp_dir:+" (remote task: ${remote_temp_dir})"}"
 }
 
 ssh::task::invoke() {
-  ssh::task::raw_invoke "$@" || ssh::task::softfail "ssh::task::raw_invoke call failed" $? || return $?
+  ssh::task::raw_invoke "$@" || ssh::task::softfail --code $? "ssh::task::raw_invoke call failed" || return $?
 }
 
 ssh::task::quiet_on_ssh_errors_invoke() {
@@ -524,7 +554,7 @@ ssh::task::quiet_on_ssh_errors_invoke() {
   fi
 
   if [ "${invoke_status}" != 0 ]; then
-    ssh::task::softfail "${error_message}" "${invoke_status}"
+    ssh::task::softfail --code "${invoke_status}" "${error_message}"
     return "${invoke_status}"
   fi
 }
@@ -561,11 +591,11 @@ ssh::task() {
     log::notice "Performing '${RUNAG_TASK_TITLE:-"$*"}'..." || ssh::task::softfail "Unable to display title" || return $?
   fi
 
-  ssh::before-run "$@" || ssh::task::softfail "Unable to perform ssh::before-run" $? || ssh::remove_temp_files $? || return $?
+  ssh::before_run "$@" || ssh::task::softfail --code $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
 
   local remote_stdin="/dev/null"
   if [ ! -t 0 ]; then
-    ssh::task::store_stdin || ssh::task::softfail "Unable to store stdin data" $? || ssh::remove_temp_files $? || return $?
+    ssh::task::store_stdin || ssh::task::softfail --code $? "Unable to store stdin data" || ssh::remove_temp_files $? || return $?
   fi
 
   ssh::task::nohup_raw_invoke 'bash "${temp_dir}/script" <%q >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"; script_status=$?; echo "${script_status}" >"${temp_dir}/exit_status"; touch "${temp_dir}/done"; exit "${script_status}"' "${remote_stdin}"
@@ -631,7 +661,7 @@ ssh::task::store_stdin() {
   if [ -s "${temp_dir}/stdin" ]; then
     local stdin_checksum; stdin_checksum="$(cksum <"${temp_dir}/stdin")" || ssh::task::softfail "Unable to get stdin checksum" || return $?
 
-    ssh::task::invoke 'cat >"${temp_dir}/stdin"; if [ "$(cksum <"${temp_dir}/stdin")" != %q ]; then exit 254; fi' "${stdin_checksum}" <"${temp_dir}/stdin" || ssh::task::softfail "Unable to store stdin data on remote" $? || return $?
+    ssh::task::invoke 'cat >"${temp_dir}/stdin"; if [ "$(cksum <"${temp_dir}/stdin")" != %q ]; then exit 254; fi' "${stdin_checksum}" <"${temp_dir}/stdin" || ssh::task::softfail --code $? "Unable to store stdin data on remote" || return $?
 
     remote_stdin="${remote_temp_dir}/stdin"
   fi

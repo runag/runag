@@ -141,7 +141,7 @@ task::install_filter() {
 task::is_stderr_empty_after_filtering() {
   local stderr_file="$1"
 
-  local stderr_size; stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?
+  local stderr_size; stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || fail # no softfail here!
 
   if [ "${stderr_size}" != 0 ]; then
     return 1

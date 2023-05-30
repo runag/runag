@@ -77,7 +77,7 @@ menu::select_and_run() {
   # to use "set -o errexit" in their functions
 
   eval "${selected_item}"
-  softfail_unless_good "Error performing ${selected_item}" $? || return $?
+  softfail --code $? --unless-good "Error performing ${selected_item} ($?)" || return $?
 
   if [ "${RUNAG_MENU_REFRAIN_FROM_SUCCESS_LOGGING:-}" != true ]; then
     log::success "Done: ${selected_item}"

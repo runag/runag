@@ -87,47 +87,47 @@ app_units::run_with_units() {
 }
 
 app_units::enable() {
-  app_units::run systemctl "$@" --quiet enable || softfail_code $? || return $?
+  app_units::run systemctl "$@" --quiet enable || softfail --code $? || return $?
 }
 
 app_units::enable_now() {
-  app_units::run systemctl "$@" --quiet --now enable || softfail_code $? || return $?
+  app_units::run systemctl "$@" --quiet --now enable || softfail --code $? || return $?
 }
 
 app_units::disable() {
-  app_units::run systemctl "$@" --quiet disable || softfail_code $? || return $?
+  app_units::run systemctl "$@" --quiet disable || softfail --code $? || return $?
 }
 
 app_units::disable_if_exists() {
-  app_units::run_if_exists systemctl "$@" --quiet disable || softfail_code $? || return $?
+  app_units::run_if_exists systemctl "$@" --quiet disable || softfail --code $? || return $?
 }
   
 app_units::disable_now() {
-  app_units::run systemctl "$@" --quiet --now disable || softfail_code $? || return $?
+  app_units::run systemctl "$@" --quiet --now disable || softfail --code $? || return $?
 }
 
 app_units::disable_now_if_exists() {
-  app_units::run_if_exists systemctl "$@" --quiet --now disable || softfail_code $? || return $?
+  app_units::run_if_exists systemctl "$@" --quiet --now disable || softfail --code $? || return $?
 }
 
 app_units::start() {
-  app_units::run systemctl "$@" --quiet start || softfail_code $? || return $?
+  app_units::run systemctl "$@" --quiet start || softfail --code $? || return $?
 }
 
 app_units::stop() {
-  app_units::run systemctl "$@" stop || softfail_code $? || return $?
+  app_units::run systemctl "$@" stop || softfail --code $? || return $?
 }
 
 app_units::stop_if_exists() {
-  app_units::run_if_exists systemctl "$@" stop || softfail_code $? || return $?
+  app_units::run_if_exists systemctl "$@" stop || softfail --code $? || return $?
 }
 
 app_units::restart() {
-  app_units::run systemctl "$@" restart || softfail_code $? || return $?
+  app_units::run systemctl "$@" restart || softfail --code $? || return $?
 }
 
 app_units::restart_services() {
-  app_units::run_for_services_only systemctl "$@" restart || softfail_code $? || return $?
+  app_units::run_for_services_only systemctl "$@" restart || softfail --code $? || return $?
 }
 
 app_units::statuses() {
@@ -141,11 +141,11 @@ app_units::statuses() {
 }
 
 app_units::journal() {
-  app_units::run_with_units journalctl "$@" || softfail_code $? || return $?
+  app_units::run_with_units journalctl "$@" || softfail --code $? || return $?
 }
 
 app_units::follow_journal() {
-  app_units::run_with_units journalctl --lines=1000 --follow "$@" || softfail_code $? || return $?
+  app_units::run_with_units journalctl --lines=1000 --follow "$@" || softfail --code $? || return $?
 }
 
 app_units::runagfile_menu() {

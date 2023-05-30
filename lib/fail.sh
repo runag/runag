@@ -14,128 +14,80 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# example-command || fail ["error message" [<error code>]]
+# fail --code $? --unless-good "msg"
+# softfail --code $? --unless-good "msg"
+
 fail() {
-  softfail::internal "$@"
-  exit $?
-}
+  local exit_status=""
+  local unless_good=false
+  local perform_softfail=false
+  local trace_start=2
+  local message=""
 
-# example-command || fail_code <error code>
-fail_code() {
-  softfail::internal "" "$1"
-  exit $?
-}
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -c|--code)
+      exit_status="$2"
+      shift; shift
+      ;;
+    -u|--unless-good)
+      unless_good=true
+      shift
+      ;;
+    -s|--soft)
+      perform_softfail=true
+      shift
+      ;;
+    --wrapped-softfail)
+      perform_softfail=true
+      trace_start=3
+      shift
+      ;;
+    -*)
+      log::error "Unknown argument for fail: $1" || echo "(unable to log by usual means) Unknown argument for fail: $1" >&2
+      shift
+      message="$*"
+      break
+      ;;
+    *)
+      message="$1"
+      break
+      ;;
+    esac
+  done
 
-# example-command || fail_unless_good ["error message" [<error code>]]
-fail_unless_good() {
-  softfail_unless_good::internal "$@" || exit $?
-}
-
-# example-command || fail_unless_good_code <error code>
-fail_unless_good_code() {
-  softfail_unless_good::internal "" "$1" || exit $?
-}
-
-
-# example-command || softfail ["error message" [<error code>]] || return $?
-softfail() {
-  softfail::internal "$@"
-}
-
-# example-command || softfail_code <error code> || return $?
-softfail_code() {
-  softfail::internal "" "$1"
-}
-
-# example-command || softfail_unless_good ["error message" [<error code>]] || return $?
-softfail_unless_good() {
-  softfail_unless_good::internal "$@"
-}
-
-# example-command || softfail_unless_good_code <error code> || return $?
-softfail_unless_good_code() {
-  softfail_unless_good::internal "" "$1"
-}
-
-softfail::internal() {
-  local message="${1:-"Abnormal termination"}"
-  local exit_status="${2:-undefined}"
+  if [ -z "${message}" ]; then
+    message="Abnormal termination"
+  fi
 
   # make sure we fail if there are some unexpected stuff in exit_status
   if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
     exit_status=1
+  elif [ "${exit_status}" = 0 ]; then
+    if [ "${unless_good}" = true ]; then
+      return 0
+    fi
+    exit_status=1
   fi
 
-  # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
-  # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
-  log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" >&2
+  # making stack trace inside fail, we dont want to display fail() or softfail() internals in trace
+  # so here we may start from trace_start=3 (instead of normal trace_start=1) to skip first two lines of stack trace
+  log::trace --start "${trace_start}" "${message}" || echo "Unable to log error: ${message}" >&2
 
-  if [ "${exit_status}" != 0 ]; then
+  if [ "${perform_softfail}" = true ]; then
     return "${exit_status}"
   fi
 
-  return 1
+  exit "${exit_status}"
 }
 
-softfail_unless_good::internal() {
-  local message="${1:-"Abnormal termination"}"
-  local exit_status="${2:-undefined}"
-
-  # make sure we fail if there are some unexpected stuff in exit_status
-  if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
-    exit_status=1
-  fi
-
-  if [ "${exit_status}" != 0 ]; then
-    # making stack trace inside softfail::internal, we dont want to display fail() or softfail() internals in trace
-    # so here we start from i=3 (instead of normal i=1) to skip first two lines of stack trace
-    log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" >&2
-  fi
-
-  return "${exit_status}"
+softfail() {
+  fail --wrapped-softfail "$@"
 }
-
-# runag test::fail_example; echo exit status: $?
-
-# test::fail_example() {
-#   test::fail_inner_function
-# }
-
-# test::fail_inner_function() {
-#   # fail
-#   # fail_code 12
-#   # fail "error message" 12
-#   # fail_unless_good
-#   # fail_unless_good "error message"
-#   # fail_unless_good "error message" 12
-#   # fail_unless_good "error message" 0
-#   # fail_unless_good_code 12
-#   # fail_unless_good_code 0
-
-#   # softfail || return $?
-#   # softfail_code 12 || return $?
-#   # softfail "error message" 12 || return $?
-#   # softfail_unless_good || return $?
-#   # softfail_unless_good "error message" || return $?
-#   # softfail_unless_good "error message" 12 || return $?
-#   # softfail_unless_good "error message" 0 || return $?
-#   # softfail_unless_good_code 12 || return $?
-#   # softfail_unless_good_code 0 || return $?
-
-#   echo end of function!!!
-# }
 
 fail::function_sources() {
   cat <<SHELL || softfail || return $?
 $(declare -f fail)
-$(declare -f fail_code)
-$(declare -f fail_unless_good)
-$(declare -f fail_unless_good_code)
 $(declare -f softfail)
-$(declare -f softfail_code)
-$(declare -f softfail_unless_good)
-$(declare -f softfail_unless_good_code)
-$(declare -f softfail::internal)
-$(declare -f softfail_unless_good::internal)
 SHELL
 }
