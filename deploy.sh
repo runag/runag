@@ -200,20 +200,9 @@ log::trace ()
         log::error "  ${line}" || echo "(unable to log by usual means) ${line}" 1>&2;
     done
 }
-task::with_verbose_task () 
+task::with_task_verbose () 
 { 
-    ( if [ -t 1 ]; then
-        log::notice "RUNAG_TASK_VERBOSE flag is set" || softfail || return $?;
-    fi;
-    export RUNAG_TASK_VERBOSE=true;
-    "$@" )
-}
-task::with_update_secrets () 
-{ 
-    ( if [ -t 1 ]; then
-        log::notice "RUNAG_UPDATE_SECRETS flag is set" || softfail || return $?;
-    fi;
-    export RUNAG_UPDATE_SECRETS=true;
+    ( export RUNAG_TASK_VERBOSE=true;
     "$@" )
 }
 task::ssh_jump () 
@@ -251,23 +240,7 @@ task::run_verbose ()
     local RUNAG_TASK_VERBOSE=true;
     task::run "$@"
 }
-task::rubygems_fail_detector () 
-{ 
-    local stderr_file="$2";
-    local task_status="$3";
-    if [ "${task_status}" = 0 ] && [ -s "${stderr_file}" ] && grep -q "^ERROR:" "${stderr_file}"; then
-        return 1;
-    fi;
-    return "${task_status}"
-}
-task::detect_fail_state () 
-{ 
-    local task_status="$3";
-    if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
-        return "${task_status}";
-    fi;
-    "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
-}
+
 task::run () 
 { 
     ( if [ "${RUNAG_TASK_SSH_JUMP:-}" = true ]; then
@@ -306,12 +279,22 @@ task::is_stderr_empty_after_filtering ()
         return 1;
     fi
 }
-task::complete_with_cleanup () 
+task::detect_fail_state () 
 { 
-    task::complete || softfail || return $?;
-    if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
-        rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?;
-    fi
+    local task_status="$3";
+    if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
+        return "${task_status}";
+    fi;
+    "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
+}
+task::rubygems_fail_detector () 
+{ 
+    local stderr_file="$2";
+    local task_status="$3";
+    if [ "${task_status}" = 0 ] && [ -s "${stderr_file}" ] && grep -q "^ERROR:" "${stderr_file}"; then
+        return 1;
+    fi;
+    return "${task_status}"
 }
 task::complete () 
 { 
@@ -341,6 +324,13 @@ task::complete ()
     fi;
     if [ "${error_state}" != 0 ]; then
         softfail "task::cleanup error state ${error_state}" || return $?;
+    fi
+}
+task::complete_with_cleanup () 
+{ 
+    task::complete || softfail || return $?;
+    if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+        rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?;
     fi
 }
 terminal::have_16_colors () 
