@@ -47,7 +47,7 @@ runag::update() {
     git -C "${HOME}/.runag" pull || softfail || return $?
   fi
 
-  runagfile::update-everything-in-runag || softfail || return $?
+  runagfile::update_everything_in_runag || softfail || return $?
 }
 
 runag::push() {
@@ -55,7 +55,7 @@ runag::push() {
     git -C "${HOME}/.runag" push || softfail || return $?
   fi
 
-  runagfile::push-everything-in-runag || softfail || return $?
+  runagfile::push_everything_in_runag || softfail || return $?
 }
 
 runag::update_current_offline_install_if_connected() {(

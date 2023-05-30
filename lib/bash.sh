@@ -14,6 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-bash::is-function-or-command-exists(){
+bash::is_function_or_command_exists(){
   declare -f "$1" >/dev/null || command -v "$1" >/dev/null
 }

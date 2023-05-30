@@ -29,7 +29,7 @@ runagfile::add() {
   git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
-runagfile::update-everything-in-runag() {
+runagfile::update_everything_in_runag() {
   local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
     if [ -d "${runagfile_dir}/.git" ]; then
       git -C "${runagfile_dir}" pull || softfail || return $?
@@ -37,7 +37,7 @@ runagfile::update-everything-in-runag() {
   done
 }
 
-runagfile::push-everything-in-runag() {
+runagfile::push_everything_in_runag() {
   local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
     if [ -d "${runagfile_dir}/.git" ]; then
       git -C "${runagfile_dir}" push || softfail || return $?
@@ -60,35 +60,35 @@ runagfile::push-everything-in-runag() {
 runagfile::load() {
   if [ -f "./runagfile.sh" ]; then
     . "./runagfile.sh"
-    softfail_unless_good "Unable to load './runagfile.sh' ($?)" $?
+    softfail --code $? --unless-good "Unable to load './runagfile.sh' ($?)"
     return $?
 
   elif [ -f "./runagfile/index.sh" ]; then
     . "./runagfile/index.sh"
-    softfail_unless_good "Unable to load './runagfile/index.sh' ($?)" $?
+    softfail --code $? --unless-good "Unable to load './runagfile/index.sh' ($?)"
     return $?
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile.sh" ]; then
     . "${HOME:-}/.runagfile.sh"
-    softfail_unless_good "Unable to load '${HOME:-}/.runagfile.sh' ($?)" $?
+    softfail --code $? --unless-good "Unable to load '${HOME:-}/.runagfile.sh' ($?)"
     return $?
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile/index.sh" ]; then
     . "${HOME:-}/.runagfile/index.sh"
-    softfail_unless_good "Unable to load '${HOME:-}/.runagfile/index.sh' ($?)" $?
+    softfail --code $? --unless-good "Unable to load '${HOME:-}/.runagfile/index.sh' ($?)"
     return $?
 
   else
-    runagfile::load-everything-from-runag
-    softfail_unless_good "Unable to load rùnagfiles from .runag ($?)" $? || return $?
+    runagfile::load_everything_from_runag
+    softfail --code $? --unless-good "Unable to load rùnagfiles from .runag ($?)" || return $?
   fi
 }
 
-runagfile::load-everything-from-runag() {
+runagfile::load_everything_from_runag() {
   local file_path; for file_path in "${HOME}/.runag/runagfiles"/*/index.sh; do
     if [ -f "${file_path}" ]; then
       . "${file_path}"
-      softfail_unless_good "Unable to load '${file_path}' ($?)" $? || return $?
+      softfail --code $? --unless-good "Unable to load '${file_path}' ($?)" || return $?
     fi
   done
 }

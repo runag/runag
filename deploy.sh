@@ -24,7 +24,7 @@ deploy_script ()
     if [ -n "${1:-}" ]; then
         if declare -f "deploy_script::$1" > /dev/null; then
             "deploy_script::$1" "${@:2}";
-            softfail_unless_good_code $? || return $?;
+            softfail --code $? --unless-good || return $?;
         else
             softfail "deploy_script: command not found: $1";
             return $?;
@@ -35,71 +35,67 @@ deploy_script::add ()
 { 
     task::run_with_install_filter runagfile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
-    softfail_unless_good_code $?
+    softfail --code $? --unless-good
 }
 deploy_script::run () 
 { 
     "${HOME}/.runag/bin/runag" "$@";
-    softfail_unless_good_code $?
+    softfail --code $? --unless-good
 }
 fail () 
 { 
-    softfail::internal "$@";
-    exit $?
-}
-fail_code () 
-{ 
-    softfail::internal "" "$1";
-    exit $?
-}
-fail_unless_good () 
-{ 
-    softfail_unless_good::internal "$@" || exit $?
-}
-fail_unless_good_code () 
-{ 
-    softfail_unless_good::internal "" "$1" || exit $?
+    local exit_status="";
+    local unless_good=false;
+    local perform_softfail=false;
+    local trace_start=2;
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -c | --code)
+                exit_status="$2";
+                shift;
+                shift
+            ;;
+            -u | --unless-good)
+                unless_good=true;
+                shift
+            ;;
+            -s | --soft)
+                perform_softfail=true;
+                shift
+            ;;
+            --wrapped-softfail)
+                perform_softfail=true;
+                trace_start=3;
+                shift
+            ;;
+            -*)
+                fail "Unknown argument: $1"
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    local message="${1:-"Abnormal termination"}";
+    if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
+        exit_status=1;
+    else
+        if [ "${exit_status}" = 0 ]; then
+            if [ "${unless_good}" = true ]; then
+                return 0;
+            fi;
+            exit_status=1;
+        fi;
+    fi;
+    log::trace --start "${trace_start}" "${message}" || echo "Unable to log error: ${message}" 1>&2;
+    if [ "${perform_softfail}" = true ]; then
+        return "${exit_status}";
+    fi;
+    exit "${exit_status}"
 }
 softfail () 
 { 
-    softfail::internal "$@"
-}
-softfail_code () 
-{ 
-    softfail::internal "" "$1"
-}
-softfail_unless_good () 
-{ 
-    softfail_unless_good::internal "$@"
-}
-softfail_unless_good_code () 
-{ 
-    softfail_unless_good::internal "" "$1"
-}
-softfail::internal () 
-{ 
-    local message="${1:-"Abnormal termination"}";
-    local exit_status="${2:-undefined}";
-    if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
-        exit_status=1;
-    fi;
-    log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" 1>&2;
-    if [ "${exit_status}" != 0 ]; then
-        return "${exit_status}";
-    fi;
-    return 1
-}
-softfail_unless_good::internal () 
-{ 
-    local message="${1:-"Abnormal termination"}";
-    local exit_status="${2:-undefined}";
-    if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
-        exit_status=1;
-    fi;
-    if [ "${exit_status}" != 0 ]; then
-        log::trace --start 3 "${message}" || echo "Unable to log error: ${message}" 1>&2;
-    fi;
-    return "${exit_status}"
+    fail --wrapped-softfail "$@"
 }
 log::elapsed_time () 
 { 
@@ -287,7 +283,7 @@ task::is_stderr_empty_after_filtering ()
 { 
     local stderr_file="$1";
     local stderr_size;
-    stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail || return $?;
+    stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || fail;
     if [ "${stderr_size}" != 0 ]; then
         return 1;
     fi
@@ -403,7 +399,7 @@ git::install_git ()
                 apt::update || softfail || return $?;
                 apt::install git || softfail || return $?;
             else
-                fail "Unable to install git, apt-get not found";
+                softfail "Unable to install git, apt-get not found" || return $?;
             fi;
         fi;
     else
@@ -481,7 +477,7 @@ runag::deploy_sh_main ()
     task::run_with_install_filter git::install_git || softfail || return $?;
     task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     deploy_script "$@";
-    softfail_unless_good_code $?
+    softfail --code $? --unless-good
 }
 
 export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"

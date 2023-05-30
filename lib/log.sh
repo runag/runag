@@ -41,6 +41,7 @@ log::success() {
 log::message() {
   local foreground_color
   local background_color
+  local message=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -53,15 +54,21 @@ log::message() {
       shift; shift
       ;;
     -*)
-      softfail "Unknown argument: $1" || return $?
+      echo "Unknown argument for log::message: $1" >&2
+      shift
+      message="$*"
+      break
       ;;
     *)
+      message="$1"
       break
       ;;
     esac
   done
 
-  local message="$1"
+  if [ -z "${message}" ]; then
+    message="(empty message)"
+  fi
 
   local color_seq="" default_color_seq=""
   if [ -t 1 ]; then
@@ -74,6 +81,7 @@ log::message() {
 
 log::trace() {
   local trace_start=1
+  local message=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -82,24 +90,26 @@ log::trace() {
       shift; shift
       ;;
     -*)
-      softfail "Unknown argument: $1" || return $?
+      echo "Unknown argument for log::trace: $1" >&2
+      shift
+      message="$*"
+      break
       ;;
     *)
+      message="$1"
       break
       ;;
     esac
   done
 
-  local message="${1:-""}"
-
   if [ -n "${message}" ]; then
-    log::error "${message}" || echo "Unable to log error: ${message}" >&2
+    log::error "${message}" || echo "(unable to log by usual means) ${message}" >&2
   fi
 
   local line i trace_end=$((${#BASH_LINENO[@]}-1))
   for ((i=trace_start; i<=trace_end; i++)); do
     line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
-    log::error "  ${line}" || echo "Unable to log stack trace: ${line}" >&2
+    log::error "  ${line}" || echo "(unable to log by usual means) ${line}" >&2
   done
 }
 

@@ -69,7 +69,7 @@ apt::add_source_with_key() {
   local key_url="$3"
 
   curl --fail --silent --show-error "${key_url}" | gpg --dearmor | file::write --sudo --mode 0644 --owner root --group root "/etc/apt/keyrings/${source_name}.gpg"
-  test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to get key or to save it: ${key_url} " || return $?
+  test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to get key or to save it: ${key_url}" || return $?
 
   <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${source_name}.gpg] ${source_string}" file::write --sudo --mode 0644 "/etc/apt/sources.list.d/${source_name}.list" || softfail || return $?
 

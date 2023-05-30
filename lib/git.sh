@@ -138,7 +138,7 @@ git::install_git() {
         apt::update || softfail || return $?
         apt::install git || softfail || return $?
       else
-        fail "Unable to install git, apt-get not found"
+        softfail "Unable to install git, apt-get not found" || return $?
       fi
     fi
 

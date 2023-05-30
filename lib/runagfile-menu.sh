@@ -25,7 +25,7 @@ runagfile_menu::necessary() {
       shift; shift
       ;;
     -*)
-      fail "Unknown argument: $1"
+      fail "Unknown argument: $1" # no softfail here!
       ;;
     *)
       break
@@ -96,7 +96,7 @@ runagfile_menu::add() {
         shift; shift
         ;;
       -*)
-        fail "Unknown argument: $1"
+        softfail "Unknown argument: $1" || return $?
         ;;
       *)
         break
@@ -136,7 +136,7 @@ runagfile_menu::display() {
     return $?
   fi
   menu::select_and_run "${RUNAGFILE_MENU[@]}"
-  softfail_unless_good_code $?
+  softfail --code $? --unless-good
 }
 
 runagfile_menu::present() {
@@ -148,7 +148,7 @@ runagfile_menu::display_for() {
     runagfile_menu::clear || softfail || return $?
     "$@" || softfail || return $?
     runagfile_menu::display
-    softfail_unless_good "Error performing runagfile_menu::display ($?)" $?
+    softfail --code $? --unless-good "Error performing runagfile_menu::display ($?)"
   )
   local status_code=$?
   # shellcheck disable=SC2034

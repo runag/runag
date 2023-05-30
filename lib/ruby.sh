@@ -105,7 +105,7 @@ rubygems::direnv_credentials() {
 
 # ---- configuration ----
 
-ruby::without-docs() {
+ruby::without_docs() {
   RUBY_CONFIGURE_OPTS="--disable-install-doc" "$@" || softfail || return $?
 }
 

@@ -18,11 +18,11 @@ github::install_profile_from_pass() {
   local pass_path="$1"
   
   if [[ "${OSTYPE}" =~ ^linux ]]; then
-    git::use_libsecret_credential_helper || fail
+    git::use_libsecret_credential_helper || softfail || return $?
 
     local github_username; github_username="$(pass::use "${pass_path}/username")" || softfail || return $?
 
-    pass::use "${pass_path}/personal-access-token" git::gnome_keyring_credentials "github.com" "${github_username}" || fail
+    pass::use "${pass_path}/personal-access-token" git::gnome_keyring_credentials "github.com" "${github_username}" || softfail || return $?
   fi
 }
 
@@ -99,7 +99,7 @@ github::download_release() {
   local file_url; file_url="$(github::query_release --release-id "${release_id}" --query "${query_string}" "${repo_path}")" || softfail || return $?
 
   if [ -z "${file_url}" ]; then
-    fail "Can't find release URL for ${repo_path} that matched ${query_string} and release ${release_id}"
+    softfail "Can't find release URL for ${repo_path} that matched ${query_string} and release ${release_id}" || return $?
   fi
 
   local temp_file; temp_file="$(mktemp)" || softfail "Unable to create temp file" || return $?
