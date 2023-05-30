@@ -136,7 +136,7 @@ runagfile_menu::display() {
     return $?
   fi
   menu::select_and_run "${RUNAGFILE_MENU[@]}"
-  softfail --code $? --unless-good
+  softfail --exit-status $? --unless-good
 }
 
 runagfile_menu::present() {
@@ -148,7 +148,7 @@ runagfile_menu::display_for() {
     runagfile_menu::clear || softfail || return $?
     "$@" || softfail || return $?
     runagfile_menu::display
-    softfail --code $? --unless-good "Error performing runagfile_menu::display ($?)"
+    softfail --exit-status $? --unless-good "Error performing runagfile_menu::display ($?)"
   )
   local status_code=$?
   # shellcheck disable=SC2034
