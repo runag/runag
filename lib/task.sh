@@ -14,62 +14,79 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-task::with_task_verbose() {(
-  export RUNAG_TASK_VERBOSE=true
-  "$@"
-)}
+# TODO:
+#
+# task::set_env () {
+#   # parse argv
+#
+#   if run-the-rest;
+#     "$@"
+#   fi
+# }
+#
+# task::with_env() {(
+#   task::set_env --run-the-rest "$@"
+# )}
 
-task::ssh_jump() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_SSH_JUMP=true
-  "$@"
-}
-
-task::run_with_install_filter() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_STDERR_FILTER=task::install_filter
-  task::run "$@"
-}
-
-task::run_with_rubygems_fail_detector() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
-  task::run "$@"
-}
-
-task::run_without_title() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_OMIT_TITLE=true
-  task::run "$@"
-}
-
-task::run_with_title() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_TITLE="$1"
-  task::run "${@:2}"
-}
-
-task::run_with_short_title() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_TITLE="$1"
-  task::run "$@"
-}
-
-task::run_verbose() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_VERBOSE=true
-  task::run "$@"
-}
 
 # shellcheck disable=SC2030
 task::run() {(
-  if [ "${RUNAG_TASK_SSH_JUMP:-}" = true ]; then
-    ssh::task "$@"
-    return $?
+  local short_title=false
+  local task_title=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -e|--stderr-filter)
+      local RUNAG_TASK_STDERR_FILTER="$2"
+      shift; shift
+      ;;
+    -i|--install-filter)
+      local RUNAG_TASK_STDERR_FILTER=task::install_filter
+      shift
+      ;;
+    -f|--fail-detector)
+      local RUNAG_TASK_FAIL_DETECTOR="$2"
+      shift; shift
+      ;;
+    -r|--rubygems-fail-detector)
+      local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
+      shift
+      ;;
+    -t|--title)
+      task_title="$2"
+      shift; shift
+      ;;
+    -s|--short-title)
+      short_title=true
+      shift
+      ;;
+    -o|--omit-title)
+      local RUNAG_TASK_OMIT_TITLE=true
+      shift
+      ;;
+    -k|--keep-temp-files)
+      local RUNAG_TASK_KEEP_TEMP_FILES=true
+      shift
+      ;;
+    -v|--verbose)
+      local RUNAG_TASK_VERBOSE=true
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  if [ "${short_title}" = true ]; then
+    task_title="$1"
   fi
 
   if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
-    log::notice "Performing '${RUNAG_TASK_TITLE:-"$*"}'..." || softfail || return $?
+    log::notice "Performing '${task_title:-"$*"}'..." || softfail || return $?
   fi
   
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $? # temp_dir also used in task::cleanup signal handler
@@ -106,6 +123,7 @@ task::install_filter() {
   fi
 }
 
+# shellcheck disable=SC2031
 task::is_stderr_empty_after_filtering() {
   local stderr_file="$1"
 
@@ -116,6 +134,7 @@ task::is_stderr_empty_after_filtering() {
   fi
 }
 
+# shellcheck disable=SC2031
 task::detect_fail_state() {
   local task_status="$3"
 
@@ -178,14 +197,6 @@ task::complete_with_cleanup() {
 
 task::function_sources() {
   cat <<SHELL || softfail || return $?
-$(declare -f task::with_task_verbose)
-$(declare -f task::ssh_jump)
-$(declare -f task::run_with_install_filter)
-$(declare -f task::run_with_rubygems_fail_detector)
-$(declare -f task::run_without_title)
-$(declare -f task::run_with_title)
-$(declare -f task::run_with_short_title)
-$(declare -f task::run_verbose)
 $(declare -f task::run)
 $(declare -f task::install_filter)
 $(declare -f task::is_stderr_empty_after_filtering)
