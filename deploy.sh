@@ -33,7 +33,7 @@ deploy_script ()
 }
 deploy_script::add () 
 { 
-    task::run_with_install_filter runagfile::add "$1" || softfail || return $?;
+    task::run --install-filter runagfile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
     softfail --exit-status $? --unless-good
 }
@@ -200,55 +200,64 @@ log::trace ()
         log::error "  ${line}" || echo "(unable to log by usual means) ${line}" 1>&2;
     done
 }
-task::with_task_verbose () 
-{ 
-    ( export RUNAG_TASK_VERBOSE=true;
-    "$@" )
-}
-task::ssh_jump () 
-{ 
-    local RUNAG_TASK_SSH_JUMP=true;
-    "$@"
-}
-task::run_with_install_filter () 
-{ 
-    local RUNAG_TASK_STDERR_FILTER=task::install_filter;
-    task::run "$@"
-}
-task::run_with_rubygems_fail_detector () 
-{ 
-    local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector;
-    task::run "$@"
-}
-task::run_without_title () 
-{ 
-    local RUNAG_TASK_OMIT_TITLE=true;
-    task::run "$@"
-}
-task::run_with_title () 
-{ 
-    local RUNAG_TASK_TITLE="$1";
-    task::run "${@:2}"
-}
-task::run_with_short_title () 
-{ 
-    local RUNAG_TASK_TITLE="$1";
-    task::run "$@"
-}
-task::run_verbose () 
-{ 
-    local RUNAG_TASK_VERBOSE=true;
-    task::run "$@"
-}
-
 task::run () 
 { 
-    ( if [ "${RUNAG_TASK_SSH_JUMP:-}" = true ]; then
-        ssh::task "$@";
-        return $?;
+    ( local short_title=false;
+    local task_title="";
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -e | --stderr-filter)
+                local RUNAG_TASK_STDERR_FILTER="$2";
+                shift;
+                shift
+            ;;
+            -i | --install-filter)
+                local RUNAG_TASK_STDERR_FILTER=task::install_filter;
+                shift
+            ;;
+            -f | --fail-detector)
+                local RUNAG_TASK_FAIL_DETECTOR="$2";
+                shift;
+                shift
+            ;;
+            -r | --rubygems-fail-detector)
+                local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector;
+                shift
+            ;;
+            -t | --title)
+                task_title="$2";
+                shift;
+                shift
+            ;;
+            -s | --short-title)
+                short_title=true;
+                shift
+            ;;
+            -o | --omit-title)
+                local RUNAG_TASK_OMIT_TITLE=true;
+                shift
+            ;;
+            -k | --keep-temp-files)
+                local RUNAG_TASK_KEEP_TEMP_FILES=true;
+                shift
+            ;;
+            -v | --verbose)
+                local RUNAG_TASK_VERBOSE=true;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    if [ "${short_title}" = true ]; then
+        task_title="$1";
     fi;
     if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
-        log::notice "Performing '${RUNAG_TASK_TITLE:-"$*"}'..." || softfail || return $?;
+        log::notice "Performing '${task_title:-"$*"}'..." || softfail || return $?;
     fi;
     local temp_dir;
     temp_dir="$(mktemp -d)" || softfail || return $?;
@@ -392,11 +401,11 @@ terminal::default_color ()
 
 apt::install () 
 { 
-    task::run_with_title "apt-get install $*" sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
+    task::run --title "apt-get install $*" sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
 }
 apt::update () 
 { 
-    task::run_with_title "apt-get update" sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
+    task::run --title "apt-get update" sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
 }
 
 git::install_git () 
@@ -482,8 +491,8 @@ runag::deploy_sh_main ()
         set -o xtrace;
     fi;
     set -o nounset;
-    task::run_with_install_filter git::install_git || softfail || return $?;
-    task::run_with_install_filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
+    task::run --install-filter git::install_git || softfail || return $?;
+    task::run --install-filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     deploy_script "$@";
     softfail --exit-status $? --unless-good
 }

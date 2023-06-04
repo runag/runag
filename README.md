@@ -177,6 +177,7 @@ Please refer to the source code for now.
 
 
 ## Environment variables
+ 
 
 ### General
 
@@ -194,6 +195,7 @@ Could be set to `"true"`
 #### `RUNAG_VERBOSE`
 
 Could be set to `"true"`
+
 
 ### SSH-related variables
 
@@ -260,6 +262,7 @@ Umask for remote commands
 User name.
 By default rùnag will not provide any user name so ssh could use it's defaults.
 
+
 ### Rsync-related variables
 
 #### `RUNAG_RSYNC_ARGS`
@@ -273,6 +276,7 @@ Could be set to `"true"`
 #### `RUNAG_RSYNC_WITHOUT_CHECKSUMS`
 
 Could be set to `"true"`
+
 
 ### Tasks-related variables
 
@@ -292,6 +296,10 @@ The function must return new exit status which will be assumed to be an exit sta
 
 Could be set to `"true"`
 
+#### `RUNAG_TASK_OMIT_TITLE`
+
+Could be set to `"true"`
+
 #### `RUNAG_TASK_RECONNECT_ATTEMPTS`
 
 Integer
@@ -299,10 +307,6 @@ Integer
 #### `RUNAG_TASK_RECONNECT_DELAY`
 
 Integer (could be float but that depends on your `sleep` command implementation).
-
-#### `RUNAG_TASK_SSH_JUMP`
-
-Run tasks on remote machine through ssh
 
 #### `RUNAG_TASK_STDERR_FILTER`
 
@@ -312,13 +316,12 @@ Could be set to function name. Function is expected to filter it's input. If fun
 
 Could be set to `"true"`
 
+
 ### Internal variables, not to be used by non-library code
 
 ```
 RUNAG_NODENV_INITIALIZED
 RUNAG_RBENV_INITIALIZED
-RUNAG_TASK_OMIT_TITLE
-RUNAG_TASK_TITLE
 ```
 
 
