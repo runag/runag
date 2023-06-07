@@ -22,6 +22,7 @@ gpg::get_key_uid() {
 
 gpg::import_key() {
   local skip_if_exists trust_level should_confirm
+  local list_keys_command="--list-keys"
   while [[ "$#" -gt 0 ]]; do
     case $1 in
       -c|--confirm)
@@ -44,6 +45,10 @@ gpg::import_key() {
         trust_level=6
         shift
         ;;
+      -e|--secret-key)
+        list_keys_command="--list-secret-keys"
+        shift
+        ;;
       -*)
         softfail "Unknown argument: $1" || return $?
         ;;
@@ -58,7 +63,7 @@ gpg::import_key() {
 
   local trust_levels=(- - - - marginally fully ultimately)
 
-  if [ "${skip_if_exists:-}" = true ] && gpg --list-keys "${gpg_key_id}" >/dev/null 2>&1; then
+  if [ "${skip_if_exists:-}" = true ] && gpg "${list_keys_command}" "${gpg_key_id}" >/dev/null 2>&1; then
     return
   fi
 
