@@ -42,7 +42,7 @@ runagfile_menu::clear() {
 
 runagfile_menu::add() {
   if [ ! -t 0 ] || [ ! -t 1 ]; then
-    return 0
+    return
   fi
 
   local quote=true
@@ -56,7 +56,7 @@ runagfile_menu::add() {
       -o|--os)
         local os_type="$2"
         if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
-          return 0
+          return
         fi
         shift; shift
         ;;

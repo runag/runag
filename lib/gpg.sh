@@ -64,7 +64,7 @@ gpg::import_key() {
   local trust_levels=(- - - - marginally fully ultimately)
 
   if [ "${skip_if_exists:-}" = true ] && gpg "${list_keys_command}" "${gpg_key_id}" >/dev/null 2>&1; then
-    return 0
+    return
   fi
 
   if [ "${should_confirm:-}" = true ]; then
@@ -93,7 +93,7 @@ gpg::import_key() {
 
     if [ "${action}" = no ]; then
       echo "Key is ignored"
-      return 0
+      return
     fi
 
     if [ "${action}" != yes ]; then
