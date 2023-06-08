@@ -46,18 +46,19 @@ runag::runagfile_menu() {
   if [ -d "${HOME}/.runag" ]; then
     runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
-    runagfile_menu::add runag::update || softfail || return $?
+    runagfile_menu::add runag::pull || softfail || return $?
+    runagfile_menu::add runag::push || softfail || return $?
     runagfile_menu::add --comment "Current directory will be used" runag::create_or_update_offline_install || softfail || return $?
     runagfile_menu::add runag::update_current_offline_install_if_connected || softfail || return $?
   fi
 }
 
-runag::update() {
+runag::pull() {
   if [ -d "${HOME}/.runag/.git" ]; then
     git -C "${HOME}/.runag" pull || softfail || return $?
   fi
 
-  runagfile::update_everything_in_runag || softfail || return $?
+  runagfile::each git pull || softfail || return $?
 }
 
 runag::push() {
@@ -65,7 +66,7 @@ runag::push() {
     git -C "${HOME}/.runag" push || softfail || return $?
   fi
 
-  runagfile::push_everything_in_runag || softfail || return $?
+  runagfile::each git push || softfail || return $?
 }
 
 runag::update_current_offline_install_if_connected() {(
