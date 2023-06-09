@@ -69,6 +69,24 @@ runag::push() {
   runagfile::each git push || softfail || return $?
 }
 
+runag::if_current_offline_install_connected() {
+  local runag_path="${HOME}/.runag"
+
+  if [ ! -d "${runag_path}/.git" ]; then
+    fail "Unable to find rùnag checkout" # fail here is intentional
+  fi
+
+  local remote_path
+
+  if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
+    if [ -d "${remote_path}" ]; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
 runag::update_current_offline_install_if_connected() {(
   local runag_path="${HOME}/.runag"
 
@@ -77,6 +95,7 @@ runag::update_current_offline_install_if_connected() {(
   fi
 
   local remote_path
+  
   if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
     if [ -d "${remote_path}" ]; then
       cd "${remote_path}/.." || softfail || return $?
