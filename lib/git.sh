@@ -153,9 +153,11 @@ git::is_remote_local() {
 
   local remote_path; remote_path="$(git config "remote.${remote_name}.url")" || fail "Remote url not found" # fail here in intentional, as function is called from if..then block
 
-  if [[ ! "${remote_path}" =~ / ]]; then
-    return 1
+  if [[ "${remote_path}" =~ ^/ ]]; then
+    return 0
   fi
+
+  return 1
 }
 
 git::is_local_remote_connected() {
@@ -163,7 +165,7 @@ git::is_local_remote_connected() {
 
   local remote_path; remote_path="$(git config "remote.${remote_name}.url")" || fail "Remote url not found" # fail here in intentional, as function is called from if..then block
 
-  if [[ ! "${remote_path}" =~ / ]]; then
+  if [[ ! "${remote_path}" =~ ^/ ]]; then
     fail "Remote path should be an absolute path: ${remote_path}" # fail here in intentional, as function is called from if..then block
   fi
 
