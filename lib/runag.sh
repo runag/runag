@@ -69,7 +69,7 @@ runag::push() {
   runagfile::each git push || softfail || return $?
 }
 
-runag::if_current_offline_install_connected() {
+runag::is_current_offline_install_connected() {
   local runag_path="${HOME}/.runag"
 
   if [ ! -d "${runag_path}/.git" ]; then
