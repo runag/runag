@@ -121,7 +121,7 @@ pass::use() {
     fi
 
     if [ "${RUNAG_UPDATE_SECRETS:-}" != "true" ] && "${callback_function}::exists" "$@"; then
-      return
+      return 0
     fi
   fi
 
@@ -151,7 +151,7 @@ pass::use() {
       test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass" || return $?
     fi
 
-    return
+    return 0
   fi
 
   # case if "--body" specified
@@ -172,7 +172,7 @@ pass::use() {
       test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass" || return $?
     fi
 
-    return
+    return 0
   fi
 
   # obtain secret data
@@ -188,7 +188,7 @@ pass::use() {
   if [ -z "${secret_data}" ]; then
     if [ "${skip_if_empty}" = true ]; then
       if [ -n "${callback_function}" ]; then
-        return
+        return 0
       fi
       softfail "--skip-if-empty is not supported for pipe output" || return $?
     fi
