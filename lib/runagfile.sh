@@ -29,18 +29,10 @@ runagfile::add() {
   git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
-runagfile::update_everything_in_runag() {
+runagfile::each() {
   local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
-    if [ -d "${runagfile_dir}/.git" ]; then
-      git -C "${runagfile_dir}" pull || softfail || return $?
-    fi
-  done
-}
-
-runagfile::push_everything_in_runag() {
-  local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
-    if [ -d "${runagfile_dir}/.git" ]; then
-      git -C "${runagfile_dir}" push || softfail || return $?
+    if [ -d "${runagfile_dir}" ]; then
+      ( cd "${runagfile_dir}" && "$@" ) || softfail || return $?
     fi
   done
 }

@@ -46,18 +46,19 @@ runag::runagfile_menu() {
   if [ -d "${HOME}/.runag" ]; then
     runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
-    runagfile_menu::add runag::update || softfail || return $?
+    runagfile_menu::add runag::pull || softfail || return $?
+    runagfile_menu::add runag::push || softfail || return $?
     runagfile_menu::add --comment "Current directory will be used" runag::create_or_update_offline_install || softfail || return $?
     runagfile_menu::add runag::update_current_offline_install_if_connected || softfail || return $?
   fi
 }
 
-runag::update() {
+runag::pull() {
   if [ -d "${HOME}/.runag/.git" ]; then
     git -C "${HOME}/.runag" pull || softfail || return $?
   fi
 
-  runagfile::update_everything_in_runag || softfail || return $?
+  runagfile::each git pull || softfail || return $?
 }
 
 runag::push() {
@@ -65,7 +66,25 @@ runag::push() {
     git -C "${HOME}/.runag" push || softfail || return $?
   fi
 
-  runagfile::push_everything_in_runag || softfail || return $?
+  runagfile::each git push || softfail || return $?
+}
+
+runag::is_current_offline_install_connected() {
+  local runag_path="${HOME}/.runag"
+
+  if [ ! -d "${runag_path}/.git" ]; then
+    fail "Unable to find rùnag checkout" # fail here is intentional
+  fi
+
+  local remote_path
+
+  if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
+    if [ -d "${remote_path}" ]; then
+      return 0
+    fi
+  fi
+
+  return 1
 }
 
 runag::update_current_offline_install_if_connected() {(
@@ -76,6 +95,7 @@ runag::update_current_offline_install_if_connected() {(
   fi
 
   local remote_path
+  
   if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
     if [ -d "${remote_path}" ]; then
       cd "${remote_path}/.." || softfail || return $?
