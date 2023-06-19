@@ -16,12 +16,26 @@
 
 erlang::install_dependencies::apt() {
   apt::install \
-    build-essential `# build` \
     autoconf        `# build` \
-    libncurses5-dev `# terminal` \
-    libssl-dev      `# SSL` \
-    zlib1g-dev      `# SSL` \
-    xsltproc        `# EEP-48 documentation` \
-    fop             `# EEP-48 documentation` \
+    build-essential `# build` \
+    m4              `# build` \
+    fop             `# documentation` \
+    libxml2-utils   `# documentation` \
+    xsltproc        `# documentation` \
+    libssh-dev      `# ssl` \
+    libncurses-dev  `# terminal` \
+      || softfail || return $?
+
+    # openjdk-11-jdk  `# jinterface` \
+    # unixodbc-dev    `# odbc` \
+}
+
+erlang::install_dependencies::observer::apt() {
+  apt::install \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    libpng-dev \
+    libwxgtk-webview3.0-gtk3-dev \
+    libwxgtk3.0-gtk3-dev \
       || softfail || return $?
 }
