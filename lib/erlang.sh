@@ -23,7 +23,7 @@ erlang::install_dependencies::apt() {
     libxml2-utils   `# documentation` \
     xsltproc        `# documentation` \
     libssh-dev      `# ssl` \
-    libncurses-dev  `# terminal` \
+    libncurses5-dev `# terminal` \
       || softfail || return $?
 
     # openjdk-11-jdk  `# jinterface` \
