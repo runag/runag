@@ -28,18 +28,13 @@ checksums::create_or_update() {
     find . -type f ! -path "./${current_checksum_file}" "${@:3}" -exec openssl dgst "-${checksum_algo}" {} \; | LC_ALL=C sort >"${new_checksum_file}"
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
-    local action
-
     if [ ! -f "${current_checksum_file}" ]; then
       if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" != true ]; then
         cat "${new_checksum_file}" || softfail || return $?
         echo ""
-        echo "Do you want to create the checksum file: ${directory}/${current_checksum_file} (yes/no)?"
-        
-        IFS="" read -r action || softfail || return $?
       fi
-      
-      if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || [ "${action}" = yes ]; then
+
+      if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || ui::confirm "Do you want to create the checksum file: ${directory}/${current_checksum_file} (yes/no)?"; then
         cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
 
         if [ -d .git ]; then
@@ -64,11 +59,8 @@ checksums::create_or_update() {
     fi
 
     echo ""
-    echo "Do you want to update the checksum file: ${directory}/${current_checksum_file} (yes/no)?"
 
-    IFS="" read -r action || softfail || return $?
-
-    if [ "${action}" = yes ]; then
+    if ui::confirm "Do you want to update the checksum file: ${directory}/${current_checksum_file} (yes/no)?"; then
       cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
 
       if [ -d .git ]; then

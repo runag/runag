@@ -89,15 +89,9 @@ gpg::import_key() {
     echo "Please prepare the key password if needed"
     echo "Please enter \"no\" if you want to continue without this key being imported."
 
-    local action; IFS="" read -r action || softfail || return $?
-
-    if [ "${action}" = no ]; then
-      echo "Key is ignored"
+    if ! ui::confirm; then
+      log::warning "Key was not imported" || softfail || return $?
       return 0
-    fi
-
-    if [ "${action}" != yes ]; then
-      softfail || return $?
     fi
   fi
 

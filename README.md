@@ -108,6 +108,7 @@ Please refer to the source code for now.
 * [fs](lib/fs.sh)
 * [source](lib/source.sh)
 * [task](lib/task.sh)
+* [ui](lib/ui.sh)
 
 ### Interfacing with OS anv VMs
 
