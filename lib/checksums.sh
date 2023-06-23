@@ -43,7 +43,6 @@ checksums::create_or_update() {
         fi
       fi
 
-      sync || softfail || return $?
       exit 0
     fi
 
@@ -67,14 +66,14 @@ checksums::create_or_update() {
         git add "${current_checksum_file}" || softfail || return $?
         git commit -m "Updates checksum file" "${current_checksum_file}" || softfail || return $?
       fi
-
-      sync || softfail || return $?
     fi
   )
 
   local result=$?
 
   rm "${new_checksum_file}" || softfail || return $?
+
+  sync || softfail || return $?
 
   if [ "${result}" != 0 ]; then
     softfail "checksums::create_or_update failed (${result})" || return $?
