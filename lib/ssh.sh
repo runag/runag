@@ -20,21 +20,22 @@ sshd::disable_password_authentication() {
   <<<"PasswordAuthentication no" file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
 }
 
-ssh::make_config_dir_if_not_exists() {
+ssh::config_dir_should_exists() {
   dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
 }
 
-ssh::make_control_sockets_dir_if_not_exists() {
+ssh::control_sockets_dir_should_exists() {
   dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
   dir::should_exists --mode 0700 "${HOME}/.ssh/control-sockets" || softfail "Unable to create ssh control sockets directory" || return $?
 }
-ssh::make_config_d_dir_if_not_exists() {
+
+ssh::config_d_dir_should_exists() {
   dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
   dir::should_exists --mode 0700 "${HOME}/.ssh/ssh_config.d" || softfail "Unable to create ssh user config.d directory" || return $?
 }
 
 ssh::add_ssh_config_d_include_directive() {
-  ssh::make_config_d_dir_if_not_exists || softfail || return $?
+  ssh::config_d_dir_should_exists || softfail || return $?
   <<<"Include ~/.ssh/ssh_config.d/*.conf" file::update_block --mode 0600 "${HOME}/.ssh/config" "include files from ssh_config.d" || softfail "Unable to add configuration to user ssh config" || return $?
 }
 
@@ -71,6 +72,7 @@ ssh::import_id() {
 
 ssh::get_user_public_key() {
   local file_name="${1:-"id_ed25519"}"
+
   if [ -r "${HOME}/.ssh/${file_name}.pub" ]; then
     cat "${HOME}/.ssh/${file_name}.pub" || softfail || return $?
   else
@@ -82,7 +84,7 @@ ssh::install_ssh_profile_from_pass() {
   local profile_path="$1"
   local profile_name="$2"
 
-  ssh::make_config_d_dir_if_not_exists || softfail || return $?
+  ssh::config_d_dir_should_exists || softfail || return $?
 
   # ssh key
   if pass::secret_exists "${profile_path}/id_ed25519"; then
@@ -113,7 +115,7 @@ ssh::install_ssh_key_from_pass() {
   local secret_path="$1"
   local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
-  ssh::make_config_dir_if_not_exists || softfail || return $?
+  ssh::config_dir_should_exists || softfail || return $?
   pass::use --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
@@ -179,37 +181,84 @@ EOF
   fi
 }
 
+ssh::refresh_host_in_known_hosts() {
+  local ssh_port="${REMOTE_PORT:-"22"}"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -p|--port)
+      ssh_port="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local host_name="${1:-"${REMOTE_HOST}"}"
+
+  ssh::remove_host_from_known_hosts --port "${ssh_port}" "${host_name}" || softfail || return $?
+  ssh::wait_for_host_ssh_to_become_available --port "${ssh_port}" "${host_name}" || softfail || return $?
+  ssh::add_host_to_known_hosts --port "${ssh_port}" "${host_name}" || softfail || return $?
+}
+
 ssh::wait_for_host_ssh_to_become_available() {
-  local ip="$1"
+  local ssh_port="${REMOTE_PORT:-"22"}"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -p|--port)
+      ssh_port="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local host_name="${1:-"${REMOTE_HOST}"}"
+
   while true; do
     # note that here I omit "|| fail" for a reason, ssh-keyscan will fail if host is not yet there
-    local key; key="$(ssh-keyscan "${ip}" 2>/dev/null)"
+    local key; key="$(ssh-keyscan -p "${ssh_port}" "${host_name}" 2>/dev/null)"
     if [ -n "${key}" ]; then
       return 0
     else
       if [ -t 2 ]; then
-        echo "Waiting for SSH to become available on host '${ip}'..." >&2
+        echo "Waiting for SSH to become available on host '${host_name}'..." >&2
       fi
       sleep 1 || softfail || return $?
     fi
   done
 }
 
-ssh::refresh_host_in_known_hosts() {
-  local host_name="$1"
-  ssh::remove_host_from_known_hosts "${host_name}" || softfail || return $?
-  ssh::wait_for_host_ssh_to_become_available "${host_name}" || softfail || return $?
-  ssh::add_host_to_known_hosts "${host_name}" || softfail || return $?
-}
-
-ssh::add_remote_to_known_hosts_and_then() {
-  ssh::add_host_to_known_hosts || softfail || return $?
-  "$@"
-}
-
 ssh::add_host_to_known_hosts() {
+  local ssh_port="${REMOTE_PORT:-"22"}"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -p|--port)
+      ssh_port="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   local host_name="${1:-"${REMOTE_HOST}"}"
-  local ssh_port="${2:-"${REMOTE_PORT:-"22"}"}"
 
   local known_hosts="${HOME}/.ssh/known_hosts"
 
@@ -218,7 +267,7 @@ ssh::add_host_to_known_hosts() {
   fi
 
   if [ ! -f "${known_hosts}" ]; then
-    ssh::make_config_dir_if_not_exists || softfail || return $?
+    ssh::config_dir_should_exists || softfail || return $?
     ( umask 0177 && touch "${known_hosts}") || softfail || return $?
   fi
 
@@ -234,8 +283,32 @@ ssh::add_host_to_known_hosts() {
 }
 
 ssh::remove_host_from_known_hosts() {
-  local host_name="$1"
-  ssh-keygen -R "${host_name}" || softfail || return $?
+  local ssh_port="${REMOTE_PORT:-"22"}"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -p|--port)
+      ssh_port="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local host_name="${1:-"${REMOTE_HOST}"}"
+
+  if [ "${ssh_port}" = "22" ]; then
+    local keygen_host_string="${host_name}"
+  else
+    local keygen_host_string="[${host_name}]:${ssh_port}"
+  fi
+
+  ssh-keygen -R "${keygen_host_string}" || softfail || return $?
 }
 
 # shellcheck disable=2030
@@ -274,7 +347,7 @@ ssh::with_ssh_args() {(
 ssh::set_args() {
   # Please note: ssh_args variable is not function-local for this function
 
-  ssh::make_control_sockets_dir_if_not_exists || softfail || return $?
+  ssh::control_sockets_dir_should_exists || softfail || return $?
 
   # shellcheck disable=2031
   if ! [[ "${OSTYPE}" =~ ^msys ]] && [ "${REMOTE_CONTROL_MASTER:-}" != "no" ]; then
