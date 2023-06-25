@@ -501,42 +501,6 @@ ssh::run() {
   return "${ssh_result}"
 }
 
-ssh::task_with_install_filter() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_STDERR_FILTER=task::install_filter
-  ssh::task "$@"
-}
-
-ssh::task_with_rubygems_fail_detector() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
-  ssh::task "$@"
-}
-
-ssh::task_without_title() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_OMIT_TITLE=true
-  ssh::task "$@"
-}
-
-ssh::task_with_title() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_TITLE="$1"
-  ssh::task "${@:2}"
-}
-
-ssh::task_with_short_title() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_TITLE="$1"
-  ssh::task "$@"
-}
-
-ssh::task_verbose() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_VERBOSE=true
-  ssh::task "$@"
-}
-
 ssh::call() {
   # shellcheck disable=2034
   local RUNAG_TASK_VERBOSE=true RUNAG_TASK_OMIT_TITLE=true
@@ -656,12 +620,66 @@ ssh::task::information_message() {
   fi
 }
 
-# shellcheck disable=2016
+# shellcheck disable=2016,2034
 ssh::task() {
+  local short_title=false
+  local task_title=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -e|--stderr-filter)
+      local RUNAG_TASK_STDERR_FILTER="$2"
+      shift; shift
+      ;;
+    -i|--install-filter)
+      local RUNAG_TASK_STDERR_FILTER=task::install_filter
+      shift
+      ;;
+    -f|--fail-detector)
+      local RUNAG_TASK_FAIL_DETECTOR="$2"
+      shift; shift
+      ;;
+    -r|--rubygems-fail-detector)
+      local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
+      shift
+      ;;
+    -t|--title)
+      task_title="$2"
+      shift; shift
+      ;;
+    -s|--short-title)
+      short_title=true
+      shift
+      ;;
+    -o|--omit-title)
+      local RUNAG_TASK_OMIT_TITLE=true
+      shift
+      ;;
+    -k|--keep-temp-files)
+      local RUNAG_TASK_KEEP_TEMP_FILES=true
+      shift
+      ;;
+    -v|--verbose)
+      local RUNAG_TASK_VERBOSE=true
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  if [ "${short_title}" = true ]; then
+    task_title="$1"
+  fi
+
   local ssh_args=() temp_dir script_checksum remote_temp_dir information_message_state
 
   if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
-    log::notice "Performing '${RUNAG_TASK_TITLE:-"$*"}'..." || ssh::task::softfail "Unable to display title" || return $?
+    log::notice "Performing '${task_title:-"$*"}'..." || ssh::task::softfail "Unable to display title" || return $?
   fi
 
   ssh::before_run "$@" || ssh::task::softfail --exit-status $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
