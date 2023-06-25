@@ -157,7 +157,7 @@ app_units::runagfile_menu() {
   runagfile_menu::add "$1" ssh::task "$2" app_units::stop || softfail || return $?
   runagfile_menu::add "$1" ssh::task "$2" app_units::restart || softfail || return $?
   runagfile_menu::add "$1" ssh::task "$2" app_units::restart_services || softfail || return $?
-  runagfile_menu::add "$1" ssh::task_verbose "$2" app_units::statuses || softfail || return $?
+  runagfile_menu::add "$1" ssh::task --verbose "$2" app_units::statuses || softfail || return $?
   runagfile_menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::journal --since yesterday --follow || true" || softfail || return $?
   runagfile_menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_units::follow_journal || true" || softfail || return $?
 }
