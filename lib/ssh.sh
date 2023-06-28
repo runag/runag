@@ -438,8 +438,14 @@ ssh::script() {
 ssh::remove_temp_files() {
   local exit_status="${1:-0}"
 
-  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ] && [ -n "${temp_dir:-}" ]; then
-    rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail "Unable to remote temp files" || return $?
+  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
+    if [ -n "${temp_dir:-}" ]; then
+      rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail "Unable to remote temp files" || return $?
+    fi
+
+    if [ -n "${push_files}" ]; then
+      ssh::call rm -rf "${push_files_rsync_dest}" || softfail "Unable to remove remote temp file"
+    fi
   fi
 
   return "${exit_status}"
@@ -505,38 +511,6 @@ ssh::call() {
   # shellcheck disable=2034
   local RUNAG_TASK_VERBOSE=true RUNAG_TASK_OMIT_TITLE=true
   ssh::task "$@"
-}
-
-ssh::call_with_remote_temp_copy() {
-  # shellcheck disable=2034
-  local RUNAG_TASK_VERBOSE=true RUNAG_TASK_OMIT_TITLE=true
-  ssh::task_with_remote_temp_copy "$@"
-}
-
-ssh::task_with_remote_temp_copy() {
-  local local_dir="$1"
-
-  if [ ! -e "${local_dir}" ]; then
-    softfail "File does not exists: ${local_dir}"
-    return $?
-  fi
-
-  if [ -d "${local_dir}" ]; then
-    local rsync_src="${local_dir}/"
-    local rsync_dest; rsync_dest="$(ssh::call mktemp -d)" || softfail "Unable to create remote temp directory" || return $?
-  else
-    local rsync_src="${local_dir}"
-    local rsync_dest; rsync_dest="$(ssh::call mktemp)" || softfail "Unable to create remote temp file" || return $?
-  fi
-
-  rsync::sync_to_remote "${rsync_src}" "${rsync_dest}" || softfail "Unable to rsync to remote" || return $?
-
-  ssh::task "$2" "${rsync_dest}" "${@:3}"
-  local task_result=$?
-
-  ssh::call rm -rf "${rsync_dest}" || softfail "Unable to remove remote temp file"
-
-  return "${task_result}"
 }
 
 ssh::task::softfail() {
@@ -624,6 +598,7 @@ ssh::task::information_message() {
 ssh::task() {
   local short_title=false
   local task_title=""
+  local push_files="" push_files_rsync_src="" push_files_rsync_dest=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -655,6 +630,10 @@ ssh::task() {
       local RUNAG_TASK_OMIT_TITLE=true
       shift
       ;;
+    -p|--push-files)
+      local push_files="$2"
+      shift; shift
+      ;;
     -k|--keep-temp-files)
       local RUNAG_TASK_KEEP_TEMP_FILES=true
       shift
@@ -672,15 +651,32 @@ ssh::task() {
     esac
   done
 
-  if [ "${short_title}" = true ]; then
-    task_title="$1"
+  if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
+    if [ "${short_title}" = true ]; then
+      task_title="$1"
+    fi
+    log::notice "Performing '${task_title:-"$*"}'..." || softfail "Unable to display title" || return $?
+  fi
+
+  if [ -n "${push_files}" ]; then
+    if [ ! -e "${push_files}" ]; then
+      softfail "File or directory does not exists: ${push_files}"
+      return $?
+    fi
+
+    if [ -d "${push_files}" ]; then
+      push_files_rsync_src="${push_files}/"
+      push_files_rsync_dest="$(ssh::call mktemp -d)" || softfail "Unable to create remote temp directory" || return $?
+    else
+      push_files_rsync_src="${push_files}"
+      push_files_rsync_dest="$(ssh::call mktemp)" || softfail "Unable to create remote temp file" || return $?
+    fi
+
+    rsync::sync_to_remote "${push_files_rsync_src}" "${push_files_rsync_dest}" || softfail "Unable to rsync to remote" || return $?
+    set -- "$@" "${push_files_rsync_dest}"
   fi
 
   local ssh_args=() temp_dir script_checksum remote_temp_dir information_message_state
-
-  if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
-    log::notice "Performing '${task_title:-"$*"}'..." || ssh::task::softfail "Unable to display title" || return $?
-  fi
 
   ssh::before_run "$@" || ssh::task::softfail --exit-status $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
 
