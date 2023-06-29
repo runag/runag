@@ -101,7 +101,6 @@ Please refer to the source code for now.
 ### General utility
 
 * [archival-snapshots](lib/archival-snapshots.sh)
-* [bash](lib/bash.sh)
 * [config](lib/config.sh)
 * [dir](lib/dir.sh)
 * [file](lib/file.sh)
