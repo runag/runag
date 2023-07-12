@@ -229,3 +229,51 @@ linux::install_runag_essential_dependencies::apt() {
     pass \
       || softfail || return $?
 }
+
+linux::set_battery_charge_control_threshold() {
+  local battery_number=0
+  local if_present=false
+  local start_threshold=90
+  local end_threshold=100
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -b|--battery)
+      battery_number="$2"
+      shift; shift
+      ;;
+    -p|--if-present)
+      if_present=true
+      shift
+      ;;
+    -s|--start)
+      start_threshold="$2"
+      shift; shift
+      ;;
+    -e|--end)
+      end_threshold="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local battery_path="/sys/class/power_supply/BAT${battery_number}"
+
+  if [ ! -d "${battery_path}" ]; then
+    if [ "${if_present}" = true ]; then
+      return 0
+    else
+      softfail "Battery not found: ${battery_path}" || return $?
+    fi
+  fi
+
+  <<<"100" sudo tee "${battery_path}/charge_control_end_threshold" >/dev/null || softfail || return $?
+  <<<"${start_threshold}" sudo tee "${battery_path}/charge_control_start_threshold" >/dev/null || softfail || return $?
+  <<<"${end_threshold}" sudo tee "${battery_path}/charge_control_end_threshold" >/dev/null || softfail || return $?
+}
