@@ -25,5 +25,9 @@ syncthing::install::apt() {
     "https://syncthing.net/release-key.txt" || softfail "Unable to add syncthing apt source" || return $?
 
   apt::install syncthing || softfail || return $?
-  sudo systemctl --quiet --now enable "syncthing@${SUDO_USER}.service" || softfail || return $?
+  systemctl --user --quiet --now enable syncthing.service || softfail || return $?
+}
+
+syncthing::open() {
+  xdg-open "http://localhost:8384" || softfail || return $?
 }
