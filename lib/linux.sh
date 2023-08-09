@@ -47,16 +47,37 @@ linux::dangerously_set_hostname() {
   sudo mv "${hosts_file}.runag-new" "${hosts_file}" || softfail || return $?
 }
 
-linux::set_locale() {
-  local locale="$1"
+linux::update_locale_lang() {
+  local lang="$1"
+  sudo locale-gen "${lang}" || softfail || return $?
+  sudo update-locale "LANG=${lang}" || softfail || return $?
+  export LANG="${lang}"
+}
 
-  sudo locale-gen "${locale}" || softfail || return $?
-  sudo update-locale "LANG=${locale}" "LANGUAGE=${locale}" "LC_CTYPE=${locale}" "LC_ALL=${locale}" || softfail || return $?
+linux::update_locale_categories() {
+  local lang="$1"
+  sudo locale-gen "${lang}" || softfail || return $?
+  sudo update-locale \
+    "LC_ADDRESS=${lang}" \
+    "LC_IDENTIFICATION=${lang}" \
+    "LC_MEASUREMENT=${lang}" \
+    "LC_MONETARY=${lang}" \
+    "LC_NAME=${lang}" \
+    "LC_NUMERIC=${lang}" \
+    "LC_PAPER=${lang}" \
+    "LC_TELEPHONE=${lang}" \
+    "LC_TIME=${lang}" \
+      || softfail || return $?
 
-  export LANG="${locale}"
-  export LANGUAGE="${locale}"
-  export LC_CTYPE="${locale}"
-  export LC_ALL="${locale}"
+  export LC_ADDRESS="${lang}"
+  export LC_IDENTIFICATION="${lang}"
+  export LC_MEASUREMENT="${lang}"
+  export LC_MONETARY="${lang}"
+  export LC_NAME="${lang}"
+  export LC_NUMERIC="${lang}"
+  export LC_PAPER="${lang}"
+  export LC_TELEPHONE="${lang}"
+  export LC_TIME="${lang}"
 }
 
 linux::configure_inotify() {
