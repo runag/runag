@@ -43,47 +43,57 @@ file::default_mode() {
   printf "%o" "$(( 0666 ^ "${umask_value}" ))" || softfail || return $?
 }
 
+# --absorb
+# --allow-empty
+# --group
 # --mode
 # --owner
-# --group
-# --sudo
 # --keep-permissions
-# --allow-empty
+# --sudo
+# --source
 file::write() {
+  local allow_empty=false
+  local file_group=""
   local file_mode=""
   local file_owner=""
-  local file_group=""
-  local perhaps_sudo=""
   local keep_permissions=false
-  local allow_empty=false
+  local perhaps_sudo=""
+  local source_file=""
+  local temp_file=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
+    -a|--absorb)
+      temp_file="$2"
+      shift; shift
+      ;;
+    -e|--allow-empty)
+      allow_empty=true
+      shift
+      ;;
+    -g|--group)
+      file_group="$2"
+      shift; shift
+      ;;
     -m|--mode)
       file_mode="$2"
       shift; shift
       ;;
     -o|--owner)
       file_owner="$2"
-      perhaps_sudo=sudo
       shift; shift
-      ;;
-    -g|--group)
-      file_group="$2"
-      perhaps_sudo=sudo
-      shift; shift
-      ;;
-    -s|--sudo)
-      perhaps_sudo=sudo
-      shift
       ;;
     -k|--keep-permissions)
       keep_permissions=true
       shift
       ;;
-    -e|--allow-empty)
-      allow_empty=true
+    -u|--sudo)
+      perhaps_sudo=sudo
       shift
+      ;;
+    -s|--source)
+      source_file="$2"
+      shift; shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -109,12 +119,18 @@ file::write() {
     fi
   fi
 
-  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+  if [ -z "${temp_file}" ]; then
+    temp_file="$(mktemp)" || softfail || return $?
 
-  if [ "${2+true}" = true ]; then
-    printf "%s" "$2" >"${temp_file}" || softfail "Unable to write to temp file" || return $?
-  else
-    cat >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+    if [ -n "${source_file}" ]; then
+      cp "${source_file}" "${temp_file}" || softfail "Unable to copy from source file" || return $?
+
+    elif [ "${2+true}" = true ]; then
+      printf "%s" "$2" >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+
+    else
+      cat >"${temp_file}" || softfail "Unable to write to temp file" || return $?
+    fi
   fi
 
   if [ ! -s "${temp_file}" ] && [ "${allow_empty}" = false ]; then
@@ -122,9 +138,17 @@ file::write() {
     softfail "Empty input for file::write" || return $?
   fi
 
-  ${perhaps_sudo} install ${file_owner:+-o "${file_owner}"} ${file_group:+-g "${file_group}"} ${file_mode:+-m "${file_mode}"} -C "${temp_file}" "${file_path}" || softfail || return $?
-}
+  if [ -n "${file_owner}" ]; then
+    ${perhaps_sudo} chown "${file_owner}${file_group:+".${file_group}"}" "${temp_file}" || softfail || return $?
+  elif [ -n "${file_group}" ]; then
+    ${perhaps_sudo} chgrp "${file_group}" "${temp_file}" || softfail || return $?
+  fi
 
+  ${perhaps_sudo} chmod "${file_mode}" "${temp_file}" || softfail || return $?
+
+  ${perhaps_sudo} mv "${temp_file}" "${file_path}" || softfail || return $?
+}
+  
 file::append_line_unless_present() {
   local perhaps_sudo=""
 
@@ -199,7 +223,12 @@ file::update_block() {
 
   file::read_with_updated_block ${perhaps_sudo:+"--sudo"} "${file_path}" "${block_name}" >"${temp_file}" || softfail || return $?
 
-  ${perhaps_sudo} install ${file_owner:+-o "${file_owner}"} ${file_group:+-g "${file_group}"} ${file_mode:+-m "${file_mode}"} -C "${temp_file}" "${file_path}" || softfail || return $?
+  file::write \
+    ${perhaps_sudo:+"--sudo"} \
+    ${file_owner:+--owner "${file_owner}"} \
+    ${file_group:+--group "${file_group}"} \
+    ${file_mode:+--mode "${file_mode}"} \
+    --absorb "${temp_file}" "${file_path}" || softfail || return $?
 }
 
 file::read_with_updated_block() {
