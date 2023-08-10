@@ -27,7 +27,8 @@ postgresql::install_dictionaries() {
       if [ -d "${dest}" ]; then
         local file; for file in "${source_dir}"/*; do
           if [ -f "${file}" ]; then
-            cp "${file}" "${dest}/share/postgresql/tsearch_data" || softfail "File copy failed: from '${file}' to '${dest}/share/postgresql/tsearch_data'" || return $?
+            local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
+            file::write --mode 0644 --source "${file}" "${dest}/share/postgresql/tsearch_data/${file_basename}" || softfail || return $?
           fi
         done
       fi
@@ -37,7 +38,8 @@ postgresql::install_dictionaries() {
       if [ -d "${dest}" ]; then
         local file; for file in "${source_dir}"/*; do
           if [ -f "${file}" ]; then
-            sudo install -o root -g root -m 0644 -C "${file}" -D "${dest}/tsearch_data" || softfail "File install failed: from '${file}' to '${dest}/tsearch_data'" || return $?
+            local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
+            file::write --sudo --owner root --group root --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
           fi
         done
       fi

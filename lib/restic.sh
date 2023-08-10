@@ -37,6 +37,8 @@ restic::install() {
     "https://github.com/restic/restic/releases/download/v${restic_version}/restic_${restic_version}_linux_amd64.bz2" >/dev/null || softfail || return $?
 
   bzip2 --decompress --stdout "${temp_file}" >"${temp_file}.out" || softfail || return $?
-  sudo install -o root -g root -m 0755 "${temp_file}.out" /usr/local/bin/restic || softfail || return $?
-  rm "${temp_file}" "${temp_file}.out" || softfail || return $?
+
+  file::write --sudo --owner root --group root --mode 0755 --absorb "${temp_file}.out" /usr/local/bin/restic || softfail || return $?
+
+  rm "${temp_file}" || softfail || return $?
 }

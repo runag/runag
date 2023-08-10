@@ -168,6 +168,7 @@ runag::create_or_update_offline_install() {
 #
 #   file::get_block "${RUNAG_BIN_PATH}" invoke_runagfile >>"${temp_file}" || softfail || return $?
 #
+#   # TODO: atomic install
 #   sudo install -m 755 -o root -g root "${temp_file}" /usr/local/bin/runag.tmp || softfail || return $?
 #
 #   sudo mv /usr/local/bin/runag.tmp /usr/local/bin/runag || softfail || return $?

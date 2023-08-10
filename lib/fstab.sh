@@ -51,7 +51,5 @@ fstab::verify_and_write() {
   
   findmnt --verify --tab-file "${temp_file}" 2>&1 || softfail "Failed to verify fstab candidate: ${temp_file}" || return $?
 
-  sudo install -o root -g root -m 0664 -C "${temp_file}" /etc/fstab || softfail "Failed to install new fstab: ${temp_file}" || return $?
-
-  rm "${temp_file}" || softfail "Failed to remove temp file: ${temp_file}" || return $?
+  file::write --sudo --owner root --group root --mode 0664 --absorb "${temp_file}" /etc/fstab || softfail "Failed to install new fstab: ${temp_file}" || return $?
 }
