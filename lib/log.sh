@@ -14,10 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-log::elapsed_time() {
-  log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
 log::error() {
   local message="$1"
   log::message --foreground-color 9 "${message}" >&2
@@ -39,18 +35,22 @@ log::success() {
 }
 
 log::message() {
-  local foreground_color
-  local background_color
+  local foreground_color_seq=""
+  local background_color_seq=""
   local message=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -f|--foreground-color)
-      foreground_color="$2"
+      if [ -t 1 ]; then
+        foreground_color_seq="$(terminal::color --foreground "$2")" || echo "Unable to obtain terminal::color ($?)" >&2
+      fi
       shift; shift
       ;;
     -b|--background-color)
-      background_color="$2"
+      if [ -t 1 ]; then
+        background_color_seq="$(terminal::color --background "$2")" || echo "Unable to obtain terminal::color ($?)" >&2
+      fi
       shift; shift
       ;;
     -*)
@@ -67,60 +67,29 @@ log::message() {
   done
 
   if [ -z "${message}" ]; then
-    message="(empty message)"
+    message="(empty log message)"
   fi
 
-  local color_seq="" default_color_seq=""
+  local default_color_seq=""
   if [ -t 1 ]; then
-    color_seq="$(terminal::color --foreground "${foreground_color:-}" --background "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" >&2
-    default_color_seq="$(terminal::default_color)" || echo "Unable to get terminal sequence from tput ($?)" >&2
+    default_color_seq="$(terminal::default_color)" || echo "Unable to obtain terminal::color ($?)" >&2
   fi
 
-  echo "${color_seq}${message}${default_color_seq}"
+  echo "${foreground_color_seq}${background_color_seq}${message}${default_color_seq}"
 }
 
-log::trace() {
-  local trace_start=1
-  local message=""
-
-  while [[ "$#" -gt 0 ]]; do
-    case $1 in
-    -s|--start)
-      trace_start="$2"
-      shift; shift
-      ;;
-    -*)
-      echo "Unknown argument for log::trace: $1" >&2
-      shift
-      message="$*"
-      break
-      ;;
-    *)
-      message="$1"
-      break
-      ;;
-    esac
-  done
-
-  if [ -n "${message}" ]; then
-    log::error "${message}" || echo "(unable to log by usual means) ${message}" >&2
-  fi
-
-  local line i trace_end=$((${#BASH_LINENO[@]}-1))
-  for ((i=trace_start; i<=trace_end; i++)); do
-    line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
-    log::error "  ${line}" || echo "(unable to log by usual means) ${line}" >&2
-  done
+log::elapsed_time() {
+  log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
+
 
 log::function_sources() {
   cat <<SHELL || softfail || return $?
-$(declare -f log::elapsed_time)
 $(declare -f log::error)
 $(declare -f log::warning)
 $(declare -f log::notice)
 $(declare -f log::success)
 $(declare -f log::message)
-$(declare -f log::trace)
+$(declare -f log::elapsed_time)
 SHELL
 }

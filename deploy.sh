@@ -70,7 +70,9 @@ fail ()
                 shift
             ;;
             -*)
-                log::error "Unknown argument for fail: $1" || echo "(unable to log by usual means) Unknown argument for fail: $1" 1>&2;
+                { 
+                    declare -f "log::error" > /dev/null && log::error "Unknown argument for fail: $1"
+                } || echo "Unknown argument for fail: $1" 1>&2;
                 shift;
                 message="$*";
                 break
@@ -94,19 +96,45 @@ fail ()
             exit_status=1;
         fi;
     fi;
-    log::trace --start "${trace_start}" "${message}" || echo "Unable to log error: ${message}" 1>&2;
+    { 
+        declare -f "log::error" > /dev/null && log::error "${message}"
+    } || echo "${message}" 1>&2;
+    fail::trace --start "${trace_start}" || echo "Unable to log stack trace" 1>&2;
     if [ "${perform_softfail}" = true ]; then
         return "${exit_status}";
     fi;
     exit "${exit_status}"
 }
+fail::trace () 
+{ 
+    local trace_start=1;
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -s | --start)
+                trace_start="$2";
+                shift;
+                shift
+            ;;
+            *)
+                { 
+                    declare -f "log::error" > /dev/null && log::error "Unknown argument for fail::trace: $1"
+                } || echo "Unknown argument for fail::trace: $1" 1>&2;
+                break
+            ;;
+        esac;
+    done;
+    local line i trace_end=$((${#BASH_LINENO[@]}-1));
+    for ((i=trace_start; i<=trace_end; i++))
+    do
+        line="  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
+        { 
+            declare -f "log::error" > /dev/null && log::error "${line}"
+        } || echo "${line}" 1>&2;
+    done
+}
 softfail () 
 { 
     fail --wrapped-softfail "$@"
-}
-log::elapsed_time () 
-{ 
-    log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
 log::error () 
 { 
@@ -130,18 +158,22 @@ log::success ()
 }
 log::message () 
 { 
-    local foreground_color;
-    local background_color;
+    local foreground_color_seq="";
+    local background_color_seq="";
     local message="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -f | --foreground-color)
-                foreground_color="$2";
+                if [ -t 1 ]; then
+                    foreground_color_seq="$(terminal::color --foreground "$2")" || echo "Unable to obtain terminal::color ($?)" 1>&2;
+                fi;
                 shift;
                 shift
             ;;
             -b | --background-color)
-                background_color="$2";
+                if [ -t 1 ]; then
+                    background_color_seq="$(terminal::color --background "$2")" || echo "Unable to obtain terminal::color ($?)" 1>&2;
+                fi;
                 shift;
                 shift
             ;;
@@ -158,47 +190,17 @@ log::message ()
         esac;
     done;
     if [ -z "${message}" ]; then
-        message="(empty message)";
+        message="(empty log message)";
     fi;
-    local color_seq="" default_color_seq="";
+    local default_color_seq="";
     if [ -t 1 ]; then
-        color_seq="$(terminal::color --foreground "${foreground_color:-}" --background "${background_color:-}")" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
-        default_color_seq="$(terminal::default_color)" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+        default_color_seq="$(terminal::default_color)" || echo "Unable to obtain terminal::color ($?)" 1>&2;
     fi;
-    echo "${color_seq}${message}${default_color_seq}"
+    echo "${foreground_color_seq}${background_color_seq}${message}${default_color_seq}"
 }
-log::trace () 
+log::elapsed_time () 
 { 
-    local trace_start=1;
-    local message="";
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in 
-            -s | --start)
-                trace_start="$2";
-                shift;
-                shift
-            ;;
-            -*)
-                echo "Unknown argument for log::trace: $1" 1>&2;
-                shift;
-                message="$*";
-                break
-            ;;
-            *)
-                message="$1";
-                break
-            ;;
-        esac;
-    done;
-    if [ -n "${message}" ]; then
-        log::error "${message}" || echo "(unable to log by usual means) ${message}" 1>&2;
-    fi;
-    local line i trace_end=$((${#BASH_LINENO[@]}-1));
-    for ((i=trace_start; i<=trace_end; i++))
-    do
-        line="${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
-        log::error "  ${line}" || echo "(unable to log by usual means) ${line}" 1>&2;
-    done
+    log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
 task::run () 
 { 
@@ -360,8 +362,8 @@ terminal::print_color_table ()
 }
 terminal::color () 
 { 
-    local foreground_color;
-    local background_color;
+    local foreground_color="";
+    local background_color="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -f | --foreground)
@@ -375,7 +377,8 @@ terminal::color ()
                 shift
             ;;
             -*)
-                softfail "Unknown argument: $1" || return $?
+                echo "Unknown argumen for terminal::color: $1" 1>&2;
+                return 1
             ;;
             *)
                 break
@@ -385,17 +388,26 @@ terminal::color ()
     local amount;
     if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
         if [[ "${foreground_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground_color:-}" ]; then
-            tput setaf "${foreground_color}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+            tput setaf "${foreground_color}" || { 
+                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
+                return 1
+            };
         fi;
         if [[ "${background_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background_color:-}" ]; then
-            tput setab "${background_color}" || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+            tput setab "${background_color}" || { 
+                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
+                return 1
+            };
         fi;
     fi
 }
 terminal::default_color () 
 { 
     if command -v tput > /dev/null; then
-        tput sgr 0 || echo "Unable to get terminal sequence from tput ($?)" 1>&2;
+        tput sgr 0 || { 
+            echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
+            return 1
+        };
     fi
 }
 

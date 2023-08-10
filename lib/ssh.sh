@@ -529,7 +529,7 @@ ssh::task::softfail() {
       shift
       ;;
     -*)
-      log::error "Unknown argument for fail: $1" || echo "(unable to log by usual means) Unknown argument for fail: $1" >&2
+      { declare -f "log::error" >/dev/null && log::error "Unknown argument for ssh::task::softfail: $1"; } || echo "Unknown argument for ssh::task::softfail: $1" >&2
       shift
       message="$*"
       break

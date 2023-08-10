@@ -44,7 +44,7 @@ fail() {
       shift
       ;;
     -*)
-      log::error "Unknown argument for fail: $1" || echo "(unable to log by usual means) Unknown argument for fail: $1" >&2
+      { declare -f "log::error" >/dev/null && log::error "Unknown argument for fail: $1"; } || echo "Unknown argument for fail: $1" >&2
       shift
       message="$*"
       break
@@ -70,15 +70,40 @@ fail() {
     exit_status=1
   fi
 
+  { declare -f "log::error" >/dev/null && log::error "${message}"; } || echo "${message}" >&2
+
   # making stack trace inside fail, we dont want to display fail() or softfail() internals in trace
-  # so here we may start from trace_start=3 (instead of normal trace_start=1) to skip first two lines of stack trace
-  log::trace --start "${trace_start}" "${message}" || echo "Unable to log error: ${message}" >&2
+  # so here we may start from trace_start = 2 or 3 (instead of normal trace_start=1) to skip first two lines of stack trace
+  fail::trace --start "${trace_start}" || echo "Unable to log stack trace" >&2
 
   if [ "${perform_softfail}" = true ]; then
     return "${exit_status}"
   fi
 
   exit "${exit_status}"
+}
+
+fail::trace() {
+  local trace_start=1
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -s|--start)
+      trace_start="$2"
+      shift; shift
+      ;;
+    *)
+      { declare -f "log::error" >/dev/null && log::error "Unknown argument for fail::trace: $1"; } || echo "Unknown argument for fail::trace: $1" >&2
+      break
+      ;;
+    esac
+  done
+
+  local line i trace_end=$((${#BASH_LINENO[@]}-1))
+  for ((i=trace_start; i<=trace_end; i++)); do
+    line="  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'"
+    { declare -f "log::error" >/dev/null && log::error "${line}"; } || echo "${line}" >&2
+  done
 }
 
 softfail() {
@@ -88,6 +113,7 @@ softfail() {
 fail::function_sources() {
   cat <<SHELL || softfail || return $?
 $(declare -f fail)
+$(declare -f fail::trace)
 $(declare -f softfail)
 SHELL
 }
