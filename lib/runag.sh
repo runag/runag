@@ -14,6 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+runag::mini_library() {
+  cat <<SHELL || softfail || return $?
+#!/usr/bin/env bash
+
+$(runag::print_license)
+
+$(declare -f fail)
+$(declare -f fail::trace)
+$(declare -f softfail)
+$(declare -f dir::should_exists)
+$(declare -f file::write)
+$(declare -f file::default_mode)
+SHELL
+}
+
 runag::with_update_secrets() {(
   export RUNAG_UPDATE_SECRETS=true
   "$@"
