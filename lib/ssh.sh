@@ -36,7 +36,13 @@ ssh::config_d_dir_should_exists() {
 
 ssh::add_ssh_config_d_include_directive() {
   ssh::config_d_dir_should_exists || softfail || return $?
-  <<<"Include ~/.ssh/ssh_config.d/*.conf" file::update_block --mode 0600 "${HOME}/.ssh/config" "include files from ssh_config.d" || softfail "Unable to add configuration to user ssh config" || return $?
+
+  # The "Host *" here is for the case if there are any "Host" directives in .ssh/config,
+  # as the last of "Host" will catch this "Include" in their scope
+  #
+  # Note that the scope of any "Host" directives in *.conf files are contained within their respective files
+
+  printf "Host *\nInclude ~/.ssh/ssh_config.d/*.conf\n" | file::update_block --mode 0600 "${HOME}/.ssh/config" "include files from ssh_config.d" || softfail "Unable to add configuration to user ssh config" || return $?
 }
 
 ssh::copy_authorized_keys_to_user() {

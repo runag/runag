@@ -258,9 +258,7 @@ file::read_with_updated_block() {
   fi
 
   echo "# BEGIN ${block_name}"
-
   cat || softfail || return $?
-
   echo "# END ${block_name}"
 }
 
