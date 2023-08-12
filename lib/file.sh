@@ -53,6 +53,7 @@ file::default_mode() {
 #   --source
 #   --absorb
 #   --allow-empty
+#
 #   file_path
 #   [content_string]
 #
@@ -173,6 +174,7 @@ file::write() {
 #   --mode
 #   --owner
 #   --group
+#
 #   file_path
 #   [line_content]
 # 
@@ -256,9 +258,11 @@ file::append_line_unless_present() {
 #   --mode
 #   --owner
 #   --group
+#
 #   --source
 #   --absorb
 #   --allow-empty
+#
 #   file_path
 #   block_name
 #   [content_string]

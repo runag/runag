@@ -112,7 +112,7 @@ ssh::install_ssh_profile_from_pass() {
 
   # known hosts
   if pass::secret_exists "${profile_path}/known_hosts"; then
-    pass::use --body "${profile_path}/known_hosts" file::update_block --mode 0600 "${HOME}/.ssh/known_hosts" "# ${profile_name}" || softfail || return $?
+    pass::use --body "${profile_path}/known_hosts" file::update_block --mode 0600 "${HOME}/.ssh/known_hosts" "${profile_name}" || softfail || return $?
   fi
 }
 
