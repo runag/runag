@@ -20,31 +20,28 @@ linux::set_timezone() {
 }
 
 linux::set_hostname() {
-  local hostname="$1"
-  sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
-  file::append_line_unless_present --sudo /etc/hosts "127.0.1.1	${hostname}" || softfail || return $?
-}
+  local new_name="$1"
 
-linux::dangerously_set_hostname() {
-  local hostname="$1"
-  local hosts_file=/etc/hosts
-  local previous_name
-  local previous_name_escaped
+  local hosts_file="/etc/hosts"
   
-  previous_name="$(hostnamectl --static status)" || softfail || return $?
-  previous_name_escaped="$(echo "${previous_name}" | sed 's/\./\\./g')" || softfail || return $?
+  local previous_name; previous_name="$(hostnamectl --static status)" || softfail || return $?
 
-  sudo hostnamectl set-hostname "${hostname}" || softfail || return $?
-
-  if [ -f "${hosts_file}" ]; then
-    grep -vxE "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" | sudo tee "${hosts_file}.runag-new" >/dev/null
-    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+  if [ "${new_name}" = "${previous_name}" ]; then
+    return 0
   fi
 
-  file::append_line_unless_present --sudo "${hosts_file}.runag-new" "127.0.1.1	${hostname}" || softfail || return $?
+  local previous_name_escaped; previous_name_escaped="$(<<<"${previous_name}" sed 's/\./\\./g')" || softfail || return $?
 
-  sudo cp "${hosts_file}" "${hosts_file}.before-runag-changes" || softfail || return $?
-  sudo mv "${hosts_file}.runag-new" "${hosts_file}" || softfail || return $?
+  file::append_line_unless_present --sudo --keep-permissions --mode 0644 "${hosts_file}" "127.0.1.1	${new_name}" || softfail || return $?
+
+  sudo hostnamectl set-hostname "${new_name}" || softfail || return $?
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  grep --invert-match --line-regexp --extended-regexp \
+    "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" >"${temp_file}" || softfail || return $?
+
+  file::write --sudo --keep-permissions --mode 0644 --absorb "${temp_file}" "${hosts_file}" || softfail || return $?
 }
 
 linux::update_locale_lang() {
