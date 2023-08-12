@@ -44,14 +44,15 @@ file::default_mode() {
 }
 
 # file::write
-#   --absorb
-#   --allow-empty
-#   --group
+#   --sudo
+#   --keep-permissions
 #   --mode
 #   --owner
-#   --keep-permissions
-#   --sudo
+#   --group
+#
 #   --source
+#   --absorb
+#   --allow-empty
 #   file_path
 #   [content_string]
 #
@@ -111,6 +112,15 @@ file::write() {
   local file_path="$1"
   local content_string="${2:-}"
 
+  if [ "${perhaps_sudo:+true}" = true ]; then
+    if [ -z "${file_owner:-}" ]; then
+      file_owner=root
+    fi
+    if [ -z "${file_group:-}" ]; then
+      file_group=root
+    fi
+  fi
+
   if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
     file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
   fi
@@ -158,11 +168,11 @@ file::write() {
 }
 
 # file::append_line_unless_present
-#   --group
+#   --sudo
+#   --keep-permissions
 #   --mode
 #   --owner
-#   --keep-permissions
-#   --sudo
+#   --group
 #   file_path
 #   [line_content]
 # 
@@ -207,6 +217,15 @@ file::append_line_unless_present() {
   local file_path="$1"
   local line_content="$2"
 
+  if [ "${perhaps_sudo:+true}" = true ]; then
+    if [ -z "${file_owner:-}" ]; then
+      file_owner=root
+    fi
+    if [ -z "${file_group:-}" ]; then
+      file_group=root
+    fi
+  fi
+
   if ! ${perhaps_sudo} test -f "${file_path}" || ! ${perhaps_sudo} grep -qFx "${line_content}" "${file_path}"; then
 
     if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
@@ -232,14 +251,14 @@ file::append_line_unless_present() {
 }
 
 # file::update_block
-#   --absorb
-#   --allow-empty
-#   --group
+#   --sudo
+#   --keep-permissions
 #   --mode
 #   --owner
-#   --keep-permissions
-#   --sudo
+#   --group
 #   --source
+#   --absorb
+#   --allow-empty
 #   file_path
 #   block_name
 #   [content_string]
@@ -300,6 +319,15 @@ file::update_block() {
   local file_path="$1"
   local block_name="$2"
   local content_string="${3:-}"
+
+  if [ "${perhaps_sudo:+true}" = true ]; then
+    if [ -z "${file_owner:-}" ]; then
+      file_owner=root
+    fi
+    if [ -z "${file_group:-}" ]; then
+      file_group=root
+    fi
+  fi
 
   if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
     file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
