@@ -156,7 +156,16 @@ file::write() {
 
   ${perhaps_sudo} mv "${temp_file}" "${file_path}" || softfail || return $?
 }
-  
+
+# file::append_line_unless_present
+#   --group
+#   --mode
+#   --owner
+#   --keep-permissions
+#   --sudo
+#   file_path
+#   [line_content]
+# 
 file::append_line_unless_present() {
   local file_group=""
   local file_mode=""
@@ -196,9 +205,9 @@ file::append_line_unless_present() {
   done
   
   local file_path="$1"
-  local line_to_add="$2"
+  local line_content="$2"
 
-  if ! ${perhaps_sudo} test -f "${file_path}" || ! ${perhaps_sudo} grep -qFx "${line_to_add}" "${file_path}"; then
+  if ! ${perhaps_sudo} test -f "${file_path}" || ! ${perhaps_sudo} grep -qFx "${line_content}" "${file_path}"; then
 
     if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
       file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
@@ -211,7 +220,7 @@ file::append_line_unless_present() {
       test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
     fi
 
-    echo "${line_to_add}" >>"${temp_file}" || softfail || return $?
+    echo "${line_content}" >>"${temp_file}" || softfail || return $?
 
     file::write \
       ${perhaps_sudo:+"--sudo"} \
