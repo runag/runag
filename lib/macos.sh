@@ -24,7 +24,7 @@ macos::increase_maxfiles_limit() {
   local dst="/Library/LaunchDaemons/${label}.plist"
 
   if [ ! -f "${dst}" ]; then
-    file::write --sudo --mode 0644 --owner root --group wheel "${dst}" <<HTML || softfail || return $?
+    file::write --sudo --mode 0644 "${dst}" <<HTML || softfail || return $?
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
         "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

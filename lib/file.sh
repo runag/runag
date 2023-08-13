@@ -118,7 +118,11 @@ file::write() {
       file_owner=root
     fi
     if [ -z "${file_group:-}" ]; then
-      file_group=root
+      if [[ "${OSTYPE}" =~ ^darwin ]]; then
+        file_group=wheel
+      else
+        file_group=root
+      fi
     fi
   fi
 
@@ -224,7 +228,11 @@ file::append_line_unless_present() {
       file_owner=root
     fi
     if [ -z "${file_group:-}" ]; then
-      file_group=root
+      if [[ "${OSTYPE}" =~ ^darwin ]]; then
+        file_group=wheel
+      else
+        file_group=root
+      fi
     fi
   fi
 
@@ -329,7 +337,11 @@ file::update_block() {
       file_owner=root
     fi
     if [ -z "${file_group:-}" ]; then
-      file_group=root
+      if [[ "${OSTYPE}" =~ ^darwin ]]; then
+        file_group=wheel
+      else
+        file_group=root
+      fi
     fi
   fi
 

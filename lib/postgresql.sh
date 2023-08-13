@@ -39,7 +39,7 @@ postgresql::install_dictionaries() {
         local file; for file in "${source_dir}"/*; do
           if [ -f "${file}" ]; then
             local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
-            file::write --sudo --owner root --group root --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
+            file::write --sudo --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
           fi
         done
       fi
