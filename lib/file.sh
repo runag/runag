@@ -257,6 +257,7 @@ file::append_line_unless_present() {
       ${file_group:+--group "${file_group}"} \
       ${file_mode:+--mode "${file_mode}"} \
       --absorb "${temp_file}" "${file_path}" || softfail || return $?
+      
   fi
 }
 
