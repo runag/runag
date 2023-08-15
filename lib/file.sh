@@ -261,7 +261,7 @@ file::append_line_unless_present() {
   fi
 }
 
-# file::update_block
+# file::write_block
 #   --sudo
 #   --keep-permissions
 #   --mode
@@ -276,7 +276,7 @@ file::append_line_unless_present() {
 #   block_name
 #   [content_string]
 #
-file::update_block() {
+file::write_block() {
   local allow_empty=""
   local file_group=""
   local file_mode=""
