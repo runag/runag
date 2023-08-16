@@ -114,5 +114,8 @@ ruby::dangerously_append_nodocument_to_gemrc() {
 }
 
 ruby::disable_spring() {
-  shellrc::write "disable-spring" <<< "export DISABLE_SPRING=true" || softfail || return $?
+  file::write --mode 0640 "${HOME}/.profile.d/disable-ruby-spring.sh" <<SHELL || softfail || return $?
+$(runag::print_license)
+export DISABLE_SPRING=true
+SHELL
 }

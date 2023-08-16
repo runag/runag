@@ -29,42 +29,55 @@ asdf::install() {
 
 asdf::install_with_shellrc() {
   asdf::install || softfail || return $?
-  asdf::install_shellrc || softfail || return $?
+  asdf::set_shell_rc || softfail || return $?
 }
 
-asdf::install_shellrc() {
-  shellrc::write "asdf" <<SHELL || softfail || return $?
+asdf::set_shell_rc() {
+  file::write --mode 0640 "${HOME}/.profile.d/asdf.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
+  . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
+fi
+SHELL
 
+  file::write --mode 0640 "${HOME}/.shellrc.d/asdf.sh" <<SHELL || softfail || return $?
+$(runag::print_license)
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
   . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
 
-  if [ -n "\${ZSH_VERSION:-}" ]; then
+  if [ -n "\${BASH_VERSION:-}" ]; then
+    . "\${HOME}/.asdf/completions/asdf.bash" || { echo "Unable to load asdf completions" >&2; return 1; }
+
+  elif [ -n "\${ZSH_VERSION:-}" ]; then
     fpath=(\${ASDF_DIR}/completions \${fpath}) || { echo "Unable to set fpath" >&2; return 1; }
     autoload -Uz compinit || { echo "Unable to set compinit function to autoload" >&2; return 1; }
     compinit || { echo "Unable to run compinit" >&2; return 1; }
 
-  elif [ -n "\${BASH_VERSION:-}" ]; then
-    . "\${HOME}/.asdf/completions/asdf.bash" || { echo "Unable to load asdf completions" >&2; return 1; }
   fi
 fi
 SHELL
 }
 
 asdf::load() {
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -i|--if-installed)
+      if [ ! -f "${HOME}/.asdf/asdf.sh" ]; then
+        return 0
+      fi
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   . "${HOME}/.asdf/asdf.sh" || softfail "Unable to load asdf" || return $?
 }
-
-asdf::load_if_installed() {
-  if [ -f "${HOME}/.asdf/asdf.sh" ]; then
-    asdf::load || softfail || return $?
-  fi
-}
-
-asdf::load_and_run() {(
-  asdf::load || softfail || return $?
-  "$@"
-)}
 
 asdf::path_variable() {
   local user_name="${1:-"${USER}"}"

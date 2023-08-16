@@ -14,34 +14,54 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-shellrc::install_loader() {
-  local shellrc_file="$1"
+shell::install_rc_loader() { (
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
+    local shellrc_file=".zshrc"
+  else
+    local shellrc_file=".bashrc"
+  fi
 
-  local shellrc_dir="${HOME}/.shellrc.d"
+  local shellrc_dir=".shellrc.d"
+  local block_name="rc-d-loader"
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    -f|--file)
+      shellrc_file="$2"
+      shift; shift
+      ;;
+    -d|--dir)
+      shellrc_dir="$2"
+      shift; shift
+      ;;
+    -b|--block-name)
+      block_name="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  cd "${HOME}" || softfail || return $?
 
   dir::should_exists --mode 0700 "${shellrc_dir}" || softfail || return $?
 
-  if [ ! -f "${shellrc_file}" ]; then
-    # ubuntu default seems to be 133 (rw-r--r--)
-    # I'll try 137 (rw-r-----) to see if there are any downsides of that
-    ( umask 0137 && touch "${shellrc_file}" ) || softfail || return $?
-  fi
-
-  if ! grep -Fxq "# shellrc.d loader" "${shellrc_file}"; then
-    cat <<SHELL >>"${shellrc_file}" || softfail || return $?
-
-# shellrc.d loader
-if [ -d "\${HOME}"/.shellrc.d ]; then
-  for file_bb21go6nkCN82Gk9XeY2 in "\${HOME}/.shellrc.d"/*.sh; do
-    if [ -f "\${file_bb21go6nkCN82Gk9XeY2}" ]; then
-      . "\${file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${file_bb21go6nkCN82Gk9XeY2} (\$?)" >&2; }
+  file::write_block --keep-permissions --mode 0644 "${shellrc_file}" "${block_name}" <<SHELL || softfail || return $?
+if [ -d "\${HOME}"/$(printf "%q" "${shellrc_dir}") ]; then
+  for _file_bb21go6nkCN82Gk9XeY2 in "\${HOME}"/$(printf "%q" "${shellrc_dir}")/*.sh; do
+    if [ -f "\${_file_bb21go6nkCN82Gk9XeY2}" ]; then
+      . "\${_file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${_file_bb21go6nkCN82Gk9XeY2} (\$?)" >&2; }
     fi
   done
-  unset file_bb21go6nkCN82Gk9XeY2
+  unset _file_bb21go6nkCN82Gk9XeY2
 fi
 SHELL
-  fi
-}
+) }
 
 shellrc::get_filename() {
   local name="$1"
@@ -79,20 +99,25 @@ shellrc::load_if_exists() {
   fi
 }
 
-shellrc::install_runag_path_rc() {
-  shellrc::write "runag-path" <<SHELL || softfail || return $?
+shell::set_runag_rc() {
+  file::write --mode 0640 "${HOME}/.profile.d/runag.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
-
 if [ -d "\${HOME}/.runag/bin" ]; then
-  export PATH="\${HOME}/.runag/bin:\${PATH}"
+  case ":\${PATH}:" in
+  *":\${HOME}/.runag/bin:"*)
+    true
+    ;;
+  *)
+    export PATH="\${HOME}/.runag/bin:\${PATH}"
+    ;;
+  esac
 fi
 SHELL
 }
 
-shellrc::install_direnv_rc() {
-  shellrc::write "direnv" <<SHELL || softfail || return $?
+shell::set_direnv_rc() {
+  file::write --mode 0640 "${HOME}/.shellrc.d/direnv.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
-
 if command -v direnv >/dev/null; then
   export DIRENV_LOG_FORMAT=""
   if [ -n "\${ZSH_VERSION:-}" ]; then
@@ -104,27 +129,22 @@ fi
 SHELL
 }
 
-shellrc::install_editor_rc() {
-  local editor_path="$1"
-  
-  shellrc::write "editor" <<SHELL || softfail || return $?
-$(runag::print_license)
+shell::set_editor_rc() {
+  local editor_path; editor_path="$(command -v "$1")" || softfail || return $?
 
+  file::write --mode 0640 "${HOME}/.shellrc.d/editor.sh" <<SHELL || softfail || return $?
+$(runag::print_license)
 if [ -z "\${EDITOR:-}" ]; then
-  if command -v ${editor_path} >/dev/null; then
-    export EDITOR="\$(command -v ${editor_path})"
-  fi
+  export EDITOR=$(printf "%q" "${editor_path}")
 fi
 SHELL
 }
 
-shellrc::install_append_to_bash_history_file_after_each_command_rc() {
-  shellrc::write "append-to-bash-history-file-after-each-command" <<SHELL || softfail || return $?
+shell::set_flush_history_rc() {
+  file::write --mode 0640 "${HOME}/.shellrc.d/flush-history.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
-
 if [ -n "\${BASH_VERSION:-}" ]; then
-  export PROMPT_COMMAND="history -a"
+  export PROMPT_COMMAND="\${PROMPT_COMMAND:+"\${PROMPT_COMMAND}; "}history -a"
 fi
 SHELL
 }
-  

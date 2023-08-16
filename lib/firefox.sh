@@ -15,13 +15,9 @@
 #  limitations under the License.
 
 firefox::enable_wayland() {
-  local pam_file="${HOME}/.pam_environment"
-
-  ( umask 0137 && touch "${pam_file}" ) || softfail || return $?
-
-  if ! grep -q "^MOZ_ENABLE_WAYLAND" "${pam_file}"; then
-    echo "MOZ_ENABLE_WAYLAND=1" >>"${pam_file}" || softfail || return $?
-  fi
+  file::write --mode 0640 "${HOME}/.profile.d/firefox.sh" <<SHELL || softfail || return $?
+export MOZ_ENABLE_WAYLAND=1
+SHELL
 }
 
 firefox::set_pref() {
