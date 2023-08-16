@@ -42,7 +42,7 @@ ssh::add_ssh_config_d_include_directive() {
   #
   # Note that the scope of any "Host" directives in *.conf files are contained within their respective files
 
-  printf "Host *\nInclude ~/.ssh/ssh_config.d/*.conf\n" | file::write_block --mode 0600 "${HOME}/.ssh/config" "include files from ssh_config.d" || softfail "Unable to add configuration to user ssh config" || return $?
+  printf "Host *\nInclude ~/.ssh/ssh_config.d/*.conf\n" | file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" || softfail "Unable to add configuration to user ssh config" || return $?
 }
 
 ssh::copy_authorized_keys_to_user() {
