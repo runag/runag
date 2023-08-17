@@ -82,7 +82,6 @@ log::elapsed_time() {
   log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
 
-
 log::function_sources() {
   cat <<SHELL || softfail || return $?
 $(declare -f log::error)
