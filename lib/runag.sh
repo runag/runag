@@ -21,7 +21,6 @@ runag::mini_library() {
 $(runag::print_license)
 
 $(declare -f fail)
-$(declare -f fail::trace)
 $(declare -f softfail)
 $(declare -f dir::should_exists)
 $(declare -f file::write)
