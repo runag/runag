@@ -47,7 +47,7 @@ fail ()
     local exit_status="";
     local unless_good=false;
     local perform_softfail=false;
-    local trace_start=2;
+    local trace_start=1;
     local message="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
@@ -66,7 +66,7 @@ fail ()
             ;;
             -w | --wrapped-softfail)
                 perform_softfail=true;
-                trace_start=3;
+                trace_start=2;
                 shift
             ;;
             -*)
@@ -99,38 +99,18 @@ fail ()
     { 
         declare -f "log::error" > /dev/null && log::error "${message}"
     } || echo "${message}" 1>&2;
-    fail::trace --start "${trace_start}" || echo "Unable to log stack trace" 1>&2;
+    local trace_line trace_index trace_end=$((${#BASH_LINENO[@]}-1));
+    for ((trace_index=trace_start; trace_index<=trace_end; trace_index++))
+    do
+        trace_line="  ${BASH_SOURCE[${trace_index}]}:${BASH_LINENO[$((trace_index-1))]}: in \`${FUNCNAME[${trace_index}]}'";
+        { 
+            declare -f "log::error" > /dev/null && log::error "${trace_line}"
+        } || echo "${trace_line}" 1>&2;
+    done;
     if [ "${perform_softfail}" = true ]; then
         return "${exit_status}";
     fi;
     exit "${exit_status}"
-}
-fail::trace () 
-{ 
-    local trace_start=1;
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in 
-            -s | --start)
-                trace_start="$2";
-                shift;
-                shift
-            ;;
-            *)
-                { 
-                    declare -f "log::error" > /dev/null && log::error "Unknown argument for fail::trace: $1"
-                } || echo "Unknown argument for fail::trace: $1" 1>&2;
-                break
-            ;;
-        esac;
-    done;
-    local line i trace_end=$((${#BASH_LINENO[@]}-1));
-    for ((i=trace_start; i<=trace_end; i++))
-    do
-        line="  ${BASH_SOURCE[${i}]}:${BASH_LINENO[$((i-1))]}: in \`${FUNCNAME[${i}]}'";
-        { 
-            declare -f "log::error" > /dev/null && log::error "${line}"
-        } || echo "${line}" 1>&2;
-    done
 }
 softfail () 
 { 
