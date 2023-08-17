@@ -14,35 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-file::default_mode() {
-  local perhaps_sudo=""
-
-  while [[ "$#" -gt 0 ]]; do
-    case $1 in
-    -s|--sudo)
-      perhaps_sudo=sudo
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
-    esac
-  done
-
-  local umask_value
-  
-  if [ "${perhaps_sudo}" = sudo ]; then
-    umask_value="$(sudo /usr/bin/sh -c umask)" || softfail || return $?
-  else
-    umask_value="$(umask)" || softfail || return $?
-  fi
-
-  printf "%o" "$(( 0666 ^ "${umask_value}" ))" || softfail || return $?
-}
-
 # file::write
 #   --sudo
 #   --keep-permissions
@@ -58,28 +29,25 @@ file::default_mode() {
 #   [content_string]
 #
 file::write() {
-  local allow_empty=""
-  local file_group=""
+  local perhaps_sudo=""
+  local keep_permissions=""
   local file_mode=""
   local file_owner=""
-  local keep_permissions=""
-  local perhaps_sudo=""
+  local file_group=""
+
   local source_file=""
   local temp_file=""
+  local allow_empty=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
-    -a|--absorb)
-      temp_file="$2"
-      shift; shift
-      ;;
-    -e|--allow-empty)
-      allow_empty=true
+    -u|--sudo)
+      perhaps_sudo=true
       shift
       ;;
-    -g|--group)
-      file_group="$2"
-      shift; shift
+    -k|--keep-permissions)
+      keep_permissions=true
+      shift
       ;;
     -m|--mode)
       file_mode="$2"
@@ -89,17 +57,22 @@ file::write() {
       file_owner="$2"
       shift; shift
       ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
+    -g|--group)
+      file_group="$2"
+      shift; shift
       ;;
-    -u|--sudo)
-      perhaps_sudo=sudo
-      shift
-      ;;
+
     -s|--source)
       source_file="$2"
       shift; shift
+      ;;
+    -a|--absorb)
+      temp_file="$2"
+      shift; shift
+      ;;
+    -e|--allow-empty)
+      allow_empty=true
+      shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -113,7 +86,11 @@ file::write() {
   local file_path="$1"
   local content_string="${2:-}"
 
-  if [ "${perhaps_sudo:+true}" = true ]; then
+  if ${perhaps_sudo:+sudo} test -e "${file_path}" && ! ${perhaps_sudo:+sudo} test -f "${file_path}"; then
+    softfail "Unable to write to file, it exists but it's not a regular file: ${file_path}" || return $?
+  fi
+
+  if [ "${perhaps_sudo}" = true ]; then
     if [ -z "${file_owner:-}" ]; then
       file_owner=root
     fi
@@ -126,15 +103,19 @@ file::write() {
     fi
   fi
 
-  if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
-    file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
-  fi
-
   if [ -z "${file_mode}" ]; then
-    if ${perhaps_sudo} test -f "${file_path}"; then
-      file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
+    if [ "${keep_permissions}" = true ] && ${perhaps_sudo:+sudo} test -f "${file_path}"; then
+      file_mode="$(${perhaps_sudo:+sudo} stat -c "%a" "${file_path}")" || softfail || return $?
     else
-      file_mode="$(file::default_mode ${perhaps_sudo:+"--sudo"})" || softfail || return $?
+      local umask_value
+      
+      if [ "${perhaps_sudo}" = true ]; then
+        umask_value="$(sudo /usr/bin/sh -c umask)" || softfail || return $?
+      else
+        umask_value="$(umask)" || softfail || return $?
+      fi
+
+      file_mode="$(printf "%o" "$(( 0666 ^ "${umask_value}" ))")" || softfail || return $?
     fi
   fi
 
@@ -153,7 +134,7 @@ file::write() {
   fi
 
   if [ ! -r "${temp_file}" ]; then
-    softfail "Unable to read temporary file: ${temp_file}" || return $?
+    softfail "Temporary file is not readable: ${temp_file}" || return $?
   fi
 
   if [ ! -s "${temp_file}" ] && [ "${allow_empty}" != true ]; then
@@ -162,14 +143,15 @@ file::write() {
   fi
 
   if [ -n "${file_owner}" ]; then
-    ${perhaps_sudo} chown "${file_owner}${file_group:+".${file_group}"}" "${temp_file}" || softfail || return $?
+    ${perhaps_sudo:+sudo} chown "${file_owner}${file_group:+".${file_group}"}" "${temp_file}" || softfail || return $?
+
   elif [ -n "${file_group}" ]; then
-    ${perhaps_sudo} chgrp "${file_group}" "${temp_file}" || softfail || return $?
+    ${perhaps_sudo:+sudo} chgrp "${file_group}" "${temp_file}" || softfail || return $?
   fi
 
-  ${perhaps_sudo} chmod "${file_mode}" "${temp_file}" || softfail || return $?
+  ${perhaps_sudo:+sudo} chmod "${file_mode}" "${temp_file}" || softfail || return $?
 
-  ${perhaps_sudo} mv "${temp_file}" "${file_path}" || softfail || return $?
+  ${perhaps_sudo:+sudo} mv "${temp_file}" "${file_path}" || softfail || return $?
 }
 
 # file::append_line_unless_present
@@ -183,17 +165,21 @@ file::write() {
 #   [line_content]
 # 
 file::append_line_unless_present() {
-  local file_group=""
+  local perhaps_sudo=""
+  local keep_permissions=""
   local file_mode=""
   local file_owner=""
-  local keep_permissions=""
-  local perhaps_sudo=""
+  local file_group=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
-    -g|--group)
-      file_group="$2"
-      shift; shift
+    -u|--sudo)
+      perhaps_sudo=true
+      shift
+      ;;
+    -k|--keep-permissions)
+      keep_permissions=true
+      shift
       ;;
     -m|--mode)
       file_mode="$2"
@@ -203,13 +189,9 @@ file::append_line_unless_present() {
       file_owner="$2"
       shift; shift
       ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
-      ;;
-    -u|--sudo)
-      perhaps_sudo=sudo
-      shift
+    -g|--group)
+      file_group="$2"
+      shift; shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -223,29 +205,12 @@ file::append_line_unless_present() {
   local file_path="$1"
   local line_content="$2"
 
-  if [ "${perhaps_sudo:+true}" = true ]; then
-    if [ -z "${file_owner:-}" ]; then
-      file_owner=root
-    fi
-    if [ -z "${file_group:-}" ]; then
-      if [[ "${OSTYPE}" =~ ^darwin ]]; then
-        file_group=wheel
-      else
-        file_group=root
-      fi
-    fi
-  fi
-
-  if ! ${perhaps_sudo} test -f "${file_path}" || ! ${perhaps_sudo} grep -qFx "${line_content}" "${file_path}"; then
-
-    if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
-      file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
-    fi
+  if ! ${perhaps_sudo:+sudo} test -e "${file_path}" || ! ${perhaps_sudo:+sudo} grep -qFx "${line_content}" "${file_path}"; then
 
     temp_file="$(mktemp)" || softfail || return $?
 
-    if ${perhaps_sudo} test -f "${file_path}"; then
-      ${perhaps_sudo} cat "${file_path}" | sed '$a\' >"${temp_file}"
+    if ${perhaps_sudo:+sudo} test -f "${file_path}"; then
+      ${perhaps_sudo:+sudo} cat "${file_path}" | sed '$a\' >"${temp_file}"
       test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
     fi
 
@@ -253,11 +218,11 @@ file::append_line_unless_present() {
 
     file::write \
       ${perhaps_sudo:+"--sudo"} \
+      ${keep_permissions:+"--keep-permissions"} \
+      ${file_mode:+--mode "${file_mode}"} \
       ${file_owner:+--owner "${file_owner}"} \
       ${file_group:+--group "${file_group}"} \
-      ${file_mode:+--mode "${file_mode}"} \
       --absorb "${temp_file}" "${file_path}" || softfail || return $?
-      
   fi
 }
 
@@ -277,28 +242,25 @@ file::append_line_unless_present() {
 #   [content_string]
 #
 file::write_block() {
-  local allow_empty=""
-  local file_group=""
+  local perhaps_sudo=""
+  local keep_permissions=""
   local file_mode=""
   local file_owner=""
-  local keep_permissions=""
-  local perhaps_sudo=""
+  local file_group=""
+
   local source_file=""
   local temp_file=""
+  local allow_empty=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
-    -a|--absorb)
-      temp_file="$2"
-      shift; shift
-      ;;
-    -e|--allow-empty)
-      allow_empty=true
+    -u|--sudo)
+      perhaps_sudo=true
       shift
       ;;
-    -g|--group)
-      file_group="$2"
-      shift; shift
+    -k|--keep-permissions)
+      keep_permissions=true
+      shift
       ;;
     -m|--mode)
       file_mode="$2"
@@ -308,81 +270,15 @@ file::write_block() {
       file_owner="$2"
       shift; shift
       ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
+    -g|--group)
+      file_group="$2"
+      shift; shift
       ;;
-    -u|--sudo)
-      perhaps_sudo=sudo
-      shift
-      ;;
+
     -s|--source)
       source_file="$2"
       shift; shift
       ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
-    esac
-  done
-
-  local file_path="$1"
-  local block_name="$2"
-  local content_string="${3:-}"
-
-  if [ "${perhaps_sudo:+true}" = true ]; then
-    if [ -z "${file_owner:-}" ]; then
-      file_owner=root
-    fi
-    if [ -z "${file_group:-}" ]; then
-      if [[ "${OSTYPE}" =~ ^darwin ]]; then
-        file_group=wheel
-      else
-        file_group=root
-      fi
-    fi
-  fi
-
-  if [ "${keep_permissions}" = true ] && ${perhaps_sudo} test -f "${file_path}"; then
-    file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
-  fi
-
-  if [ -z "${file_mode}" ]; then
-    if ${perhaps_sudo} test -f "${file_path}"; then
-      file_mode="$(${perhaps_sudo} stat -c "%a" "${file_path}")" || softfail || return $?
-    else
-      file_mode="$(file::default_mode ${perhaps_sudo:+"--sudo"})" || softfail || return $?
-    fi
-  fi
-
-  local result_temp_file; result_temp_file="$(mktemp)" || softfail || return $?
-
-  file::read_with_updated_block \
-    ${temp_file:+"--absorb" "${temp_file}"} \
-    ${allow_empty:+"--allow-empty"} \
-    ${perhaps_sudo:+"--sudo"} \
-    ${source_file:+"--source" "${source_file}"} \
-    "${file_path}" "${block_name}" ${content_string:+"${content_string}"} >"${result_temp_file}" || softfail || return $?
-
-  file::write \
-    ${perhaps_sudo:+"--sudo"} \
-    ${file_owner:+--owner "${file_owner}"} \
-    ${file_group:+--group "${file_group}"} \
-    ${file_mode:+--mode "${file_mode}"} \
-    --absorb "${result_temp_file}" "${file_path}" || softfail || return $?
-}
-
-file::read_with_updated_block() {
-  local allow_empty=""
-  local perhaps_sudo=""
-  local source_file=""
-  local temp_file=""
-
-  while [[ "$#" -gt 0 ]]; do
-    case $1 in
     -a|--absorb)
       temp_file="$2"
       shift; shift
@@ -391,13 +287,62 @@ file::read_with_updated_block() {
       allow_empty=true
       shift
       ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local file_path="$1"
+  local block_name="$2"
+  local content_string="${3:-}"
+
+  local result_temp_file; result_temp_file="$(mktemp)" || softfail || return $?
+
+  file::read_with_updated_block \
+    ${perhaps_sudo:+"--sudo"} \
+    ${source_file:+"--source" "${source_file}"} \
+    ${temp_file:+"--absorb" "${temp_file}"} \
+    ${allow_empty:+"--allow-empty"} \
+    "${file_path}" "${block_name}" ${content_string:+"${content_string}"} >"${result_temp_file}" || softfail || return $?
+
+  file::write \
+    ${perhaps_sudo:+"--sudo"} \
+    ${keep_permissions:+"--keep-permissions"} \
+    ${file_mode:+--mode "${file_mode}"} \
+    ${file_owner:+--owner "${file_owner}"} \
+    ${file_group:+--group "${file_group}"} \
+    --absorb "${result_temp_file}" \
+    ${allow_empty:+"--allow-empty"} \
+    "${file_path}" || softfail || return $?
+}
+
+file::read_with_updated_block() {
+  local perhaps_sudo=""
+  local source_file=""
+  local temp_file=""
+  local allow_empty=""
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
     -u|--sudo)
-      perhaps_sudo=sudo
+      perhaps_sudo=true
       shift
       ;;
     -s|--source)
       source_file="$2"
       shift; shift
+      ;;
+    -a|--absorb)
+      temp_file="$2"
+      shift; shift
+      ;;
+    -e|--allow-empty)
+      allow_empty=true
+      shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -412,8 +357,8 @@ file::read_with_updated_block() {
   local block_name="$2"
   local content_string="${3:-}"
 
-  if ${perhaps_sudo} test -f "${file_path}"; then
-    ${perhaps_sudo} cat "${file_path}" | sed '$a\' | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
+  if ${perhaps_sudo:+sudo} test -f "${file_path}"; then
+    ${perhaps_sudo:+sudo} cat "${file_path}" | sed '$a\' | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
     test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
   fi
 
@@ -432,10 +377,10 @@ file::read_with_updated_block() {
   fi
 
   if [ ! -r "${temp_file}" ]; then
-    softfail "Unable to read temporary file: ${temp_file}" || return $?
+    softfail "Temporary file is not readable: ${temp_file}" || return $?
   fi
 
-  if [ ! -s "${temp_file}" ] && [ "${allow_empty}" != true ]; then
+  if [ "${allow_empty}" != true ] && [ ! -s "${temp_file}" ]; then
     rm "${temp_file}" || softfail || return $?
     softfail "Empty input for file::write" || return $?
   fi
