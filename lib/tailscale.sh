@@ -42,17 +42,16 @@ tailscale::issue_2541_workaround() {
   if ip address show tailscale0 >/dev/null 2>&1; then
     if ! ip address show tailscale0 | grep -qF "inet"; then
       echo "tailscale::issue_2541_workaround: about to restart tailscaled"
-      sudo systemctl restart tailscaled || { echo "Unable to restart tailscaled" >&2; exit 1; }
+      sudo systemctl restart tailscaled || fail "Unable to restart tailscaled"
     fi
   fi
 }
 
 tailscale::install_issue_2541_workaround() {
   file::write --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround <<SHELL || softfail || return $?
-#!/usr/bin/env bash
-$(runag::print_license)
+$(runag::mini_library)
 $(declare -f tailscale::issue_2541_workaround)
-tailscale::issue_2541_workaround || { echo "Unable to perform tailscale::issue_2541_workaround" >&2; exit 1; }
+tailscale::issue_2541_workaround || fail "Unable to perform tailscale::issue_2541_workaround"
 SHELL
 
   file::write --sudo --mode 0644 /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || softfail || return $?
