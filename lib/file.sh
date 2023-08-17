@@ -210,7 +210,7 @@ file::append_line_unless_present() {
     temp_file="$(mktemp)" || softfail || return $?
 
     if ${perhaps_sudo:+sudo} test -f "${file_path}"; then
-      ${perhaps_sudo:+sudo} cat "${file_path}" | sed '$a\' >"${temp_file}"
+      ${perhaps_sudo:+sudo} cat "${file_path}" | sed "\$a\\" >"${temp_file}"
       test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
     fi
 
@@ -358,7 +358,7 @@ file::read_with_updated_block() {
   local content_string="${3:-}"
 
   if ${perhaps_sudo:+sudo} test -f "${file_path}"; then
-    ${perhaps_sudo:+sudo} cat "${file_path}" | sed '$a\' | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
+    ${perhaps_sudo:+sudo} cat "${file_path}" | sed "\$a\\" | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
     test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
   fi
 
@@ -386,7 +386,7 @@ file::read_with_updated_block() {
   fi
 
   echo "# BEGIN ${block_name}"
-  <"${temp_file}" sed '$a\' || softfail || return $?
+  <"${temp_file}" sed "\$a\\" || softfail || return $?
   echo "# END ${block_name}"
 
   rm "${temp_file}" || softfail || return $?
