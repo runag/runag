@@ -17,25 +17,13 @@
 sshd::disable_password_authentication() {
   dir::should_exists --sudo --mode 0755 /etc/ssh  || softfail || return $?
   dir::should_exists --sudo --mode 0755 /etc/ssh/sshd_config.d || softfail || return $?
+
   <<<"PasswordAuthentication no" file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
 }
 
-ssh::config_dir_should_exists() {
-  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
-}
-
-ssh::control_sockets_dir_should_exists() {
-  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
-  dir::should_exists --mode 0700 "${HOME}/.ssh/control-sockets" || softfail "Unable to create ssh control sockets directory" || return $?
-}
-
-ssh::config_d_dir_should_exists() {
+ssh::add_ssh_config_d_include_directive() {
   dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
   dir::should_exists --mode 0700 "${HOME}/.ssh/ssh_config.d" || softfail "Unable to create ssh user config.d directory" || return $?
-}
-
-ssh::add_ssh_config_d_include_directive() {
-  ssh::config_d_dir_should_exists || softfail || return $?
 
   # The "Host *" here is for the case if there are any "Host" directives in .ssh/config,
   # as the last of "Host" will catch this "Include" in their scope
@@ -90,8 +78,6 @@ ssh::install_ssh_profile_from_pass() {
   local profile_path="$1"
   local profile_name="$2"
 
-  ssh::config_d_dir_should_exists || softfail || return $?
-
   # ssh key
   if pass::secret_exists "${profile_path}/id_ed25519"; then
     ssh::install_ssh_key_from_pass "${profile_path}/id_ed25519" "${HOME}/.ssh/${profile_name}.id_ed25519" || softfail || return $?
@@ -121,7 +107,7 @@ ssh::install_ssh_key_from_pass() {
   local secret_path="$1"
   local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
-  ssh::config_dir_should_exists || softfail || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
   pass::use --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
@@ -273,7 +259,7 @@ ssh::add_host_to_known_hosts() {
   fi
 
   if [ ! -f "${known_hosts}" ]; then
-    ssh::config_dir_should_exists || softfail || return $?
+    dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
     ( umask 0177 && touch "${known_hosts}") || softfail || return $?
   fi
 
@@ -353,7 +339,8 @@ ssh::with_ssh_args() {(
 ssh::set_args() {
   # Please note: ssh_args variable is not function-local for this function
 
-  ssh::control_sockets_dir_should_exists || softfail || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh/control-sockets" || softfail "Unable to create ssh control sockets directory" || return $?
 
   # shellcheck disable=2031
   if ! [[ "${OSTYPE}" =~ ^msys ]] && [ "${REMOTE_CONTROL_MASTER:-}" != "no" ]; then
