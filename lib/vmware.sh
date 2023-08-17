@@ -121,18 +121,17 @@ vmware::vm_network_loss_workaround() {
   if ip address show ens33 >/dev/null 2>&1; then
     if ! ip address show ens33 | grep -qF "inet "; then
       echo "vmware::vm_network_loss_workaround: about to restart network"
-      sudo systemctl restart NetworkManager.service || { echo "Unable to restart network" >&2; exit 1; }
-      sudo dhclient || { echo "Error running dhclient" >&2; exit 1; }
+      sudo systemctl restart NetworkManager.service || fail "Unable to restart network"
+      sudo dhclient || fail "Error running dhclient"
     fi
   fi
 }
 
 vmware::install_vm_network_loss_workaround() {
   file::write --sudo --mode 0755 /usr/local/bin/vmware-vm-network-loss-workaround <<SHELL || softfail || return $?
-#!/usr/bin/env bash
-$(runag::print_license)
+$(runag::mini_library)
 $(declare -f vmware::vm_network_loss_workaround)
-vmware::vm_network_loss_workaround || { echo "Unable to perform vmware::vm_network_loss_workaround" >&2; exit 1; }
+vmware::vm_network_loss_workaround || fail "Unable to perform vmware::vm_network_loss_workaround"
 SHELL
 
   file::write --sudo --mode 0644 /etc/systemd/system/vmware-vm-network-loss-workaround.service <<EOF || softfail || return $?
