@@ -103,6 +103,7 @@ shellrc::load_if_exists() {
 shell::set_runag_rc() {
   file::write --mode 0640 "${HOME}/.profile.d/runag.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+
 if [ -d "\${HOME}/.runag/bin" ]; then
   case ":\${PATH}:" in
   *":\${HOME}/.runag/bin:"*)
@@ -119,6 +120,7 @@ SHELL
 shell::set_direnv_rc() {
   file::write --mode 0640 "${HOME}/.shellrc.d/direnv.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+
 if command -v direnv >/dev/null; then
   export DIRENV_LOG_FORMAT=""
   if [ -n "\${ZSH_VERSION:-}" ]; then
@@ -135,6 +137,7 @@ shell::set_editor_rc() {
 
   file::write --mode 0640 "${HOME}/.shellrc.d/editor.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+
 if [ -z "\${EDITOR:-}" ]; then
   export EDITOR=$(printf "%q" "${editor_path}")
 fi
@@ -144,6 +147,7 @@ SHELL
 shell::set_flush_history_rc() {
   file::write --mode 0640 "${HOME}/.shellrc.d/flush-history.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+
 if [ -n "\${BASH_VERSION:-}" ]; then
   export PROMPT_COMMAND="\${PROMPT_COMMAND:+"\${PROMPT_COMMAND}; "}history -a"
 fi
