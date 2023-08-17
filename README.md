@@ -315,14 +315,6 @@ Could be set to function name. Function is expected to filter it's input. If fun
 Could be set to `"true"`
 
 
-### Internal variables, not to be used by non-library code
-
-```
-RUNAG_NODENV_INITIALIZED
-RUNAG_RBENV_INITIALIZED
-```
-
-
 ## License
 
 [Apache License, Version 2.0](LICENSE).
