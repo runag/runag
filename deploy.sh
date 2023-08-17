@@ -14,34 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-
-# This script is wrapped inside a function with a random name to lower the chance for the bash to run some 
-# unexpected commands in case if "curl | bash" fails in the middle of download.
+# This script is wrapped inside a function with a random name to lower the chance for the bash
+# to run some unexpected commands in case if "curl | bash" fails in the middle of download.
 __xVhMyefCbBnZFUQtwqCs() {
 
-deploy_script () 
-{ 
-    if [ -n "${1:-}" ]; then
-        if declare -f "deploy_script::$1" > /dev/null; then
-            "deploy_script::$1" "${@:2}";
-            softfail --exit-status $? --unless-good || return $?;
-        else
-            softfail "deploy_script: command not found: $1";
-            return $?;
-        fi;
-    fi
-}
-deploy_script::add () 
-{ 
-    task::run --install-filter runagfile::add "$1" || softfail || return $?;
-    deploy_script "${@:2}";
-    softfail --exit-status $? --unless-good
-}
-deploy_script::run () 
-{ 
-    "${HOME}/.runag/bin/runag" "$@";
-    softfail --exit-status $? --unless-good
-}
 fail () 
 { 
     local exit_status="";
@@ -115,6 +91,72 @@ fail ()
 softfail () 
 { 
     fail --wrapped-softfail "$@"
+}
+terminal::have_16_colors () 
+{ 
+    local amount;
+    command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
+}
+terminal::print_color_table () 
+{ 
+    for i in {0..16..1};
+    do
+        echo "$(tput setaf "${i}")tput setaf ${i}$(tput sgr 0)";
+    done;
+    for i in {0..16..1};
+    do
+        echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)";
+    done
+}
+terminal::color () 
+{ 
+    local foreground_color="";
+    local background_color="";
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in 
+            -f | --foreground)
+                foreground_color="$2";
+                shift;
+                shift
+            ;;
+            -b | --background)
+                background_color="$2";
+                shift;
+                shift
+            ;;
+            -*)
+                echo "Unknown argumen for terminal::color: $1" 1>&2;
+                return 1
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    local amount;
+    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
+        if [[ "${foreground_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground_color:-}" ]; then
+            tput setaf "${foreground_color}" || { 
+                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
+                return 1
+            };
+        fi;
+        if [[ "${background_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background_color:-}" ]; then
+            tput setab "${background_color}" || { 
+                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
+                return 1
+            };
+        fi;
+    fi
+}
+terminal::default_color () 
+{ 
+    if command -v tput > /dev/null; then
+        tput sgr 0 || { 
+            echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
+            return 1
+        };
+    fi
 }
 log::error () 
 { 
@@ -324,71 +366,29 @@ task::complete_with_cleanup ()
         rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?;
     fi
 }
-terminal::have_16_colors () 
+
+deploy_script () 
 { 
-    local amount;
-    command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
-}
-terminal::print_color_table () 
-{ 
-    for i in {0..16..1};
-    do
-        echo "$(tput setaf "${i}")tput setaf ${i}$(tput sgr 0)";
-    done;
-    for i in {0..16..1};
-    do
-        echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)";
-    done
-}
-terminal::color () 
-{ 
-    local foreground_color="";
-    local background_color="";
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in 
-            -f | --foreground)
-                foreground_color="$2";
-                shift;
-                shift
-            ;;
-            -b | --background)
-                background_color="$2";
-                shift;
-                shift
-            ;;
-            -*)
-                echo "Unknown argumen for terminal::color: $1" 1>&2;
-                return 1
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    local amount;
-    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
-        if [[ "${foreground_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground_color:-}" ]; then
-            tput setaf "${foreground_color}" || { 
-                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
-                return 1
-            };
-        fi;
-        if [[ "${background_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background_color:-}" ]; then
-            tput setab "${background_color}" || { 
-                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
-                return 1
-            };
+    if [ -n "${1:-}" ]; then
+        if declare -f "deploy_script::$1" > /dev/null; then
+            "deploy_script::$1" "${@:2}";
+            softfail --exit-status $? --unless-good || return $?;
+        else
+            softfail "deploy_script: command not found: $1";
+            return $?;
         fi;
     fi
 }
-terminal::default_color () 
+deploy_script::add () 
 { 
-    if command -v tput > /dev/null; then
-        tput sgr 0 || { 
-            echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
-            return 1
-        };
-    fi
+    task::run --install-filter runagfile::add "$1" || softfail || return $?;
+    deploy_script "${@:2}";
+    softfail --exit-status $? --unless-good
+}
+deploy_script::run () 
+{ 
+    "${HOME}/.runag/bin/runag" "$@";
+    softfail --exit-status $? --unless-good
 }
 
 apt::install () 

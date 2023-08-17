@@ -37,16 +37,16 @@ file::write deploy.sh <<SHELL || fail
 
 $(runag::print_license)
 
-
-# This script is wrapped inside a function with a random name to lower the chance for the bash to run some 
-# unexpected commands in case if "curl | bash" fails in the middle of download.
+# This script is wrapped inside a function with a random name to lower the chance for the bash
+# to run some unexpected commands in case if "curl | bash" fails in the middle of download.
 __xVhMyefCbBnZFUQtwqCs() {
 
-$(deploy_script::function_sources)
 $(fail::function_sources)
+$(terminal::function_sources)
 $(log::function_sources)
 $(task::function_sources)
-$(terminal::function_sources)
+
+$(deploy_script::function_sources)
 
 $(declare -f apt::install)
 $(declare -f apt::update)
