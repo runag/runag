@@ -134,11 +134,9 @@ Please refer to the source code for now.
 * [git](lib/git.sh)
 * [imagemagick](lib/imagemagick.sh)
 * [nodejs](lib/nodejs.sh)
-* [nodenv](lib/nodenv.sh)
 * [postgresql](lib/postgresql.sh)
 * [python](lib/python.sh)
 * [rails](lib/rails.sh)
-* [rbenv](lib/rbenv.sh)
 * [ruby](lib/ruby.sh)
 
 ### Networking and access to remote systems
