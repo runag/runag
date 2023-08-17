@@ -47,23 +47,6 @@ ruby::install_by_asdf_and_set_global() {
 }
 
 
-# ---- install by rbenv ----
-
-# To get a version number, use: rbenv install -l
-
-ruby::install_by_rbenv() {
-  rbenv::install || softfail || return $?
-  rbenv::install_ruby "$@" || softfail || return $?
-}
-
-ruby::install_by_rbenv_and_set_global() {
-  local ruby_version="${1:-"${RBENV_VERSION}"}"
-
-  ruby::install_by_rbenv "${ruby_version}" || softfail || return $?
-  rbenv global "${ruby_version}" || softfail || return $?
-}
-
-
 # ---- install by apt ----
 
 ruby::install::apt() {
