@@ -35,6 +35,7 @@ asdf::install_with_shellrc() {
 asdf::set_shell_rc() {
   file::write --mode 0640 "${HOME}/.profile.d/asdf.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
   . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
 fi
@@ -42,6 +43,7 @@ SHELL
 
   file::write --mode 0640 "${HOME}/.shellrc.d/asdf.sh" <<SHELL || softfail || return $?
 $(runag::print_license)
+
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
   . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
 
