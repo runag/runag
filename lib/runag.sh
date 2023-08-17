@@ -25,7 +25,6 @@ $(declare -f fail::trace)
 $(declare -f softfail)
 $(declare -f dir::should_exists)
 $(declare -f file::write)
-$(declare -f file::default_mode)
 SHELL
 }
 
