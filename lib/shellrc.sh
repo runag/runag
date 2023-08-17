@@ -51,14 +51,15 @@ shell::install_rc_loader() { (
 
   dir::should_exists --mode 0700 "${shellrc_dir}" || softfail || return $?
 
+  # I use a random variable name here to reduce the chance of overwriting someone else's data
   file::write_block --keep-permissions --mode 0644 "${shellrc_file}" "${block_name}" <<SHELL || softfail || return $?
 if [ -d "\${HOME}"/$(printf "%q" "${shellrc_dir}") ]; then
-  for _file_bb21go6nkCN82Gk9XeY2 in "\${HOME}"/$(printf "%q" "${shellrc_dir}")/*.sh; do
-    if [ -f "\${_file_bb21go6nkCN82Gk9XeY2}" ]; then
-      . "\${_file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${_file_bb21go6nkCN82Gk9XeY2} (\$?)" >&2; }
+  for __file_bb21go6nkCN82Gk9XeY2 in "\${HOME}"/$(printf "%q" "${shellrc_dir}")/*.sh; do
+    if [ -f "\${__file_bb21go6nkCN82Gk9XeY2}" ]; then
+      . "\${__file_bb21go6nkCN82Gk9XeY2}" || { echo "Unable to load file \${__file_bb21go6nkCN82Gk9XeY2} (\$?)" >&2; }
     fi
   done
-  unset _file_bb21go6nkCN82Gk9XeY2
+  unset __file_bb21go6nkCN82Gk9XeY2
 fi
 SHELL
 ) }
