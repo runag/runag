@@ -397,7 +397,8 @@ file::get_block() {
   local block_name="$2"
 
   if [ -f "${file_path}" ]; then
-    <"${file_path}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" || softfail || return $?
+    <"${file_path}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" | tail -n +2 | head -n -1
+    test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
   fi
 }
 

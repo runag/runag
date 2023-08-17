@@ -154,22 +154,8 @@ runag::create_or_update_offline_install() {
   cp -f "${runag_path}/src/deploy-offline.sh" . || softfail || return $?
 }
 
-# it will dump all current runagfiles, not a good idea
-# is systemwide-install a good idea at all?
-#
-# runag::install_systemwide() {
-#   local temp_file; temp_file="$(mktemp)" || softfail || return $?
-#
-#   file::get_block "${RUNAG_BIN_PATH}" set_shell_options >>"${temp_file}" || softfail || return $?
-#
-#   declare -f >>"${temp_file}" || softfail || return $?
-#
-#   file::get_block "${RUNAG_BIN_PATH}" invoke_runagfile >>"${temp_file}" || softfail || return $?
-#
-#   # TODO: atomic install
-#   sudo install -m 755 -o root -g root "${temp_file}" /usr/local/bin/runag.tmp || softfail || return $?
-#
-#   sudo mv /usr/local/bin/runag.tmp /usr/local/bin/runag || softfail || return $?
-#
-#   rm "${temp_file}" || softfail || return $?
-# }
+runag::bundle() {
+  file::get_block "${RUNAG_BIN_PATH}" set_shell_options || softfail || return $?
+  declare -f || softfail || return $?
+  file::get_block "${RUNAG_BIN_PATH}" invoke_runagfile || softfail || return $?
+}
