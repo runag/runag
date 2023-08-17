@@ -45,27 +45,6 @@ nodejs::install_by_asdf_and_set_global() {
 }
 
 
-# ---- install by nodenv ----
-
-# Get a version number: nodenv install --list | grep ^14
-
-nodejs::install_by_nodenv() {
-  local node_version="${1:-}"
-
-  nodenv::install_nodejs "${node_version:-}" || softfail || return $?
-
-  # shellcheck disable=2124
-  NODENV_VERSION="${node_version:-"${NODENV_VERSION:-}"}" nodenv::configure_mismatched_binaries_workaround || softfail || return $?
-}
-
-nodejs::install_by_nodenv_and_set_global() {
-  local node_version="${1:-"${NODENV_VERSION}"}"
-
-  nodejs::install_by_nodenv "${node_version}" || softfail || return $?
-  nodenv global "${node_version}" || softfail || return $?
-}
-
-
 # ---- install by apt ----
 
 nodejs::install::apt() {
