@@ -35,22 +35,18 @@ log::success() {
 }
 
 log::message() {
-  local foreground_color_seq=""
-  local background_color_seq=""
+  local foreground_color=""
+  local background_color=""
   local message=""
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -f|--foreground-color)
-      if [ -t 1 ]; then
-        foreground_color_seq="$(terminal::color --foreground "$2")" || echo "Unable to obtain terminal::color ($?)" >&2
-      fi
+        test -t 1 && foreground_color="$(tput setaf "$2" 2>/dev/null)" || foreground_color=""
       shift; shift
       ;;
     -b|--background-color)
-      if [ -t 1 ]; then
-        background_color_seq="$(terminal::color --background "$2")" || echo "Unable to obtain terminal::color ($?)" >&2
-      fi
+      test -t 1 && background_color="$(tput setab "$2" 2>/dev/null)" || background_color=""
       shift; shift
       ;;
     -*)
@@ -70,12 +66,9 @@ log::message() {
     message="(empty log message)"
   fi
 
-  local default_color_seq=""
-  if [ -t 1 ]; then
-    default_color_seq="$(terminal::default_color)" || echo "Unable to obtain terminal::color ($?)" >&2
-  fi
+  local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
-  echo "${foreground_color_seq}${background_color_seq}${message}${default_color_seq}"
+  echo "${foreground_color}${background_color}${message}${reset_attrs}"
 }
 
 log::elapsed_time() {

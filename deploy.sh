@@ -92,72 +92,6 @@ softfail ()
 { 
     fail --wrapped-softfail "$@"
 }
-terminal::have_16_colors () 
-{ 
-    local amount;
-    command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge 16 ]
-}
-terminal::print_color_table () 
-{ 
-    for i in {0..16..1};
-    do
-        echo "$(tput setaf "${i}")tput setaf ${i}$(tput sgr 0)";
-    done;
-    for i in {0..16..1};
-    do
-        echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)";
-    done
-}
-terminal::color () 
-{ 
-    local foreground_color="";
-    local background_color="";
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in 
-            -f | --foreground)
-                foreground_color="$2";
-                shift;
-                shift
-            ;;
-            -b | --background)
-                background_color="$2";
-                shift;
-                shift
-            ;;
-            -*)
-                echo "Unknown argumen for terminal::color: $1" 1>&2;
-                return 1
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    local amount;
-    if command -v tput > /dev/null && amount="$(tput colors 2>/dev/null)" && [[ "${amount}" =~ ^[0-9]+$ ]]; then
-        if [[ "${foreground_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${foreground_color:-}" ]; then
-            tput setaf "${foreground_color}" || { 
-                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
-                return 1
-            };
-        fi;
-        if [[ "${background_color:-}" =~ ^[0-9]+$ ]] && [ "${amount}" -ge "${background_color:-}" ]; then
-            tput setab "${background_color}" || { 
-                echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
-                return 1
-            };
-        fi;
-    fi
-}
-terminal::default_color () 
-{ 
-    if command -v tput > /dev/null; then
-        tput sgr 0 || { 
-            echo "Unable to get terminal sequence from tput in terminal::color ($?)" 1>&2;
-            return 1
-        };
-    fi
-}
 log::error () 
 { 
     local message="$1";
@@ -180,22 +114,18 @@ log::success ()
 }
 log::message () 
 { 
-    local foreground_color_seq="";
-    local background_color_seq="";
+    local foreground_color="";
+    local background_color="";
     local message="";
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -f | --foreground-color)
-                if [ -t 1 ]; then
-                    foreground_color_seq="$(terminal::color --foreground "$2")" || echo "Unable to obtain terminal::color ($?)" 1>&2;
-                fi;
+                test -t 1 && foreground_color="$(tput setaf "$2" 2>/dev/null)" || foreground_color="";
                 shift;
                 shift
             ;;
             -b | --background-color)
-                if [ -t 1 ]; then
-                    background_color_seq="$(terminal::color --background "$2")" || echo "Unable to obtain terminal::color ($?)" 1>&2;
-                fi;
+                test -t 1 && background_color="$(tput setab "$2" 2>/dev/null)" || background_color="";
                 shift;
                 shift
             ;;
@@ -214,11 +144,9 @@ log::message ()
     if [ -z "${message}" ]; then
         message="(empty log message)";
     fi;
-    local default_color_seq="";
-    if [ -t 1 ]; then
-        default_color_seq="$(terminal::default_color)" || echo "Unable to obtain terminal::color ($?)" 1>&2;
-    fi;
-    echo "${foreground_color_seq}${background_color_seq}${message}${default_color_seq}"
+    local reset_attrs;
+    test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs="";
+    echo "${foreground_color}${background_color}${message}${reset_attrs}"
 }
 log::elapsed_time () 
 { 
@@ -347,12 +275,17 @@ task::complete ()
             };
         fi;
         if [ -s "${temp_dir}/stderr" ]; then
-            test -t 2 && terminal::color --foreground 9 1>&2;
+            local terminal_sequence;
+            if [ -t 2 ] && terminal_sequence="$(tput setaf 9 2>/dev/null)"; then
+                echo -n "${terminal_sequence}" 1>&2;
+            fi;
             cat "${temp_dir}/stderr" 1>&2 || { 
                 echo "Unable to display task stderr ($?)" 1>&2;
                 error_state=2
             };
-            test -t 2 && terminal::default_color 1>&2;
+            if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
+                echo -n "${terminal_sequence}" 1>&2;
+            fi;
         fi;
     fi;
     if [ "${error_state}" != 0 ]; then

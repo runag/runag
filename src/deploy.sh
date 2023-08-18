@@ -42,7 +42,6 @@ $(runag::print_license)
 __xVhMyefCbBnZFUQtwqCs() {
 
 $(fail::function_sources)
-$(terminal::function_sources)
 $(log::function_sources)
 $(task::function_sources)
 

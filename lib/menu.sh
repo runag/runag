@@ -33,14 +33,14 @@ menu::select_and_run() {
     fi
   done
 
-  local prompt_color; prompt_color="$(terminal::color --foreground 11)" || softfail || return $?
-  local default_color; default_color="$(terminal::default_color)" || softfail || return $?
+  local prompt_color; test -t 1 && prompt_color="$(tput setaf 11 2>/dev/null)" || prompt_color=""
+  local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
   local input_text read_status
-  IFS="" read -p "${prompt_color}${PS3:-"Please select number: "}${default_color}" -e -r input_text
+  IFS="" read -p "${prompt_color}${PS3:-"Please select number: "}${reset_attrs}" -e -r input_text
   read_status=$?
 
   if [ ${read_status} != 0 ]; then
@@ -87,21 +87,19 @@ menu::select_and_run() {
 }
 
 menu::display_menu() {
-  local color_a color_a_slight_accent color_a_notable_accent
-  local color_b color_b_slight_accent color_b_notable_accent
+  local color_a; test -t 0 && color_a="$(tput setaf 13 2>/dev/null)" || color_a=""
+  local color_b; test -t 0 && color_b="$(tput setaf 15 2>/dev/null)" || color_b=""
 
-  color_a="$(terminal::color --foreground 13)" || softfail || return $?
-  color_b="$(terminal::color --foreground 15)" || softfail || return $?
+  local color_a_slight_accent; test -t 0 && color_a_slight_accent="$(tput setaf 13 2>/dev/null)" || color_a_slight_accent=""
+  local color_b_slight_accent; test -t 0 && color_b_slight_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_slight_accent=""
 
-  color_a_slight_accent="$(terminal::color --foreground 13)" || softfail || return $?
-  color_b_slight_accent="$(terminal::color --foreground 15 --background 8)" || softfail || return $?
+  local color_a_notable_accent; test -t 0 && color_a_notable_accent="$(printf "setaf 0\nsetab 5" | tput -S 2>/dev/null)" || color_a_notable_accent=""
+  local color_b_notable_accent; test -t 0 && color_b_notable_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_notable_accent=""
 
-  color_a_notable_accent="$(terminal::color --foreground 0 --background 5)" || softfail || return $?
-  color_b_notable_accent="$(terminal::color --foreground 15 --background 8)" || softfail || return $?
+  local header_color; test -t 0 && header_color="$(tput setaf 14 2>/dev/null)" || header_color=""
+  local comment_color; test -t 0 && comment_color="$(tput setaf 10 2>/dev/null)" || comment_color=""
 
-  local header_color;  header_color="$(terminal::color --foreground 14)" || softfail || return $?
-  local comment_color; comment_color="$(terminal::color --foreground 10)" || softfail || return $?
-  local default_color; default_color="$(terminal::default_color)" || softfail || return $?
+  local reset_attrs; test -t 0 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   local item index=1
   local current_color="" current_color_slight_accent="" current_color_notable_accent=""
@@ -121,7 +119,7 @@ menu::display_menu() {
       if [[ "${item}" =~ ^\#\#\  ]]; then
         # header
         echo ""
-        echo "  ${header_color}## ${item:3}${default_color}"
+        echo "  ${header_color}## ${item:3}${reset_attrs}"
         echo ""
         current_color=""
         last_line_was_header=true
@@ -131,14 +129,14 @@ menu::display_menu() {
         if [ "${last_line_was_header}" != true ]; then
           echo ""
         fi
-        echo "  ${header_color}### ${item:4}${default_color}"
+        echo "  ${header_color}### ${item:4}${reset_attrs}"
         echo ""
         current_color=""
         last_line_was_header=true
 
       elif [[ "${item}" =~ ^\#\>\  ]]; then
         # note
-        echo "   ${comment_color}> ${item:3}${default_color}"
+        echo "   ${comment_color}> ${item:3}${reset_attrs}"
         current_color=""
         last_line_was_header=false
       fi
@@ -165,12 +163,12 @@ menu::display_menu() {
       fi
 
       if [ ${#item} -gt 80 ]; then
-        endline_sticker=" ${current_color_notable_accent} #$((index))${default_color}"
+        endline_sticker=" ${current_color_notable_accent} #$((index))${reset_attrs}"
       else
         endline_sticker=""
       fi
 
-      echo "  ${current_color_slight_accent} $((index)))${default_color} ${current_color}${item}${default_color}${endline_sticker}"
+      echo "  ${current_color_slight_accent} $((index)))${reset_attrs} ${current_color}${item}${reset_attrs}${endline_sticker}"
 
       last_line_was_header=false
 
