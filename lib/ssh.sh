@@ -336,7 +336,7 @@ ssh::with_ssh_args() {(
   "$@"
 )}
 
-ssh::set_args() {
+ssh::set_ssh_args() {
   # Please note: ssh_args variable is not function-local for this function
 
   dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
@@ -451,7 +451,7 @@ ssh::before_run() {
     softfail "REMOTE_HOST should be set" || return $?
   fi
 
-  ssh::set_args || softfail "Unable to set ssh args" || return $?
+  ssh::set_ssh_args || softfail "Unable to set ssh args" || return $?
 
   temp_dir="$(mktemp -d)" || softfail "Unable to make temp file" || return $?
 

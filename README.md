@@ -222,7 +222,7 @@ Remote directory to run script in.
 Space-separated list of environment variable names, to be set in remote script
 with the values present in the calling rùnag instance at the moment of ssh call.
 For any provided names (or for absence of them),
-rùnag will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE"`.
+rùnag will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE RUNAG_STDOUT_IS_TERMINAL RUNAG_STDERR_IS_TERMINAL"`.
 
 #### `REMOTE_HOST`
 
