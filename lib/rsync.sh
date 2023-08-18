@@ -22,7 +22,7 @@ rsync::sync_from_remote() {
   rsync::sync "${REMOTE_HOST:-}:$1" "$2" || softfail || return $?
 }
 
-rsync::set_args() {
+rsync::set_rsync_args() {
   if [ "${RUNAG_RSYNC_DELETE_AND_BACKUP:-}" = "true" ]; then
     local timestamp; timestamp="$(date --utc +"%Y%m%dT%H%M%SZ")" || softfail || return $?
 
@@ -44,7 +44,7 @@ rsync::set_args() {
 rsync::sync() {
   local rsync_args=()
 
-  rsync::set_args || softfail || return $?
+  rsync::set_rsync_args || softfail || return $?
 
   rsync::run \
     --links \
@@ -57,7 +57,7 @@ rsync::sync() {
 
 rsync::run() {
   local ssh_args=()
-  ssh::set_args || softfail || return $?
+  ssh::set_ssh_args || softfail || return $?
 
   local ssh_args_string
   printf -v ssh_args_string " '%s'" "${ssh_args[@]}" || softfail || return $?
