@@ -588,9 +588,10 @@ ssh::task::nohup_raw_invoke() {
 ssh::task::information_message() {
   local message="$1"
   if [ -t 2 ]; then
-    test -t 2 && terminal::color --foreground 12 >&2
-    echo "${message}" >&2
-    test -t 2 && terminal::default_color >&2
+    local color_sequence; color_sequence="$(tput setaf 12 2>/dev/null)" || color_sequence=""
+    local reset_attrs; reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
+
+    echo "${color_sequence}${message}${reset_attrs}" >&2
   fi
 }
 
