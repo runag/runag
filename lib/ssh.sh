@@ -398,6 +398,13 @@ ssh::remote_env() {
   done
 }
 
+ssh::script::interactive_terminal_functions_filter() {
+  local function_name="$1"
+
+  [ "${function_name:0:1}" = "_" ] ||
+  [[ "${function_name}" =~ ^(asdf|command_not_found_handle|dequote|quote|quote_readline)$ ]]
+}
+
 ssh::script() {
   local joined_command="$*" # I don't want to save/restore IFS to be able to do "test -n "${*..."
   test -n "${joined_command//[[:blank:][:cntrl:]]/}" || softfail "Command should be specified" || return $?
@@ -410,7 +417,7 @@ ssh::script() {
   else
     local function_name
     declare -F | while IFS="" read -r function_name; do
-      if [ "${function_name:11:1}" != "_" ] && [[ ! "${function_name:11}" =~ ^(asdf|command_not_found_handle|dequote|quote|quote_readline)$ ]]; then
+      if ! ssh::script::interactive_terminal_functions_filter "${function_name:11}"; then
         declare -f "${function_name:11}" || softfail "Unable to produce source code dump of function: ${function_name:11}" || return $?
       fi
     done
