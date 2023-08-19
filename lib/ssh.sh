@@ -303,6 +303,25 @@ ssh::remove_host_from_known_hosts() {
   ssh-keygen -R "${keygen_host_string}" || softfail || return $?
 }
 
+# Below are a set of functions to run bash scripts on a remote host.
+#
+# They serialize all functions defined in the current bash interpreter, and, along with a few
+# selected environment variables, transfer them to a remote host to perform.
+#
+# ssh::run is a closest thing to a regular ssh. Standard streams are connected directly to a ssh process.
+#
+# ssh::call and ssh::task streams are buffered with the goal to make ssh calls resilent to network errors.
+#
+# First, the whole STDIN is read till the EOF, then the result is transfered to a remote host.
+# Then remote script is started, STDOUT/ERR content and exit status are stored on remote side.
+# Then they are transfered to a local side and then provided to a caller.
+#
+# ssh::call is similar to a regular ssh
+#
+# ssh::task will display a customisable task header and will hide stdout unless there is
+# an non-zero exit status or there is something in the STDERR stream.
+# A filter could be applied to a STDERR stream to account for the noisy processes.
+
 # shellcheck disable=2030
 ssh::with_forward_agent() {(
   if ! declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
