@@ -194,11 +194,11 @@ ssh::refresh_host_in_known_hosts() {
   local host_name="${1:-"${REMOTE_HOST}"}"
 
   ssh::remove_host_from_known_hosts --port "${ssh_port}" "${host_name}" || softfail || return $?
-  ssh::wait_for_host_ssh_to_become_available --port "${ssh_port}" "${host_name}" || softfail || return $?
+  ssh::wait_for_host_to_become_available --port "${ssh_port}" "${host_name}" || softfail || return $?
   ssh::add_host_to_known_hosts --port "${ssh_port}" "${host_name}" || softfail || return $?
 }
 
-ssh::wait_for_host_ssh_to_become_available() {
+ssh::wait_for_host_to_become_available() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
   while [[ "$#" -gt 0 ]]; do
