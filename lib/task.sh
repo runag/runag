@@ -18,6 +18,7 @@
 task::run() {(
   local short_title=false
   local task_title=""
+  local omit_title=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -46,7 +47,7 @@ task::run() {(
       shift
       ;;
     -o|--omit-title)
-      local RUNAG_TASK_OMIT_TITLE=true
+      omit_title=true
       shift
       ;;
     -k|--keep-temp-files)
@@ -70,7 +71,7 @@ task::run() {(
     task_title="$1"
   fi
 
-  if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
+  if [ "${omit_title}" != true ] && [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
     log::notice "Performing '${task_title:-"$*"}'..." || softfail || return $?
   fi
   
