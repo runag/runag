@@ -470,7 +470,7 @@ ssh::remove_temp_files() {
   return "${exit_status}"
 }
 
-ssh::before_run() {
+ssh::upload_script() {
   # Please note: temp_dir, script_checksum, and remote_temp_dir variables are not function-local for this function
 
   if [ -z "${REMOTE_HOST:-}" ]; then
@@ -506,7 +506,7 @@ ssh::before_run() {
 ssh::run() {
   local ssh_args=() temp_dir script_checksum remote_temp_dir
 
-  ssh::before_run "$@" || softfail --exit-status $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
+  ssh::upload_script "$@" || softfail --exit-status $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
 
   if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
     # shellcheck disable=2016
@@ -698,11 +698,11 @@ ssh::task() {
 
   local ssh_args=() temp_dir script_checksum remote_temp_dir information_message_state
 
-  ssh::before_run "$@" || ssh::task::softfail --exit-status $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
+  ssh::upload_script "$@" || ssh::task::softfail --exit-status $? "Unable to perform ssh::before-run" || ssh::remove_temp_files $? || return $?
 
   local remote_stdin="/dev/null"
   if [ ! -t 0 ]; then
-    ssh::task::store_stdin || ssh::task::softfail --exit-status $? "Unable to store stdin data" || ssh::remove_temp_files $? || return $?
+    ssh::task::upload_stdin || ssh::task::softfail --exit-status $? "Unable to store stdin data" || ssh::remove_temp_files $? || return $?
   fi
 
   ssh::task::nohup_raw_invoke 'bash "${temp_dir}/script" <%q >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"; script_status=$?; echo "${script_status}" >"${temp_dir}/exit_status"; touch "${temp_dir}/done"; exit "${script_status}"' "${remote_stdin}"
@@ -760,7 +760,7 @@ ssh::task() {
 }
 
 # shellcheck disable=2016
-ssh::task::store_stdin() {
+ssh::task::upload_stdin() {
   # Please note: temp_dir, remote_temp_dir, and remote_stdin variables are not function-local for this function
 
   cat >"${temp_dir}/stdin" || ssh::task::softfail "Unable to read stdin" || return $?
