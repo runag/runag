@@ -14,21 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# TODO:
-#
-# task::set_env () {
-#   # parse argv
-#
-#   if run-the-rest;
-#     "$@"
-#   fi
-# }
-#
-# task::with_env() {(
-#   task::set_env --run-the-rest "$@"
-# )}
-
-
 # shellcheck disable=SC2030
 task::run() {(
   local short_title=false
