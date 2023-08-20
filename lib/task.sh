@@ -16,26 +16,32 @@
 
 # shellcheck disable=SC2030
 task::run() {(
+  local fail_detector
+  local task_title
   local short_title=false
-  local task_title=""
   local omit_title=false
+
+  # Those_Variables are used in other functions down the call stack and in signal handlers
+  local Stderr_Filter
+  local Keep_Temp_Files
+  local Verbose_Output
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
     -e|--stderr-filter)
-      local RUNAG_TASK_STDERR_FILTER="$2"
+      Stderr_Filter="$2"
       shift; shift
       ;;
     -i|--install-filter)
-      local RUNAG_TASK_STDERR_FILTER=task::install_filter
+      Stderr_Filter=task::install_filter
       shift
       ;;
     -f|--fail-detector)
-      local RUNAG_TASK_FAIL_DETECTOR="$2"
+      fail_detector="$2"
       shift; shift
       ;;
     -r|--rubygems-fail-detector)
-      local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector
+      fail_detector=task::rubygems_fail_detector
       shift
       ;;
     -t|--title)
@@ -51,11 +57,11 @@ task::run() {(
       shift
       ;;
     -k|--keep-temp-files)
-      local RUNAG_TASK_KEEP_TEMP_FILES=true
+      Keep_Temp_Files=true
       shift
       ;;
     -v|--verbose)
-      local RUNAG_TASK_VERBOSE=true
+      Verbose_Output=true
       shift
       ;;
     -*)
@@ -75,23 +81,23 @@ task::run() {(
     log::notice "Performing '${task_title:-"$*"}'..." || softfail || return $?
   fi
   
-  local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $? # temp_dir also used in task::cleanup signal handler
+  local Temp_Dir; Temp_Dir="$(mktemp -d)" || softfail || return $?
+  local Task_Status
 
   trap "task::complete_with_cleanup" EXIT
 
   # I know I could put /dev/fd/0 in variable, but what if system does not support it?
-  if [ -t 0 ]; then # stdin is a terminal
-    ("$@") </dev/null >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"
+  if [ -t 0 ]; then # check if stdin is a terminal
+    ("$@") </dev/null >"${Temp_Dir}/stdout" 2>"${Temp_Dir}/stderr"
   else
-    ("$@") >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"
+    ("$@") >"${Temp_Dir}/stdout" 2>"${Temp_Dir}/stderr"
   fi
+
+  task::detect_fail_state "${Temp_Dir}/stdout" "${Temp_Dir}/stderr" $? "${fail_detector:-}"
   
-  local task_status=$? # task_status also used in task::cleanup signal handler so we must assign it here
+  Task_Status=$?
 
-  task::detect_fail_state "${temp_dir}/stdout" "${temp_dir}/stderr" "${task_status}"
-  local task_status=$? # task_status also used in task::cleanup signal handler so we must assign it here
-
-  exit "${task_status}"
+  exit "${Task_Status}"
 )}
 
 task::install_filter() {
@@ -109,26 +115,17 @@ task::install_filter() {
   fi
 }
 
-# shellcheck disable=SC2031
-task::is_stderr_empty_after_filtering() {
-  local stderr_file="$1"
-
-  local stderr_size; stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || fail # no softfail here!
-
-  if [ "${stderr_size}" != 0 ]; then
-    return 1
-  fi
-}
-
-# shellcheck disable=SC2031
 task::detect_fail_state() {
+  # local stdout_file="$1"
+  # local stderr_file="$2"
   local task_status="$3"
+  local fail_detector="$4"
 
-  if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
+  if [ -z "${fail_detector:-"${RUNAG_TASK_FAIL_DETECTOR:-}"}" ]; then
     return "${task_status}"
   fi
 
-  "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
+  "${fail_detector:-"${RUNAG_TASK_FAIL_DETECTOR:-}"}" "$@"
 }
 
 task::rubygems_fail_detector() {
@@ -144,30 +141,33 @@ task::rubygems_fail_detector() {
 
 # shellcheck disable=SC2031
 task::complete() {
-  local error_state=0
+  local error_state=false
   local stderr_present=false
 
-  if [ "${task_status:-1}" = 0 ] && [ -s "${temp_dir}/stderr" ]; then
+  if [ "${Task_Status:-1}" = 0 ] && [ -s "${Temp_Dir}/stderr" ]; then
     stderr_present=true
-    if [ -n "${RUNAG_TASK_STDERR_FILTER:-}" ] && task::is_stderr_empty_after_filtering "${temp_dir}/stderr"; then
-      stderr_present=false
+    if [ -n "${Stderr_Filter:-"${RUNAG_TASK_STDERR_FILTER:-}"}" ]; then
+      local stderr_size; stderr_size="$("${Stderr_Filter:-"${RUNAG_TASK_STDERR_FILTER}"}" <"${Temp_Dir}/stderr" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || softfail "Error performing STDERR filter" || return $?
+      if [ "${stderr_size}" = 0 ]; then
+        stderr_present=false
+      fi
     fi
   fi
 
-  if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${RUNAG_VERBOSE:-}" = true ] || [ "${RUNAG_TASK_VERBOSE:-}" = true ]; then
+  if [ "${Task_Status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${Verbose_Output:-}" = true ] || [ "${RUNAG_VERBOSE:-}" = true ] || [ "${RUNAG_TASK_VERBOSE:-}" = true ]; then
 
-    if [ -s "${temp_dir}/stdout" ]; then
-      cat "${temp_dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=1; }
+    if [ -s "${Temp_Dir}/stdout" ]; then
+      cat "${Temp_Dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=true; }
     fi
 
-    if [ -s "${temp_dir}/stderr" ]; then
+    if [ -s "${Temp_Dir}/stderr" ]; then
       local terminal_sequence
 
       if [ -t 2 ] && terminal_sequence="$(tput setaf 9 2>/dev/null)"; then
         echo -n "${terminal_sequence}" >&2
       fi
 
-      cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=2; }
+      cat "${Temp_Dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
 
       if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
         echo -n "${terminal_sequence}" >&2
@@ -175,8 +175,8 @@ task::complete() {
     fi
   fi
 
-  if [ "${error_state}" != 0 ]; then
-    softfail "task::cleanup error state ${error_state}" || return $?
+  if [ "${error_state}" = true ]; then
+    softfail "Error reading STDOUT/STDERR in task::complete" || return $?
   fi
 }
 
@@ -184,8 +184,8 @@ task::complete() {
 task::complete_with_cleanup() {
   task::complete || softfail || return $?
 
-  if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
-    rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?
+  if [ "${Keep_Temp_Files:-"${RUNAG_TASK_KEEP_TEMP_FILES:-}"}" != true ]; then
+    rm -fd "${Temp_Dir}/stdout" "${Temp_Dir}/stderr" "${Temp_Dir}" || softfail || return $?
   fi
 }
 
@@ -193,7 +193,6 @@ task::function_sources() {
   cat <<SHELL || softfail || return $?
 $(declare -f task::run)
 $(declare -f task::install_filter)
-$(declare -f task::is_stderr_empty_after_filtering)
 $(declare -f task::detect_fail_state)
 $(declare -f task::rubygems_fail_detector)
 $(declare -f task::complete)
