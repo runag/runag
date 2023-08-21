@@ -92,66 +92,6 @@ softfail ()
 { 
     fail --wrapped-softfail "$@"
 }
-log::error () 
-{ 
-    local message="$1";
-    log::message --foreground-color 9 "${message}" 1>&2
-}
-log::warning () 
-{ 
-    local message="$1";
-    log::message --foreground-color 11 "${message}" 1>&2
-}
-log::notice () 
-{ 
-    local message="$1";
-    log::message --foreground-color 14 "${message}"
-}
-log::success () 
-{ 
-    local message="$1";
-    log::message --foreground-color 10 "${message}"
-}
-log::message () 
-{ 
-    local foreground_color="";
-    local background_color="";
-    local message="";
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in 
-            -f | --foreground-color)
-                test -t 1 && foreground_color="$(tput setaf "$2" 2>/dev/null)" || foreground_color="";
-                shift;
-                shift
-            ;;
-            -b | --background-color)
-                test -t 1 && background_color="$(tput setab "$2" 2>/dev/null)" || background_color="";
-                shift;
-                shift
-            ;;
-            -*)
-                echo "Unknown argument for log::message: $1" 1>&2;
-                shift;
-                message="$*";
-                break
-            ;;
-            *)
-                message="$1";
-                break
-            ;;
-        esac;
-    done;
-    if [ -z "${message}" ]; then
-        message="(empty log message)";
-    fi;
-    local reset_attrs;
-    test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs="";
-    echo "${foreground_color}${background_color}${message}${reset_attrs}"
-}
-log::elapsed_time () 
-{ 
-    log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
 
 deploy_script () 
 { 
