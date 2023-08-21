@@ -143,6 +143,7 @@ Please refer to the source code for now.
 * [cifs](lib/cifs.sh)
 * [rsync](lib/rsync.sh)
 * [ssh](lib/ssh.sh)
+* [ssh-call](lib/ssh-call.sh)
 * [syncthing](lib/syncthing.sh)
 * [tailscale](lib/tailscale.sh)
 
