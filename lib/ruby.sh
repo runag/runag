@@ -103,3 +103,27 @@ $(runag::print_license)
 export DISABLE_SPRING=true
 SHELL
 }
+
+# ---- fail detector ----
+
+ruby::gem() {
+  local exit_status
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  gem "$@" 2>"${temp_file}"
+  exit_status=$?
+
+  if [ "${exit_status}" != 0 ]; then
+    rm "${temp_file}" || softfail "Unable to remove temp file"
+    return "${exit_status}"
+  fi
+
+  if [ -s "${temp_file}" ]; then
+    cat "${temp_file}" >&2 || softfail "Unable to read STDERR output" || { rm "${temp_file}" || softfail "Unable to remove temp file"; return 1; }
+    if grep -q "^ERROR:" "${temp_file}"; then
+      rm "${temp_file}" || softfail "Unable to remove temp file"
+      softfail "Error found in rubygems output"
+      return $?
+    fi
+  fi
+}
