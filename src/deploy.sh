@@ -22,9 +22,9 @@ runag::deploy_sh_main() {
   fi
   set -o nounset
 
-  task::run --install-filter git::install_git || softfail || return $?
+  git::install_git || softfail || return $?
 
-  task::run --install-filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
+  git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
 
   deploy_script "$@"
   softfail --exit-status $? --unless-good
@@ -43,7 +43,6 @@ __xVhMyefCbBnZFUQtwqCs() {
 
 $(fail::function_sources)
 $(log::function_sources)
-$(task::function_sources)
 
 $(deploy_script::function_sources)
 

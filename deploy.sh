@@ -152,153 +152,6 @@ log::elapsed_time ()
 { 
     log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
 }
-task::run () 
-{ 
-    ( local short_title=false;
-    local task_title="";
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in 
-            -e | --stderr-filter)
-                local RUNAG_TASK_STDERR_FILTER="$2";
-                shift;
-                shift
-            ;;
-            -i | --install-filter)
-                local RUNAG_TASK_STDERR_FILTER=task::install_filter;
-                shift
-            ;;
-            -f | --fail-detector)
-                local RUNAG_TASK_FAIL_DETECTOR="$2";
-                shift;
-                shift
-            ;;
-            -r | --rubygems-fail-detector)
-                local RUNAG_TASK_FAIL_DETECTOR=task::rubygems_fail_detector;
-                shift
-            ;;
-            -t | --title)
-                task_title="$2";
-                shift;
-                shift
-            ;;
-            -s | --short-title)
-                short_title=true;
-                shift
-            ;;
-            -o | --omit-title)
-                local RUNAG_TASK_OMIT_TITLE=true;
-                shift
-            ;;
-            -k | --keep-temp-files)
-                local RUNAG_TASK_KEEP_TEMP_FILES=true;
-                shift
-            ;;
-            -v | --verbose)
-                local RUNAG_TASK_VERBOSE=true;
-                shift
-            ;;
-            -*)
-                softfail "Unknown argument: $1" || return $?
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    if [ "${short_title}" = true ]; then
-        task_title="$1";
-    fi;
-    if [ "${RUNAG_TASK_OMIT_TITLE:-}" != true ]; then
-        log::notice "Performing '${task_title:-"$*"}'..." || softfail || return $?;
-    fi;
-    local temp_dir;
-    temp_dir="$(mktemp -d)" || softfail || return $?;
-    trap "task::complete_with_cleanup" EXIT;
-    if [ -t 0 ]; then
-        ( "$@" ) < /dev/null > "${temp_dir}/stdout" 2> "${temp_dir}/stderr";
-    else
-        ( "$@" ) > "${temp_dir}/stdout" 2> "${temp_dir}/stderr";
-    fi;
-    local task_status=$?;
-    task::detect_fail_state "${temp_dir}/stdout" "${temp_dir}/stderr" "${task_status}";
-    local task_status=$?;
-    exit "${task_status}" )
-}
-task::install_filter () 
-{ 
-    grep -vFx "Success." | grep -vFx "Warning: apt-key output should not be parsed (stdout is not a terminal)" | grep -vx "Cloning into '.*'\\.\\.\\.";
-    if ! [[ "${PIPESTATUS[*]}" =~ ^([01][[:blank:]])*[01]$ ]]; then
-        softfail || return $?;
-    fi
-}
-task::is_stderr_empty_after_filtering () 
-{ 
-    local stderr_file="$1";
-    local stderr_size;
-    stderr_size="$("${RUNAG_TASK_STDERR_FILTER}" <"${stderr_file}" | awk NF | wc -c; test "${PIPESTATUS[*]}" = "0 0 0")" || fail;
-    if [ "${stderr_size}" != 0 ]; then
-        return 1;
-    fi
-}
-task::detect_fail_state () 
-{ 
-    local task_status="$3";
-    if [ -z "${RUNAG_TASK_FAIL_DETECTOR:-}" ]; then
-        return "${task_status}";
-    fi;
-    "${RUNAG_TASK_FAIL_DETECTOR}" "$@"
-}
-task::rubygems_fail_detector () 
-{ 
-    local stderr_file="$2";
-    local task_status="$3";
-    if [ "${task_status}" = 0 ] && [ -s "${stderr_file}" ] && grep -q "^ERROR:" "${stderr_file}"; then
-        return 1;
-    fi;
-    return "${task_status}"
-}
-task::complete () 
-{ 
-    local error_state=0;
-    local stderr_present=false;
-    if [ "${task_status:-1}" = 0 ] && [ -s "${temp_dir}/stderr" ]; then
-        stderr_present=true;
-        if [ -n "${RUNAG_TASK_STDERR_FILTER:-}" ] && task::is_stderr_empty_after_filtering "${temp_dir}/stderr"; then
-            stderr_present=false;
-        fi;
-    fi;
-    if [ "${task_status:-1}" != 0 ] || [ "${stderr_present}" = true ] || [ "${RUNAG_VERBOSE:-}" = true ] || [ "${RUNAG_TASK_VERBOSE:-}" = true ]; then
-        if [ -s "${temp_dir}/stdout" ]; then
-            cat "${temp_dir}/stdout" || { 
-                echo "Unable to display task stdout ($?)" 1>&2;
-                error_state=1
-            };
-        fi;
-        if [ -s "${temp_dir}/stderr" ]; then
-            local terminal_sequence;
-            if [ -t 2 ] && terminal_sequence="$(tput setaf 9 2>/dev/null)"; then
-                echo -n "${terminal_sequence}" 1>&2;
-            fi;
-            cat "${temp_dir}/stderr" 1>&2 || { 
-                echo "Unable to display task stderr ($?)" 1>&2;
-                error_state=2
-            };
-            if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
-                echo -n "${terminal_sequence}" 1>&2;
-            fi;
-        fi;
-    fi;
-    if [ "${error_state}" != 0 ]; then
-        softfail "task::cleanup error state ${error_state}" || return $?;
-    fi
-}
-task::complete_with_cleanup () 
-{ 
-    task::complete || softfail || return $?;
-    if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
-        rm -fd "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}" || softfail || return $?;
-    fi
-}
 
 deploy_script () 
 { 
@@ -314,7 +167,7 @@ deploy_script ()
 }
 deploy_script::add () 
 { 
-    task::run --install-filter runagfile::add "$1" || softfail || return $?;
+    runagfile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
     softfail --exit-status $? --unless-good
 }
@@ -326,11 +179,11 @@ deploy_script::run ()
 
 apt::install () 
 { 
-    task::run --title "apt-get install $*" sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
 }
 apt::update () 
 { 
-    task::run --title "apt-get update" sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
 }
 
 git::install_git () 
@@ -416,8 +269,8 @@ runag::deploy_sh_main ()
         set -o xtrace;
     fi;
     set -o nounset;
-    task::run --install-filter git::install_git || softfail || return $?;
-    task::run --install-filter git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
+    git::install_git || softfail || return $?;
+    git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     deploy_script "$@";
     softfail --exit-status $? --unless-good
 }

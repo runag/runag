@@ -27,7 +27,7 @@ deploy_script() {
 }
 
 deploy_script::add() {
-  task::run --install-filter runagfile::add "$1" || softfail || return $?
+  runagfile::add "$1" || softfail || return $?
 
   deploy_script "${@:2}"
   softfail --exit-status $? --unless-good

@@ -455,12 +455,32 @@ ssh::task() {
     return "${get_result_result}"
   fi
 
-  task::detect_fail_state "${temp_dir}/stdout" "${temp_dir}/stderr" "${task_status}"
-  task_status=$?
+  local error_state=false
 
-  task::complete || ssh::task::softfail "Unable to perform task::complete" || ssh::remove_temp_files $? || return $?
+  if [ -s "${temp_dir}/stdout" ]; then
+    cat "${temp_dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=true; }
+  fi
+
+  if [ -s "${temp_dir}/stderr" ]; then
+    local terminal_sequence
+
+    if [ -t 2 ] && terminal_sequence="$(tput setaf 9 2>/dev/null)"; then
+      echo -n "${terminal_sequence}" >&2
+    fi
+
+    cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
+
+    if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
+      echo -n "${terminal_sequence}" >&2
+    fi
+  fi
+
+  if [ "${error_state}" = true ]; then
+    ssh::task::softfail "Error reading STDOUT/STDERR in ssh::call" || ssh::remove_temp_files $? || return $?
+  fi
 
   # Note, that after that point we don't return any exit status other than task_status
+  
   if [ "${RUNAG_TASK_KEEP_TEMP_FILES:-}" != true ]; then
     ssh::task::invoke 'rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}/output_concat_good" "${temp_dir}/exit_status" "${temp_dir}/done" "${temp_dir}"' || ssh::task::softfail "Unable to remove remote temp files"
 
