@@ -186,10 +186,6 @@ Anywhere you put rùnag, the variable will reflect it actual location.
 If you put rùnag into your home directory them value will be `"${HOME}/.runag/bin"`.
 You could use that file as an executable or you could source that file in your scripts.
 
-#### `RUNAG_UPDATE_SECRETS`
-
-Could be set to `"true"`
-
 #### `RUNAG_VERBOSE`
 
 Could be set to `"true"`
@@ -221,8 +217,7 @@ Remote directory to run script in.
 
 Space-separated list of environment variable names, to be set in remote script
 with the values present in the calling rùnag instance at the moment of ssh call.
-For any provided names (or for absence of them),
-rùnag will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_VERBOSE"`.
+For any provided names (or for absence of them), rùnag will internaly add `"RUNAG_VERBOSE"`.
 
 #### `REMOTE_FORWARD_AGENT`
 

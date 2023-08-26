@@ -429,7 +429,7 @@ ssh::call::produce_script() {
   fi
 
   # env list
-  local env_list; IFS=" " read -r -a env_list <<<"${REMOTE_ENV:-} RUNAG_UPDATE_SECRETS RUNAG_VERBOSE" || softfail || return $?
+  local env_list; IFS=" " read -r -a env_list <<<"${REMOTE_ENV:-} RUNAG_VERBOSE" || softfail || return $?
 
   local env_list_item; for env_list_item in "${env_list[@]}"; do
     if [ -n "${!env_list_item:-}" ]; then
