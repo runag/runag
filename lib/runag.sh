@@ -27,11 +27,6 @@ $(declare -f file::write)
 SHELL
 }
 
-runag::with_update_secrets() {(
-  export RUNAG_UPDATE_SECRETS=true
-  "$@"
-)}
-
 runag::with_verbose() {(
   export RUNAG_VERBOSE=true
   "$@"
