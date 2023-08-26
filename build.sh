@@ -15,4 +15,5 @@
 #  limitations under the License.
 
 bash src/deploy.sh
+bash src/ssh-call.sh
 bash docs/make.sh

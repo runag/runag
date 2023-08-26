@@ -14,24 +14,32 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# log::test() {
+#   # 1356
+#   log::error log::error
+#   log::warning log::warning
+#   log::notice log::notice
+#   log::success log::success
+# }
+
 log::error() {
   local message="$1"
-  log::message --foreground-color 9 "${message}" >&2
+  log::message --foreground-color 1 "${message}" >&2
 }
 
 log::warning() {
   local message="$1"
-  log::message --foreground-color 11 "${message}" >&2
+  log::message --foreground-color 3 "${message}" >&2
 }
 
 log::notice() {
   local message="$1"
-  log::message --foreground-color 14 "${message}" 
+  log::message --foreground-color 6 "${message}" 
 }
 
 log::success() {
   local message="$1"
-  log::message --foreground-color 10 "${message}"
+  log::message --foreground-color 5 "${message}"
 }
 
 log::message() {

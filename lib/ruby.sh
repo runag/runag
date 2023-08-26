@@ -119,7 +119,7 @@ ruby::gem() {
   fi
 
   if [ -s "${temp_file}" ]; then
-    cat "${temp_file}" >&2 || softfail "Unable to read STDERR output" || { rm "${temp_file}" || softfail "Unable to remove temp file"; return 1; }
+    cat "${temp_file}" >&2 || softfail "Unable to read STDERR output from temp file: ${temp_file}" || return $?
     if grep -q "^ERROR:" "${temp_file}"; then
       rm "${temp_file}" || softfail "Unable to remove temp file"
       softfail "Error found in rubygems output"

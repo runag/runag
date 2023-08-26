@@ -56,11 +56,9 @@ rsync::sync() {
 }
 
 rsync::run() {
-  local ssh_args=()
-  ssh::set_ssh_args || softfail || return $?
+  local Ssh_Args=(); ssh::call::set_ssh_args || softfail || return $?
 
-  local ssh_args_string
-  printf -v ssh_args_string " '%s'" "${ssh_args[@]}" || softfail || return $?
+  local ssh_args_string; printf -v ssh_args_string " '%s'" "${Ssh_Args[@]}" || softfail || return $?
 
   rsync --rsh "ssh ${ssh_args_string:1}" "$@" || softfail || return $?
 }

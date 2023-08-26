@@ -20,10 +20,10 @@
 # --sudo
 # --keep-permissions
 dir::should_exists() {
-  local dir_mode=""
-  local dir_owner=""
-  local dir_group=""
-  local perhaps_sudo=""
+  local dir_mode
+  local dir_owner
+  local dir_group
+  local perhaps_sudo
   local keep_permissions=false
 
   while [[ "$#" -gt 0 ]]; do
@@ -41,7 +41,7 @@ dir::should_exists() {
       shift; shift
       ;;
     -s|--sudo)
-      perhaps_sudo=sudo
+      perhaps_sudo=true
       shift
       ;;
     -k|--keep-permissions)
@@ -59,22 +59,22 @@ dir::should_exists() {
 
   local dir_path="$1"
 
-  if ${perhaps_sudo} mkdir ${dir_mode:+-m "${dir_mode}"} "${dir_path}" 2>/dev/null; then
-    if [ -n "${dir_owner}" ]; then
-      ${perhaps_sudo} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
+  if ${perhaps_sudo:+"sudo"} mkdir ${dir_mode:+-m "${dir_mode}"} "${dir_path}" 2>/dev/null; then
+    if [ -n "${dir_owner:-}" ]; then
+      ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
     fi
   else
-    if ${perhaps_sudo} test ! -d "${dir_path}"; then
+    if ${perhaps_sudo:+"sudo"} test ! -d "${dir_path}"; then
       softfail "Unable to create directory" || return $?
     fi
 
     if [ "${keep_permissions}" = false ]; then
-      if [ -n "${dir_mode}" ]; then
-        ${perhaps_sudo} chmod "${dir_mode}" "${dir_path}" || softfail || return $?
+      if [ -n "${dir_mode:-}" ]; then
+        ${perhaps_sudo:+"sudo"} chmod "${dir_mode}" "${dir_path}" || softfail || return $?
       fi
 
-      if [ -n "${dir_owner}" ]; then
-        ${perhaps_sudo} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
+      if [ -n "${dir_owner:-}" ]; then
+        ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
       fi
     fi
   fi

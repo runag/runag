@@ -33,7 +33,7 @@ menu::select_and_run() {
     fi
   done
 
-  local prompt_color; test -t 1 && prompt_color="$(tput setaf 11 2>/dev/null)" || prompt_color=""
+  local prompt_color; test -t 1 && prompt_color="$(tput setaf 3 2>/dev/null)" || prompt_color=""
   local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
@@ -87,23 +87,26 @@ menu::select_and_run() {
 }
 
 menu::display_menu() {
-  local color_a; test -t 0 && color_a="$(tput setaf 13 2>/dev/null)" || color_a=""
-  local color_b; test -t 0 && color_b="$(tput setaf 15 2>/dev/null)" || color_b=""
+  # 1 - color a
+  # 3 - prompt
+  # 5 - header
+  # 6 - comment
 
-  local color_a_slight_accent; test -t 0 && color_a_slight_accent="$(tput setaf 13 2>/dev/null)" || color_a_slight_accent=""
-  local color_b_slight_accent; test -t 0 && color_b_slight_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_slight_accent=""
+  local color_a; test -t 0 && color_a="$(tput setaf 1 2>/dev/null)" || color_a=""
+  local color_b=""
 
-  local color_a_notable_accent; test -t 0 && color_a_notable_accent="$(printf "setaf 0\nsetab 5" | tput -S 2>/dev/null)" || color_a_notable_accent=""
-  local color_b_notable_accent; test -t 0 && color_b_notable_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_notable_accent=""
+  local color_a_accent; test -t 0 && color_a_accent="$(printf "setaf 15\nsetab 1" | tput -S 2>/dev/null)" || color_a_accent=""
+  local color_b_accent; test -t 0 && color_b_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_accent=""
 
-  local header_color; test -t 0 && header_color="$(tput setaf 14 2>/dev/null)" || header_color=""
-  local comment_color; test -t 0 && comment_color="$(tput setaf 10 2>/dev/null)" || comment_color=""
+  local header_color; test -t 0 && header_color="$(tput setaf 5 2>/dev/null)" || header_color=""
+  local comment_color; test -t 0 && comment_color="$(tput setaf 6 2>/dev/null)" || comment_color=""
 
   local reset_attrs; test -t 0 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   local item index=1
-  local current_color="" current_color_slight_accent="" current_color_notable_accent=""
-  local endline_sticker=""
+  local current_color=""
+  local current_color_accent
+  local endline_sticker
   local last_line_was_header=false
 
   for item in "$@"; do
@@ -145,12 +148,10 @@ menu::display_menu() {
       # menu item
       if [ "${current_color}" = "${color_a}" ]; then
         current_color="${color_b}"
-        current_color_slight_accent="${color_b_slight_accent}"
-        current_color_notable_accent="${color_b_notable_accent}"
+        current_color_accent="${color_b_accent}"
       else
         current_color="${color_a}"
-        current_color_slight_accent="${color_a_slight_accent}"
-        current_color_notable_accent="${color_a_notable_accent}"
+        current_color_accent="${color_a_accent}"
       fi
 
       if [[ "${item}" =~ [^\\]\#([[:digit:]]+)\#$ ]]; then
@@ -163,12 +164,12 @@ menu::display_menu() {
       fi
 
       if [ ${#item} -gt 80 ]; then
-        endline_sticker=" ${current_color_notable_accent} #$((index))${reset_attrs}"
+        endline_sticker=" ${current_color_accent} #$((index))${reset_attrs}"
       else
         endline_sticker=""
       fi
 
-      echo "  ${current_color_slight_accent} $((index)))${reset_attrs} ${current_color}${item}${reset_attrs}${endline_sticker}"
+      echo "  ${current_color} $((index))) ${item}${reset_attrs}${endline_sticker}"
 
       last_line_was_header=false
 

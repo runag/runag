@@ -15,4 +15,4 @@
 #  limitations under the License.
 
 # shellcheck disable=SC2046
-shellcheck index.sh bin/* $(find lib -name '*.sh') $(find src -name '*.sh')
+shellcheck index.sh bin/runag $(find lib -name '*.sh') $(find src -name '*.sh')
