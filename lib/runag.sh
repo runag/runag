@@ -27,11 +27,6 @@ $(declare -f file::write)
 SHELL
 }
 
-runag::with_verbose() {(
-  export RUNAG_VERBOSE=true
-  "$@"
-)}
-
 runag::print_license() {
   cat <<SHELL
 #  Copyright 2012-2022 Rùnag project contributors
