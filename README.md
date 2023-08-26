@@ -222,22 +222,37 @@ Remote directory to run script in.
 Space-separated list of environment variable names, to be set in remote script
 with the values present in the calling rùnag instance at the moment of ssh call.
 For any provided names (or for absence of them),
-rùnag will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_TASK_VERBOSE RUNAG_VERBOSE RUNAG_STDOUT_IS_TERMINAL RUNAG_STDERR_IS_TERMINAL"`.
+rùnag will internaly add `"RUNAG_UPDATE_SECRETS RUNAG_VERBOSE"`.
+
+#### `REMOTE_FORWARD_AGENT`
+
+Could be set to `"true"`
 
 #### `REMOTE_HOST`
 
 Host name, for example `"example.com"`.
-This variable is required to be set.
 
 #### `REMOTE_IDENTITY_FILE`
 
 Path to identity file, for example `"${HOME}/.ssh/id_ed25519"`.
 By default rùnag will not provide any identity file path so ssh could use it's defaults.
 
+#### `REMOTE_KEEP_TEMP_FILES`
+
+Could be set to `"true"`
+
 #### `REMOTE_PORT`
 
 Port number. 
 By default rùnag will not provide any port number so ssh could use it's defaults.
+
+#### `REMOTE_RECONNECT_DELAY`
+
+Integer (could be float but that depends on your `sleep` command implementation).
+
+#### `REMOTE_RECONNECT_TIME_LIMIT`
+
+Seconds, integer
 
 #### `REMOTE_SERVER_ALIVE_INTERVAL`
 
@@ -272,45 +287,6 @@ Array of strings, for example `("--archive")`
 Could be set to `"true"`
 
 #### `RUNAG_RSYNC_WITHOUT_CHECKSUMS`
-
-Could be set to `"true"`
-
-
-### Tasks-related variables
-
-#### `RUNAG_TASK_FAIL_DETECTOR`
-
-Could be set to function name. The function will be called with 3 arguments:
-
-```
-$1 # stdout_file (path fo file)
-$2 # stderr_file (path fo file)
-$3 # task_status (integer exit status)
-```
-
-The function must return new exit status which will be assumed to be an exit status of the task.
-
-#### `RUNAG_TASK_KEEP_TEMP_FILES`
-
-Could be set to `"true"`
-
-#### `RUNAG_TASK_OMIT_TITLE`
-
-Could be set to `"true"`
-
-#### `RUNAG_TASK_RECONNECT_ATTEMPTS`
-
-Integer
-
-#### `RUNAG_TASK_RECONNECT_DELAY`
-
-Integer (could be float but that depends on your `sleep` command implementation).
-
-#### `RUNAG_TASK_STDERR_FILTER`
-
-Could be set to function name. Function is expected to filter it's input. If function output is empty then stderr will not be displayed.
-
-#### `RUNAG_TASK_VERBOSE`
 
 Could be set to `"true"`
 
