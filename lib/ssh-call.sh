@@ -74,7 +74,7 @@ ssh::call() {
   
   local exit_status=$?
 
-  softfail --unless-good --exit-status "${exit_status}"
+  # softfail --unless-good --exit-status "${exit_status}"
 
   if [ "${keep_temp_files}" != true ]; then
     rm -fd \
@@ -91,6 +91,7 @@ ssh::call() {
 ssh::call::internal() {
   local produce_script_args=()
   local direct_mode=false
+  local terminal_mode=false
   local keep_temp_files=false
   local temp_dir
   local upload_path
@@ -104,6 +105,10 @@ ssh::call::internal() {
         ;;
       --direct)
         direct_mode=true
+        shift
+        ;;
+      --terminal)
+        terminal_mode=true
         shift
         ;;
       --keep-temp-files)
@@ -210,187 +215,196 @@ ssh::call::internal() {
     softfail "Unable to get remote temp file name" || return $?
   fi
 
+  if [ "${terminal_mode}" = true ]; then
+    ssh::call::invoke --terminal "${remote_temp_dir}" "${ssh_destination}" 'bash "${temp_dir}/script"'
+    local task_status=$?
 
-  # read local stdin and upload to remote
-  local remote_stdin_file="/dev/null"
-  if [ ! -t 0 ]; then
-    cat >"${temp_dir}/stdin" || softfail "Unable to read stdin" || return $?
+  elif [ "${direct_mode}" = true ]; then
+    ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'bash "${temp_dir}/script"'
+    local task_status=$?
 
-    if [ -s "${temp_dir}/stdin" ]; then
-      local stdin_checksum
+  else
+    # read local stdin and upload to remote
+    local remote_stdin_file="/dev/null"
+    if [ ! -t 0 ]; then
+      cat >"${temp_dir}/stdin" || softfail "Unable to read stdin" || return $?
 
-      stdin_checksum="$(cksum <"${temp_dir}/stdin")" || softfail "Unable to get stdin checksum" || return $?
+      if [ -s "${temp_dir}/stdin" ]; then
+        local stdin_checksum
 
-      <"${temp_dir}/stdin" ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" \
-        'cat >"${temp_dir}/stdin"; if [ "$(cksum <"${temp_dir}/stdin")" != %q ]; then exit 254; fi' "${stdin_checksum}" \
-          || softfail --exit-status $? "Unable to store stdin data on remote" || return $?
+        stdin_checksum="$(cksum <"${temp_dir}/stdin")" || softfail "Unable to get stdin checksum" || return $?
 
-      remote_stdin_file="${remote_temp_dir}/stdin"
-    fi
-  fi
+        <"${temp_dir}/stdin" ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" \
+          'cat >"${temp_dir}/stdin"; if [ "$(cksum <"${temp_dir}/stdin")" != %q ]; then exit 254; fi' "${stdin_checksum}" \
+            || softfail --exit-status $? "Unable to store stdin data on remote" || return $?
 
-
-  # run script
-  ssh::call::invoke --nohup "${remote_temp_dir}" "${ssh_destination}" \
-    'bash "${temp_dir}/script" <%q >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"; script_status=$?; echo "${script_status}" >"${temp_dir}/exit_status"; touch "${temp_dir}/done"; exit "${script_status}"' \
-    "${remote_stdin_file}"
-
-  local task_status=$?
-
-  local task_status_retrieved=false
-  local stdout_retrieved=false
-  local stderr_retrieved=false
-
-  local call_result
-
-  if [ "${task_status}" != 255 ]; then
-    task_status_retrieved=true
-  fi
-
-  local started_at="${SECONDS}"
-  local retry_limit="${REMOTE_RECONNECT_TIME_LIMIT:-600}"
-  local first_run=true
-
-  while true; do
-    if [ "${first_run}" = true ]; then
-      first_run=false
-    else
-      sleep "${REMOTE_RECONNECT_DELAY:-5}"
-
-      if [ "$(( SECONDS - started_at ))" -ge "${retry_limit}" ]; then
-        softfail "Unable to obtain task result, maximum time limit reached"
-        return 1
+        remote_stdin_file="${remote_temp_dir}/stdin"
       fi
-
-      log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)..." >&2
     fi
 
-    # retrieve exit status
-    if [ "${task_status_retrieved}" = false ]; then
-      ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -f "${temp_dir}/done"'
-      call_result=$?
 
-      if [ "${call_result}" = 255 ]; then
-        continue
-      elif [ "${call_result}" != 0 ]; then
+    # run script
+    ssh::call::invoke --nohup "${remote_temp_dir}" "${ssh_destination}" \
+      'bash "${temp_dir}/script" <%q >"${temp_dir}/stdout" 2>"${temp_dir}/stderr"; script_status=$?; echo "${script_status}" >"${temp_dir}/exit_status"; touch "${temp_dir}/done"; exit "${script_status}"' \
+      "${remote_stdin_file}"
 
-        # check if script is still around
-        ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -d "${temp_dir}"'
-        call_result=$?
+    local task_status=$?
 
-        if [ "${call_result}" != 0 ] && [ "${call_result}" != 255 ]; then
-          softfail "Unable to find remote task state directory, remote host may have been rebooted"
-          return 1
-        fi
+    local task_status_retrieved=false
+    local stdout_retrieved=false
+    local stderr_retrieved=false
 
-        # check if script is started at all
-        ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -f "${temp_dir}/stdout"'
-        call_result=$?
+    local call_result
 
-        if [ "${call_result}" != 0 ] && [ "${call_result}" != 255 ]; then
-          softfail "It seems that the remote command did not even start"
-          return 1
-        fi
-
-        continue
-      fi
-
-      task_status="$(ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat "${temp_dir}/exit_status"')"
-      call_result=$?
-
-      if [ "${call_result}" = 255 ]; then
-        continue
-      elif [ "${call_result}" != 0 ]; then
-        softfail "Unable to obtain exit status from remote"
-        return 1
-      fi
-
-      if ! [[ "${task_status}" =~ ^[0-9]+$ ]]; then
-        task_status=1
-      fi
-
+    if [ "${task_status}" != 255 ]; then
       task_status_retrieved=true
     fi
 
-    # retrieve stdout
-    if [ "${stdout_retrieved}" = false ]; then
-      ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat "${temp_dir}/stdout"' >"${temp_dir}/stdout"
+    local started_at="${SECONDS}"
+    local retry_limit="${REMOTE_RECONNECT_TIME_LIMIT:-600}"
+    local first_run=true
+
+    while true; do
+      if [ "${first_run}" = true ]; then
+        first_run=false
+      else
+        sleep "${REMOTE_RECONNECT_DELAY:-5}"
+
+        if [ "$(( SECONDS - started_at ))" -ge "${retry_limit}" ]; then
+          softfail "Unable to obtain task result, maximum time limit reached"
+          return 1
+        fi
+
+        log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)..." >&2
+      fi
+
+      # retrieve exit status
+      if [ "${task_status_retrieved}" = false ]; then
+        ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -f "${temp_dir}/done"'
+        call_result=$?
+
+        if [ "${call_result}" = 255 ]; then
+          continue
+        elif [ "${call_result}" != 0 ]; then
+
+          # check if script is still around
+          ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -d "${temp_dir}"'
+          call_result=$?
+
+          if [ "${call_result}" != 0 ] && [ "${call_result}" != 255 ]; then
+            softfail "Unable to find remote task state directory, remote host may have been rebooted"
+            return 1
+          fi
+
+          # check if script is started at all
+          ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -f "${temp_dir}/stdout"'
+          call_result=$?
+
+          if [ "${call_result}" != 0 ] && [ "${call_result}" != 255 ]; then
+            softfail "It seems that the remote command did not even start"
+            return 1
+          fi
+
+          continue
+        fi
+
+        task_status="$(ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat "${temp_dir}/exit_status"')"
+        call_result=$?
+
+        if [ "${call_result}" = 255 ]; then
+          continue
+        elif [ "${call_result}" != 0 ]; then
+          softfail "Unable to obtain exit status from remote"
+          return 1
+        fi
+
+        if ! [[ "${task_status}" =~ ^[0-9]+$ ]]; then
+          task_status=1
+        fi
+
+        task_status_retrieved=true
+      fi
+
+      # retrieve stdout
+      if [ "${stdout_retrieved}" = false ]; then
+        ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat "${temp_dir}/stdout"' >"${temp_dir}/stdout"
+        call_result=$?
+
+        if [ "${call_result}" = 255 ]; then
+          continue
+        elif [ "${call_result}" != 0 ]; then
+          softfail "Unable to obtain stdout from remote"
+          return 1
+        fi
+
+        stdout_retrieved=true
+      fi
+
+      # retrieve stderr
+      if [ "${stderr_retrieved}" = false ]; then
+        ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat "${temp_dir}/stderr"' >"${temp_dir}/stderr"
+        call_result=$?
+
+        if [ "${call_result}" = 255 ]; then
+          continue
+        elif [ "${call_result}" != 0 ]; then
+          softfail "Unable to obtain stderr from remote"
+          return 1
+        fi
+
+        stderr_retrieved=true
+      fi
+
+      # retrieve output checksum
+      local remote_checksum
+      local local_checksum
+
+      # there is no PIPESTATUS in posix shell so output_concat_good flag file is used
+      remote_checksum="$(ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" '{ cat "${temp_dir}/stdout" "${temp_dir}/stderr" && touch "${temp_dir}/output_concat_good"; } | cksum && test -f "${temp_dir}/output_concat_good"')"
       call_result=$?
 
       if [ "${call_result}" = 255 ]; then
         continue
       elif [ "${call_result}" != 0 ]; then
-        softfail "Unable to obtain stdout from remote"
+        softfail "Unable to obtain checksums from remote"
         return 1
       fi
 
-      stdout_retrieved=true
-    fi
+      local_checksum="$(cat "${temp_dir}/stdout" "${temp_dir}/stderr" | cksum; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to get local output checksum" || return $?
 
-    # retrieve stderr
-    if [ "${stderr_retrieved}" = false ]; then
-      ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat "${temp_dir}/stderr"' >"${temp_dir}/stderr"
-      call_result=$?
-
-      if [ "${call_result}" = 255 ]; then
-        continue
-      elif [ "${call_result}" != 0 ]; then
-        softfail "Unable to obtain stderr from remote"
+      if [ "${remote_checksum}" != "${local_checksum}" ]; then
+        softfail "Output checksum mismatch"
         return 1
       fi
 
-      stderr_retrieved=true
+      break
+    done
+
+    # display output
+    local error_state=false
+
+    if [ -s "${temp_dir}/stdout" ]; then
+      cat "${temp_dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=true; }
     fi
 
-    # retrieve output checksum
-    local remote_checksum
-    local local_checksum
+    if [ -s "${temp_dir}/stderr" ]; then
+      local terminal_sequence
 
-    # there is no PIPESTATUS in posix shell so output_concat_good flag file is used
-    remote_checksum="$(ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" '{ cat "${temp_dir}/stdout" "${temp_dir}/stderr" && touch "${temp_dir}/output_concat_good"; } | cksum && test -f "${temp_dir}/output_concat_good"')"
-    call_result=$?
+      if [ -t 2 ] && terminal_sequence="$(tput setaf 1 2>/dev/null)"; then
+        echo -n "${terminal_sequence}" >&2
+      fi
 
-    if [ "${call_result}" = 255 ]; then
-      continue
-    elif [ "${call_result}" != 0 ]; then
-      softfail "Unable to obtain checksums from remote"
+      cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
+
+      if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
+        echo -n "${terminal_sequence}" >&2
+      fi
+    fi
+
+    if [ "${error_state}" = true ]; then
+      softfail "Error reading STDOUT/STDERR in ssh::call"
       return 1
     fi
-
-    local_checksum="$(cat "${temp_dir}/stdout" "${temp_dir}/stderr" | cksum; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to get local output checksum" || return $?
-
-    if [ "${remote_checksum}" != "${local_checksum}" ]; then
-      softfail "Output checksum mismatch"
-      return 1
-    fi
-
-    break
-  done
-
-  # display output
-  local error_state=false
-
-  if [ -s "${temp_dir}/stdout" ]; then
-    cat "${temp_dir}/stdout" || { echo "Unable to display task stdout ($?)" >&2; error_state=true; }
-  fi
-
-  if [ -s "${temp_dir}/stderr" ]; then
-    local terminal_sequence
-
-    if [ -t 2 ] && terminal_sequence="$(tput setaf 1 2>/dev/null)"; then
-      echo -n "${terminal_sequence}" >&2
-    fi
-
-    cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
-
-    if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
-      echo -n "${terminal_sequence}" >&2
-    fi
-  fi
-
-  if [ "${error_state}" = true ]; then
-    softfail "Error reading STDOUT/STDERR in ssh::call"
-    return 1
   fi
 
   # Note, that after that point we don't return any exit status other than task_status
@@ -530,11 +544,16 @@ ssh::call::interactive_terminal_functions_filter() {
 
 ssh::call::invoke() {
   local nohup_mode=false
+  local terminal_mode
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
       --nohup)
         nohup_mode=true
+        shift
+        ;;
+      --terminal)
+        terminal_mode=true
         shift
         ;;
       -*)
@@ -559,7 +578,7 @@ ssh::call::invoke() {
   fi
 
   # shellcheck disable=2029
-  ssh "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "${command_string}")"
+  ssh ${terminal_mode:+"-t"} "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "${command_string}")"
 }
 
 ssh::call::function_sources() {
