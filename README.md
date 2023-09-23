@@ -271,21 +271,6 @@ User name.
 By default rùnag will not provide any user name so ssh could use it's defaults.
 
 
-### Rsync-related variables
-
-#### `RUNAG_RSYNC_ARGS`
-
-Array of strings, for example `("--archive")`
-
-#### `RUNAG_RSYNC_DELETE_AND_BACKUP`
-
-Could be set to `"true"`
-
-#### `RUNAG_RSYNC_WITHOUT_CHECKSUMS`
-
-Could be set to `"true"`
-
-
 ## License
 
 [Apache License, Version 2.0](LICENSE).

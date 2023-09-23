@@ -14,53 +14,66 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-rsync::sync_to_remote() {
-  rsync::sync "$1" "${REMOTE_HOST:-}:$2" || softfail || return $?
-}
-
-rsync::sync_from_remote() {
-  rsync::sync "${REMOTE_HOST:-}:$1" "$2" || softfail || return $?
-}
-
-rsync::set_rsync_args() {
-  if [ "${RUNAG_RSYNC_DELETE_AND_BACKUP:-}" = "true" ]; then
-    local timestamp; timestamp="$(date --utc +"%Y%m%dT%H%M%SZ")" || softfail || return $?
-
-    rsync_args+=("--delete")
-    rsync_args+=("--backup")
-    rsync_args+=("--backup-dir=.runag-rsync-backups/${timestamp}")
-    rsync_args+=("--filter=protect_.runag-rsync-backups")
-  fi
-
-  if [ "${RUNAG_RSYNC_WITHOUT_CHECKSUMS:-}" != "true" ]; then
-    rsync_args+=("--checksum")
-  fi
-
-  if declare -p RUNAG_RSYNC_ARGS >/dev/null 2>&1; then
-    rsync_args=("${rsync_args[@]}" "${RUNAG_RSYNC_ARGS[@]}")
-  fi
-}
-
 rsync::sync() {
+  local from_remote=false
+  local to_remote=false
   local rsync_args=()
 
-  rsync::set_rsync_args || softfail || return $?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+    --from-remote)
+      from_remote=true
+      shift
+      ;;
+    --to-remote)
+      to_remote=true
+      shift
+      ;;
+    -*)
+      rsync_args+=("$1")
+      shift
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
 
-  rsync::run \
-    --links \
-    --perms \
-    --recursive \
-    --times \
+  # TODO: account for multiple sources
+  local sources_and_destination
+  if [ "${from_remote}" = true ]; then
+    sources_and_destination=("${REMOTE_HOST:+"${REMOTE_HOST}:"}$1" "$2")
+  elif [ "${to_remote}" = true ]; then
+    sources_and_destination=("$1" "${REMOTE_HOST:+"${REMOTE_HOST}:"}$2")
+  else
+    sources_and_destination=("$@")
+  fi
+
+  local Default_Rsync_Args; rsync::set_default_args || softfail || return $? # NOTE: strange transgressive variable
+  local rsh_string; rsh_string="$(rsync::rsh_string)" || softfail || return $?
+
+  rsync \
+    --rsh "${rsh_string}" \
+    "${Default_Rsync_Args[@]}" \
     "${rsync_args[@]}" \
-    "$@" || softfail || return $?
+    "${sources_and_destination[@]}" \
+      || softfail || return $?
 }
 
-rsync::run() {
-  local Ssh_Args=(); ssh::call::set_ssh_args || softfail || return $?
-
-  local ssh_args_string; printf -v ssh_args_string " '%s'" "${Ssh_Args[@]}" || softfail || return $?
-
-  rsync --rsh "ssh ${ssh_args_string:1}" "$@" || softfail || return $?
+rsync::set_default_args() {
+  Default_Rsync_Args=(--checksum --delete --links --perms --recursive --safe-links --times)
 }
 
-# REMOTE_HOST=example.com runag rsync::upload ~/.runag/ .runag
+rsync::rsh_string() {
+  local Ssh_Args=() # NOTE: strange transgressive variable
+  
+  ssh::call::set_ssh_args || softfail || return $?
+
+  local rsh_string=""
+
+  local ssh_arg; for ssh_arg in "${Ssh_Args[@]}"; do
+    rsh_string+=" '$(<<<"${ssh_arg}" sed -E "s/'/''/")'" || softfail || return $?
+  done
+
+  echo "ssh ${rsh_string:1}" || softfail || return $?
+}

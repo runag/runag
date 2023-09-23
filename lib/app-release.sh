@@ -193,5 +193,5 @@ app_release::sync_to_remote() {
   local source_path="$1"
   local dest_path="${2:-"$1"}"
 
-  rsync::sync_to_remote "${source_path}" "${app_release_path}/${dest_path}" || softfail || return $?
+  rsync::sync --to-remote "${source_path}" "${app_release_path}/${dest_path}" || softfail || return $?
 }
