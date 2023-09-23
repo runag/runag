@@ -93,6 +93,7 @@ ssh::call::internal() {
   local direct_mode=false
   local keep_temp_files=false
   local temp_dir
+  local upload_path
   local ssh_destination
 
   while [[ "$#" -gt 0 ]]; do
@@ -113,6 +114,10 @@ ssh::call::internal() {
         temp_dir="$2"
         shift; shift
         ;;
+      --upload)
+        upload_path="$2"
+        shift; shift
+        ;;
       -*)
         softfail "Unknown argument: $1" || return $?
         ;;
@@ -127,6 +132,54 @@ ssh::call::internal() {
   else
     ssh_destination="$1"
     shift
+  fi
+
+
+  # upload files if needed
+  local resolved_upload_path
+  local rsync_ssh_args_string
+  local upload_remote_temp
+  local upload_rsync_dest
+  local upload_rsync_src
+  local upload_basename
+
+  if [ -n "${upload_path:-}" ]; then
+
+    if [ -d "${upload_path}" ]; then
+      resolved_upload_path="$(cd "${upload_path}" >/dev/null 2>&1 && pwd)" || softfail "Unable to resolve upload directory: ${upload_path}" || return $?
+      upload_basename="$(basename "${resolved_upload_path}")" || softfail || return $?
+
+      if [ "${upload_basename}" = "/" ]; then
+        upload_basename=root
+      fi
+
+      upload_rsync_src="${resolved_upload_path}/"
+    else
+      upload_basename="$(basename "${upload_path}")" || softfail || return $?
+      upload_rsync_src="${upload_path}"
+    fi
+
+    upload_remote_temp="$(ssh "${Ssh_Args[@]}" "${ssh_destination}" "mktemp -d")" \
+      || softfail --exit-status $? "Unable to create remote temp directory for file upload" || return $?
+
+    upload_rsync_dest="${upload_remote_temp}/${upload_basename}"
+
+    local ssh_args_item; for ssh_args_item in "${Ssh_Args[@]}"; do
+      rsync_ssh_args_string+=" '$(<<<"${ssh_args_item}" sed -E "s/'/''/")'" || softfail || return $?
+    done
+
+    rsync \
+      --rsh "ssh ${rsync_ssh_args_string:1}" \
+      --checksum \
+      --links \
+      --perms \
+      --recursive \
+      --safe-links \
+      --times \
+      "${upload_rsync_src}" "${ssh_destination}:${upload_rsync_dest}" || softfail || return $?
+
+    set -- "$@" "${upload_rsync_dest}"
+ 
   fi
 
 
@@ -346,6 +399,12 @@ ssh::call::internal() {
   if [ "${keep_temp_files}" != true ]; then
     ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}/output_concat_good" "${temp_dir}/exit_status" "${temp_dir}/done" "${temp_dir}"'
     softfail --unless-good --exit-status $? "Unable to remove remote temp files"
+
+    if [ -n "${upload_remote_temp:-}" ]; then
+      # shellcheck disable=2029
+      ssh "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "$(printf "rm -rf %q" "${upload_remote_temp}")")"
+      softfail --unless-good --exit-status $? "Unable to remove remote temp directory for file upload"
+    fi
   fi
 
   return "${task_status}"
