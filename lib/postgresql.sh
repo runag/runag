@@ -47,53 +47,85 @@ postgresql::install_dictionaries() {
   fi
 }
 
-psql_su() {
-  postgresql::psql_su "$@" || softfail || return $?
-}
-
-postgresql::psql_su() {
-  if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    if [ -n "${SUDO_USER:-}" ]; then
-      local user_name="${SUDO_USER}"
-    else
-      local user_name="${USER}"
-    fi
-  else
-    local user_name=postgres
-  fi
-  
-  sudo -i -u "${user_name}" psql --username "${user_name}" --set ON_ERROR_STOP=on "$@" || softfail || return $?
-}
-
-postgresql::psql_su_run() {
-  postgresql::psql_su --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return $?
-}
-
 postgresql::psql() {
-  psql --set ON_ERROR_STOP=on "$@" || softfail || return $?
-}
+  local psql_command=(psql --set ON_ERROR_STOP=on)
+  local arguments_list=()
 
-postgresql::psql_run() {
-  postgresql::psql --no-align --echo-errors --quiet --tuples-only --command "$@" || softfail || return $?
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+      --sudo)
+        local user_name
+
+        if [[ "${OSTYPE}" =~ ^darwin ]]; then
+          if [ -n "${SUDO_USER:-}" ]; then
+            user_name="${SUDO_USER}"
+          else
+            user_name="${USER}"
+          fi
+        else
+          user_name=postgres
+        fi
+
+        psql_command=(sudo -i -u "${user_name}" psql --username "${user_name}" --set ON_ERROR_STOP=on)
+
+        shift
+        ;;
+      --query)
+        arguments_list=(--no-align --echo-errors --quiet --tuples-only --command "$2")
+        shift; shift
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  "${psql_command[@]}" "${arguments_list[@]}" "$@"
 }
 
 # TODO: Library users probably will not have any untrusted input here, but perhaps I should account for possible SQL injections
 
 postgresql::create_role_if_not_exists() {
-  local user_name="$1"
-  if ! postgresql::is_role_exists "${user_name}"; then
-    postgresql::psql_su_run "CREATE ROLE ${user_name} ${*:2}" postgres || softfail || return $?
+  local with_string
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+      --with)
+        with_string="WITH $2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  local role_name="${1:-"${PGUSER:-"${USER}"}"}"
+  
+  if ! postgresql::is_role_exists "${role_name}"; then
+    postgresql::psql --sudo --query "CREATE ROLE ${user_name} ${with_string:-}" --dbname postgres || softfail || return $?
   fi
 }
 
 postgresql::is_role_exists() {
-  local role_name="${1:-"${PGUSER}"}"
-  local role_exists; role_exists="$(postgresql::psql_su_run "SELECT 1 FROM pg_roles WHERE rolname='${role_name}'" postgres)" || fail --exit-status 2 "Unable to query postgresql" # no softfail here!
+  local role_name="${1:-"${PGUSER:-"${USER}"}"}"
+
+  local role_exists
+
+  role_exists="$(postgresql::psql --sudo --query "SELECT 1 FROM pg_roles WHERE rolname='${role_name}'" --dbname postgres)" || fail --exit-status 2 "Unable to query postgresql" # no softfail here!
+
   test "${role_exists}" = 1
 }
 
 postgresql::is_database_exists() {
   local database_name="${1:-"${PGDATABASE}"}"
-  local database_exists; database_exists="$(postgresql::psql_run "SELECT 1 FROM pg_database WHERE datname='${database_name}'" postgres)" || fail --exit-status 2 "Unable to query postgresql" # no softfail here!
+
+  local database_exists
+  
+  database_exists="$(postgresql::psql --query "SELECT 1 FROM pg_database WHERE datname='${database_name}'" --dbname postgres)" || fail --exit-status 2 "Unable to query postgresql" # no softfail here!
+
   test "${database_exists}" = 1
 }
