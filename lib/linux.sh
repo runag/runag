@@ -44,37 +44,28 @@ linux::set_hostname() {
   file::write --sudo --keep-permissions --mode 0644 --absorb "${temp_file}" "${hosts_file}" || softfail || return $?
 }
 
-linux::update_locale_lang() {
-  local lang="$1"
-  sudo locale-gen "${lang}" || softfail || return $?
-  sudo update-locale "LANG=${lang}" || softfail || return $?
-  export LANG="${lang}"
+linux::update_locale() {
+  local locale_kind="$1"
+  local locale_name="$2"
+
+  sudo locale-gen "${locale_name}" || softfail || return $?
+  sudo update-locale "${locale_kind}=${locale_name}" || softfail || return $?
+
+  eval "export ${locale_kind}=\${locale_name}"
 }
 
-linux::update_locale_categories() {
-  local lang="$1"
-  sudo locale-gen "${lang}" || softfail || return $?
-  sudo update-locale \
-    "LC_ADDRESS=${lang}" \
-    "LC_IDENTIFICATION=${lang}" \
-    "LC_MEASUREMENT=${lang}" \
-    "LC_MONETARY=${lang}" \
-    "LC_NAME=${lang}" \
-    "LC_NUMERIC=${lang}" \
-    "LC_PAPER=${lang}" \
-    "LC_TELEPHONE=${lang}" \
-    "LC_TIME=${lang}" \
-      || softfail || return $?
+linux::update_locale::all_categories() {
+  local locale_name="$1"
 
-  export LC_ADDRESS="${lang}"
-  export LC_IDENTIFICATION="${lang}"
-  export LC_MEASUREMENT="${lang}"
-  export LC_MONETARY="${lang}"
-  export LC_NAME="${lang}"
-  export LC_NUMERIC="${lang}"
-  export LC_PAPER="${lang}"
-  export LC_TELEPHONE="${lang}"
-  export LC_TIME="${lang}"
+  linux::update_locale LC_ADDRESS "${locale_name}" || softfail || return $?
+  linux::update_locale LC_IDENTIFICATION "${locale_name}" || softfail || return $?
+  linux::update_locale LC_MEASUREMENT "${locale_name}" || softfail || return $?
+  linux::update_locale LC_MONETARY "${locale_name}" || softfail || return $?
+  linux::update_locale LC_NAME "${locale_name}" || softfail || return $?
+  linux::update_locale LC_NUMERIC "${locale_name}" || softfail || return $?
+  linux::update_locale LC_PAPER "${locale_name}" || softfail || return $?
+  linux::update_locale LC_TELEPHONE "${locale_name}" || softfail || return $?
+  linux::update_locale LC_TIME "${locale_name}" || softfail || return $?
 }
 
 linux::configure_inotify() {
