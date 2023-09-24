@@ -48,7 +48,11 @@ linux::update_locale() {
   local locale_kind="$1"
   local locale_name="$2"
 
-  sudo locale-gen "${locale_name}" || softfail || return $?
+  if ! locale -a | sed -E 's/\.utf8$/.UTF-8/' | grep -qFx "${locale_name}"; then
+    sudo locale-gen "${locale_name}" || softfail || return $?
+  fi
+
+  # TODO: Skip if already set
   sudo update-locale "${locale_kind}=${locale_name}" || softfail || return $?
 
   eval "export ${locale_kind}=\${locale_name}"
