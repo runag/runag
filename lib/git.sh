@@ -42,7 +42,7 @@ git::create_or_update_mirror() {
   local dest_path="$2"
 
   if [ -d "${dest_path}" ]; then
-    git -C "${dest_path}" remote update || softfail || return $?
+    (cd "${dest_path}" && git remote update) || softfail || return $?
   else
     git clone --mirror "${source_url}" "${dest_path}" || softfail || return $?
   fi
@@ -70,7 +70,7 @@ git::place_up_to_date_clone() {
   local dest_path="$2"
 
   if [ -d "${dest_path}" ]; then
-    local current_url; current_url="$(git -C "${dest_path}" config remote.origin.url)" || softfail || return $?
+    local current_url; current_url="$(cd "${dest_path}" && git config remote.origin.url)" || softfail || return $?
 
     if [ "${current_url}" != "${remote_url}" ]; then
       git::remove_current_clone "${dest_path}" || softfail || return $?
@@ -82,10 +82,11 @@ git::place_up_to_date_clone() {
   fi
 
   if [ -n "${branch_name}" ]; then
-    git -C "${dest_path}" pull origin "${branch_name}" || softfail "Unable to pull branch ${branch_name}" || return $?
-    git -C "${dest_path}" checkout "${branch_name}" || softfail "Unable to git checkout ${branch_name}" || return $?
+    (cd "${dest_path}" && git remote update) || softfail "Unable to perform git remote update: ${dest_path}" || return $?
+    (cd "${dest_path}" && git fetch) || softfail "Unable to perform git fetch: ${dest_path}" || return $?
+    (cd "${dest_path}" && git checkout "${branch_name}") || softfail "Unable to perform git checkout: ${dest_path}" || return $?
   else
-    git -C "${dest_path}" pull || softfail "Unable to pull in ${dest_path}" || return $?
+    (cd "${dest_path}" && git pull) || softfail "Unable to perform git pull: ${dest_path}" || return $?
   fi
 }
 
@@ -98,7 +99,7 @@ git::remove_current_clone() {
 
   local dest_dir_name; dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?
 
-  local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-RUNAG-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
+  local backup_path; backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?
 
   mv "${dest_full_path}" "${backup_path}" || softfail || return $?
 }
