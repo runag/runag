@@ -77,12 +77,15 @@ ssh::call() {
   # softfail --unless-good --exit-status "${exit_status}"
 
   if [ "${keep_temp_files}" != true ]; then
-    rm -fd \
-      "${temp_dir}/script" \
-      "${temp_dir}/stdin" \
-      "${temp_dir}/stdout" \
-      "${temp_dir}/stderr" \
-      "${temp_dir}" || softfail "Unable to remote temp files"
+    local remove_list=("${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr")
+
+    if [ "${exit_status}" = 0 ]; then
+      remove_list+=("${temp_dir}/script" "${temp_dir}")
+    else
+      echo "Script is kept due to abnormal termination: ${temp_dir}/script" >&2
+    fi
+
+    rm -fd "${remove_list[@]}" || softfail "Unable to remote temp files"
   fi
 
   return "${exit_status}"
