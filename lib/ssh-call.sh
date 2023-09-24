@@ -31,6 +31,7 @@ ssh::call() {
 
   local internal_args=()
   local keep_temp_files=false
+  local terminal_mode=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -45,6 +46,11 @@ ssh::call() {
       --keep-temp-files)
         internal_args+=("$1")
         keep_temp_files=true
+        shift
+        ;;
+      --terminal)
+        internal_args+=("$1")
+        terminal_mode=true
         shift
         ;;
       --*)
@@ -79,7 +85,7 @@ ssh::call() {
   if [ "${keep_temp_files}" != true ]; then
     local remove_list=("${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr")
 
-    if [ "${exit_status}" = 0 ]; then
+    if [ "${exit_status}" = 0 ] || [ "${terminal_mode}" = true ]; then
       remove_list+=("${temp_dir}/script" "${temp_dir}")
     else
       echo "Script is kept due to abnormal termination: ${temp_dir}/script" >&2
