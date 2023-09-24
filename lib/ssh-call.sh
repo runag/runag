@@ -117,6 +117,7 @@ ssh::call::internal() {
         shift
         ;;
       --terminal)
+        produce_script_args+=(--terminal)
         terminal_mode=true
         shift
         ;;
@@ -481,11 +482,16 @@ ssh::call::set_ssh_args() {
 
 ssh::call::produce_script() {
   local command_mode=false
+  local terminal_mode=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
       --command)
         command_mode=true
+        shift
+        ;;
+      --terminal)
+        terminal_mode=true
         shift
         ;;
       -*)
@@ -499,7 +505,17 @@ ssh::call::produce_script() {
 
   # test for empty command
   local joined_command="$*" # I don't want to save/restore IFS to be able to do "test -n "${*..."
-  test -n "${joined_command//[[:blank:][:cntrl:]]/}" || softfail "Command should be specified" || return $?
+
+  if [ -n "${joined_command//[[:blank:][:cntrl:]]/}" ]; then
+    local command_present=true
+  else
+    local command_present=false
+  fi
+
+  if [ "${command_present}" = false ] && [ "${terminal_mode}" = false ]; then
+    softfail "Command should be specified"
+    return $?
+  fi
 
   # shell options
   if shopt -o -q xtrace || [ "${RUNAG_VERBOSE:-}" = true ]; then
@@ -519,7 +535,7 @@ ssh::call::produce_script() {
     fi
   done
 
-  if [ "${command_mode}" = false ] && declare -F "$1" >/dev/null; then
+  if [ "${command_mode}" = false ] && [ "${command_present}" = true ] && declare -F "$1" >/dev/null; then
     if [ -z "${PS1:-}" ]; then
       declare -f || softfail "Unable to produce source code dump of functions" || return $?
     else
@@ -540,8 +556,12 @@ ssh::call::produce_script() {
     printf "umask %q || exit \$?\n" "${REMOTE_UMASK}"
   fi
 
-  local command_string; printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?
-  echo "${command_string:1}"
+  if [ "${command_present}" = false ] && [ "${terminal_mode}" = true ]; then
+    echo '"${SHELL}"'
+  else
+    local command_string; printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?
+    echo "${command_string:1}"
+  fi
 }
 
 ssh::call::interactive_terminal_functions_filter() {
