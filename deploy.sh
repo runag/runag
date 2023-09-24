@@ -47,7 +47,7 @@ fail ()
             ;;
             -*)
                 { 
-                    declare -f "log::error" > /dev/null && log::error "Unknown argument for fail: $1"
+                    declare -F "log::error" > /dev/null && log::error "Unknown argument for fail: $1"
                 } || echo "Unknown argument for fail: $1" 1>&2;
                 shift;
                 message="$*";
@@ -73,14 +73,14 @@ fail ()
         fi;
     fi;
     { 
-        declare -f "log::error" > /dev/null && log::error "${message}"
+        declare -F "log::error" > /dev/null && log::error "${message}"
     } || echo "${message}" 1>&2;
     local trace_line trace_index trace_end=$((${#BASH_LINENO[@]}-1));
     for ((trace_index=trace_start; trace_index<=trace_end; trace_index++))
     do
         trace_line="  ${BASH_SOURCE[${trace_index}]}:${BASH_LINENO[$((trace_index-1))]}: in \`${FUNCNAME[${trace_index}]}'";
         { 
-            declare -f "log::error" > /dev/null && log::error "${trace_line}"
+            declare -F "log::error" > /dev/null && log::error "${trace_line}"
         } || echo "${trace_line}" 1>&2;
     done;
     if [ "${perform_softfail}" = true ]; then
@@ -96,7 +96,7 @@ softfail ()
 deploy_script () 
 { 
     if [ -n "${1:-}" ]; then
-        if declare -f "deploy_script::$1" > /dev/null; then
+        if declare -F "deploy_script::$1" > /dev/null; then
             "deploy_script::$1" "${@:2}";
             softfail --exit-status $? --unless-good || return $?;
         else

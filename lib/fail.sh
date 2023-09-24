@@ -44,7 +44,7 @@ fail() {
       shift
       ;;
     -*)
-      { declare -f "log::error" >/dev/null && log::error "Unknown argument for fail: $1"; } || echo "Unknown argument for fail: $1" >&2
+      { declare -F "log::error" >/dev/null && log::error "Unknown argument for fail: $1"; } || echo "Unknown argument for fail: $1" >&2
       shift
       message="$*"
       break
@@ -70,12 +70,12 @@ fail() {
     exit_status=1
   fi
 
-  { declare -f "log::error" >/dev/null && log::error "${message}"; } || echo "${message}" >&2
+  { declare -F "log::error" >/dev/null && log::error "${message}"; } || echo "${message}" >&2
 
   local trace_line trace_index trace_end=$((${#BASH_LINENO[@]}-1))
   for ((trace_index=trace_start; trace_index<=trace_end; trace_index++)); do
     trace_line="  ${BASH_SOURCE[${trace_index}]}:${BASH_LINENO[$((trace_index-1))]}: in \`${FUNCNAME[${trace_index}]}'"
-    { declare -f "log::error" >/dev/null && log::error "${trace_line}"; } || echo "${trace_line}" >&2
+    { declare -F "log::error" >/dev/null && log::error "${trace_line}"; } || echo "${trace_line}" >&2
   done
 
   if [ "${perform_softfail}" = true ]; then

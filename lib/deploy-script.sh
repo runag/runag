@@ -16,7 +16,7 @@
 
 deploy_script() {
   if [ -n "${1:-}" ]; then  
-    if declare -f "deploy_script::$1" >/dev/null; then
+    if declare -F "deploy_script::$1" >/dev/null; then
       "deploy_script::$1" "${@:2}"
       softfail --exit-status $? --unless-good || return $?
     else

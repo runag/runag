@@ -510,7 +510,7 @@ ssh::call::produce_script() {
     fi
   done
 
-  if [ "${command_mode}" != true ]; then
+  if [ "${command_mode}" = false ] && declare -F "$1" >/dev/null; then
     if [ -z "${PS1:-}" ]; then
       declare -f || softfail "Unable to produce source code dump of functions" || return $?
     else
