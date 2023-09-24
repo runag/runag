@@ -133,8 +133,9 @@ linux::is_bare_metal() {
 
 linux::add_user() {
   local user_name="$1"
+
   if ! id -u "${user_name}" >/dev/null 2>&1; then
-    sudo adduser --system --group --shell /bin/bash "${user_name}" || softfail || return $?
+    sudo useradd --create-home --shell /bin/bash "${user_name}" || softfail || return $?
   fi
 }
 
