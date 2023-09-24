@@ -116,7 +116,7 @@ pass::use() {
       softfail "Callback function name should be specified" || return $?
     fi
 
-    if ! declare -f "${callback_function}::exists" >/dev/null && ! command -v "${callback_function}::exists" >/dev/null; then
+    if ! declare -F "${callback_function}::exists" >/dev/null && ! command -v "${callback_function}::exists" >/dev/null; then
       softfail "${callback_function}::exists should be available as function or command" || return $?
     fi
 
