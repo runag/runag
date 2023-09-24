@@ -142,7 +142,7 @@ linux::assign_user_to_group() {
   local user_name="$1"
   local group_name="$2"
 
-  usermod --append --groups "${group_name}" "${user_name}" || softfail || return $?
+  sudo usermod --append --groups "${group_name}" "${user_name}" || softfail || return $?
 }
 
 linux::get_default_route() {
