@@ -106,7 +106,7 @@ postgresql::create_role_if_not_exists() {
   local role_name="${1:-"${PGUSER:-"${USER}"}"}"
   
   if ! postgresql::is_role_exists "${role_name}"; then
-    postgresql::psql --sudo --query "CREATE ROLE ${user_name} ${with_string:-}" --dbname postgres || softfail || return $?
+    postgresql::psql --sudo --query "CREATE ROLE ${role_name} ${with_string:-}" --dbname postgres || softfail || return $?
   fi
 }
 
