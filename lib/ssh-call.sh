@@ -112,6 +112,10 @@ ssh::call::internal() {
         produce_script_args+=(--command)
         shift
         ;;
+      --home)
+        produce_script_args+=(--home)
+        shift
+        ;;
       --direct)
         direct_mode=true
         shift
@@ -483,11 +487,16 @@ ssh::call::set_ssh_args() {
 ssh::call::produce_script() {
   local command_mode=false
   local terminal_mode=false
+  local cd_to_home=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
       --command)
         command_mode=true
+        shift
+        ;;
+      --home)
+        cd_to_home=true
         shift
         ;;
       --terminal)
@@ -546,6 +555,10 @@ ssh::call::produce_script() {
         fi
       done
     fi
+  fi
+
+  if [ "${cd_to_home}" = true ]; then
+    echo 'cd "${HOME}" || exit $?'
   fi
 
   if [ -n "${REMOTE_DIR:-}" ]; then
