@@ -101,6 +101,7 @@ ssh::call ()
     local Ssh_Args=();
     local internal_args=();
     local keep_temp_files=false;
+    local terminal_mode=false;
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -[46AaCfGgKkMNnqsTtVvXxYy]*)
@@ -115,6 +116,11 @@ ssh::call ()
             --keep-temp-files)
                 internal_args+=("$1");
                 keep_temp_files=true;
+                shift
+            ;;
+            --terminal)
+                internal_args+=("$1");
+                terminal_mode=true;
                 shift
             ;;
             --*)
@@ -140,7 +146,7 @@ ssh::call ()
     local exit_status=$?;
     if [ "${keep_temp_files}" != true ]; then
         local remove_list=("${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr");
-        if [ "${exit_status}" = 0 ]; then
+        if [ "${exit_status}" = 0 ] || [ "${terminal_mode}" = true ]; then
             remove_list+=("${temp_dir}/script" "${temp_dir}");
         else
             echo "Script is kept due to abnormal termination: ${temp_dir}/script" 1>&2;
@@ -164,11 +170,16 @@ ssh::call::internal ()
                 produce_script_args+=(--command);
                 shift
             ;;
+            --home)
+                produce_script_args+=(--home);
+                shift
+            ;;
             --direct)
                 direct_mode=true;
                 shift
             ;;
             --terminal)
+                produce_script_args+=(--terminal);
                 terminal_mode=true;
                 shift
             ;;
@@ -432,10 +443,20 @@ ssh::call::set_ssh_args ()
 ssh::call::produce_script () 
 { 
     local command_mode=false;
+    local terminal_mode=false;
+    local cd_to_home=false;
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             --command)
                 command_mode=true;
+                shift
+            ;;
+            --home)
+                cd_to_home=true;
+                shift
+            ;;
+            --terminal)
+                terminal_mode=true;
                 shift
             ;;
             -*)
@@ -447,7 +468,15 @@ ssh::call::produce_script ()
         esac;
     done;
     local joined_command="$*";
-    test -n "${joined_command//[[:blank:][:cntrl:]]/}" || softfail "Command should be specified" || return $?;
+    if [ -n "${joined_command//[[:blank:][:cntrl:]]/}" ]; then
+        local command_present=true;
+    else
+        local command_present=false;
+    fi;
+    if [ "${command_present}" = false ] && [ "${terminal_mode}" = false ]; then
+        softfail "Command should be specified";
+        return $?;
+    fi;
     if shopt -o -q xtrace || [ "${RUNAG_VERBOSE:-}" = true ]; then
         echo "set -o xtrace";
     fi;
@@ -463,7 +492,7 @@ ssh::call::produce_script ()
             echo "export $(printf "%q=%q" "${env_list_item}" "${!env_list_item}")";
         fi;
     done;
-    if [ "${command_mode}" = false ] && declare -F "$1" > /dev/null; then
+    if [ "${command_mode}" = false ] && [ "${command_present}" = true ] && declare -F "$1" > /dev/null; then
         if [ -z "${PS1:-}" ]; then
             declare -f || softfail "Unable to produce source code dump of functions" || return $?;
         else
@@ -475,15 +504,22 @@ ssh::call::produce_script ()
             done;
         fi;
     fi;
+    if [ "${cd_to_home}" = true ]; then
+        echo 'cd "${HOME}" || exit $?';
+    fi;
     if [ -n "${REMOTE_DIR:-}" ]; then
         printf "cd %q || exit \$?\n" "${REMOTE_DIR}";
     fi;
     if [ -n "${REMOTE_UMASK:-}" ]; then
         printf "umask %q || exit \$?\n" "${REMOTE_UMASK}";
     fi;
-    local command_string;
-    printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?;
-    echo "${command_string:1}"
+    if [ "${command_present}" = false ] && [ "${terminal_mode}" = true ]; then
+        echo '"${SHELL}"';
+    else
+        local command_string;
+        printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?;
+        echo "${command_string:1}";
+    fi
 }
 ssh::call::interactive_terminal_functions_filter () 
 { 
