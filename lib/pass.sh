@@ -48,11 +48,12 @@ pass::secret_exists() {
 }
 
 # pass::use [arguments for pass::use]... secret/path [callback_function] [arguments for callback_function]...
-#   -b,--body          # skip first line and then write the rest of the file contents to stdout
-#   -g,--get name      # get metadata instead of password
-#   -m,--multiline     # write all file contents to stdout
-#   -e,--skip-if-empty # do not call callback function if secret is empty
-#   -u,--skip-update   # do not call callback function if call to "${callback_function}::exists" returns 0
+#   -b,--body               # skip first line and then write the rest of the file contents to stdout
+#   -g,--get name           # get metadata instead of password
+#   -m,--multiline          # write all file contents to stdout
+#   -e,--skip-if-empty      # do not call callback function if secret is empty
+#   -x,--skip-if-not-exists # do not call callback function if secret not exists
+#   -u,--skip-update        # do not call callback function if call to "${callback_function}::exists" returns 0
 #
 # If no callback_function is provided then write output to stdout
 #
@@ -72,6 +73,7 @@ pass::use() {
   local get_metadata=false metadata_name
   local get_multiline=false
   local skip_if_empty=false
+  local skip_if_not_exists=false
   local skip_update=false
 
   while [[ "$#" -gt 0 ]]; do
@@ -91,6 +93,10 @@ pass::use() {
       ;;
     -e|--skip-if-empty)
       skip_if_empty=true
+      shift
+      ;;
+    -x|--skip-if-not-exists)
+      skip_if_not_exists=true
       shift
       ;;
     -u|--skip-update)
@@ -130,7 +136,11 @@ pass::use() {
   local secret_file_path="${password_store_dir}/${secret_path}.gpg"
 
   if [ ! -f "${secret_file_path}" ]; then
-    softfail "Unable to find password file: ${secret_file_path}" || return $?
+    if [ "${skip_if_not_exists}" = true ]; then
+      return 0
+    else
+      softfail "Unable to find password file: ${secret_file_path}" || return $?
+    fi
   fi
 
   # case if "--multiline" specified
