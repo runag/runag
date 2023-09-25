@@ -102,7 +102,7 @@ ssh::install_ssh_profile_from_pass() {
   fi
 }
 
-# ssh private key should be in body, password may be in password, separate .pub secret may contain public key in 1st line (password field)
+# ssh private key should be in body, password may be in password, optional .pub secret can contain public key in 1st line (password field)
 ssh::install_ssh_key_from_pass() {
   local secret_path="$1"
   local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
@@ -118,6 +118,32 @@ ssh::install_ssh_key_from_pass() {
     pass::use --skip-if-empty "${secret_path}" ssh::gnome_keyring_credentials "${key_file_path}" || softfail || return $?
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
     pass::use --skip-if-empty "${secret_path}" ssh::macos_keychain "${key_file_path}" || softfail || return $?
+  fi
+}
+
+ssh::install_ssh_key_from_pass_to_remote() {
+  local pass_args=()
+
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+      -*)
+        pass_args+=("$1")
+        shift
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  local secret_path="$1"
+  local key_file_path; key_file_path="${2:-".ssh/$(basename "${secret_path}")"}" || softfail || return $?
+
+  ssh::call --home dir::should_exists --mode 0700 ".ssh" || softfail "Unable to create ssh user config directory" || return $?
+  pass::use "${pass_args[@]}" --body "${secret_path}" ssh::call --home file::write --mode 0600 "${key_file_path}" || softfail || return $?
+
+  if pass::secret_exists "${secret_path}.pub"; then
+    pass::use "${pass_args[@]}" "${secret_path}.pub" ssh::call --home file::write --mode 0600 "${key_file_path}.pub" || softfail || return $?
   fi
 }
 
