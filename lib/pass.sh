@@ -153,12 +153,11 @@ pass::use() {
     if [ -n "${callback_function}" ]; then
       # pipe secret data to callback function
       pass show "${secret_path}" | "${callback_function}" "$@"
-      test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to obtain secret from pass and process it with the callback function: ${callback_function}" || return $?
+      test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass and process it with the callback function: ${callback_function}" || return $?
 
     else
       # pipe secret data to stdout
-      pass show "${secret_path}"
-      test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass" || return $?
+      pass show "${secret_path}" || softfail "Unable to obtain secret from pass" || return $?
     fi
 
     return 0
