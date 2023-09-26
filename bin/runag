@@ -74,24 +74,24 @@ runag::load_runag_library || {
 # Load rùnagfile
 if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
   runagfile::load
-  softfail --exit-status $? --unless-good "Unable to load rùnagfile ($?)" || return $?
+  softfail --unless-good --exit-status $? "Unable to load rùnagfile ($?)" || return $?
 else # we are not sourced
   runagfile::load
-  softfail --exit-status $? --unless-good "Unable to load rùnagfile ($?)" || exit $?
+  softfail --unless-good --exit-status $? "Unable to load rùnagfile ($?)" || exit $?
 fi
 
 # if there is something in the first argument, run it
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
-    softfail --exit-status $? --unless-good "Error performing $1 ($?)" || return $?
+    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || return $?
     if [ -t 1 ]; then
       log::success "Done: $*"
     fi
     return 0
   else # we are not sourced
     "$@"
-    softfail --exit-status $? --unless-good "Error performing $1 ($?)" || exit $?
+    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || exit $?
     if [ -t 1 ]; then
       log::success "Done: $*"
     fi
@@ -103,11 +103,11 @@ fi
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -F runagfile::main >/dev/null; then
     runagfile::main
-    softfail --exit-status $? --unless-good "Error performing runagfile::main ($?)"
+    softfail --unless-good --exit-status $? "Error performing runagfile::main ($?)"
     exit $?
   elif runagfile_menu::present && [ -t 0 ] && [ -t 1 ]; then
     runagfile_menu::display
-    softfail --exit-status $? --unless-good "Error performing runagfile_menu::display ($?)"
+    softfail --unless-good --exit-status $? "Error performing runagfile_menu::display ($?)"
     exit $?
   fi
 
