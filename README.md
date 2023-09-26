@@ -105,6 +105,7 @@ Please refer to the source code for now.
 * [dir](lib/dir.sh)
 * [file](lib/file.sh)
 * [fs](lib/fs.sh)
+* [shell](lib/shell.sh)
 * [source](lib/source.sh)
 * [ui](lib/ui.sh)
 
