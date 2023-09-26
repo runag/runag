@@ -98,7 +98,7 @@ deploy_script ()
     if [ -n "${1:-}" ]; then
         if declare -F "deploy_script::$1" > /dev/null; then
             "deploy_script::$1" "${@:2}";
-            softfail --exit-status $? --unless-good || return $?;
+            softfail --unless-good --exit-status $? || return $?;
         else
             softfail "deploy_script: command not found: $1";
             return $?;
@@ -109,12 +109,12 @@ deploy_script::add ()
 { 
     runagfile::add "$1" || softfail || return $?;
     deploy_script "${@:2}";
-    softfail --exit-status $? --unless-good
+    softfail --unless-good --exit-status $?
 }
 deploy_script::run () 
 { 
     "${HOME}/.runag/bin/runag" "$@";
-    softfail --exit-status $? --unless-good
+    softfail --unless-good --exit-status $?
 }
 
 apt::install () 
@@ -213,7 +213,7 @@ runag::deploy_sh_main ()
     git::install_git || softfail || return $?;
     git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     deploy_script "$@";
-    softfail --exit-status $? --unless-good
+    softfail --unless-good --exit-status $?
 }
 
 export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"
