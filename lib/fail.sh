@@ -14,8 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# fail --exit-status $? --unless-good "msg"
-# softfail --exit-status $? --unless-good "msg"
+# fail --unless-good --exit-status $? "msg"
+# softfail --unless-good --exit-status $? "msg"
 
 fail() {
   local exit_status=""

@@ -39,6 +39,6 @@ $(declare -f dir::should_exists)
 # run command if we are not sourced
 if [ "\${BASH_SOURCE[0]}" = "\$0" ]; then
   ssh::call --command "\$@"
-  softfail --exit-status \$? --unless-good || exit \$?
+  softfail --unless-good --exit-status \$? || exit \$?
 fi
 SHELL
