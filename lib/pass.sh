@@ -14,6 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+pass::set_password_store_dir() {
+  local dir_path="$1"
+
+  # get absolute path
+  dir_path="$(cd "${dir_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
+
+  export PASSWORD_STORE_DIR="${dir_path}"
+}
+
 pass::exists() {
   local secret_path="$1"
   local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
