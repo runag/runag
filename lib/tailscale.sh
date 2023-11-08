@@ -29,7 +29,7 @@ tailscale::install() {
 
 tailscale::is_logged_in() {
   # this function is intent to use fail (and not softfail) in case of errors
-  local backend_state; backend_state="$(tailscale status --json | jq .BackendState --raw-output --exit-status; test "${PIPESTATUS[*]}" = "0 0")" || fail # no softfail here!
+  local backend_state; backend_state="$(tailscale status --json | jq --raw-output --exit-status .BackendState; test "${PIPESTATUS[*]}" = "0 0")" || fail # no softfail here!
 
   if [ "${backend_state}" = "NeedsLogin" ]; then
     return 1
