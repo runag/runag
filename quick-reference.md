@@ -11,3 +11,6 @@
 0 stdin
 1 stdout
 2 stderr
+
+# gpg
+gpg --list-keys --with-subkey-fingerprints
