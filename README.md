@@ -141,6 +141,7 @@ Please refer to the source code for now.
 
 ### Networking and access to remote systems
 
+* [aws](lib/aws.sh)
 * [cifs](lib/cifs.sh)
 * [postfix](lib/postfix.sh)
 * [rsync](lib/rsync.sh)
