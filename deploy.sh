@@ -20,11 +20,11 @@ __xVhMyefCbBnZFUQtwqCs() {
 
 fail () 
 { 
-    local exit_status="";
+    local exit_status;
     local unless_good=false;
     local perform_softfail=false;
     local trace_start=1;
-    local message="";
+    local message;
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
             -e | --exit-status)
@@ -59,13 +59,13 @@ fail ()
             ;;
         esac;
     done;
-    if [ -z "${message}" ]; then
+    if [ -z "${message:-}" ]; then
         message="Abnormal termination";
     fi;
-    if ! [[ "${exit_status}" =~ ^[0-9]+$ ]]; then
+    if ! [[ "${exit_status:-}" =~ ^[0-9]+$ ]]; then
         exit_status=1;
     else
-        if [ "${exit_status}" = 0 ]; then
+        if [ "${exit_status:-}" = 0 ]; then
             if [ "${unless_good}" = true ]; then
                 return 0;
             fi;
@@ -84,9 +84,9 @@ fail ()
         } || echo "${trace_line}" 1>&2;
     done;
     if [ "${perform_softfail}" = true ]; then
-        return "${exit_status}";
+        return "${exit_status:-0}";
     fi;
-    exit "${exit_status}"
+    exit "${exit_status:-0}"
 }
 softfail () 
 { 
