@@ -35,3 +35,11 @@ shell::with() (
 
   "$@"
 )
+
+shell::export_variables_as_code() {
+  local list_item; for list_item in "$@"; do
+    if [ -n "${!list_item:-}" ]; then
+      echo "export $(printf "%q=%q" "${list_item}" "${!list_item}")"
+    fi
+  done
+}
