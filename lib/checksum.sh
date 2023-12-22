@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-checksums::create_or_update() {
+checksum::create_or_update() {
   local directory="$1"
   local current_checksum_file="$2"
 
@@ -76,11 +76,11 @@ checksums::create_or_update() {
   sync || softfail || return $?
 
   if [ "${result}" != 0 ]; then
-    softfail "checksums::create_or_update failed (${result})" || return $?
+    softfail "checksum::create_or_update failed (${result})" || return $?
   fi
 }
 
-checksums::verify() {(
+checksum::verify() {(
   local directory="$1"
   local current_checksum_file="$2"
 
@@ -117,6 +117,6 @@ checksums::verify() {(
   rm "${new_checksum_file}" || softfail || return $?
 
   if [ "${result}" != 0 ]; then
-    softfail "checksums::verify failed (${result})" || return $?
+    softfail "checksum::verify failed (${result})" || return $?
   fi
 )}

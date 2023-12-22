@@ -100,7 +100,7 @@ Please refer to the source code for now.
 
 ### General utility
 
-* [archival-snapshots](lib/archival-snapshots.sh)
+* [archival-snapshot](lib/archival-snapshot.sh)
 * [config](lib/config.sh)
 * [dir](lib/dir.sh)
 * [file](lib/file.sh)
@@ -123,7 +123,7 @@ Please refer to the source code for now.
 
 ### Managment of keys, passwords, and other secrets
 
-* [checksums](lib/checksums.sh)
+* [checksum](lib/checksum.sh)
 * [gpg](lib/gpg.sh)
 * [pass](lib/pass.sh)
 
@@ -159,7 +159,7 @@ Please refer to the source code for now.
 ### Application deployment
 
 * [app-release](lib/app-release.sh)
-* [app-units](lib/app-units.sh)
+* [app-unit](lib/app-unit.sh)
 * [direnv](lib/direnv.sh)
 
 ### Desktop applications
