@@ -16,7 +16,7 @@
 
 # :? here is to make sure we don't accidentally cleanup root directory or some other unexpected location
 
-archival_snapshots::create() {
+archival_snapshot::create() {
   local source="${1:?}"
   local dest="${2:?}"
   local snapshot_name="${3:-}"
@@ -26,7 +26,7 @@ archival_snapshots::create() {
   btrfs subvolume snapshot -r "${source}" "${dest}/${current_date}${snapshot_name:+"-${snapshot_name}"}" || softfail || return $?
 }
 
-archival_snapshots::cleanup() {
+archival_snapshot::cleanup() {
   local snapshots_dir="${1:?}" 
   local keep_amount="${2:-10}"
 
