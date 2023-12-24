@@ -18,6 +18,10 @@ btrfs::scrub() {
   sudo btrfs scrub start -B -d "$@" || softfail || return $?
 }
 
+btrfs::scrub_status() {
+  sudo btrfs scrub status -d "$@" || softfail || return $?
+}
+
 btrfs::check() {
   sudo btrfs check --readonly --progress "$@" || softfail || return $?
 }
