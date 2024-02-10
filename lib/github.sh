@@ -29,7 +29,7 @@ github::install_profile_from_pass() {
 # github::query_release --get tag_name asdf-vm/asdf
 github::query_release() {
   local release_id="latest"
-  local query_string=""
+  local query_string
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -54,6 +54,10 @@ github::query_release() {
     esac
   done
 
+  if [ -z "${query_string:-}" ]; then
+    softfail "Query string should be specified" || return $?
+  fi
+
   local repo_path="$1"
 
   local api_url="https://api.github.com/repos/${repo_path}/releases/${release_id}"
@@ -65,7 +69,7 @@ github::query_release() {
 
 github::download_release() {
   local release_id="latest"
-  local query_string=""
+  local query_string
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -93,6 +97,10 @@ github::download_release() {
       ;;
     esac
   done
+
+  if [ -z "${query_string:-}" ]; then
+    softfail "Query string should be specified" || return $?
+  fi
 
   local repo_path="$1"
 

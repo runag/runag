@@ -43,9 +43,9 @@ log::success() {
 }
 
 log::message() {
-  local foreground_color=""
-  local background_color=""
-  local message=""
+  local foreground_color
+  local background_color
+  local message
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -70,13 +70,13 @@ log::message() {
     esac
   done
 
-  if [ -z "${message}" ]; then
+  if [ -z "${message:-}" ]; then
     message="(empty log message)"
   fi
 
   local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
-  echo "${foreground_color}${background_color}${message}${reset_attrs}"
+  echo "${foreground_color:-}${background_color:-}${message}${reset_attrs}"
 }
 
 log::elapsed_time() {

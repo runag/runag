@@ -103,7 +103,7 @@ gpg::import_key() {
 }
 
 # gpg::decrypt_and_install_file() {
-#   local file_mode=""
+#   local file_mode
 #
 #   while [[ "$#" -gt 0 ]]; do
 #     case $1 in

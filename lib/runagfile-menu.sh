@@ -47,8 +47,7 @@ runagfile_menu::add() {
 
   local quote=true
   local add_delimiter=false
-  local prefix=""
-  local comment_postfix="" signal_message=""
+  local prefix comment_postfix signal_message
   local add_menu=false
 
   while [[ "$#" -gt 0 ]]; do
@@ -105,15 +104,15 @@ runagfile_menu::add() {
   done
 
   local operand_string
-  if [ "${add_delimiter}" = true ]; then
-    operand_string=""
-  else
+
+  if [ "${add_delimiter}" = false ]; then
     if [ "${add_menu}" = true ]; then
-      if [ -z "${signal_message}" ]; then
+      if [ -z "${signal_message:-}" ]; then
         signal_message="#* Menu for $*"
       fi
       set -- runagfile_menu::display_for "$1"::runagfile_menu "${@:2}"
     fi
+
     if [ "${quote}" = true ]; then
       printf -v operand_string " %q" "$@" || softfail "Unable to produce operand string" || return $?
       operand_string="${operand_string:1}"
@@ -123,11 +122,11 @@ runagfile_menu::add() {
     fi
   fi
 
-  if [ -n "${signal_message}" ]; then
+  if [ -n "${signal_message:-}" ]; then
     signal_message=" ${signal_message}#${#signal_message}#"
   fi
 
-  RUNAGFILE_MENU+=("${prefix}${operand_string}${comment_postfix}${signal_message}")
+  RUNAGFILE_MENU+=("${prefix:-}${operand_string:-}${comment_postfix:-}${signal_message:-}")
 }
 
 runagfile_menu::display() {

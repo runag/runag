@@ -49,7 +49,7 @@ git::create_or_update_mirror() {
 }
 
 git::place_up_to_date_clone() {
-  local branch_name=""
+  local branch_name
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -81,7 +81,7 @@ git::place_up_to_date_clone() {
     git clone "${remote_url}" "${dest_path}" || softfail "Unable to clone ${remote_url}" || return $?
   fi
 
-  if [ -n "${branch_name}" ]; then
+  if [ -n "${branch_name:-}" ]; then
     (cd "${dest_path}" && git remote update) || softfail "Unable to perform git remote update: ${dest_path}" || return $?
     (cd "${dest_path}" && git fetch) || softfail "Unable to perform git fetch: ${dest_path}" || return $?
     (cd "${dest_path}" && git checkout "${branch_name}") || softfail "Unable to perform git checkout: ${dest_path}" || return $?

@@ -93,7 +93,7 @@ menu::display_menu() {
   # 6 - comment
 
   local color_a; test -t 0 && color_a="$(tput setaf 1 2>/dev/null)" || color_a=""
-  local color_b=""
+  local color_b
 
   local color_a_accent; test -t 0 && color_a_accent="$(printf "setaf 15\nsetab 1" | tput -S 2>/dev/null)" || color_a_accent=""
   local color_b_accent; test -t 0 && color_b_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_accent=""
@@ -104,7 +104,7 @@ menu::display_menu() {
   local reset_attrs; test -t 0 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   local item index=1
-  local current_color=""
+  local current_color
   local current_color_accent
   local endline_sticker
   local last_line_was_header=false
@@ -146,8 +146,8 @@ menu::display_menu() {
 
     else
       # menu item
-      if [ "${current_color}" = "${color_a}" ]; then
-        current_color="${color_b}"
+      if [ "${current_color:-}" = "${color_a}" ]; then
+        current_color="${color_b:-}"
         current_color_accent="${color_b_accent}"
       else
         current_color="${color_a}"

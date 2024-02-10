@@ -29,15 +29,15 @@
 #   [content_string]
 #
 file::write() {
-  local perhaps_sudo=""
-  local keep_permissions=""
-  local file_mode=""
-  local file_owner=""
-  local file_group=""
+  local perhaps_sudo
+  local keep_permissions
+  local file_mode
+  local file_owner
+  local file_group
 
-  local source_file=""
-  local temp_file=""
-  local allow_empty=""
+  local source_file
+  local temp_file
+  local allow_empty
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -86,14 +86,15 @@ file::write() {
   local file_path="$1"
   local content_string="${2:-}"
 
-  if ${perhaps_sudo:+sudo} test -e "${file_path}" && ! ${perhaps_sudo:+sudo} test -f "${file_path}"; then
+  if ${perhaps_sudo:+"sudo"} test -e "${file_path}" && ! ${perhaps_sudo:+"sudo"} test -f "${file_path}"; then
     softfail "Unable to write to file, it exists but it's not a regular file: ${file_path}" || return $?
   fi
 
-  if [ "${perhaps_sudo}" = true ]; then
+  if [ "${perhaps_sudo:-}" = true ]; then
     if [ -z "${file_owner:-}" ]; then
       file_owner=root
     fi
+
     if [ -z "${file_group:-}" ]; then
       if [[ "${OSTYPE}" =~ ^darwin ]]; then
         file_group=wheel
@@ -103,13 +104,13 @@ file::write() {
     fi
   fi
 
-  if [ -z "${file_mode}" ]; then
-    if [ "${keep_permissions}" = true ] && ${perhaps_sudo:+sudo} test -f "${file_path}"; then
-      file_mode="$(${perhaps_sudo:+sudo} stat -c "%a" "${file_path}")" || softfail || return $?
+  if [ -z "${file_mode:-}" ]; then
+    if [ "${keep_permissions:-}" = true ] && ${perhaps_sudo:+"sudo"} test -f "${file_path}"; then
+      file_mode="$(${perhaps_sudo:+"sudo"} stat -c "%a" "${file_path}")" || softfail || return $?
     else
       local umask_value
       
-      if [ "${perhaps_sudo}" = true ]; then
+      if [ "${perhaps_sudo:-}" = true ]; then
         umask_value="$(sudo /usr/bin/sh -c umask)" || softfail || return $?
       else
         umask_value="$(umask)" || softfail || return $?
@@ -119,10 +120,10 @@ file::write() {
     fi
   fi
 
-  if [ -z "${temp_file}" ]; then
+  if [ -z "${temp_file:-}" ]; then
     temp_file="$(mktemp)" || softfail || return $?
 
-    if [ -n "${source_file}" ]; then
+    if [ -n "${source_file:-}" ]; then
       cp "${source_file}" "${temp_file}" || softfail "Unable to copy from source file" || return $?
 
     elif [ "${content_string:+true}" = true ]; then
@@ -137,21 +138,21 @@ file::write() {
     softfail "Temporary file is not readable: ${temp_file}" || return $?
   fi
 
-  if [ ! -s "${temp_file}" ] && [ "${allow_empty}" != true ]; then
+  if [ ! -s "${temp_file}" ] && [ "${allow_empty:-}" != true ]; then
     rm "${temp_file}" || softfail || return $?
     softfail "Empty input for file::write" || return $?
   fi
 
-  if [ -n "${file_owner}" ]; then
-    ${perhaps_sudo:+sudo} chown "${file_owner}${file_group:+".${file_group}"}" "${temp_file}" || softfail || return $?
+  if [ -n "${file_owner:-}" ]; then
+    ${perhaps_sudo:+"sudo"} chown "${file_owner}${file_group:+".${file_group}"}" "${temp_file}" || softfail || return $?
 
-  elif [ -n "${file_group}" ]; then
-    ${perhaps_sudo:+sudo} chgrp "${file_group}" "${temp_file}" || softfail || return $?
+  elif [ -n "${file_group:-}" ]; then
+    ${perhaps_sudo:+"sudo"} chgrp "${file_group}" "${temp_file}" || softfail || return $?
   fi
 
-  ${perhaps_sudo:+sudo} chmod "${file_mode}" "${temp_file}" || softfail || return $?
+  ${perhaps_sudo:+"sudo"} chmod "${file_mode}" "${temp_file}" || softfail || return $?
 
-  ${perhaps_sudo:+sudo} mv "${temp_file}" "${file_path}" || softfail || return $?
+  ${perhaps_sudo:+"sudo"} mv "${temp_file}" "${file_path}" || softfail || return $?
 }
 
 # file::append_line_unless_present
@@ -165,11 +166,11 @@ file::write() {
 #   [line_content]
 # 
 file::append_line_unless_present() {
-  local perhaps_sudo=""
-  local keep_permissions=""
-  local file_mode=""
-  local file_owner=""
-  local file_group=""
+  local perhaps_sudo
+  local keep_permissions
+  local file_mode
+  local file_owner
+  local file_group
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -205,12 +206,12 @@ file::append_line_unless_present() {
   local file_path="$1"
   local line_content="$2"
 
-  if ! ${perhaps_sudo:+sudo} test -e "${file_path}" || ! ${perhaps_sudo:+sudo} grep -qFx "${line_content}" "${file_path}"; then
+  if ! ${perhaps_sudo:+"sudo"} test -e "${file_path}" || ! ${perhaps_sudo:+"sudo"} grep -qFx "${line_content}" "${file_path}"; then
 
-    temp_file="$(mktemp)" || softfail || return $?
+    local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
-    if ${perhaps_sudo:+sudo} test -f "${file_path}"; then
-      ${perhaps_sudo:+sudo} cat "${file_path}" | sed "\$a\\" >"${temp_file}"
+    if ${perhaps_sudo:+"sudo"} test -f "${file_path}"; then
+      ${perhaps_sudo:+"sudo"} cat "${file_path}" | sed "\$a\\" >"${temp_file}"
       test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
     fi
 
@@ -242,15 +243,15 @@ file::append_line_unless_present() {
 #   [content_string]
 #
 file::write_block() {
-  local perhaps_sudo=""
-  local keep_permissions=""
-  local file_mode=""
-  local file_owner=""
-  local file_group=""
+  local perhaps_sudo
+  local keep_permissions
+  local file_mode
+  local file_owner
+  local file_group
 
-  local source_file=""
-  local temp_file=""
-  local allow_empty=""
+  local source_file
+  local temp_file
+  local allow_empty
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -321,10 +322,10 @@ file::write_block() {
 }
 
 file::read_with_updated_block() {
-  local perhaps_sudo=""
-  local source_file=""
-  local temp_file=""
-  local allow_empty=""
+  local perhaps_sudo
+  local source_file
+  local temp_file
+  local allow_empty
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -357,15 +358,15 @@ file::read_with_updated_block() {
   local block_name="$2"
   local content_string="${3:-}"
 
-  if ${perhaps_sudo:+sudo} test -f "${file_path}"; then
-    ${perhaps_sudo:+sudo} cat "${file_path}" | sed "\$a\\" | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
+  if ${perhaps_sudo:+"sudo"} test -f "${file_path}"; then
+    ${perhaps_sudo:+"sudo"} cat "${file_path}" | sed "\$a\\" | sed "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/d"
     test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
   fi
 
-  if [ -z "${temp_file}" ]; then
+  if [ -z "${temp_file:-}" ]; then
     temp_file="$(mktemp)" || softfail || return $?
 
-    if [ -n "${source_file}" ]; then
+    if [ -n "${source_file:-}" ]; then
       cp "${source_file}" "${temp_file}" || softfail "Unable to copy from source file" || return $?
 
     elif [ "${content_string:+true}" = true ]; then
@@ -380,7 +381,7 @@ file::read_with_updated_block() {
     softfail "Temporary file is not readable: ${temp_file}" || return $?
   fi
 
-  if [ "${allow_empty}" != true ] && [ ! -s "${temp_file}" ]; then
+  if [ "${allow_empty:-}" != true ] && [ ! -s "${temp_file}" ]; then
     rm "${temp_file}" || softfail || return $?
     softfail "Empty input for file::write" || return $?
   fi
