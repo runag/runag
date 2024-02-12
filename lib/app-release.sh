@@ -111,7 +111,7 @@ app_release::clone() {
   fi
 }
 
-# TODO: link to file? link to dir? Document magic happening here
+# TODO: link to file? link to dir? Document what kind of magic is happening here
 app_release::link_shared_file() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
   local app_release_path="${app_dir}/releases/${APP_RELEASE:?}"
