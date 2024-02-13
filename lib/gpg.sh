@@ -125,6 +125,7 @@ gpg::import_key() {
 #
 #   if [ ! -f "${dest_path}" ]; then
 #     file::wait_until_available "${source_path}" || softfail || return $?
+#     # TODO: --absorb?
 #     gpg --decrypt "${source_path}" | file::write ${file_mode:+--mode "${file_mode}"} "${dest_path}"
 #     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 #   fi

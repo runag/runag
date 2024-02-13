@@ -79,6 +79,7 @@ shellrc::write() {
   local shellrc_dir="${HOME}/.shellrc.d"
 
   dir::should_exists --mode 0700 "${shellrc_dir}" || softfail || return $?
+  # TODO: --absorb?
   file::write --mode 0600 "${shellrc_dir}/${name}.sh" || softfail || return $?
 }
 
