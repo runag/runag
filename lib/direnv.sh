@@ -20,6 +20,7 @@ direnv::write_file() {
   local dir_name=".direnv.d"
   dir::should_exists --mode 0700 "${dir_name}" || softfail || return $?
 
+  # TODO: --absorb?
   file::write --mode 0600 "${dir_name}/${name}.sh" || softfail || return $?
 }
 
