@@ -84,9 +84,14 @@ pass::use() {
   local skip_if_empty=false
   local skip_if_not_exists=false
   local skip_update=false
+  local absorb_in_callback=false
 
   while [[ "$#" -gt 0 ]]; do
     case $1 in
+    -a|--absorb-in-callback)
+      absorb_in_callback=true
+      shift
+      ;;
     -b|--body)
       get_body=true
       shift
@@ -152,42 +157,56 @@ pass::use() {
     fi
   fi
 
-  # case if "--multiline" specified
-  if [ "${get_multiline}" = true ]; then
+  if [ "${get_body}" = true ] || [ "${get_multiline}" = true ]; then
+
+    if [ "${absorb_in_callback}" = true ]; then
+      if [ -z "${callback_function}" ]; then
+        softfail "Callback function should be specified" || return $?
+      fi
+
+      local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+      if [ "${get_body}" = true ]; then
+        pass show "${secret_path}" | tail -n +2 >"${temp_file}"
+        test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass" || return $?
+      else
+        pass show "${secret_path}" >"${temp_file}" || softfail || return $?
+      fi
+
+      if [ -f "${temp_file}" ] && [ ! -s "${temp_file}" ]; then
+        if [ "${skip_if_empty}" = true ]; then
+          return 0
+        fi
+        softfail "Zero-length secret data from pass" || return $?
+      fi
+
+      "${callback_function}" --absorb "${temp_file}" "$@" || softfail "Unable to process secret data in ${callback_function} ($?)" || return $?
+
+      return 0
+    fi
+
     # I don't want to hack a way to peek into the pipe nor do I want to keep secret in a temp file or run pass show twice in case if someone need to confirm on each access
     if [ "${skip_if_empty}" = true ]; then
       softfail "--skip-if-empty is not supported for pipe output" || return $?
     fi
-    
-    if [ -n "${callback_function}" ]; then
-      # pipe secret data to callback function
-      pass show "${secret_path}" | "${callback_function}" "$@"
-      test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass and process it with the callback function: ${callback_function}" || return $?
-
-    else
-      # pipe secret data to stdout
-      pass show "${secret_path}" || softfail "Unable to obtain secret from pass" || return $?
-    fi
-
-    return 0
-  fi
-
-  # case if "--body" specified
-  if [ "${get_body}" = true ]; then
-    # I don't want to hack a way to peek into the pipe nor do I want to keep secret in a temp file or run pass show twice in case if someone need to confirm on each access
-    if [ "${skip_if_empty}" = true ]; then
-      softfail "--skip-if-empty is not supported for pipe output" || return $?
-    fi
 
     if [ -n "${callback_function}" ]; then
       # pipe secret data to callback function
-      pass show "${secret_path}" | tail -n +2 | "${callback_function}" "$@"
-      test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to obtain secret from pass and process it with the callback function: ${callback_function}" || return $?
-
+      if [ "${get_body}" = true ]; then
+        pass show "${secret_path}" | tail -n +2 | "${callback_function}" "$@"
+        test "${PIPESTATUS[*]}" = "0 0 0" || softfail "Unable to obtain secret from pass and process it with the callback function: ${callback_function}" || return $?
+      else
+        pass show "${secret_path}" | "${callback_function}" "$@"
+        test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass and process it with the callback function: ${callback_function}" || return $?
+      fi
     else
       # pipe secret data to stdout
-      pass show "${secret_path}" | tail -n +2
-      test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass" || return $?
+      if [ "${get_body}" = true ]; then
+        pass show "${secret_path}" | tail -n +2
+        test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to obtain secret from pass" || return $?
+      else
+        pass show "${secret_path}" || softfail "Unable to obtain secret from pass" || return $?
+      fi
     fi
 
     return 0
