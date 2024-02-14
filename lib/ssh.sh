@@ -87,10 +87,14 @@ ssh::install_ssh_profile_from_pass() {
   local profile_config_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
 
   if [[ "${OSTYPE}" =~ ^linux ]] && pass::secret_exists "${profile_path}/config.linux"; then
-    pass::use --body "${profile_path}/config.linux" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+    local temp_file; temp_file="$(mktemp)" || softfail || return $?
+    pass::use --body "${profile_path}/config.linux" >"${temp_file}" || softfail || return $?
+    file::write --absorb "${temp_file}" --mode 0600 "${profile_config_path}" || softfail || return $?
 
   elif pass::secret_exists "${profile_path}/config"; then
-    pass::use --body "${profile_path}/config" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+    local temp_file; temp_file="$(mktemp)" || softfail || return $?
+    pass::use --body "${profile_path}/config" >"${temp_file}" || softfail || return $?
+    file::write --absorb "${temp_file}" --mode 0600 "${profile_config_path}" || softfail || return $?
     
   elif pass::secret_exists "${profile_path}/id_ed25519"; then
     <<<"IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
@@ -98,7 +102,9 @@ ssh::install_ssh_profile_from_pass() {
 
   # known hosts
   if pass::secret_exists "${profile_path}/known_hosts"; then
-    pass::use --body "${profile_path}/known_hosts" file::write_block --mode 0600 "${HOME}/.ssh/known_hosts" "${profile_name}" || softfail || return $?
+    local temp_file; temp_file="$(mktemp)" || softfail || return $?
+    pass::use --body "${profile_path}/known_hosts" >"${temp_file}" || softfail || return $?
+    file::write_block --absorb "${temp_file}" --mode 0600 "${HOME}/.ssh/known_hosts" "${profile_name}" || softfail || return $?
   fi
 }
 
@@ -108,7 +114,10 @@ ssh::install_ssh_key_from_pass() {
   local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
   dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
-  pass::use --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+  pass::use --body "${secret_path}" >"${temp_file}" || softfail || return $?
+  file::write --absorb "${temp_file}" --mode 0600 "${key_file_path}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
     pass::use "${secret_path}.pub" file::write --mode 0600 "${key_file_path}.pub" || softfail || return $?
@@ -140,7 +149,11 @@ ssh::install_ssh_key_from_pass_to_remote() {
   local key_file_path; key_file_path="${2:-".ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
   ssh::call --home dir::should_exists --mode 0700 ".ssh" || softfail "Unable to create ssh user config directory" || return $?
-  pass::use "${pass_args[@]}" --body "${secret_path}" ssh::call --home file::write --mode 0600 "${key_file_path}" || softfail || return $?
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+  pass::use "${pass_args[@]}" --body "${secret_path}" >"${temp_file}" || softfail || return $?
+  <"${temp_file}" ssh::call --home file::write --mode 0600 "${key_file_path}" || softfail || return $?
+  rm "${temp_file}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
     pass::use "${pass_args[@]}" "${secret_path}.pub" ssh::call --home file::write --mode 0600 "${key_file_path}.pub" || softfail || return $?
