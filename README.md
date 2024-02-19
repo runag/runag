@@ -119,6 +119,7 @@ Please refer to the source code for now.
 * [os](lib/os.sh)
 * [shellrc](lib/shellrc.sh)
 * [systemd](lib/systemd.sh)
+* [ubuntu](lib/ubuntu.sh)
 * [vmware](lib/vmware.sh)
 
 ### Managment of keys, passwords, and other secrets
