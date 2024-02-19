@@ -161,11 +161,17 @@ ssh::call::internal ()
     local direct_mode=false;
     local terminal_mode=false;
     local keep_temp_files=false;
+    local absorb_file;
     local temp_dir;
     local upload_path;
     local ssh_destination;
     while [[ "$#" -gt 0 ]]; do
         case $1 in 
+            --absorb)
+                absorb_file="$2";
+                shift;
+                shift
+            ;;
             --command | --cmd)
                 produce_script_args+=(--command);
                 shift
@@ -258,8 +264,12 @@ ssh::call::internal ()
             local task_status=$?;
         else
             local remote_stdin_file="/dev/null";
-            if [ ! -t 0 ]; then
-                cat > "${temp_dir}/stdin" || softfail "Unable to read stdin" || return $?;
+            if [ ! -t 0 ] || [ -n "${absorb_file:-}" ]; then
+                if [ -n "${absorb_file:-}" ]; then
+                    mv "${absorb_file}" "${temp_dir}/stdin" || softfail "Unable to absorb file: ${absorb_file}" || return $?;
+                else
+                    cat > "${temp_dir}/stdin" || softfail "Unable to read stdin" || return $?;
+                fi;
                 if [ -s "${temp_dir}/stdin" ]; then
                     local stdin_checksum;
                     stdin_checksum="$(cksum <"${temp_dir}/stdin")" || softfail "Unable to get stdin checksum" || return $?;
