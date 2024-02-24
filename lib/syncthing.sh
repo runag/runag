@@ -26,6 +26,16 @@ syncthing::install::apt() {
 
   apt::install syncthing || softfail || return $?
   systemctl --user --quiet --now enable syncthing.service || softfail || return $?
+
+  # https://wiki.archlinux.org/title/Desktop_entries#Hide_desktop_entries
+  file::write "${HOME}/.local/share/applications/syncthing-start.desktop" <<SHELL || fail
+[Desktop Entry]
+Type=Application
+NoDisplay=true
+Hidden=true
+SHELL
+
+  sudo update-desktop-database || fail
 }
 
 syncthing::open() {
