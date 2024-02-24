@@ -1,10 +1,10 @@
 ## Index
 
 * [apt::update](#aptupdate)
-* [apt::dist_upgrade](#aptdist_upgrade)
+* [apt::dist_upgrade](#aptdistupgrade)
 * [apt::install](#aptinstall)
 * [apt::autoremove](#aptautoremove)
-* [apt::add_source_with_key](#aptadd_source_with_key)
+* [apt::add_source_with_key](#aptaddsourcewithkey)
 
 ### apt::update
 
