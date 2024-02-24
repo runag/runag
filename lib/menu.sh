@@ -33,7 +33,7 @@ menu::select_and_run() {
     fi
   done
 
-  local prompt_color; test -t 1 && prompt_color="$(tput setaf 3 2>/dev/null)" || prompt_color=""
+  local prompt_color; test -t 1 && prompt_color="$(printf "setaf 11\nbold" | tput -S 2>/dev/null)" || prompt_color=""
   local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
@@ -92,14 +92,14 @@ menu::display_menu() {
   # 5 - header
   # 6 - comment
 
-  local color_a; test -t 0 && color_a="$(tput setaf 1 2>/dev/null)" || color_a=""
+  local color_a; test -t 0 && color_a="$(tput setaf 9 2>/dev/null)" || color_a=""
   local color_b
 
-  local color_a_accent; test -t 0 && color_a_accent="$(printf "setaf 15\nsetab 1" | tput -S 2>/dev/null)" || color_a_accent=""
+  local color_a_accent; test -t 0 && color_a_accent="$(printf "setaf 15\nsetab 9" | tput -S 2>/dev/null)" || color_a_accent=""
   local color_b_accent; test -t 0 && color_b_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_accent=""
 
-  local header_color; test -t 0 && header_color="$(tput setaf 5 2>/dev/null)" || header_color=""
-  local comment_color; test -t 0 && comment_color="$(tput setaf 6 2>/dev/null)" || comment_color=""
+  local header_color; test -t 0 && header_color="$(printf "setaf 14\nbold" | tput -S 2>/dev/null)" || header_color=""
+  local comment_color; test -t 0 && comment_color="$(printf "setaf 13\nbold" | tput -S 2>/dev/null)" || comment_color=""
 
   local reset_attrs; test -t 0 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 

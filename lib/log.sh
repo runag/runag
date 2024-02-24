@@ -14,69 +14,51 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# log::test() {
-#   # 1356
-#   log::error log::error
-#   log::warning log::warning
-#   log::notice log::notice
-#   log::success log::success
-# }
+# colors:
+# 1  3  5  6 - don't looks good in dark mode
+# 9 11 14 13 - looks good in dark mode, looks good in light only with bold
+
+log::test() {
+  log::error log::error
+  log::warning log::warning
+  log::notice log::notice
+  log::success log::success
+}
 
 log::error() {
-  local message="$1"
-  log::message --foreground-color 1 "${message}" >&2
+  local message="${1:-"(empty log message)"}"
+  if test -t 1; then
+    echo "$(printf "setaf 9\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  else
+    echo "${message}"
+  fi
 }
 
 log::warning() {
-  local message="$1"
-  log::message --foreground-color 3 "${message}" >&2
+  local message="${1:-"(empty log message)"}"
+  if test -t 1; then
+    echo "$(printf "setaf 11\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  else
+    echo "${message}"
+  fi
 }
 
 log::notice() {
-  local message="$1"
-  log::message --foreground-color 6 "${message}" 
+  local message="${1:-"(empty log message)"}"
+  if test -t 1; then
+    echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  else
+    echo "${message}"
+  fi
 }
 
 log::success() {
-  local message="$1"
-  log::message --foreground-color 5 "${message}"
-}
-
-log::message() {
-  local foreground_color
-  local background_color
-  local message
-
-  while [[ "$#" -gt 0 ]]; do
-    case $1 in
-    -f|--foreground-color)
-        test -t 1 && foreground_color="$(tput setaf "$2" 2>/dev/null)" || foreground_color=""
-      shift; shift
-      ;;
-    -b|--background-color)
-      test -t 1 && background_color="$(tput setab "$2" 2>/dev/null)" || background_color=""
-      shift; shift
-      ;;
-    -*)
-      echo "Unknown argument for log::message: $1" >&2
-      shift
-      message="$*"
-      break
-      ;;
-    *)
-      message="$1"
-      break
-      ;;
-    esac
-  done
-
-  if [ -z "${message:-}" ]; then
-    message="(empty log message)"
+  local message="${1:-"(empty log message)"}"
+  if test -t 1; then
+    echo "$(printf "setaf 13\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  else
+    echo "${message}"
   fi
-
-  local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
-
-  echo "${foreground_color:-}${background_color:-}${message}${reset_attrs}"
 }
 
 log::elapsed_time() {
@@ -89,7 +71,6 @@ $(declare -f log::error)
 $(declare -f log::warning)
 $(declare -f log::notice)
 $(declare -f log::success)
-$(declare -f log::message)
 $(declare -f log::elapsed_time)
 SHELL
 }

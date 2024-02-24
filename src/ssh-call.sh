@@ -32,7 +32,6 @@ fi
 $(fail::function_sources)
 $(ssh::call::function_sources)
 
-$(declare -f log::message)
 $(declare -f log::notice)
 $(declare -f dir::should_exists)
 
