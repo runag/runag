@@ -411,16 +411,14 @@ ssh::call::internal() {
     fi
 
     if [ -s "${temp_dir}/stderr" ]; then
-      local terminal_sequence
-
-      if [ -t 2 ] && terminal_sequence="$(tput setaf 1 2>/dev/null)"; then
-        echo -n "${terminal_sequence}" >&2
+      if test -t 2; then
+        printf "setaf 9\nbold" | tput -S >&2 2>/dev/null && true
       fi
 
       cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
 
-      if [ -t 2 ] && terminal_sequence="$(tput sgr 0 2>/dev/null)"; then
-        echo -n "${terminal_sequence}" >&2
+      if test -t 2; then
+        tput sgr 0 >&2 2>/dev/null && true
       fi
     fi
 

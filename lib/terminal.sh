@@ -15,11 +15,11 @@
 #  limitations under the License.
 
 terminal::color_table() {
-  for i in {0..16..1}; do 
+  for i in {0..15}; do 
     echo "$(tput setaf "${i}")tput setaf ${i}$(tput sgr 0)"
   done
 
-  for i in {0..16..1}; do 
+  for i in {0..15}; do 
     echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)"
   done
 }
