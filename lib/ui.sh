@@ -21,12 +21,12 @@ ui::confirm() {
 
   local user_input; IFS="" read -r user_input || fail
 
-  while [ "${user_input}" != yes ]; do
-    if [ "${user_input}" = no ]; then
+  while [ "${user_input}" != yes ] && [ "${user_input}" != y ]; do
+    if [ "${user_input}" = no ] || [ "${user_input}" = n ]; then
       return 1
     fi
 
-    log::warning 'Please enter "yes" or "no" to continue' || fail
+    log::warning 'Please enter "yes" or "y" to continue, "no" or "n" to stop.' || fail
     
     IFS="" read -r user_input || fail
   done
