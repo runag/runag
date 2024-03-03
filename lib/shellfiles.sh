@@ -56,13 +56,13 @@ SHELL
 }
 
 shellfiles::install_loader::bash() {
-  shellfiles::write_loader_block --file "${HOME}/.bashrc" --dir "${HOME}/.shellfiles.d/rc" || softfail || return $?
-  shellfiles::write_loader_block --file "${HOME}/.profile" --dir "${HOME}/.shellfiles.d/profile" || softfail || return $?
+  shellfiles::write_loader_block --file "${HOME}/.bashrc" --dir ".shellfiles.d/rc" || softfail || return $?
+  shellfiles::write_loader_block --file "${HOME}/.profile" --dir ".shellfiles.d/profile" || softfail || return $?
 }
 
 shellfiles::install_loader::zsh() {
-  shellfiles::write_loader_block --file "${HOME}/.zshrc" --dir "${HOME}/.shellfiles.d/rc" || softfail || return $?
-  shellfiles::write_loader_block --file "${HOME}/.profile" --dir "${HOME}/.shellfiles.d/profile" || softfail || return $?
+  shellfiles::write_loader_block --file "${HOME}/.zshrc" --dir ".shellfiles.d/rc" || softfail || return $?
+  shellfiles::write_loader_block --file "${HOME}/.profile" --dir ".shellfiles.d/profile" || softfail || return $?
 }
 
 shellfiles::write() {
