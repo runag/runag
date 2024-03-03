@@ -143,3 +143,17 @@ if [ -n "\${BASH_VERSION:-}" ]; then
 fi
 SHELL
 }
+
+shellfiles::install_short_prompt_rc() {
+  local license_text; license_text="$(runag::print_license)" || softfail || return $?
+
+  shellfiles::write "rc/short-prompt" <<SHELL || softfail || return $?
+${license_text}
+
+if [ -n "\${BASH_VERSION:-}" ]; then
+  if tput cols >/dev/null 2>&1 && [ "\$(tput cols)" -le 140 ]; then
+    PS1='\['"\$(tput setaf 12)\$(tput bold)"'\]\W\['"\$(tput sgr 0)"'\]\$ '
+  fi
+fi
+SHELL
+}
