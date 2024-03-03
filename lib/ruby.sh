@@ -14,8 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ---- install dependencies ----
-
 ruby::install_dependencies::apt() {
   apt::install \
     build-essential `# new rails project requires some gems to be compiled` \
@@ -27,27 +25,6 @@ ruby::install_dependencies::apt() {
     zlib1g-dev      `# dependency to install ruby 2.7.3 using ruby-build` \
       || softfail || return $?
 }
-
-
-# ---- install by asdf ----
-
-ruby::install_by_asdf() {
-  local ruby_version="${1:-"latest"}"
-
-  asdf::add_plugin ruby || softfail || return $?
-
-  asdf install ruby "${ruby_version}" --verbose || softfail || return $?
-}
-
-ruby::install_by_asdf_and_set_global() {
-  local ruby_version="${1:-"latest"}"
-
-  ruby::install_by_asdf "${ruby_version}" || softfail || return $?
-  asdf global ruby "${ruby_version}" || softfail || return $?
-}
-
-
-# ---- install by apt ----
 
 ruby::install::apt() {
   ruby::install_dependencies::apt || softfail || return $?
@@ -103,6 +80,7 @@ $(runag::print_license)
 export DISABLE_SPRING=true
 SHELL
 }
+
 
 # ---- fail detector ----
 

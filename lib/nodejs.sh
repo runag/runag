@@ -14,8 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ---- install dependencies ----
-
 nodejs::install_dependencies::apt() {
   # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
   apt::install \
@@ -25,27 +23,6 @@ nodejs::install_dependencies::apt() {
     gpg     `# asdf-specific` \
       || softfail || return $?
 }
-
-
-# ---- install by asdf ----
-
-nodejs::install_by_asdf() {
-  local node_version="${1:-"latest"}"
-
-  asdf::add_plugin nodejs || softfail || return $?
-
-  asdf install nodejs "${node_version}" || softfail || return $?
-}
-
-nodejs::install_by_asdf_and_set_global() {
-  local node_version="${1:-"latest"}"
-
-  nodejs::install_by_asdf "${node_version}" || softfail || return $?
-  asdf global nodejs "${node_version}" || softfail || return $?
-}
-
-
-# ---- install by apt ----
 
 nodejs::install::apt() {
   local version="$1"
@@ -67,12 +44,12 @@ nodejs::install_yarn::apt() {
   apt::install yarn || softfail || return $?
 }
 
+
+# npm
+
 npm::update_globally_installed_packages() {
   sudo NODENV_VERSION=system npm update -g --unsafe-perm=true || softfail || return $?
 }
-
-
-# ---- npm auth_token ----
 
 npm::auth_token() {
   local registry="registry.npmjs.org"
