@@ -43,3 +43,9 @@ shell::export_variables_as_code() {
     fi
   done
 }
+
+# shellcheck disable=SC2016
+shell::enable_trace() {
+  PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
+  set -o xtrace
+}
