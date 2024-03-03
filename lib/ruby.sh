@@ -73,9 +73,11 @@ ruby::dangerously_append_nodocument_to_gemrc() {
   file::append_line_unless_present --mode 0600 "${HOME}/.gemrc" "gem: --no-document" || softfail || return $?
 }
 
-ruby::disable_spring() {
-  file::write --mode 0640 "${HOME}/.profile.d/disable-ruby-spring.sh" <<SHELL || softfail || return $?
-$(runag::print_license)
+ruby::install_disable_spring_shellfile() {
+  local license_text; license_text="$(runag::print_license)" || softfail || return $?
+
+  shellfiles::write "profile/ruby-disable-spring" <<SHELL || softfail || return $?
+${license_text}
 
 export DISABLE_SPRING=true
 SHELL

@@ -29,20 +29,22 @@ asdf::install() {
 
 asdf::install_with_shellrc() {
   asdf::install || softfail || return $?
-  asdf::set_shell_rc || softfail || return $?
+  asdf::install_shellfile || softfail || return $?
 }
 
-asdf::set_shell_rc() {
-  file::write --mode 0640 "${HOME}/.profile.d/asdf.sh" <<SHELL || softfail || return $?
-$(runag::print_license)
+asdf::install_shellfile() {
+  local license_text; license_text="$(runag::print_license)" || softfail || return $?
+
+  shellfiles::write "profile/asdf" <<SHELL || softfail || return $?
+${license_text}
 
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
   . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
 fi
 SHELL
 
-  file::write --mode 0640 "${HOME}/.shellrc.d/asdf.sh" <<SHELL || softfail || return $?
-$(runag::print_license)
+  shellfiles::write "rc/asdf" <<SHELL || softfail || return $?
+${license_text}
 
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
   . "\${HOME}/.asdf/asdf.sh" || { echo "Unable to load asdf" >&2; return 1; }
