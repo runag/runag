@@ -14,12 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-firefox::enable_wayland() {
-  file::write --mode 0640 "${HOME}/.profile.d/firefox.sh" <<SHELL || softfail || return $?
-export MOZ_ENABLE_WAYLAND=1
-SHELL
-}
-
 firefox::set_pref() {
   local name="$1"
   local value="$2"
