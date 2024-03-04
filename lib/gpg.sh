@@ -71,6 +71,7 @@ gpg::import_key() {
     local key_with_spaces; key_with_spaces="$(<<<"${gpg_key_id}" sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?
     local key_base64; key_base64="$(<<<"${gpg_key_id}" xxd -r -p | base64 | sed -E 's/(.{4})/\1 /g' | sed 's/ $//'; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
 
+    echo ""
     echo "You are about to import GPG key with id: ${gpg_key_id}."
 
     if [ -n "${trust_level:-}" ]; then
