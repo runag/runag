@@ -64,16 +64,6 @@ ssh::import_id() {
   fi
 }
 
-ssh::get_user_public_key() {
-  local file_name="${1:-"id_ed25519"}"
-
-  if [ -r "${HOME}/.ssh/${file_name}.pub" ]; then
-    cat "${HOME}/.ssh/${file_name}.pub" || softfail || return $?
-  else
-    softfail "Unable to find user public key" || return $?
-  fi
-}
-
 ssh::install_ssh_profile_from_pass() {
   local profile_path="$1"
   local profile_name="$2"
