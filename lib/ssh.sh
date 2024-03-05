@@ -70,42 +70,45 @@ ssh::install_ssh_profile_from_pass() {
 
   # ssh key
   if pass::secret_exists "${profile_path}/id_ed25519"; then
+    # I have trouble getting Ubuntu desktop 22.04 to remember password for the key if that key resides in any subdirectory inside ~/.ssh
+    # If I put the key right into ~/.ssh then it's fine
     ssh::install_ssh_key_from_pass "${profile_path}/id_ed25519" "${HOME}/.ssh/${profile_name}.id_ed25519" || softfail || return $?
   fi
 
   # ssh config
-  local profile_config_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
+  local config_file_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
 
   if [[ "${OSTYPE}" =~ ^linux ]] && pass::secret_exists "${profile_path}/config.linux"; then
-    local temp_file; temp_file="$(mktemp)" || softfail || return $?
-
-    pass::use --absorb-in-callback --body "${profile_path}/config.linux" file::write --mode 0600 "${temp_file}" || softfail || return $?
-
-    if pass::secret_exists "${profile_path}/id_ed25519"; then
-      sed --in-place -E "s#IdentityFile %k#IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519#g" "${temp_file}" || softfail || return $?
-    fi
-
-    file::write --absorb "${temp_file}" --mode 0600 "${profile_config_path}" || softfail || return $?
+    ssh::install_ssh_profile_from_pass::write_config  "${profile_path}" "${profile_name}" "${config_file_path}" "${profile_path}/config.linux" || softfail || return $?
 
   elif pass::secret_exists "${profile_path}/config"; then
-    local temp_file; temp_file="$(mktemp)" || softfail || return $?
-
-    pass::use --absorb-in-callback --body "${profile_path}/config" file::write --mode 0600 "${temp_file}" || softfail || return $?
-
-    if pass::secret_exists "${profile_path}/id_ed25519"; then
-      sed --in-place -E "s#IdentityFile %k#IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519#g" "${temp_file}" || softfail || return $?
-    fi
-
-    file::write --absorb "${temp_file}" --mode 0600 "${profile_config_path}" || softfail || return $?
+    ssh::install_ssh_profile_from_pass::write_config  "${profile_path}" "${profile_name}" "${config_file_path}" "${profile_path}/config" || softfail || return $?
     
   elif pass::secret_exists "${profile_path}/id_ed25519"; then
-    <<<"IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+    <<<"IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519" file::write --mode 0600 "${config_file_path}" || softfail || return $?
   fi
 
   # known hosts
   if pass::secret_exists "${profile_path}/known_hosts"; then
     pass::use --absorb-in-callback --body "${profile_path}/known_hosts" file::write_block --mode 0600 "${HOME}/.ssh/known_hosts" "${profile_name}" || softfail || return $?
   fi
+}
+
+ssh::install_ssh_profile_from_pass::write_config() {
+  local profile_path="$1"
+  local profile_name="$2"
+  local config_file_path="$3"
+  local pass_config_path="$4"
+  
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  pass::use --absorb-in-callback --body "${pass_config_path}" file::write --mode 0600 "${temp_file}" || softfail || return $?
+
+  if pass::secret_exists "${profile_path}/id_ed25519"; then
+    sed --in-place -E "s#IdentityFile %k#IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519#g" "${temp_file}" || softfail || return $?
+  fi
+
+  file::write --absorb "${temp_file}" --mode 0600 "${config_file_path}" || softfail || return $?
 }
 
 # ssh private key should be in body, password may be in password, optional .pub secret can contain public key in 1st line (password field)
