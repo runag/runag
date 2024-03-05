@@ -77,10 +77,26 @@ ssh::install_ssh_profile_from_pass() {
   local profile_config_path="${HOME}/.ssh/ssh_config.d/${profile_name}.conf"
 
   if [[ "${OSTYPE}" =~ ^linux ]] && pass::secret_exists "${profile_path}/config.linux"; then
-    pass::use --absorb-in-callback --body "${profile_path}/config.linux" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+    local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+    pass::use --absorb-in-callback --body "${profile_path}/config.linux" file::write --mode 0600 "${temp_file}" || softfail || return $?
+
+    if pass::secret_exists "${profile_path}/id_ed25519"; then
+      sed --in-place -E "s#IdentityFile %k#IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519#g" "${temp_file}" || softfail || return $?
+    fi
+
+    file::write --absorb "${temp_file}" --mode 0600 "${profile_config_path}" || softfail || return $?
 
   elif pass::secret_exists "${profile_path}/config"; then
-    pass::use --absorb-in-callback --body "${profile_path}/config" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
+    local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+    pass::use --absorb-in-callback --body "${profile_path}/config" file::write --mode 0600 "${temp_file}" || softfail || return $?
+
+    if pass::secret_exists "${profile_path}/id_ed25519"; then
+      sed --in-place -E "s#IdentityFile %k#IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519#g" "${temp_file}" || softfail || return $?
+    fi
+
+    file::write --absorb "${temp_file}" --mode 0600 "${profile_config_path}" || softfail || return $?
     
   elif pass::secret_exists "${profile_path}/id_ed25519"; then
     <<<"IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519" file::write --mode 0600 "${profile_config_path}" || softfail || return $?
