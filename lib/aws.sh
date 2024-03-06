@@ -50,9 +50,9 @@ aws::create_access_key_and_save_to_pass() {
 
   local access_key; access_key="$(aws iam create-access-key --user-name "${user_name}")" || softfail || return $?
 
-  <<<"${access_key}" jq --raw-output --exit-status .AccessKey.AccessKeyId | pass insert --multiline --force "${pass_path}/id"
+  <<<"${access_key}" jq --raw-output --exit-status .AccessKey.AccessKeyId | pass insert --multiline "${pass_path}/id"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
-  <<<"${access_key}" jq --raw-output --exit-status .AccessKey.SecretAccessKey | pass insert --multiline --force "${pass_path}/secret"
+  <<<"${access_key}" jq --raw-output --exit-status .AccessKey.SecretAccessKey | pass insert --multiline "${pass_path}/secret"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
