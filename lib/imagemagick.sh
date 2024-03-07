@@ -17,7 +17,7 @@
 imagemagick::set_policy::resource() {
   local policy_path="/etc/ImageMagick-6/policy.xml"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -p|--policy-path)
       policy_path="$2"

@@ -33,7 +33,7 @@ ssh::call() {
   local keep_temp_files=false
   local terminal_mode=false
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       -[46AaCfGgKkMNnqsTtVvXxYy]*)
         Ssh_Args+=("$1")
@@ -107,7 +107,7 @@ ssh::call::internal() {
   local upload_path
   local ssh_destination
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       --absorb)
         absorb_file="$2"
@@ -496,7 +496,7 @@ ssh::call::produce_script() {
   local terminal_mode=false
   local cd_to_home=false
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       --command)
         command_mode=true
@@ -595,7 +595,7 @@ ssh::call::invoke() {
   local nohup_mode=false
   local terminal_mode
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       --nohup)
         nohup_mode=true

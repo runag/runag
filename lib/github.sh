@@ -31,7 +31,7 @@ github::query_release() {
   local release_id="latest"
   local query_string
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -r|--release-id)
       release_id="$2"
@@ -71,7 +71,7 @@ github::download_release() {
   local release_id="latest"
   local query_string
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -r|--release-id)
       release_id="$2"

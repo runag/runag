@@ -55,7 +55,7 @@ npm::auth_token() {
   local registry="registry.npmjs.org"
   local project_config
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -r|--registry)
       registry="$2"

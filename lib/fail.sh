@@ -24,7 +24,7 @@ fail() {
   local trace_start=1
   local message
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -e|--exit-status)
       exit_status="$2"

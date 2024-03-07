@@ -76,7 +76,7 @@ linux::configure_inotify() {
   local max_user_watches="1048576"
   local max_user_instances="2048"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -w|--max-user-watches)
       max_user_watches="$2"
@@ -250,7 +250,7 @@ linux::set_battery_charge_control_threshold() {
   local start_threshold=90
   local end_threshold=100
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -b|--battery)
       battery_number="$2"

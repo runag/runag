@@ -86,7 +86,7 @@ pass::use() {
   local skip_update=false
   local absorb_in_callback=false
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -a|--absorb-in-callback)
       absorb_in_callback=true
