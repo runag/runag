@@ -51,7 +51,7 @@ postgresql::psql() {
   local psql_command=(psql --set ON_ERROR_STOP=on)
   local arguments_list=()
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       --sudo)
         local user_name
@@ -88,7 +88,7 @@ postgresql::psql() {
 postgresql::create_role_if_not_exists() {
   local with_string
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       --with)
         with_string="WITH $2"

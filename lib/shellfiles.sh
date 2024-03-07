@@ -19,7 +19,7 @@ shellfiles::write_loader_block() {
   local directory_path
   local block_name="shellfile-d-loader"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -f|--file)
       file_path="$2"

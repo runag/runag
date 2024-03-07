@@ -39,7 +39,7 @@ file::write() {
   local temp_file
   local allow_empty
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -u|--sudo)
       perhaps_sudo=true
@@ -172,7 +172,7 @@ file::append_line_unless_present() {
   local file_owner
   local file_group
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -u|--sudo)
       perhaps_sudo=true
@@ -253,7 +253,7 @@ file::write_block() {
   local temp_file
   local allow_empty
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -u|--sudo)
       perhaps_sudo=true
@@ -327,7 +327,7 @@ file::read_with_updated_block() {
   local temp_file
   local allow_empty
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -u|--sudo)
       perhaps_sudo=true

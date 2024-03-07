@@ -23,7 +23,7 @@ gpg::get_key_uid() {
 gpg::import_key() {
   local skip_if_exists trust_level should_confirm
   local list_keys_command="--list-keys"
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       -c|--confirm)
         should_confirm=true
@@ -106,7 +106,7 @@ gpg::import_key() {
 # gpg::decrypt_and_install_file() {
 #   local file_mode
 #
-#   while [[ "$#" -gt 0 ]]; do
+#   while [ "$#" -gt 0 ]; do
 #     case $1 in
 #     -m|--mode)
 #       file_mode="$2"

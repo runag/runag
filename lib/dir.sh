@@ -26,7 +26,7 @@ dir::should_exists() {
   local perhaps_sudo
   local keep_permissions=false
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -m|--mode)
       dir_mode="$2"

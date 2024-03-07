@@ -28,7 +28,7 @@ direnv::write_block() {
   local file_mode="0600"
   local file_name=".envrc"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -m|--mode)
       file_mode="$2"

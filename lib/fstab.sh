@@ -17,7 +17,7 @@
 fstab::add_mount_option() {
   local fstype
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -f|--filesystem-type)
       fstype="$2"

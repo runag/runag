@@ -18,7 +18,7 @@ postfix::install() {
   local mailname
   local root_address
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -m|--mailname)
       mailname="$2"

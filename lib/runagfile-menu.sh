@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 runagfile_menu::necessary() {
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -o|--os)
       local os_type="$2"
@@ -50,7 +50,7 @@ runagfile_menu::add() {
   local prefix comment_postfix signal_message
   local add_menu=false
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       -o|--os)
         local os_type="$2"

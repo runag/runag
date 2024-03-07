@@ -21,7 +21,7 @@ apt::update() {
 
 # @description Perform apt dist-upgrade
 apt::dist_upgrade() {
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -s|--skip-in-ci|--skip-in-continuous-integration)
       if [ "${CI:-}" = "true" ]; then

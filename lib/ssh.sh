@@ -134,7 +134,7 @@ ssh::install_ssh_key_from_pass() {
 ssh::install_ssh_key_from_pass_to_remote() {
   local pass_args=()
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
       -*)
         pass_args+=("$1")
@@ -213,7 +213,7 @@ EOF
 ssh::refresh_host_in_known_hosts() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -p|--port)
       ssh_port="$2"
@@ -238,7 +238,7 @@ ssh::refresh_host_in_known_hosts() {
 ssh::wait_for_host_to_become_available() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -p|--port)
       ssh_port="$2"
@@ -272,7 +272,7 @@ ssh::wait_for_host_to_become_available() {
 ssh::add_host_to_known_hosts() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -p|--port)
       ssh_port="$2"
@@ -314,7 +314,7 @@ ssh::add_host_to_known_hosts() {
 ssh::remove_host_from_known_hosts() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -p|--port)
       ssh_port="$2"

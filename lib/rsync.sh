@@ -19,7 +19,7 @@ rsync::sync() {
   local to_remote=false
   local rsync_args=()
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     --from-remote)
       from_remote=true

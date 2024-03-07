@@ -32,7 +32,7 @@ cifs::mount() {
   local file_mode="0600"
   local dir_mode="0700"
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
     -f|--file-mode)
       file_mode="$2"
