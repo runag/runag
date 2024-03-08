@@ -33,3 +33,129 @@ systemd::write_system_unit() {
   # TODO: --absorb?
   file::write --sudo --mode 0644 "/etc/systemd/system/${name}" || softfail || return $?
 }
+
+systemd::runagfile_menu() {
+  local service_name
+  local ssh_call_prefix=()
+  local ssh_call_direct_prefix=()
+  local systemctl_args=()
+  local library_function_arguments=()
+  local with_timer=false
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    -n|--name)
+      service_name="$2"
+      shift; shift
+      ;;
+    -w|--ssh-call-with)
+      ssh_call_prefix+=("$2")
+      ssh_call_direct_prefix+=("$2" "--direct")
+      shift; shift
+      ;;
+    -s|--ssh-call)
+      ssh_call_prefix+=("ssh::call")
+      ssh_call_direct_prefix+=("ssh::call" "--direct")
+      shift; shift
+      ;;
+    -u|--user)
+      systemctl_args+=("--user")
+      library_function_arguments+=("--user")
+      shift
+      ;;
+    -t|--with-timer)
+      with_timer=true
+      library_function_arguments+=("--with-timer")
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  runagfile_menu::add --header "Actions on ${service_name} services" || softfail || return $?
+
+  runagfile_menu::add "${ssh_call_prefix[@]}" systemctl "${systemctl_args[@]}" start "${service_name}.service" || softfail || return $?
+  runagfile_menu::add "${ssh_call_prefix[@]}" systemctl "${systemctl_args[@]}" stop "${service_name}.service" || softfail || return $?
+
+  if [ "${with_timer}" = true ]; then
+    runagfile_menu::add "${ssh_call_prefix[@]}" systemd::disable_timer "${library_function_arguments[@]}" "${service_name}" || softfail || return $?
+  fi
+
+  runagfile_menu::add "${ssh_call_prefix[@]}" systemd::show_status "${library_function_arguments[@]}" "${service_name}" || softfail || return $?
+
+  runagfile_menu::add "${ssh_call_prefix[@]}"        journalctl "${systemctl_args[@]}" -u "${service_name}.service" --since today || softfail || return $?
+  runagfile_menu::add "${ssh_call_direct_prefix[@]}" journalctl "${systemctl_args[@]}" -u "${service_name}.service" --since today --follow || softfail || return $?
+}
+
+systemd::disable_timer() {
+  local systemctl_args=()
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    -u|--user)
+      systemctl_args+=("--user")
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  systemctl "${systemctl_args[@]}" stop "${1}.timer" || softfail || return $?
+  systemctl "${systemctl_args[@]}" disable "${1}.timer" || softfail || return $? # add --quiet?
+}
+
+systemd::show_status() {
+  local systemctl_args=()
+  local with_timer=false
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    -u|--user)
+      systemctl_args+=("--user")
+      shift
+      ;;
+    -t|--with-timer)
+      with_timer=true
+      shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local exit_statuses=()
+
+  printf "\n"
+
+  if [ "${with_timer}" = true ]; then
+    systemctl "${systemctl_args[@]}" list-timers "${1}.timer" || softfail || return $? # add --all?
+    exit_statuses+=($?)
+    printf "\n\n\n"
+
+    systemctl "${systemctl_args[@]}" status "${1}.timer"
+    exit_statuses+=($?)
+    printf "\n\n\n"
+  fi
+
+  systemctl "${systemctl_args[@]}" status "${1}.service"
+  exit_statuses+=($?)
+  printf "\n"
+
+  if [[ "${exit_statuses[*]}" =~ [^03[:space:]] ]]; then # I'm not sure about number 3 here
+    softfail || return $?
+  fi
+}
