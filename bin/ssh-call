@@ -29,7 +29,7 @@ fail ()
     local perform_softfail=false;
     local trace_start=1;
     local message;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             -e | --exit-status)
                 exit_status="$2";
@@ -102,7 +102,7 @@ ssh::call ()
     local internal_args=();
     local keep_temp_files=false;
     local terminal_mode=false;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             -[46AaCfGgKkMNnqsTtVvXxYy]*)
                 Ssh_Args+=("$1");
@@ -165,7 +165,7 @@ ssh::call::internal ()
     local temp_dir;
     local upload_path;
     local ssh_destination;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             --absorb)
                 absorb_file="$2";
@@ -454,7 +454,7 @@ ssh::call::produce_script ()
     local command_mode=false;
     local terminal_mode=false;
     local cd_to_home=false;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             --command)
                 command_mode=true;
@@ -539,7 +539,7 @@ ssh::call::invoke ()
 { 
     local nohup_mode=false;
     local terminal_mode;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             --nohup)
                 nohup_mode=true;
@@ -586,7 +586,7 @@ dir::should_exists ()
     local dir_group;
     local perhaps_sudo;
     local keep_permissions=false;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             -m | --mode)
                 dir_mode="$2";

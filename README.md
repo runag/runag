@@ -117,7 +117,7 @@ Please refer to the source code for now.
 * [linux](lib/linux.sh)
 * [macos](lib/macos.sh)
 * [os](lib/os.sh)
-* [shellrc](lib/shellrc.sh)
+* [shellfiles](lib/shellfiles.sh)
 * [systemd](lib/systemd.sh)
 * [ubuntu](lib/ubuntu.sh)
 * [vmware](lib/vmware.sh)
@@ -173,6 +173,7 @@ Please refer to the source code for now.
 ### Miscellaneous tools
 
 * [benchmark](lib/benchmark.sh)
+* [nvidia](lib/nvidia.sh)
 * [restic](lib/restic.sh)
 
 <!-- API TOC END -->

@@ -25,7 +25,7 @@ fail ()
     local perform_softfail=false;
     local trace_start=1;
     local message;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             -e | --exit-status)
                 exit_status="$2";
@@ -146,7 +146,7 @@ git::install_git ()
 git::place_up_to_date_clone () 
 { 
     local branch_name;
-    while [[ "$#" -gt 0 ]]; do
+    while [ "$#" -gt 0 ]; do
         case $1 in 
             -b | --branch)
                 local branch_name="$2";
