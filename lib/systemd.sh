@@ -41,6 +41,8 @@ systemd::runagfile_menu() {
   local systemctl_args=()
   local library_function_arguments=()
   local with_timer=false
+  local user_services=false
+  local ssh_call=false
 
   while [ "$#" -gt 0 ]; do
     case $1 in
@@ -49,16 +51,19 @@ systemd::runagfile_menu() {
       shift; shift
       ;;
     -w|--ssh-call-with)
+      ssh_call=true
       ssh_call_prefix+=("$2")
       ssh_call_direct_prefix+=("$2" "--direct")
       shift; shift
       ;;
     -s|--ssh-call)
+      ssh_call=true
       ssh_call_prefix+=("ssh::call")
       ssh_call_direct_prefix+=("ssh::call" "--direct")
       shift; shift
       ;;
     -u|--user)
+      user_services=true
       systemctl_args+=("--user")
       library_function_arguments+=("--user")
       shift
@@ -87,6 +92,20 @@ systemd::runagfile_menu() {
   fi
 
   runagfile_menu::add "${ssh_call_prefix[@]}" systemd::show_status "${library_function_arguments[@]}" "${service_name}" || softfail || return $?
+
+  # TODO: eventually remove 
+  if [ "${user_services}" = true ]; then
+    local release_codename; release_codename="$("${ssh_call_prefix[@]}" lsb_release --codename --short)" || softfail || return $?
+    if [ "${release_codename}" = focal ]; then
+      if [ "${ssh_call}" = true ]; then
+        ssh_call_prefix+=("--root") # Watch out!
+        ssh_call_direct_prefix+=("--root") # Watch out!
+      fi
+      runagfile_menu::add "${ssh_call_prefix[@]}"        journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today || softfail || return $?
+      runagfile_menu::add "${ssh_call_direct_prefix[@]}" journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today --follow || softfail || return $?
+      return # Watch out!
+    fi
+  fi
 
   runagfile_menu::add "${ssh_call_prefix[@]}"        journalctl "${systemctl_args[@]}" -u "${service_name}.service" --since today || softfail || return $?
   runagfile_menu::add "${ssh_call_direct_prefix[@]}" journalctl "${systemctl_args[@]}" -u "${service_name}.service" --since today --follow || softfail || return $?
