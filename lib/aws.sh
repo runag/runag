@@ -14,14 +14,29 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-aws::write_pass_credentials_to_file() {
+aws::pass::write_credentials_file() {
+  local credentials_file
+  local pass_path
   local profile_name="default"
+  local ssh_call=false
 
-  while [[ "$#" -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--profile)
+    -c|--credentials-file)
+      credentials_file="$2"
+      shift; shift
+      ;;
+    -p|--pass-path)
+      pass_path="$2"
+      shift; shift
+      ;;
+    -e|--profile)
       profile_name="$2"
       shift; shift
+      ;;
+    -r|--ssh-call)
+      ssh_call=true
+      shift
       ;;
     -*)
       softfail "Unknown argument: $1" || return $?
@@ -32,21 +47,54 @@ aws::write_pass_credentials_to_file() {
     esac
   done
 
-  local pass_path="$1"
+  local command_prefix=()
+  local default_credentials_dir="${HOME}/.aws"
+
+  if [ "${ssh_call}" = true ]; then
+    command_prefix+=("ssh::call")
+    default_credentials_dir=".aws"
+  fi
+
+  credentials_file="${credentials_file:-"${AWS_SHARED_CREDENTIALS_FILE:-"${default_credentials_dir}/credentials"}"}"
+
+  local credentials_dir; credentials_dir="$(dirname "${credentials_file}")" || softfail || return $?
+
+  if [ "${credentials_dir}" = "${default_credentials_dir}" ]; then
+    "${command_prefix[@]}" dir::should_exists --mode 0700 "${credentials_dir}" || softfail || return $?
+  fi
 
   local aws_access_key_id; aws_access_key_id="$(pass::use "${pass_path}/id")" || softfail || return $?
   local aws_secret_access_key; aws_secret_access_key="$(pass::use "${pass_path}/secret")" || softfail || return $?
 
-  file::write_block --mode 0600 "${AWS_SHARED_CREDENTIALS_FILE}" "PROFILE ${profile_name}" <<INI || softfail || return $?
+  "${command_prefix[@]}" file::write_block --mode 0600 "${credentials_file}" "PROFILE ${profile_name}" <<INI || softfail || return $?
 [${profile_name}]
 aws_access_key_id=${aws_access_key_id}
 aws_secret_access_key=${aws_secret_access_key}
 INI
 }
 
-aws::create_access_key_and_save_to_pass() {
-  local user_name="$1"
-  local pass_path="$2"
+aws::pass::create_access_key() {
+  local pass_path
+  local user_name
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    -p|--pass-path)
+      pass_path="$2"
+      shift; shift
+      ;;
+    -u|--user-name)
+      user_name="$2"
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
 
   local access_key; access_key="$(aws iam create-access-key --user-name "${user_name}")" || softfail || return $?
 
