@@ -79,7 +79,7 @@ systemd::runagfile_menu() {
 
   runagfile_menu::add --header "Actions on ${service_name} services" || softfail || return $?
 
-  runagfile_menu::add "${ssh_call_prefix[@]}" systemctl "${systemctl_args[@]}" start "${service_name}.service" || softfail || return $?
+  runagfile_menu::add "${ssh_call_prefix[@]}" systemctl "${systemctl_args[@]}" --no-block start "${service_name}.service" || softfail || return $?
   runagfile_menu::add "${ssh_call_prefix[@]}" systemctl "${systemctl_args[@]}" stop "${service_name}.service" || softfail || return $?
 
   if [ "${with_timer}" = true ]; then
@@ -111,7 +111,7 @@ systemd::disable_timer() {
   done
 
   systemctl "${systemctl_args[@]}" stop "${1}.timer" || softfail || return $?
-  systemctl "${systemctl_args[@]}" disable "${1}.timer" || softfail || return $? # add --quiet?
+  systemctl "${systemctl_args[@]}" --quiet disable "${1}.timer" || softfail || return $?
 }
 
 systemd::show_status() {
@@ -142,7 +142,7 @@ systemd::show_status() {
   printf "\n"
 
   if [ "${with_timer}" = true ]; then
-    systemctl "${systemctl_args[@]}" list-timers "${1}.timer" || softfail || return $? # add --all?
+    systemctl "${systemctl_args[@]}" list-timers "${1}.timer" --all || softfail || return $?
     exit_statuses+=($?)
     printf "\n\n\n"
 
