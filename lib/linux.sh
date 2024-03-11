@@ -38,7 +38,7 @@ linux::set_hostname() {
 
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
-  grep --invert-match --line-regexp --extended-regexp \
+  grep -vxE \
     "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" >"${temp_file}" || softfail || return $?
 
   file::write --sudo --keep-permissions --mode 0644 --absorb "${temp_file}" "${hosts_file}" || softfail || return $?
