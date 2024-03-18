@@ -49,3 +49,7 @@ shell::enable_trace() {
   PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
   set -o xtrace
 }
+
+shell::export_variable() {
+  declare -gx "$1"="$2"
+}
