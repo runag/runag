@@ -108,7 +108,7 @@ runagfile_menu::add() {
   if [ "${add_delimiter}" = false ]; then
     if [ "${add_menu}" = true ]; then
       if [ -z "${signal_message:-}" ]; then
-        signal_message="#* Menu for $*"
+        signal_message="#* * Menu for $*"
       fi
       set -- runagfile_menu::display_for "$1"::runagfile_menu "${@:2}"
     fi
