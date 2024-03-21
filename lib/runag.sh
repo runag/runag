@@ -51,7 +51,7 @@ runag::menu() {
     
     menu::add runag::pull || softfail || return $?
     menu::add runag::push || softfail || return $?
-    menu::add --comment "Current directory will be used" runag::create_or_update_offline_install || softfail || return $?
+    menu::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?
     menu::add runag::update_current_offline_install_if_connected || softfail || return $?
   fi
 }
@@ -90,7 +90,7 @@ runag::is_current_offline_install_connected() {
   return 1
 }
 
-runag::update_current_offline_install_if_connected() {(
+runag::update_current_offline_install_if_connected() {
   local runag_path="${HOME}/.runag"
 
   if [ ! -d "${runag_path}/.git" ]; then
@@ -101,20 +101,23 @@ runag::update_current_offline_install_if_connected() {(
   
   if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
     if [ -d "${remote_path}" ]; then
-      cd "${remote_path}/.." || softfail || return $?
-      runag::create_or_update_offline_install || softfail || return $?
+      runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?
     fi
   fi
-)}
+}
 
-runag::create_or_update_offline_install() {
+runag::create_or_update_offline_install() (
+  local target_directory="${1:-"."}"
+
+  cd "${target_directory}" || softfail || return $?
+
+  target_directory="$(pwd)" || softfail || return $?
+
   local runag_path="${HOME}/.runag"
 
   if [ ! -d "${runag_path}/.git" ]; then
     softfail "Unable to find rùnag checkout" || return $?
   fi
-
-  local current_directory; current_directory="$(pwd)" || softfail || return $?
 
   local runag_remote_url; runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?
 
@@ -123,7 +126,7 @@ runag::create_or_update_offline_install() {
 
   git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?
 
-  ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${current_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?
+  ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?
 
   dir::should_exists --mode 0700 "runagfiles" || softfail || return $?
 
@@ -137,12 +140,12 @@ runag::create_or_update_offline_install() {
 
       git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?
 
-      ( cd "${runagfile_path}" && git::add_or_update_remote "offline-install" "${current_directory}/runagfiles/${runagfile_dir_name}" && git fetch "offline-install" ) || softfail || return $?
+      ( cd "${runagfile_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runagfiles/${runagfile_dir_name}" && git fetch "offline-install" ) || softfail || return $?
     fi
   done
 
   cp -f "${runag_path}/src/deploy-offline.sh" . || softfail || return $?
-}
+)
 
 runag::bundle() {
   file::get_block "${RUNAG_BIN_PATH}" set_shell_options || softfail || return $?
