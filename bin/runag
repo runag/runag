@@ -105,9 +105,9 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     runagfile::main
     softfail --unless-good --exit-status $? "Error performing runagfile::main ($?)"
     exit $?
-  elif runagfile_menu::present && [ -t 0 ] && [ -t 1 ]; then
-    runagfile_menu::display
-    softfail --unless-good --exit-status $? "Error performing runagfile_menu::display ($?)"
+  elif menu::is_present && [ -t 0 ] && [ -t 1 ]; then
+    menu::display
+    softfail --unless-good --exit-status $? "Error performing menu::display ($?)"
     exit $?
   fi
 

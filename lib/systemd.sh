@@ -34,7 +34,7 @@ systemd::write_system_unit() {
   file::write --sudo --mode 0644 "/etc/systemd/system/${name}" || softfail || return $?
 }
 
-systemd::runagfile_menu() {
+systemd::menu() {
   local service_name
   local ssh_call
   local ssh_call_prefix
@@ -74,29 +74,29 @@ systemd::runagfile_menu() {
     esac
   done
 
-  runagfile_menu::add --header "Actions on ${service_name} services" || softfail || return $?
+  menu::add --header "Actions on ${service_name} services" || softfail || return $?
 
-  runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} --no-block start "${service_name}.service" || softfail || return $?
-  runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} --no-block start "${service_name}.service" || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
 
   if [ "${with_timer:-}" = true ]; then
-    runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::disable_timer ${user_services:+"--user"} "${service_name}" || softfail || return $?
+    menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::disable_timer ${user_services:+"--user"} "${service_name}" || softfail || return $?
   fi
 
-  runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::show_status ${user_services:+"--user"} ${with_timer:+"--with-timer"} "${service_name}" || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::show_status ${user_services:+"--user"} ${with_timer:+"--with-timer"} "${service_name}" || softfail || return $?
 
   # TODO: eventually remove 
   if [ "${user_services:-}" = true ]; then
     local release_codename; release_codename="$(${ssh_call:+"${ssh_call_prefix}"} lsb_release --codename --short)" || softfail || return $?
     if [ "${release_codename}" = focal ]; then
-      runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today || softfail || return $?
-      runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today --follow || softfail || return $?
+      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today || softfail || return $?
+      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today --follow || softfail || return $?
       return # Watch out!
     fi
   fi
 
-  runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --since today || softfail || return $?
-  runagfile_menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --since today --follow || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --since today || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --since today --follow || softfail || return $?
 }
 
 systemd::disable_timer() {

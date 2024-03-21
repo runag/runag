@@ -36,7 +36,7 @@ menu::select_and_run() {
   local prompt_color; test -t 1 && prompt_color="$(printf "setaf 11\nbold" | tput -S 2>/dev/null)" || prompt_color=""
   local reset_attrs; test -t 1 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
-  menu::display_menu "$@" | less -eFKrWX --mouse --wheel-lines 6
+  menu::render "$@" | less -eFKrWX --mouse --wheel-lines 6
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
   local input_text read_status
@@ -86,7 +86,7 @@ menu::select_and_run() {
   return 0
 }
 
-menu::display_menu() {
+menu::render() {
   # 1 - color a
   # 3 - prompt
   # 5 - header
@@ -178,4 +178,145 @@ menu::display_menu() {
   done
 
   echo ""
+}
+
+menu::is_present() {
+  test -n "${RUNAGFILE_MENU:+x}"
+}
+
+menu::is_necessary() {
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    -o|--os)
+      local os_type="$2"
+      if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
+        return 1
+      fi
+      shift; shift
+      ;;
+    -*)
+      fail "Unknown argument: $1" # no softfail here!
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  [ -t 0 ] && [ -t 1 ]
+}
+
+menu::clear() {
+  RUNAGFILE_MENU=()
+}
+
+menu::add() {
+  if [ ! -t 0 ] || [ ! -t 1 ]; then
+    return 0
+  fi
+
+  local quote=true
+  local add_delimiter=false
+  local prefix comment_postfix signal_message
+  local add_menu=false
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -o|--os)
+        local os_type="$2"
+        if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
+          return 0
+        fi
+        shift; shift
+        ;;
+      -r|--raw)
+        quote=false
+        shift
+        ;;
+      -d|--delimiter)
+        add_delimiter=true
+        shift
+        ;;
+      -h|--header)
+        prefix="## "
+        quote=false
+        shift
+        ;;
+      -s|--subheader)
+        prefix="### "
+        quote=false
+        shift
+        ;;
+      -n|--note)
+        prefix="#> "
+        quote=false
+        shift
+        ;;
+      -c|--comment)
+        comment_postfix=" # $2"
+        shift; shift
+        ;;
+      -m|--menu)
+        add_menu=true
+        shift
+        ;;
+      -t|--title)
+        signal_message="#* $2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  local operand_string
+
+  if [ "${add_delimiter}" = false ]; then
+    if [ "${add_menu}" = true ]; then
+      if [ -z "${signal_message:-}" ]; then
+        signal_message="#* * $*"
+      fi
+      set -- menu::display_for "$@"
+    fi
+
+    if [ "${quote}" = true ]; then
+      printf -v operand_string " %q" "$@" || softfail "Unable to produce operand string" || return $?
+      operand_string="${operand_string:1}"
+    else
+      printf -v operand_string " %s" "$@" || softfail "Unable to produce operand string" || return $?
+      operand_string="${operand_string:1}"
+    fi
+  fi
+
+  if [ -n "${signal_message:-}" ]; then
+    signal_message=" ${signal_message}#${#signal_message}#"
+  fi
+
+  RUNAGFILE_MENU+=("${prefix:-}${operand_string:-}${comment_postfix:-}${signal_message:-}")
+}
+
+menu::display() {
+  if ! menu::is_present; then
+    softfail "Menu is empty"
+    return $?
+  fi
+  menu::select_and_run "${RUNAGFILE_MENU[@]}"
+  softfail --unless-good --exit-status $?
+}
+
+menu::display_for() {
+  (
+    menu::clear || softfail || return $?
+    "$@" || softfail || return $?
+    menu::display
+    softfail --unless-good --exit-status $? "Error performing menu::display ($?)"
+  )
+  local status_code=$?
+  # shellcheck disable=SC2034
+  RUNAG_MENU_REFRAIN_FROM_SUCCESS_LOGGING=true
+  return "${status_code}"
 }
