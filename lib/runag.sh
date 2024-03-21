@@ -45,14 +45,14 @@ runag::print_license() {
 SHELL
 }
 
-runag::runagfile_menu() {
+runag::menu() {
   if [ -d "${HOME}/.runag" ]; then
-    runagfile_menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
+    menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
-    runagfile_menu::add runag::pull || softfail || return $?
-    runagfile_menu::add runag::push || softfail || return $?
-    runagfile_menu::add --comment "Current directory will be used" runag::create_or_update_offline_install || softfail || return $?
-    runagfile_menu::add runag::update_current_offline_install_if_connected || softfail || return $?
+    menu::add runag::pull || softfail || return $?
+    menu::add runag::push || softfail || return $?
+    menu::add --comment "Current directory will be used" runag::create_or_update_offline_install || softfail || return $?
+    menu::add runag::update_current_offline_install_if_connected || softfail || return $?
   fi
 }
 

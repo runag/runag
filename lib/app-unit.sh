@@ -148,16 +148,16 @@ app_unit::follow_journal() {
   app_unit::run_with_units journalctl --lines=1000 --follow "$@" || softfail --exit-status $? || return $?
 }
 
-app_unit::runagfile_menu() {
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::enable || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::enable_now || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::disable || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::disable_now || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::start || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::stop || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::restart || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::restart_services || softfail || return $?
-  runagfile_menu::add "$1" ssh::call "$2" app_unit::statuses || softfail || return $?
-  runagfile_menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_unit::journal --since yesterday --follow || true" || softfail || return $?
-  runagfile_menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_unit::follow_journal || true" || softfail || return $?
+app_unit::menu() {
+  menu::add "$1" ssh::call "$2" app_unit::enable || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::enable_now || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::disable || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::disable_now || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::start || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::stop || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::restart || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::restart_services || softfail || return $?
+  menu::add "$1" ssh::call "$2" app_unit::statuses || softfail || return $?
+  menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_unit::journal --since yesterday --follow || true" || softfail || return $?
+  menu::add --raw "$(printf "%q" "$1") ssh::run $(printf "%q" "$2") app_unit::follow_journal || true" || softfail || return $?
 }

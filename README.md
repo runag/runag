@@ -94,7 +94,6 @@ Please refer to the source code for now.
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)
 * [runag](lib/runag.sh)
-* [runagfile-menu](lib/runagfile-menu.sh)
 * [runagfile](lib/runagfile.sh)
 * [terminal](lib/terminal.sh)
 
