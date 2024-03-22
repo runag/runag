@@ -42,3 +42,24 @@ restic::install() {
 
   rm "${temp_file}" || softfail || return $?
 }
+
+restic::open_mount_when_available() {
+  local mount_path="$1"
+
+  local cutoff_time="$((SECONDS+40))"
+
+  (
+    while [ ! -d "${mount_path}/snapshots" ]; do
+      sleep 0.1 || fail
+      if [ "${SECONDS}" -gt "${cutoff_time}" ]; then
+        fail "Maximum time to wait for mount to complete has been reached"
+      fi
+    done
+    
+    if [ -d "${mount_path}/snapshots/latest" ]; then
+      xdg-open "${mount_path}/snapshots/latest" || fail
+    else
+      xdg-open "${mount_path}" || fail
+    fi
+  ) &
+}
