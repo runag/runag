@@ -189,3 +189,60 @@ systemd::show_status() {
     softfail || return $?
   fi
 }
+
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html#Quoting
+
+systemd::export_shell_function_as_command() {
+  local command; command="$(declare -f "$1" | tail -n +3 | head -n -1 | sed -E "s/^\s*//"; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
+  echo "/usr/bin/bash -c '${command//\'/\\\'}'"
+}
+
+systemd::on_calendar() {
+  local calendar_block; printf -v calendar_block "\nOnCalendar=%s" "$@" || softfail || return $?
+  echo "${calendar_block:1}"
+}
+
+systemd::exec() {
+  local command_name="ExecStart"
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    --start)
+      command_name="ExecStart"
+      shift
+      ;;
+    --start-pre)
+      command_name="ExecStartPre"
+      shift
+      ;;
+    --start-post)
+      command_name="ExecStartPost"
+      shift
+      ;;
+    --condition)
+      command_name="ExecCondition"
+      shift
+      ;;
+    --reload)
+      command_name="ExecReload"
+      shift
+      ;;
+    --stop)
+      command_name="ExecStop"
+      shift
+      ;;
+    --stop-post)
+      command_name="ExecStopPost"
+      shift
+      ;;
+    -*)
+      fail "Unknown argument: $1"
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  local exec_block; printf -v exec_block "\n${command_name}=%s" "$@" || softfail || return $?
+  echo "${exec_block:1}"
+}
