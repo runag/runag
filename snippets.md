@@ -1,4 +1,4 @@
-# Quick reference
+# Snippets
 
 ## Posix grep
 -v, --invert-match 
