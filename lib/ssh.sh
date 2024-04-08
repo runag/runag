@@ -33,34 +33,20 @@ ssh::add_ssh_config_d_include_directive() {
   printf "Host *\nInclude ~/.ssh/ssh_config.d/*.conf\n" | file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" || softfail "Unable to add configuration to user ssh config" || return $?
 }
 
-ssh::copy_authorized_keys_to_user() {
-  local user_name="$1"
+ssh::install_authorized_keys_from_pass() {
+  local profile_path="$1"
+  local profile_name="$2"
 
-  local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
+  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
 
-  if [ ! -f "${user_home}/.ssh/authorized_keys" ]; then
-    dir::should_exists --sudo --mode 0700 --owner "${user_name}" --group "${user_name}" "${user_home}/.ssh" || softfail || return $?
-    file::write --sudo --mode 0600 --owner "${user_name}" --group "${user_name}" "${user_home}/.ssh/authorized_keys" <"${HOME}/.ssh/authorized_keys" || softfail || return $?
-  fi
-}
-
-ssh::import_id() {
-  local public_user_id="$1"
-  local user_name="${2:-"${USER}"}"
-
-  local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
-  local authorized_keys="${user_home}/.ssh/authorized_keys"
-
-  if [ "${user_name}" != "${USER}" ]; then
-    dir::should_exists --sudo --mode 0700 --owner "${user_name}" --group "${user_name}" "${user_home}/.ssh" || softfail || return $?
-  else
-    dir::should_exists --mode 0700 "${user_home}/.ssh" || softfail || return $?
+  # authorized_keys
+  if pass::secret_exists "${profile_path}/id_ed25519.pub"; then
+    pass::use --absorb-in-callback "${profile_path}/id_ed25519.pub" file::write_block --mode 0600 "${HOME}/.ssh/authorized_keys" "${profile_name}-id_ed25519.pub" || softfail || return $?
   fi
 
-  ssh-import-id --output "${authorized_keys}" "${public_user_id}" || softfail || return $?
-
-  if [ "${user_name}" != "${USER}" ]; then
-    sudo chown "${user_name}"."${user_name}" "${authorized_keys}" || softfail || return $?
+  # authorized_keys
+  if pass::secret_exists "${profile_path}/authorized_keys"; then
+    pass::use --absorb-in-callback --body "${profile_path}/authorized_keys" file::write_block --mode 0600 "${HOME}/.ssh/authorized_keys" "${profile_name}-authorized_keys" || softfail || return $?
   fi
 }
 
