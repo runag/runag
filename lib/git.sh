@@ -190,7 +190,13 @@ git::get_remote_url_without_username() {
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-git::add_signed_off_by_trailer_in_commit_msg_hook() {
+git::add_signed_off_by_trailer_in_commit_msg_hook() (
+  local dest_path="${1:-}"
+
+  if [ -n "${dest_path}" ]; then
+    cd "${dest_path}" || softfail || return $?
+  fi
+
   if [ ! -d .git ]; then
     softfail "Not in a git folder: ${PWD}" || return $?
   fi
@@ -217,4 +223,4 @@ user_email="\$(git config user.email)" || exit 1
 
 git interpret-trailers --if-exists addIfDifferent --trailer "Signed-off-by: \${user_name} <\${user_email}>" --in-place "\$1"
 SHELL
-}
+)
