@@ -189,3 +189,32 @@ git::get_remote_url_without_username() {
   git remote get-url "${remote_name}" | sed 's/^https:\/\/[[:alnum:]_]\+@/https:\/\//'
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
+
+git::add_signed_off_by_trailer_in_commit_msg_hook() {
+  if [ ! -d .git ]; then
+    softfail "Not in a git folder: ${PWD}" || return $?
+  fi
+
+  local hook_file=".git/hooks/commit-msg"
+
+  if [ -s "${hook_file}" ]; then
+    if [ "$(head -n 1 "${hook_file}")" != "#!/bin/sh" ]; then
+      softfail "Not a /bin/sh script: ${hook_file}" || return $?
+    fi
+  else
+    file::write --keep-permissions "${hook_file}" "#!/bin/sh" || softfail || return $?
+  fi
+
+  chmod u+x "${hook_file}" || softfail || return $?
+
+  local license_text; license_text="$(runag::print_license)" || softfail || return $?
+
+  file::write_block --keep-permissions "${hook_file}" "add-signed-off-by-trailer" <<SHELL || softfail || return $?
+${license_text}
+
+user_name="\$(git config user.name)" || exit 1
+user_email="\$(git config user.email)" || exit 1
+
+git interpret-trailers --if-exists addIfDifferent --trailer "Signed-off-by: \${user_name} <\${user_email}>" --in-place "\$1"
+SHELL
+}
