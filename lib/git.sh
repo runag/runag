@@ -189,25 +189,3 @@ git::get_remote_url_without_username() {
   git remote get-url "${remote_name}" | sed 's/^https:\/\/[[:alnum:]_]\+@/https:\/\//'
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
-
-git::disable_nested_repositories() {
-  git::disable_nested_repositories::item d .git || softfail || return $?
-  git::disable_nested_repositories::item f .gitignore || softfail || return $?
-  git::disable_nested_repositories::item f .gitattributes || softfail || return $?
-}
-
-git::enable_nested_repositories() {
-  git::enable_nested_repositories::item d .git || softfail || return $?
-  git::enable_nested_repositories::item f .gitignore || softfail || return $?
-  git::enable_nested_repositories::item f .gitattributes || softfail || return $?
-}
-
-# shellcheck disable=2016
-git::disable_nested_repositories::item() {
-  find . -type "$1" -name "$2" ! -path "./$2" -print0 | xargs -0 -n1 -r bash -c 'dir_name="$(dirname "$1")" && echo "Disabling $1" && mv "$1" "$dir_name/'"$2"'-disabled" || echo "Unable to rename $1"' rename-script || softfail || return $?
-}
-
-# shellcheck disable=2016
-git::enable_nested_repositories::item() {
-  find . -type "$1" -name "$2"-disabled -print0 | xargs -0 -n1 -r bash -c 'dir_name="$(dirname "$1")" && echo "Enabling $1" && mv "$1" "$dir_name/'"$2"'" || echo "Unable to rename $1"' rename-script || softfail || return $?
-}
