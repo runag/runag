@@ -160,7 +160,6 @@ Please refer to the source code for now.
 
 * [app-release](lib/app-release.sh)
 * [app-unit](lib/app-unit.sh)
-* [direnv](lib/direnv.sh)
 
 ### Desktop applications
 
