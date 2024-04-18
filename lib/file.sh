@@ -321,6 +321,8 @@ file::write_block() {
     "${file_path}" || softfail || return $?
 }
 
+# TODO: replace block in-place
+
 file::read_with_updated_block() {
   local perhaps_sudo
   local source_file
