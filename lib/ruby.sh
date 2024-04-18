@@ -53,7 +53,9 @@ YAML
 # shellcheck disable=SC2034
 rubygems::direnv_credentials() {
   local GEM_HOST_API_KEY="$1"
-  direnv::save_variables_to_block rubygems-credentials GEM_HOST_API_KEY || softfail || return $?
+
+  shell::export_variables_as_code GEM_HOST_API_KEY | file::write_block --mode 0600 .envrc RUBYGEMS-CREDENTIALS
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
   file::append_line_unless_present ".gitignore" "/.envrc" || softfail || return $?
   
