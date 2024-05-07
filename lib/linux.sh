@@ -44,7 +44,65 @@ linux::set_hostname() {
   file::write --sudo --keep-permissions --mode 0644 --absorb "${temp_file}" "${hosts_file}" || softfail || return $?
 }
 
+linux::update_remote_locale() (
+  # The server may not have the locales that are present on the local machine
+  # If you pass these variables to him, an error may occur
+  unset LANG
+
+  unset LC_ALL 
+  unset LC_CTYPE
+
+  unset LC_ADDRESS
+  unset LC_IDENTIFICATION
+  unset LC_MEASUREMENT
+  unset LC_MONETARY
+  unset LC_NAME
+  unset LC_NUMERIC
+  unset LC_PAPER
+  unset LC_TELEPHONE
+  unset LC_TIME
+
+  # without that, previous locale will stick to all commands within connection sharing session
+  export REMOTE_CONTROL_MASTER=no
+
+  ssh::call linux::update_locale "$@" || fail
+)
+
 linux::update_locale() {
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    --lang)
+      linux::update_locale::do LANG "$2" || softfail || return $?
+      shift; shift
+      ;;
+    --each-category)
+      linux::update_locale::do LC_ADDRESS "$2"        || softfail || return $?
+      linux::update_locale::do LC_IDENTIFICATION "$2" || softfail || return $?
+      linux::update_locale::do LC_MEASUREMENT "$2"    || softfail || return $?
+      linux::update_locale::do LC_MONETARY "$2"       || softfail || return $?
+      linux::update_locale::do LC_NAME "$2"           || softfail || return $?
+      linux::update_locale::do LC_NUMERIC "$2"        || softfail || return $?
+      linux::update_locale::do LC_PAPER "$2"          || softfail || return $?
+      linux::update_locale::do LC_TELEPHONE "$2"      || softfail || return $?
+      linux::update_locale::do LC_TIME "$2"           || softfail || return $?
+
+      shift; shift
+      ;;
+    -*)
+      softfail "Unknown argument: $1" || return $?
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
+  if [ $# -gt 1 ]; then
+    linux::update_locale::do "$@" || softfail || return $?
+  fi
+}
+
+linux::update_locale::do() {
   local locale_kind="$1"
   local locale_name="$2"
 
@@ -56,20 +114,6 @@ linux::update_locale() {
   sudo update-locale "${locale_kind}=${locale_name}" || softfail || return $?
 
   eval "export ${locale_kind}=\${locale_name}"
-}
-
-linux::update_locale::all_categories() {
-  local locale_name="$1"
-
-  linux::update_locale LC_ADDRESS "${locale_name}" || softfail || return $?
-  linux::update_locale LC_IDENTIFICATION "${locale_name}" || softfail || return $?
-  linux::update_locale LC_MEASUREMENT "${locale_name}" || softfail || return $?
-  linux::update_locale LC_MONETARY "${locale_name}" || softfail || return $?
-  linux::update_locale LC_NAME "${locale_name}" || softfail || return $?
-  linux::update_locale LC_NUMERIC "${locale_name}" || softfail || return $?
-  linux::update_locale LC_PAPER "${locale_name}" || softfail || return $?
-  linux::update_locale LC_TELEPHONE "${locale_name}" || softfail || return $?
-  linux::update_locale LC_TIME "${locale_name}" || softfail || return $?
 }
 
 linux::configure_inotify() {
