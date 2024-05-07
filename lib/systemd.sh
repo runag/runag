@@ -89,14 +89,14 @@ systemd::menu() {
   if [ "${user_services:-}" = true ]; then
     local release_codename; release_codename="$(${ssh_call:+"${ssh_call_prefix}"} lsb_release --codename --short)" || softfail || return $?
     if [ "${release_codename}" = focal ]; then
-      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today || softfail || return $?
-      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --since today --follow || softfail || return $?
+      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 || softfail || return $?
+      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --follow || softfail || return $?
       return # Watch out!
     fi
   fi
 
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --since today || softfail || return $?
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --since today --follow || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 || softfail || return $?
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 --follow || softfail || return $?
 }
 
 systemd::disable_timer() {
