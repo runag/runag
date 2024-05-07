@@ -131,19 +131,9 @@ linux::is_bare_metal() {
   ! grep -q "^flags.*:.*hypervisor" /proc/cpuinfo
 }
 
-linux::add_user() {
+linux::is_user_exists() {
   local user_name="$1"
-
-  if ! id -u "${user_name}" >/dev/null 2>&1; then
-    sudo useradd --create-home --shell /bin/bash "${user_name}" || softfail || return $?
-  fi
-}
-
-linux::assign_user_to_group() {
-  local user_name="$1"
-  local group_name="$2"
-
-  sudo usermod --append --groups "${group_name}" "${user_name}" || softfail || return $?
+  id -u "${user_name}" >/dev/null 2>&1
 }
 
 linux::get_default_route() {
