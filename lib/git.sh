@@ -53,16 +53,16 @@ git::place_up_to_date_clone() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -b|--branch)
-      local branch_name="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -b|--branch)
+        local branch_name="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

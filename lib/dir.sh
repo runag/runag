@@ -28,32 +28,32 @@ dir::should_exists() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -m|--mode)
-      dir_mode="$2"
-      shift; shift
-      ;;
-    -o|--owner)
-      dir_owner="$2"
-      shift; shift
-      ;;
-    -g|--group)
-      dir_group="$2"
-      shift; shift
-      ;;
-    -s|--sudo)
-      perhaps_sudo=true
-      shift
-      ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -m|--mode)
+        dir_mode="$2"
+        shift; shift
+        ;;
+      -o|--owner)
+        dir_owner="$2"
+        shift; shift
+        ;;
+      -g|--group)
+        dir_group="$2"
+        shift; shift
+        ;;
+      -s|--sudo)
+        perhaps_sudo=true
+        shift
+        ;;
+      -k|--keep-permissions)
+        keep_permissions=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

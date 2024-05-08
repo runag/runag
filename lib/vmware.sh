@@ -71,20 +71,20 @@ vmware::symlink_hgfs_mounts() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -m|--mount-point)
-      mount_point="$2"
-      shift; shift
-      ;;
-    -s|--symlinks-directory)
-      symlinks_directory="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -m|--mount-point)
+        mount_point="$2"
+        shift; shift
+        ;;
+      -s|--symlinks-directory)
+        symlinks_directory="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

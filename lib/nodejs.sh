@@ -57,20 +57,20 @@ npm::auth_token() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -r|--registry)
-      registry="$2"
-      shift; shift
-      ;;
-    -l|--project)
-      project_config=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -r|--registry)
+        registry="$2"
+        shift; shift
+        ;;
+      -l|--project)
+        project_config=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

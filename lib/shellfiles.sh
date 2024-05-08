@@ -21,24 +21,24 @@ shellfiles::write_loader_block() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -f|--file)
-      file_path="$2"
-      shift; shift
-      ;;
-    -d|--dir)
-      directory_path="$2"
-      shift; shift
-      ;;
-    -b|--block)
-      block_name="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -f|--file)
+        file_path="$2"
+        shift; shift
+        ;;
+      -d|--dir)
+        directory_path="$2"
+        shift; shift
+        ;;
+      -b|--block)
+        block_name="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

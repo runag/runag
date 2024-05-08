@@ -108,16 +108,16 @@ gpg::import_key() {
 #
 #   while [ "$#" -gt 0 ]; do
 #     case $1 in
-#     -m|--mode)
-#       file_mode="$2"
-#       shift; shift
-#       ;;
-#     -*)
-#       softfail "Unknown argument: $1" || return $?
-#       ;;
-#     *)
-#       break
-#       ;;
+#       -m|--mode)
+#         file_mode="$2"
+#         shift; shift
+#         ;;
+#       -*)
+#         softfail "Unknown argument: $1" || return $?
+#         ;;
+#       *)
+#         break
+#         ;;
 #     esac
 #   done
 #

@@ -19,16 +19,16 @@ imagemagick::set_policy::resource() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--policy-path)
-      policy_path="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -p|--policy-path)
+        policy_path="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

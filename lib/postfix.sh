@@ -20,20 +20,20 @@ postfix::install() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -m|--mailname)
-      mailname="$2"
-      shift; shift
-      ;;
-    -r|--root-address)
-      root_address="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -m|--mailname)
+        mailname="$2"
+        shift; shift
+        ;;
+      -r|--root-address)
+        root_address="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

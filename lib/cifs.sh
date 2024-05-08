@@ -34,20 +34,20 @@ cifs::mount() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -f|--file-mode)
-      file_mode="$2"
-      shift; shift
-      ;;
-    -d|--dir-mode)
-      dir_mode="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -f|--file-mode)
+        file_mode="$2"
+        shift; shift
+        ;;
+      -d|--dir-mode)
+        dir_mode="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

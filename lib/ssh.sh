@@ -43,38 +43,38 @@ ssh::install_authorized_keys_from_pass() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--profile-name)
-      profile_name="$2"
-      shift; shift
-      ;;
-    -o|--owner)
-      file_owner="$2"
-      shift; shift
-      ;;
-    -g|--group)
-      file_group="$2"
-      shift; shift
-      ;;
-    -s|--sudo)
-      perhaps_sudo=true
-      shift
-      ;;
-    -w|--ssh-call-with)
-      ssh_call=true
-      ssh_call_prefix="$2"
-      shift; shift
-      ;;
-    -c|--ssh-call)
-      ssh_call=true
-      ssh_call_prefix="ssh::call"
-      shift
-      ;;
-    -*)
-      fail "Unknown argument: $1"
-      ;;
-    *)
-      break
-      ;;
+      -p|--profile-name)
+        profile_name="$2"
+        shift; shift
+        ;;
+      -o|--owner)
+        file_owner="$2"
+        shift; shift
+        ;;
+      -g|--group)
+        file_group="$2"
+        shift; shift
+        ;;
+      -s|--sudo)
+        perhaps_sudo=true
+        shift
+        ;;
+      -w|--ssh-call-with)
+        ssh_call=true
+        ssh_call_prefix="$2"
+        shift; shift
+        ;;
+      -c|--ssh-call)
+        ssh_call=true
+        ssh_call_prefix="ssh::call"
+        shift
+        ;;
+      -*)
+        fail "Unknown argument: $1"
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -273,16 +273,16 @@ ssh::refresh_host_in_known_hosts() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--port)
-      ssh_port="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -p|--port)
+        ssh_port="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -298,16 +298,16 @@ ssh::wait_for_host_to_become_available() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--port)
-      ssh_port="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -p|--port)
+        ssh_port="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -332,16 +332,16 @@ ssh::add_host_to_known_hosts() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--port)
-      ssh_port="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -p|--port)
+        ssh_port="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -374,16 +374,16 @@ ssh::remove_host_from_known_hosts() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--port)
-      ssh_port="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -p|--port)
+        ssh_port="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
