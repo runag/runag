@@ -85,8 +85,8 @@ asdf::load() {
 
 asdf::path_variable() {
   local user_name="${1:-"${USER}"}"
-  local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
-  echo "${user_home}/.asdf/shims:${user_home}/.asdf/bin"
+  local home_dir; home_dir="$(linux::get_home_dir "${user_name}")" || softfail || return $?
+  echo "${home_dir}/.asdf/shims:${home_dir}/.asdf/bin"
 }
 
 asdf::add_plugin() {
