@@ -34,25 +34,97 @@ ssh::add_ssh_config_d_include_directive() {
 }
 
 ssh::install_authorized_keys_from_pass() {
+  local profile_name
+  local file_owner
+  local file_group
+  local perhaps_sudo
+  local ssh_call
+  local ssh_call_prefix
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+    -p|--profile-name)
+      profile_name="$2"
+      shift; shift
+      ;;
+    -o|--owner)
+      file_owner="$2"
+      shift; shift
+      ;;
+    -g|--group)
+      file_group="$2"
+      shift; shift
+      ;;
+    -s|--sudo)
+      perhaps_sudo=true
+      shift
+      ;;
+    -w|--ssh-call-with)
+      ssh_call=true
+      ssh_call_prefix="$2"
+      shift; shift
+      ;;
+    -c|--ssh-call)
+      ssh_call=true
+      ssh_call_prefix="ssh::call"
+      shift
+      ;;
+    -*)
+      fail "Unknown argument: $1"
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+
   local profile_path="$1"
-  local profile_name="$2"
 
-  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  if [ -z "${profile_name:-}" ]; then
+    profile_name="$(basename "${profile_path}")" || softfail || return $?
+  fi
 
-  # authorized_keys
+  local home_path
+  
+  if [ -n "${file_owner:-}" ]; then
+    home_path="$(${ssh_call:+"${ssh_call_prefix}"} linux::get_user_home "${file_owner}")" || softfail || return $?
+
+  elif [ "${ssh_call:-}" != true ]; then
+    home_path="${HOME}"
+  fi
+
+  ${ssh_call:+"${ssh_call_prefix}"} dir::should_exists ${perhaps_sudo:+"--sudo"}  --mode 0700 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_path:+"${home_path}/"}.ssh" || softfail "Unable to create ssh user config directory" || return $?
+
+  # id_ed25519.pub
   if pass::secret_exists "${profile_path}/id_ed25519.pub"; then
-    pass::use --absorb-in-callback "${profile_path}/id_ed25519.pub" file::write_block --mode 0600 "${HOME}/.ssh/authorized_keys" "${profile_name}-id_ed25519.pub" || softfail || return $?
+    pass::use --absorb-in-callback "${profile_path}/id_ed25519.pub" ${ssh_call:+"${ssh_call_prefix}"} file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_path:+"${home_path}/"}.ssh/authorized_keys" "${profile_name}-id_ed25519.pub" || softfail || return $?
   fi
 
   # authorized_keys
   if pass::secret_exists "${profile_path}/authorized_keys"; then
-    pass::use --absorb-in-callback --body "${profile_path}/authorized_keys" file::write_block --mode 0600 "${HOME}/.ssh/authorized_keys" "${profile_name}-authorized_keys" || softfail || return $?
+    pass::use --absorb-in-callback --body "${profile_path}/authorized_keys" ${ssh_call:+"${ssh_call_prefix}"} file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_path:+"${home_path}/"}.ssh/authorized_keys" "${profile_name}-authorized_keys" || softfail || return $?
   fi
 }
 
 ssh::install_ssh_profile_from_pass() {
+  local profile_name
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -p|--profile-name)
+        profile_name="$2"
+        shift; shift
+        ;;
+      -*)
+        fail "Unknown argument: $1"
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   local profile_path="$1"
-  local profile_name="$2"
 
   # ssh key
   if pass::secret_exists "${profile_path}/id_ed25519"; then
