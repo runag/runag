@@ -16,7 +16,7 @@
 
 . bin/runag || { echo "Unable to load rùnag" >&2; exit 1; }
 
-runag::deploy_sh_main() {
+runag::online_deploy_script() {
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
     set -o xtrace
   fi
@@ -26,8 +26,22 @@ runag::deploy_sh_main() {
 
   git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
 
-  deploy_script "$@"
-  softfail --unless-good --exit-status $?
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      add)
+        runagfile::add "$2" || softfail || return $?
+        shift; shift
+        ;;
+      run)
+        shift
+        "${HOME}/.runag/bin/runag" "$@" || softfail || return $?
+        break
+        ;;
+      *)
+        softfail "runag::online_deploy_script: command not found: $*" || return $?
+        ;;
+    esac
+  done
 }
 
 runag_remote_url="$(git::get_remote_url_without_username)" || fail
@@ -43,8 +57,6 @@ __xVhMyefCbBnZFUQtwqCs() {
 
 $(fail::function_sources)
 
-$(deploy_script::function_sources)
-
 $(declare -f apt::install)
 $(declare -f apt::update)
 
@@ -54,11 +66,11 @@ $(declare -f git::remove_current_clone)
 
 $(declare -f runagfile::add)
 
-$(declare -f runag::deploy_sh_main)
+$(declare -f runag::online_deploy_script)
 
 export RUNAG_DIST_REPO="\${RUNAG_DIST_REPO:-$(printf "%q" "${runag_remote_url}")}"
 
-runag::deploy_sh_main "\$@"
+runag::online_deploy_script "\$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "\$@"
 SHELL

@@ -89,7 +89,6 @@ Please refer to the source code for now.
 
 ### Rùnag core
 
-* [deploy-script](lib/deploy-script.sh)
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
 * [menu](lib/menu.sh)

@@ -93,30 +93,6 @@ softfail ()
     fail --wrapped-softfail "$@"
 }
 
-deploy_script () 
-{ 
-    if [ -n "${1:-}" ]; then
-        if declare -F "deploy_script::$1" > /dev/null; then
-            "deploy_script::$1" "${@:2}";
-            softfail --unless-good --exit-status $? || return $?;
-        else
-            softfail "deploy_script: command not found: $1";
-            return $?;
-        fi;
-    fi
-}
-deploy_script::add () 
-{ 
-    runagfile::add "$1" || softfail || return $?;
-    deploy_script "${@:2}";
-    softfail --unless-good --exit-status $?
-}
-deploy_script::run () 
-{ 
-    "${HOME}/.runag/bin/runag" "$@";
-    softfail --unless-good --exit-status $?
-}
-
 apt::install () 
 { 
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
@@ -204,7 +180,7 @@ runagfile::add ()
     git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 
-runag::deploy_sh_main () 
+runag::online_deploy_script () 
 { 
     if [ "${RUNAG_VERBOSE:-}" = true ]; then
         set -o xtrace;
@@ -212,12 +188,27 @@ runag::deploy_sh_main ()
     set -o nounset;
     git::install_git || softfail || return $?;
     git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
-    deploy_script "$@";
-    softfail --unless-good --exit-status $?
+    while [ "$#" -gt 0 ]; do
+        case $1 in 
+            add)
+                runagfile::add "$2" || softfail || return $?;
+                shift;
+                shift
+            ;;
+            run)
+                shift;
+                "${HOME}/.runag/bin/runag" "$@" || softfail || return $?;
+                break
+            ;;
+            *)
+                softfail "runag::online_deploy_script: command not found: $*" || return $?
+            ;;
+        esac;
+    done
 }
 
 export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"
 
-runag::deploy_sh_main "$@"
+runag::online_deploy_script "$@"
 
 }; __xVhMyefCbBnZFUQtwqCs "$@"
