@@ -214,18 +214,20 @@ linux::with_secure_temp_dir() {
   fi
 }
 
-linux::get_user_home() {
+linux::get_home_dir() { 
   local user_name="$1"
   getent passwd "${user_name}" | cut -d : -f 6
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-# do I need it?
-# linux::cd_user_home() {
-#   local user_name="$1"
-#   local user_home; user_home="$(linux::get_user_home "${user_name}")" || softfail || return $?
-#   cd "${user_home}" || softfail || return $?
-# }
+# linux::adduser --quiet --disabled-password --gecos "bar" bar
+linux::adduser() {
+  local user_name="${*: -1}"
+
+  if ! id -u "${user_name}" >/dev/null 2>&1; then
+    sudo adduser "$@" || softfail || return $?
+  fi
+}
 
 linux::get_cpu_count() {
   local cpu_count; cpu_count="$(grep -c ^processor /proc/cpuinfo 2>/dev/null)"

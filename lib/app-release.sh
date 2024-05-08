@@ -40,7 +40,7 @@ app_release::change_app_dir_group() {
 app_release::get_absolute_app_dir() {
   local app_dir="${APP_DIR:-"${APP_NAME:?}"}"
 
-  local user_home; user_home="$(linux::get_user_home "${APP_USER}")" || softfail || return $?
+  local user_home; user_home="$(linux::get_home_dir "${APP_USER}")" || softfail || return $?
   
   ( cd "${user_home}" >/dev/null 2>&1 && cd "${app_dir}" >/dev/null 2>&1 && pwd ) || softfail "Unable to find application directory" || return $?
 }
@@ -141,7 +141,7 @@ app_release::link_shared_file() {
 
 app_release::link_as_current() {
   if [ "${USER}" != "${APP_USER}" ]; then
-    local user_home; user_home="$(linux::get_user_home "${APP_USER}")" || softfail || return $?
+    local user_home; user_home="$(linux::get_home_dir "${APP_USER}")" || softfail || return $?
     ( cd "${user_home}" && app_release::link_as_current::perform "$@" ) || softfail || return $?
   else
     app_release::link_as_current::perform "$@" || softfail || return $?

@@ -84,25 +84,25 @@ ssh::install_authorized_keys_from_pass() {
     profile_name="$(basename "${profile_path}")" || softfail || return $?
   fi
 
-  local home_path
+  local home_dir
   
   if [ -n "${file_owner:-}" ]; then
-    home_path="$(${ssh_call:+"${ssh_call_prefix}"} linux::get_user_home "${file_owner}")" || softfail || return $?
+    home_dir="$(${ssh_call:+"${ssh_call_prefix}"} linux::get_home_dir "${file_owner}")" || softfail || return $?
 
   elif [ "${ssh_call:-}" != true ]; then
-    home_path="${HOME}"
+    home_dir="${HOME}"
   fi
 
-  ${ssh_call:+"${ssh_call_prefix}"} dir::should_exists ${perhaps_sudo:+"--sudo"}  --mode 0700 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_path:+"${home_path}/"}.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  ${ssh_call:+"${ssh_call_prefix}"} dir::should_exists ${perhaps_sudo:+"--sudo"}  --mode 0700 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh" || softfail "Unable to create ssh user config directory" || return $?
 
   # id_ed25519.pub
   if pass::secret_exists "${profile_path}/id_ed25519.pub"; then
-    pass::use --absorb-in-callback "${profile_path}/id_ed25519.pub" ${ssh_call:+"${ssh_call_prefix}"} file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_path:+"${home_path}/"}.ssh/authorized_keys" "${profile_name}-id_ed25519.pub" || softfail || return $?
+    pass::use --absorb-in-callback "${profile_path}/id_ed25519.pub" ${ssh_call:+"${ssh_call_prefix}"} file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh/authorized_keys" "${profile_name}-id_ed25519.pub" || softfail || return $?
   fi
 
   # authorized_keys
   if pass::secret_exists "${profile_path}/authorized_keys"; then
-    pass::use --absorb-in-callback --body "${profile_path}/authorized_keys" ${ssh_call:+"${ssh_call_prefix}"} file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_path:+"${home_path}/"}.ssh/authorized_keys" "${profile_name}-authorized_keys" || softfail || return $?
+    pass::use --absorb-in-callback --body "${profile_path}/authorized_keys" ${ssh_call:+"${ssh_call_prefix}"} file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh/authorized_keys" "${profile_name}-authorized_keys" || softfail || return $?
   fi
 }
 
