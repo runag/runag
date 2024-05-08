@@ -98,12 +98,12 @@ Please refer to the source code for now.
 
 ### General utility
 
-* [archival-snapshot](lib/archival-snapshot.sh)
 * [config](lib/config.sh)
 * [dir](lib/dir.sh)
 * [file](lib/file.sh)
 * [fs](lib/fs.sh)
 * [shell](lib/shell.sh)
+* [snapshot](lib/snapshot.sh)
 * [source](lib/source.sh)
 * [ui](lib/ui.sh)
 

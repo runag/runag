@@ -16,7 +16,7 @@
 
 # :? here is to make sure we don't accidentally cleanup root directory or some other unexpected location
 
-archival_snapshot::create() {
+snapshot::create() {
   local source="${1:?}"
   local dest="${2:?}"
   local snapshot_name="${3:-}"
@@ -26,15 +26,15 @@ archival_snapshot::create() {
   btrfs subvolume snapshot -r "${source}" "${dest}/${current_date}${snapshot_name:+"-${snapshot_name}"}" || softfail || return $?
 }
 
-archival_snapshot::cleanup() {
+snapshot::cleanup() {
   local snapshots_dir="${1:?}" 
   local keep_amount="${2:-10}"
 
   local snapshot_path
   local remove_this_snapshot
 
-  if [ ! -f "${snapshots_dir:?}"/.this-is-archival-snapshots-directory ]; then
-    softfail "Unable to find archival snapshots directory flag. To indicate that it is safe to perform automatic cleanup please put \".this-is-archival-snapshots-directory\" file to the directory that you sure it is safe to cleanup."
+  if [ ! -f "${snapshots_dir:?}"/.safe-to-cleanup ]; then
+    softfail "Unable to find safe to cleanup flag. To indicate that it is safe to perform automatic cleanup please put \".safe-to-cleanup\" file in the directory that you are sure it is safe to cleanup."
     return $? # the expression takes a line of its own, because if softfail fails to set non-zero exit status, then we still need to make sure a return from the function will happen here
   fi
 
