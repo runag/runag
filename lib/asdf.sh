@@ -65,18 +65,18 @@ SHELL
 asdf::load() {
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -i|--if-installed)
-      if [ ! -f "${HOME}/.asdf/asdf.sh" ]; then
-        return 0
-      fi
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -i|--if-installed)
+        if [ ! -f "${HOME}/.asdf/asdf.sh" ]; then
+          return 0
+        fi
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

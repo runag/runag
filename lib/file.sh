@@ -41,45 +41,45 @@ file::write() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--sudo)
-      perhaps_sudo=true
-      shift
-      ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
-      ;;
-    -m|--mode)
-      file_mode="$2"
-      shift; shift
-      ;;
-    -o|--owner)
-      file_owner="$2"
-      shift; shift
-      ;;
-    -g|--group)
-      file_group="$2"
-      shift; shift
-      ;;
+      -u|--sudo)
+        perhaps_sudo=true
+        shift
+        ;;
+      -k|--keep-permissions)
+        keep_permissions=true
+        shift
+        ;;
+      -m|--mode)
+        file_mode="$2"
+        shift; shift
+        ;;
+      -o|--owner)
+        file_owner="$2"
+        shift; shift
+        ;;
+      -g|--group)
+        file_group="$2"
+        shift; shift
+        ;;
 
-    -s|--source)
-      source_file="$2"
-      shift; shift
-      ;;
-    -a|--absorb)
-      temp_file="$2"
-      shift; shift
-      ;;
-    -e|--allow-empty)
-      allow_empty=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -s|--source)
+        source_file="$2"
+        shift; shift
+        ;;
+      -a|--absorb)
+        temp_file="$2"
+        shift; shift
+        ;;
+      -e|--allow-empty)
+        allow_empty=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -174,32 +174,32 @@ file::append_line_unless_present() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--sudo)
-      perhaps_sudo=true
-      shift
-      ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
-      ;;
-    -m|--mode)
-      file_mode="$2"
-      shift; shift
-      ;;
-    -o|--owner)
-      file_owner="$2"
-      shift; shift
-      ;;
-    -g|--group)
-      file_group="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -u|--sudo)
+        perhaps_sudo=true
+        shift
+        ;;
+      -k|--keep-permissions)
+        keep_permissions=true
+        shift
+        ;;
+      -m|--mode)
+        file_mode="$2"
+        shift; shift
+        ;;
+      -o|--owner)
+        file_owner="$2"
+        shift; shift
+        ;;
+      -g|--group)
+        file_group="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
   
@@ -255,45 +255,44 @@ file::write_block() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--sudo)
-      perhaps_sudo=true
-      shift
-      ;;
-    -k|--keep-permissions)
-      keep_permissions=true
-      shift
-      ;;
-    -m|--mode)
-      file_mode="$2"
-      shift; shift
-      ;;
-    -o|--owner)
-      file_owner="$2"
-      shift; shift
-      ;;
-    -g|--group)
-      file_group="$2"
-      shift; shift
-      ;;
-
-    -s|--source)
-      source_file="$2"
-      shift; shift
-      ;;
-    -a|--absorb)
-      temp_file="$2"
-      shift; shift
-      ;;
-    -e|--allow-empty)
-      allow_empty=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -u|--sudo)
+        perhaps_sudo=true
+        shift
+        ;;
+      -k|--keep-permissions)
+        keep_permissions=true
+        shift
+        ;;
+      -m|--mode)
+        file_mode="$2"
+        shift; shift
+        ;;
+      -o|--owner)
+        file_owner="$2"
+        shift; shift
+        ;;
+      -g|--group)
+        file_group="$2"
+        shift; shift
+        ;;
+      -s|--source)
+        source_file="$2"
+        shift; shift
+        ;;
+      -a|--absorb)
+        temp_file="$2"
+        shift; shift
+        ;;
+      -e|--allow-empty)
+        allow_empty=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -331,28 +330,28 @@ file::read_with_updated_block() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--sudo)
-      perhaps_sudo=true
-      shift
-      ;;
-    -s|--source)
-      source_file="$2"
-      shift; shift
-      ;;
-    -a|--absorb)
-      temp_file="$2"
-      shift; shift
-      ;;
-    -e|--allow-empty)
-      allow_empty=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -u|--sudo)
+        perhaps_sudo=true
+        shift
+        ;;
+      -s|--source)
+        source_file="$2"
+        shift; shift
+        ;;
+      -a|--absorb)
+        temp_file="$2"
+        shift; shift
+        ;;
+      -e|--allow-empty)
+        allow_empty=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

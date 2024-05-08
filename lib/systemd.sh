@@ -43,34 +43,34 @@ systemd::menu() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -n|--name)
-      service_name="$2"
-      shift; shift
-      ;;
-    -w|--ssh-call-with)
-      ssh_call=true
-      ssh_call_prefix="$2"
-      shift; shift
-      ;;
-    -s|--ssh-call)
-      ssh_call=true
-      ssh_call_prefix="ssh::call"
-      shift
-      ;;
-    -u|--user)
-      user_services=true
-      shift
-      ;;
-    -t|--with-timer)
-      with_timer=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -n|--name)
+        service_name="$2"
+        shift; shift
+        ;;
+      -w|--ssh-call-with)
+        ssh_call=true
+        ssh_call_prefix="$2"
+        shift; shift
+        ;;
+      -s|--ssh-call)
+        ssh_call=true
+        ssh_call_prefix="ssh::call"
+        shift
+        ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      -t|--with-timer)
+        with_timer=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -104,16 +104,16 @@ systemd::disable_timer() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--user)
-      user_services=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -126,16 +126,16 @@ systemd::enable_timer() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--user)
-      user_services=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -150,20 +150,20 @@ systemd::show_status() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -u|--user)
-      user_services=true
-      shift
-      ;;
-    -t|--with-timer)
-      with_timer=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      -t|--with-timer)
+        with_timer=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -206,40 +206,40 @@ systemd::exec() {
   local command_name="ExecStart"
   while [ "$#" -gt 0 ]; do
     case $1 in
-    --start)
-      command_name="ExecStart"
-      shift
-      ;;
-    --start-pre)
-      command_name="ExecStartPre"
-      shift
-      ;;
-    --start-post)
-      command_name="ExecStartPost"
-      shift
-      ;;
-    --condition)
-      command_name="ExecCondition"
-      shift
-      ;;
-    --reload)
-      command_name="ExecReload"
-      shift
-      ;;
-    --stop)
-      command_name="ExecStop"
-      shift
-      ;;
-    --stop-post)
-      command_name="ExecStopPost"
-      shift
-      ;;
-    -*)
-      fail "Unknown argument: $1"
-      ;;
-    *)
-      break
-      ;;
+      --start)
+        command_name="ExecStart"
+        shift
+        ;;
+      --start-pre)
+        command_name="ExecStartPre"
+        shift
+        ;;
+      --start-post)
+        command_name="ExecStartPost"
+        shift
+        ;;
+      --condition)
+        command_name="ExecCondition"
+        shift
+        ;;
+      --reload)
+        command_name="ExecReload"
+        shift
+        ;;
+      --stop)
+        command_name="ExecStop"
+        shift
+        ;;
+      --stop-post)
+        command_name="ExecStopPost"
+        shift
+        ;;
+      -*)
+        fail "Unknown argument: $1"
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

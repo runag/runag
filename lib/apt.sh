@@ -23,18 +23,18 @@ apt::update() {
 apt::dist_upgrade() {
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -s|--skip-in-ci|--skip-in-continuous-integration)
-      if [ "${CI:-}" = "true" ]; then
-        return 0
-      fi
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -s|--skip-in-ci|--skip-in-continuous-integration)
+        if [ "${CI:-}" = "true" ]; then
+          return 0
+        fi
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

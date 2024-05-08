@@ -22,28 +22,28 @@ aws::pass::write_credentials_file() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -c|--credentials-file)
-      credentials_file="$2"
-      shift; shift
-      ;;
-    -p|--pass-path)
-      pass_path="$2"
-      shift; shift
-      ;;
-    -e|--profile)
-      profile_name="$2"
-      shift; shift
-      ;;
-    -r|--ssh-call)
-      ssh_call=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -c|--credentials-file)
+        credentials_file="$2"
+        shift; shift
+        ;;
+      -p|--pass-path)
+        pass_path="$2"
+        shift; shift
+        ;;
+      -e|--profile)
+        profile_name="$2"
+        shift; shift
+        ;;
+      -r|--ssh-call)
+        ssh_call=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -76,20 +76,20 @@ aws::pass::create_access_key() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -p|--pass-path)
-      pass_path="$2"
-      shift; shift
-      ;;
-    -u|--user-name)
-      user_name="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -p|--pass-path)
+        pass_path="$2"
+        shift; shift
+        ;;
+      -u|--user-name)
+        user_name="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

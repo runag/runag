@@ -88,41 +88,41 @@ pass::use() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -a|--absorb-in-callback)
-      absorb_in_callback=true
-      shift
-      ;;
-    -b|--body)
-      get_body=true
-      shift
-      ;;
-    -g|--get)
-      get_metadata=true
-      metadata_name="$2"
-      shift; shift
-      ;;
-    -m|--multiline)
-      get_multiline=true
-      shift
-      ;;
-    -e|--skip-if-empty)
-      skip_if_empty=true
-      shift
-      ;;
-    -x|--skip-if-not-exists)
-      skip_if_not_exists=true
-      shift
-      ;;
-    -u|--skip-update)
-      skip_update=true
-      shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -a|--absorb-in-callback)
+        absorb_in_callback=true
+        shift
+        ;;
+      -b|--body)
+        get_body=true
+        shift
+        ;;
+      -g|--get)
+        get_metadata=true
+        metadata_name="$2"
+        shift; shift
+        ;;
+      -m|--multiline)
+        get_multiline=true
+        shift
+        ;;
+      -e|--skip-if-empty)
+        skip_if_empty=true
+        shift
+        ;;
+      -x|--skip-if-not-exists)
+        skip_if_not_exists=true
+        shift
+        ;;
+      -u|--skip-update)
+        skip_update=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

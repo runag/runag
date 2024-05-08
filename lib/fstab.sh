@@ -19,16 +19,16 @@ fstab::add_mount_option() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -f|--filesystem-type)
-      fstype="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -f|--filesystem-type)
+        fstype="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

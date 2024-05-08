@@ -26,33 +26,33 @@ fail() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -e|--exit-status)
-      exit_status="$2"
-      shift; shift
-      ;;
-    -u|--unless-good)
-      unless_good=true
-      shift
-      ;;
-    -s|--soft)
-      perform_softfail=true
-      shift
-      ;;
-    -w|--wrapped-softfail)
-      perform_softfail=true
-      trace_start=2
-      shift
-      ;;
-    -*)
-      { declare -F "log::error" >/dev/null && log::error "Unknown argument for fail: $1"; } || echo "Unknown argument for fail: $1" >&2
-      shift
-      message="$*"
-      break
-      ;;
-    *)
-      message="$1"
-      break
-      ;;
+      -e|--exit-status)
+        exit_status="$2"
+        shift; shift
+        ;;
+      -u|--unless-good)
+        unless_good=true
+        shift
+        ;;
+      -s|--soft)
+        perform_softfail=true
+        shift
+        ;;
+      -w|--wrapped-softfail)
+        perform_softfail=true
+        trace_start=2
+        shift
+        ;;
+      -*)
+        { declare -F "log::error" >/dev/null && log::error "Unknown argument for fail: $1"; } || echo "Unknown argument for fail: $1" >&2
+        shift
+        message="$*"
+        break
+        ;;
+      *)
+        message="$1"
+        break
+        ;;
     esac
   done
 

@@ -21,21 +21,21 @@ rsync::sync() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    --from-remote)
-      from_remote=true
-      shift
-      ;;
-    --to-remote)
-      to_remote=true
-      shift
-      ;;
-    -*)
-      rsync_args+=("$1")
-      shift
-      ;;
-    *)
-      break
-      ;;
+      --from-remote)
+        from_remote=true
+        shift
+        ;;
+      --to-remote)
+        to_remote=true
+        shift
+        ;;
+      -*)
+        rsync_args+=("$1")
+        shift
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

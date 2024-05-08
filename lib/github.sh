@@ -33,24 +33,24 @@ github::query_release() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -r|--release-id)
-      release_id="$2"
-      shift; shift
-      ;;
-    -g|--get)
-      query_string=".$2"
-      shift; shift
-      ;;
-    -q|--query)
-      query_string="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -r|--release-id)
+        release_id="$2"
+        shift; shift
+        ;;
+      -g|--get)
+        query_string=".$2"
+        shift; shift
+        ;;
+      -q|--query)
+        query_string="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -73,28 +73,28 @@ github::download_release() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -r|--release-id)
-      release_id="$2"
-      shift; shift
-      ;;
-    -q|--query)
-      query_string="$2"
-      shift; shift
-      ;;
-    -l|--asset-label)
-      query_string=".assets[] | select(.label == \"$2\").browser_download_url"
-      shift; shift
-      ;;
-    -n|--asset-name)
-      query_string=".assets[] | select(.name | test(\"$2\")).browser_download_url"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -r|--release-id)
+        release_id="$2"
+        shift; shift
+        ;;
+      -q|--query)
+        query_string="$2"
+        shift; shift
+        ;;
+      -l|--asset-label)
+        query_string=".assets[] | select(.label == \"$2\").browser_download_url"
+        shift; shift
+        ;;
+      -n|--asset-name)
+        query_string=".assets[] | select(.name | test(\"$2\")).browser_download_url"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 

@@ -71,29 +71,29 @@ linux::update_remote_locale() (
 linux::update_locale() {
   while [ "$#" -gt 0 ]; do
     case $1 in
-    --lang)
-      linux::update_locale::do LANG "$2" || softfail || return $?
-      shift; shift
-      ;;
-    --each-category)
-      linux::update_locale::do LC_ADDRESS "$2"        || softfail || return $?
-      linux::update_locale::do LC_IDENTIFICATION "$2" || softfail || return $?
-      linux::update_locale::do LC_MEASUREMENT "$2"    || softfail || return $?
-      linux::update_locale::do LC_MONETARY "$2"       || softfail || return $?
-      linux::update_locale::do LC_NAME "$2"           || softfail || return $?
-      linux::update_locale::do LC_NUMERIC "$2"        || softfail || return $?
-      linux::update_locale::do LC_PAPER "$2"          || softfail || return $?
-      linux::update_locale::do LC_TELEPHONE "$2"      || softfail || return $?
-      linux::update_locale::do LC_TIME "$2"           || softfail || return $?
+      --lang)
+        linux::update_locale::do LANG "$2" || softfail || return $?
+        shift; shift
+        ;;
+      --each-category)
+        linux::update_locale::do LC_ADDRESS "$2"        || softfail || return $?
+        linux::update_locale::do LC_IDENTIFICATION "$2" || softfail || return $?
+        linux::update_locale::do LC_MEASUREMENT "$2"    || softfail || return $?
+        linux::update_locale::do LC_MONETARY "$2"       || softfail || return $?
+        linux::update_locale::do LC_NAME "$2"           || softfail || return $?
+        linux::update_locale::do LC_NUMERIC "$2"        || softfail || return $?
+        linux::update_locale::do LC_PAPER "$2"          || softfail || return $?
+        linux::update_locale::do LC_TELEPHONE "$2"      || softfail || return $?
+        linux::update_locale::do LC_TIME "$2"           || softfail || return $?
 
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -122,20 +122,20 @@ linux::configure_inotify() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -w|--max-user-watches)
-      max_user_watches="$2"
-      shift; shift
-      ;;
-    -i|--max-user-instances)
-      max_user_instances="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -w|--max-user-watches)
+        max_user_watches="$2"
+        shift; shift
+        ;;
+      -i|--max-user-instances)
+        max_user_instances="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
@@ -288,28 +288,28 @@ linux::set_battery_charge_control_threshold() {
 
   while [ "$#" -gt 0 ]; do
     case $1 in
-    -b|--battery)
-      battery_number="$2"
-      shift; shift
-      ;;
-    -p|--if-present)
-      if_present=true
-      shift
-      ;;
-    -s|--start)
-      start_threshold="$2"
-      shift; shift
-      ;;
-    -e|--end)
-      end_threshold="$2"
-      shift; shift
-      ;;
-    -*)
-      softfail "Unknown argument: $1" || return $?
-      ;;
-    *)
-      break
-      ;;
+      -b|--battery)
+        battery_number="$2"
+        shift; shift
+        ;;
+      -p|--if-present)
+        if_present=true
+        shift
+        ;;
+      -s|--start)
+        start_threshold="$2"
+        shift; shift
+        ;;
+      -e|--end)
+        end_threshold="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
     esac
   done
 
