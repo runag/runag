@@ -35,7 +35,7 @@ asdf::install_with_shellrc() {
 asdf::install_shellfile() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "profile/asdf" <<SHELL || softfail || return $?
+  shellfile::write "profile/asdf" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
@@ -43,7 +43,7 @@ if [ -f "\${HOME}/.asdf/asdf.sh" ]; then
 fi
 SHELL
 
-  shellfiles::write "rc/asdf" <<SHELL || softfail || return $?
+  shellfile::write "rc/asdf" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -f "\${HOME}/.asdf/asdf.sh" ]; then

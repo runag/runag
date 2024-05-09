@@ -115,7 +115,7 @@ Please refer to the source code for now.
 * [linux](lib/linux.sh)
 * [macos](lib/macos.sh)
 * [os](lib/os.sh)
-* [shellfiles](lib/shellfiles.sh)
+* [shellfile](lib/shellfile.sh)
 * [systemd](lib/systemd.sh)
 * [ubuntu](lib/ubuntu.sh)
 * [vmware](lib/vmware.sh)

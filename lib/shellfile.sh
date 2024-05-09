@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-shellfiles::write_loader_block() {
+shellfile::write_loader_block() {
   local file_path
   local directory_path
   local block_name="shellfile-d-loader"
@@ -55,37 +55,37 @@ fi
 SHELL
 }
 
-shellfiles::install_loader::bash() {
-  shellfiles::write_loader_block --file "${HOME}/.bashrc" --dir ".shellfiles.d/rc" || softfail || return $?
-  shellfiles::write_loader_block --file "${HOME}/.profile" --dir ".shellfiles.d/profile" || softfail || return $?
+shellfile::install_loader::bash() {
+  shellfile::write_loader_block --file "${HOME}/.bashrc" --dir ".shellfile.d/rc" || softfail || return $?
+  shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
 }
 
-shellfiles::install_loader::zsh() {
-  shellfiles::write_loader_block --file "${HOME}/.zshrc" --dir ".shellfiles.d/rc" || softfail || return $?
-  shellfiles::write_loader_block --file "${HOME}/.profile" --dir ".shellfiles.d/profile" || softfail || return $?
+shellfile::install_loader::zsh() {
+  shellfile::write_loader_block --file "${HOME}/.zshrc" --dir ".shellfile.d/rc" || softfail || return $?
+  shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
 }
 
-shellfiles::write() {
+shellfile::write() {
   local file_path="$1"
 
   # TODO: handle --absorb as an argument and propogate it down to file::write
 
-  local shellfiles_path="${HOME}/.shellfiles.d"
+  local shellfile_dir_path="${HOME}/.shellfile.d"
 
-  dir::should_exists --mode 0700 "${shellfiles_path}" || softfail || return $?
-  dir::should_exists --mode 0700 "${shellfiles_path}/rc" || softfail || return $?
-  dir::should_exists --mode 0700 "${shellfiles_path}/profile" || softfail || return $?
+  dir::should_exists --mode 0700 "${shellfile_dir_path}" || softfail || return $?
+  dir::should_exists --mode 0700 "${shellfile_dir_path}/rc" || softfail || return $?
+  dir::should_exists --mode 0700 "${shellfile_dir_path}/profile" || softfail || return $?
 
-  file::write --mode 0600 "${shellfiles_path}/${file_path}.sh" || softfail || return $?
+  file::write --mode 0600 "${shellfile_dir_path}/${file_path}.sh" || softfail || return $?
 }
 
 
 # ---- misc files
 
-shellfiles::install_runag_path_profile() {
+shellfile::install_runag_path_profile() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "profile/runag-path" <<SHELL || softfail || return $?
+  shellfile::write "profile/runag-path" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -d "\${HOME}/.runag/bin" ]; then
@@ -101,10 +101,10 @@ fi
 SHELL
 }
 
-shellfiles::install_direnv_rc() {
+shellfile::install_direnv_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "rc/direnv" <<SHELL || softfail || return $?
+  shellfile::write "rc/direnv" <<SHELL || softfail || return $?
 ${license_text}
 
 if command -v direnv >/dev/null; then
@@ -118,12 +118,12 @@ fi
 SHELL
 }
 
-shellfiles::install_editor_rc() {
+shellfile::install_editor_rc() {
   local editor_path; editor_path="$(command -v "$1")" || softfail || return $?
 
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "rc/editor" <<SHELL || softfail || return $?
+  shellfile::write "rc/editor" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -z "\${EDITOR:-}" ]; then
@@ -132,10 +132,10 @@ fi
 SHELL
 }
 
-shellfiles::install_flush_history_rc() {
+shellfile::install_flush_history_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "rc/flush-history" <<SHELL || softfail || return $?
+  shellfile::write "rc/flush-history" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -n "\${BASH_VERSION:-}" ]; then
@@ -144,10 +144,10 @@ fi
 SHELL
 }
 
-shellfiles::install_short_prompt_rc() {
+shellfile::install_short_prompt_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "rc/short-prompt" <<SHELL || softfail || return $?
+  shellfile::write "rc/short-prompt" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -n "\${BASH_VERSION:-}" ]; then
