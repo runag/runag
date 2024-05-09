@@ -78,7 +78,7 @@ ruby::dangerously_append_nodocument_to_gemrc() {
 ruby::install_disable_spring_shellfile() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfiles::write "profile/ruby-disable-spring" <<SHELL || softfail || return $?
+  shellfile::write "profile/ruby-disable-spring" <<SHELL || softfail || return $?
 ${license_text}
 
 export DISABLE_SPRING=true
