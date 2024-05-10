@@ -50,6 +50,28 @@ runagfile::each() {
 # ~/.runag/runagfiles/*/index.sh
 #
 runagfile::load() {
+  local working_directory_only=false
+  local tolerate_absence=false
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -w|--working-directory-only)
+        working_directory_only=true
+        shift
+        ;;
+      -t|--tolerate-absence)
+        tolerate_absence=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   if [ -f "./runagfile.sh" ]; then
     . "./runagfile.sh"
     softfail --unless-good --exit-status $? "Unable to load './runagfile.sh' ($?)"
@@ -58,6 +80,13 @@ runagfile::load() {
   elif [ -f "./runagfile/index.sh" ]; then
     . "./runagfile/index.sh"
     softfail --unless-good --exit-status $? "Unable to load './runagfile/index.sh' ($?)"
+    return $?
+
+  elif [ "${working_directory_only}" = true ]; then
+    if [ "${tolerate_absence}" = true ]; then
+      return
+    fi
+    softfail "Unable to find runagfile"
     return $?
 
   elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile.sh" ]; then
@@ -71,6 +100,7 @@ runagfile::load() {
     return $?
 
   else
+    # TODO: tolerate_absence
     runagfile::load_everything_from_runag
     softfail --unless-good --exit-status $? "Unable to load rùnagfiles from .runag ($?)" || return $?
   fi
