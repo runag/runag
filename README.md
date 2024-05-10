@@ -129,6 +129,7 @@ Please refer to the source code for now.
 ### Development
 
 * [asdf](lib/asdf.sh)
+* [direnv](lib/direnv.sh)
 * [erlang](lib/erlang.sh)
 * [git](lib/git.sh)
 * [imagemagick](lib/imagemagick.sh)
@@ -157,6 +158,7 @@ Please refer to the source code for now.
 
 ### Application deployment
 
+* [release](lib/release.sh)
 * [app-release](lib/app-release.sh)
 * [app-unit](lib/app-unit.sh)
 
