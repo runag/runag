@@ -263,7 +263,16 @@ thus ssh could potentially use a value from your ssh config file.
 
 #### `REMOTE_SSH_ARGS`
 
-Additional SSH arguments, array of strings, for example `("-i" "keyfile")`.
+Additional SSH arguments. Could be array of strings, or just plain string.
+
+The string is split into separate arguments using `IFS=" " read -a`, thereby `\` escape character have special meaning.
+
+Examples:
+
+```
+REMOTE_SSH_ARGS=("-i" "path to/keyfile")`.
+REMOTE_SSH_ARGS="-i path\ to/keyfile"
+```
 
 #### `REMOTE_UMASK`
 
