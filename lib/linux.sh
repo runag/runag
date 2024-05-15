@@ -113,7 +113,11 @@ linux::update_locale::do() {
   # TODO: Skip if already set
   sudo update-locale "${locale_kind}=${locale_name}" || softfail || return $?
 
-  eval "export ${locale_kind}=\${locale_name}"
+  # declare will make local variable, so using printf -v here
+  printf -v "${locale_kind}" "%s" "${locale_name}" || softfail || return $?
+
+  # shellcheck disable=SC2163
+  export "${locale_kind}" || softfail || return $?
 }
 
 linux::configure_inotify() {
