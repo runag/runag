@@ -533,7 +533,7 @@ ssh::call::produce_script() {
   fi
 
   if [ "${command_present}" = false ] && [ "${terminal_mode}" = false ]; then
-    softfail "Command should be specified"
+    softfail "Command should be specified (note that ssh::call may ate your first argument as a host name if REMOTE_HOST is not provided)"
     return $?
   fi
 
