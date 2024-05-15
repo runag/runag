@@ -297,8 +297,7 @@ ssh::call::internal() {
           softfail "Unable to obtain task result, maximum time limit reached"
           return 1
         fi
-
-        log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)..." >&2
+        log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)..."
       fi
 
       # retrieve exit status
