@@ -485,9 +485,14 @@ ssh::call::set_ssh_args() {
     Ssh_Args+=("-l" "${REMOTE_USER}")
   fi
 
-  # shellcheck disable=2031
-  if declare -p REMOTE_SSH_ARGS >/dev/null 2>&1; then
-    Ssh_Args=("${Ssh_Args[@]}" "${REMOTE_SSH_ARGS[@]}")
+  if declare -p REMOTE_SSH_ARGS 2>/dev/null | grep -q '^declare \-a'; then
+    Ssh_Args+=("${REMOTE_SSH_ARGS[@]}")
+
+  elif [ -n "${REMOTE_SSH_ARGS:-}" ]; then
+    local remote_ssh_args_array
+    # shellcheck disable=2162
+    IFS=" " <<<"${REMOTE_SSH_ARGS}" read -a remote_ssh_args_array || softfail || return $?
+    Ssh_Args+=("${remote_ssh_args_array[@]}")
   fi
 }
 
