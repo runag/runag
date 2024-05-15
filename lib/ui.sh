@@ -16,7 +16,7 @@
 
 ui::confirm() {
   if [ -n "${1:-}" ]; then
-    log::warning "$1" || fail
+    echo "$1"
   fi
 
   local user_input; IFS="" read -r user_input || fail
@@ -26,7 +26,7 @@ ui::confirm() {
       return 1
     fi
 
-    log::warning 'Please enter "yes" or "y" to continue, "no" or "n" to stop.' || fail
+    echo 'Please enter "yes" or "y" to continue, "no" or "n" to stop.'
     
     IFS="" read -r user_input || fail
   done

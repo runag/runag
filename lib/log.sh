@@ -18,46 +18,46 @@
 # 1  3  5  6 - don't looks good in dark mode
 # 9 11 14 13 - looks good in dark mode, looks good in light only with bold
 
-log::test() {
-  log::error log::error
-  log::warning log::warning
-  log::notice log::notice
-  log::success log::success
-}
+# log::test() {
+#   log::error log::error
+#   log::warning log::warning
+#   log::notice log::notice
+#   log::success log::success
+# }
 
 log::error() {
   local message="${1:-"(empty log message)"}"
-  if test -t 1; then
-    echo "$(printf "setaf 9\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  if [ -t 2 ]; then
+    echo "$(printf "setaf 9\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
   else
-    echo "${message}"
+    echo "[ERROR] ${message}" >&2
   fi
 }
 
 log::warning() {
   local message="${1:-"(empty log message)"}"
-  if test -t 1; then
-    echo "$(printf "setaf 11\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  if [ -t 2 ]; then
+    echo "$(printf "setaf 11\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
   else
-    echo "${message}"
+    echo "[WARNING] ${message}" >&2
   fi
 }
 
 log::notice() {
   local message="${1:-"(empty log message)"}"
-  if test -t 1; then
-    echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  if [ -t 2 ]; then
+    echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
   else
-    echo "${message}"
+    echo "[NOTICE] ${message}" >&2
   fi
 }
 
 log::success() {
   local message="${1:-"(empty log message)"}"
-  if test -t 1; then
-    echo "$(printf "setaf 13\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)"
+  if [ -t 2 ]; then
+    echo "$(printf "setaf 13\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
   else
-    echo "${message}"
+    echo "[SUCCESS] ${message}" >&2
   fi
 }
 

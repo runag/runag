@@ -298,7 +298,7 @@ ssh::call::internal ()
                         softfail "Unable to obtain task result, maximum time limit reached";
                         return 1;
                     fi;
-                    log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)..." 1>&2;
+                    log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)...";
                 fi;
                 if [ "${task_status_retrieved}" = false ]; then
                     ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'test -f "${temp_dir}/done"';
@@ -573,10 +573,10 @@ ssh::call::invoke ()
 log::notice () 
 { 
     local message="${1:-"(empty log message)"}";
-    if test -t 1; then
-        echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)";
+    if [ -t 2 ]; then
+        echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" 1>&2;
     else
-        echo "${message}";
+        echo "[NOTICE] ${message}" 1>&2;
     fi
 }
 dir::should_exists () 
