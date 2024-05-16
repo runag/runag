@@ -15,7 +15,12 @@
 #  limitations under the License.
 
 ui::confirm() {
+  if [ ! -t 0 ]; then
+    fail "Input is not a terminal"
+  fi
+
   if [ -n "${1:-}" ]; then
+    echo ""
     echo "$1"
   fi
 
