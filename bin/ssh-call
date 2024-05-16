@@ -445,8 +445,14 @@ ssh::call::set_ssh_args ()
     if [ -n "${REMOTE_USER:-}" ]; then
         Ssh_Args+=("-l" "${REMOTE_USER}");
     fi;
-    if declare -p REMOTE_SSH_ARGS > /dev/null 2>&1; then
-        Ssh_Args=("${Ssh_Args[@]}" "${REMOTE_SSH_ARGS[@]}");
+    if declare -p REMOTE_SSH_ARGS 2> /dev/null | grep -q '^declare \-a'; then
+        Ssh_Args+=("${REMOTE_SSH_ARGS[@]}");
+    else
+        if [ -n "${REMOTE_SSH_ARGS:-}" ]; then
+            local remote_ssh_args_array;
+            IFS=" " read -a remote_ssh_args_array <<< "${REMOTE_SSH_ARGS}" || softfail || return $?;
+            Ssh_Args+=("${remote_ssh_args_array[@]}");
+        fi;
     fi
 }
 ssh::call::produce_script () 
@@ -483,7 +489,7 @@ ssh::call::produce_script ()
         local command_present=false;
     fi;
     if [ "${command_present}" = false ] && [ "${terminal_mode}" = false ]; then
-        softfail "Command should be specified";
+        softfail "Command should be specified (note that ssh::call may ate your first argument as a host name if REMOTE_HOST is not provided)";
         return $?;
     fi;
     if shopt -o -q xtrace || [ "${RUNAG_VERBOSE:-}" = true ]; then
@@ -522,11 +528,20 @@ ssh::call::produce_script ()
     if [ -n "${REMOTE_UMASK:-}" ]; then
         printf "umask %q || exit \$?\n" "${REMOTE_UMASK}";
     fi;
+    if declare -p REMOTE_RC 2> /dev/null | grep -q '^declare \-a'; then
+        local rc_string;
+        printf -v rc_string " %q" "${REMOTE_RC[@]}" || softfail || return $?;
+        printf "{\n%s\n} || { exit_status=\$?; echo 'Error performing REMOTE_RC line' >&2; exit \$?; }\n" "${rc_string:1}" || softfail || return $?;
+    else
+        if [ -n "${REMOTE_RC:-}" ]; then
+            printf "{\n%s\n} || { exit_status=\$?; echo 'Error performing REMOTE_RC line' >&2; exit \$?; }\n" "${REMOTE_RC}" || softfail || return $?;
+        fi;
+    fi;
     if [ "${command_present}" = false ] && [ "${terminal_mode}" = true ]; then
         echo '"${SHELL}"';
     else
         local command_string;
-        printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?;
+        printf -v command_string " %q" "$@" || softfail || return $?;
         echo "${command_string:1}";
     fi
 }
