@@ -31,7 +31,6 @@ checksum::create_or_update() {
     if [ ! -f "${current_checksum_file}" ]; then
       if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" != true ]; then
         cat "${new_checksum_file}" || softfail || return $?
-        echo ""
       fi
 
       if [ "${RUNAG_CREATE_CHECKSUMS_WITHOUT_CONFIRMATION:-}" = true ] || ui::confirm "Do you want to create the checksum file: ${directory}/${current_checksum_file} (yes/no)?"; then
@@ -56,8 +55,6 @@ checksum::create_or_update() {
     else
       diff --strip-trailing-cr --context=6 --color "${current_checksum_file}" "${new_checksum_file}"
     fi
-
-    echo ""
 
     if ui::confirm "Do you want to update the checksum file: ${directory}/${current_checksum_file} (yes/no)?"; then
       cp "${new_checksum_file}" "${current_checksum_file}" || softfail || return $?
