@@ -585,7 +585,6 @@ ssh::call::produce_script() {
 
   # functions dump
   if [ "${remote_rc_require_functions}" = true ] || { [ "${command_mode}" = false ] && [ "${command_present}" = true ] && declare -F "$1" >/dev/null; }; then
-  echo function dump >&2
     if [ -z "${PS1:-}" ]; then
       declare -f || softfail "Unable to produce source code dump of functions" || return $?
     else
