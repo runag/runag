@@ -580,10 +580,18 @@ ssh::call::produce_script() {
     printf "umask %q || exit \$?\n" "${REMOTE_UMASK}"
   fi
 
+  if declare -p REMOTE_RC 2>/dev/null | grep -q '^declare \-a'; then
+    local rc_string; printf -v rc_string " %q" "${REMOTE_RC[@]}" || softfail || return $?
+    printf "{\n%s\n} || { exit_status=\$?; echo 'Error performing REMOTE_RC line' >&2; exit \$?; }\n" "${rc_string:1}" || softfail || return $?
+
+  elif [ -n "${REMOTE_RC:-}" ]; then
+    printf "{\n%s\n} || { exit_status=\$?; echo 'Error performing REMOTE_RC line' >&2; exit \$?; }\n" "${REMOTE_RC}" || softfail || return $?
+  fi
+
   if [ "${command_present}" = false ] && [ "${terminal_mode}" = true ]; then
     echo '"${SHELL}"'
   else
-    local command_string; printf -v command_string " %q" "$@" || softfail "Unable to produce command string" || return $?
+    local command_string; printf -v command_string " %q" "$@" || softfail || return $?
     echo "${command_string:1}"
   fi
 }
