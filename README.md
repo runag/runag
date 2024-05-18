@@ -159,7 +159,6 @@ Please refer to the source code for now.
 ### Application deployment
 
 * [release](lib/release.sh)
-* [app-release](lib/app-release.sh)
 * [app-unit](lib/app-unit.sh)
 
 ### Desktop applications
