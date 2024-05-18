@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-release::create() {
+release::deploy() {
   local source_path
   local dest_path
   local ssh_call
@@ -53,14 +53,14 @@ release::create() {
     dest_path="$(basename "${source_path}")" || softfail || return $?
   fi
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::create::init "${dest_path}" || softfail || return $?
+  ${ssh_call:+"${ssh_call_prefix}"} release::init "${dest_path}" || softfail || return $?
 
-  release::create::push "${source_path}" "${dest_path}" || softfail || return $?
+  release::push "${source_path}" "${dest_path}" || softfail || return $?
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::create::do "${dest_path}" || softfail || return $?
+  ${ssh_call:+"${ssh_call_prefix}"} release::create "${dest_path}" || softfail || return $?
 }
 
-release::create::init() {
+release::init() {
   local dest_path="$1"
 
   dir::should_exists --mode 0700 "${dest_path}" || softfail || return $?
@@ -73,7 +73,7 @@ release::create::init() {
   ( cd "${dest_path}/repo" && git symbolic-ref HEAD refs/heads/main ) || softfail || return $?
 }
 
-release::create::push() (
+release::push() (
   local source_path="$1"
   local dest_path="$2"
 
@@ -97,7 +97,7 @@ release::create::push() (
   git push --quiet --set-upstream "${remote_name}" main || fail
 )
 
-release::create::do() {
+release::create() {
   local dest_path="$1"
 
   cd "${dest_path}" || softfail || return $?
@@ -123,16 +123,36 @@ release::create::do() {
 
   touch "${release_dir}/.successful-release-flag" || softfail || return $?
 
-  release::create::cleanup successful || softfail || return $?
-  release::create::cleanup non-successful || softfail || return $?
+  release::cleanup --kind successful || softfail || return $?
+  release::cleanup --kind non-successful || softfail || return $?
 }
 
-release::create::cleanup() {
-  local cleanup_kind="$1"
-  local keep_amount=6
-  local release_item
+# release::build() {
 
-  for release_item in releases/*; do
+release::cleanup() {
+  local cleanup_kind
+  local keep_amount=6
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -k|--kind)
+        cleanup_kind="$2"
+        shift; shift
+        ;;
+      -p|--keep)
+        keep_amount="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  local release_item; for release_item in releases/*; do
     if [ -d "${release_item}" ]; then
       if [ "${cleanup_kind}" = successful ] && [ -f "${release_item}/.successful-release-flag" ]; then
         echo "${release_item}"
@@ -140,7 +160,7 @@ release::create::cleanup() {
         echo "${release_item}"
       fi
     fi
-  done | sort | head "--lines=-${keep_amount}" | \
+  done | sort | head --lines="-${keep_amount}" | \
   while IFS="" read -r release_item; do
     echo "Cleaning up past release ${PWD}/${release_item}..."
     rm -rf "${release_item:?}" || softfail || return $?
