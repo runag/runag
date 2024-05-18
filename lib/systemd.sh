@@ -76,26 +76,40 @@ systemd::menu() {
 
   menu::add --header "Actions on ${service_name} services" || softfail || return $?
 
+  # start
   menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} --no-block start "${service_name}.service" || softfail || return $?
+
+  # stop
   menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
 
+  # disable timer
   if [ "${with_timer:-}" = true ]; then
     menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::disable_timer ${user_services:+"--user"} "${service_name}" || softfail || return $?
   fi
 
+  # show status
   menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::show_status ${user_services:+"--user"} ${with_timer:+"--with-timer"} "${service_name}" || softfail || return $?
 
-  # TODO: eventually remove 
+  # view/follow log for older systemd
+  # TODO: remove this block eventually
   if [ "${user_services:-}" = true ]; then
     local release_codename; release_codename="$(${ssh_call:+"${ssh_call_prefix}"} lsb_release --codename --short)" || softfail || return $?
     if [ "${release_codename}" = focal ]; then
+      # view log
       menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 || softfail || return $?
+
+      # follow log
       menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --follow || softfail || return $?
-      return # Watch out!
+      
+      # Watch out!
+      return
     fi
   fi
 
+  # view log
   menu::add ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 || softfail || return $?
+
+  # follow log
   menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 --follow || softfail || return $?
 }
 
