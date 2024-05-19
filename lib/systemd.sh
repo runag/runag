@@ -47,15 +47,15 @@ systemd::menu() {
         service_name="$2"
         shift; shift
         ;;
+      -c|--ssh-call)
+        ssh_call=true
+        ssh_call_prefix="ssh::call"
+        shift
+        ;;
       -w|--ssh-call-with)
         ssh_call=true
         ssh_call_prefix="$2"
         shift; shift
-        ;;
-      -s|--ssh-call)
-        ssh_call=true
-        ssh_call_prefix="ssh::call"
-        shift
         ;;
       -u|--user)
         user_services=true

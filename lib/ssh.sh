@@ -59,15 +59,15 @@ ssh::install_authorized_keys_from_pass() {
         perhaps_sudo=true
         shift
         ;;
-      -w|--ssh-call-with)
-        ssh_call=true
-        ssh_call_prefix="$2"
-        shift; shift
-        ;;
       -c|--ssh-call)
         ssh_call=true
         ssh_call_prefix="ssh::call"
         shift
+        ;;
+      -w|--ssh-call-with)
+        ssh_call=true
+        ssh_call_prefix="$2"
+        shift; shift
         ;;
       -*)
         fail "Unknown argument: $1"
