@@ -189,6 +189,10 @@ release::build_and_deploy_services() (
 
   runagfile::load --working-directory-only --tolerate-absence || softfail || return $?
 
+  if declare -F release::env >/dev/null; then
+    release::env || softfail || return $?
+  fi
+
   if declare -F release::build >/dev/null; then
     release::build || softfail || return $?
   fi
@@ -199,7 +203,7 @@ release::build_and_deploy_services() (
 )
 
 # release::build() {
-  
+
 # release::release::deploy_services() {
 
 release::cleanup() {
