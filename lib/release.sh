@@ -53,15 +53,30 @@ release::deploy() {
     dest_path="$(basename "${source_path}")" || softfail || return $?
   fi
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::init "${dest_path}" || softfail || return $?
+  ${ssh_call:+"${ssh_call_prefix}"} release::init --dest "${dest_path}" || softfail || return $?
 
-  release::push "${source_path}" "${dest_path}" || softfail || return $?
+  release::push --source "${source_path}" --dest "${dest_path}" || softfail || return $?
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::create "${dest_path}" || softfail || return $?
+  ${ssh_call:+"${ssh_call_prefix}"} release::create --dest "${dest_path}" || softfail || return $?
 }
 
 release::init() {
-  local dest_path="$1"
+  local dest_path
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -d|--dest)
+        dest_path="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
 
   dir::should_exists --mode 0700 "${dest_path}" || softfail || return $?
   dir::should_exists --mode 0700 "${dest_path}/releases" || softfail || return $?
@@ -74,8 +89,27 @@ release::init() {
 }
 
 release::push() (
-  local source_path="$1"
-  local dest_path="$2"
+  local source_path
+  local dest_path
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -s|--source)
+        source_path="$2"
+        shift; shift
+        ;;
+      -d|--dest)
+        dest_path="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
 
   cd "${source_path}" || softfail || return $?
 
@@ -98,7 +132,22 @@ release::push() (
 )
 
 release::create() {
-  local dest_path="$1"
+  local dest_path
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -d|--dest)
+        dest_path="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
 
   cd "${dest_path}" || softfail || return $?
 
