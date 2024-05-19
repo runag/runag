@@ -157,7 +157,7 @@ release::create() (
 
   git clone --quiet repo "${release_dir}" || softfail || return $?
 
-  release::invoke_build --release-dir "${release_dir}" || softfail || return $?
+  release::build_and_deploy_services --release-dir "${release_dir}" || softfail || return $?
 
   ln --symbolic --force --no-dereference "${release_dir}" "current" || softfail || return $?
 
@@ -167,7 +167,7 @@ release::create() (
   release::cleanup --kind non-successful || softfail || return $?
 )
 
-release::invoke_build() (
+release::build_and_deploy_services() (
   local release_dir
 
   while [ "$#" -gt 0 ]; do
@@ -191,6 +191,10 @@ release::invoke_build() (
 
   if declare -F release::build >/dev/null; then
     release::build || softfail || return $?
+  fi
+
+  if declare -F release::deploy_services >/dev/null; then
+    release::deploy_services || softfail || return $?
   fi
 )
 
