@@ -131,7 +131,7 @@ release::push() (
   git push --quiet --set-upstream "${remote_name}" main || fail
 )
 
-release::create() {
+release::create() (
   local dest_path
 
   while [ "$#" -gt 0 ]; do
@@ -157,16 +157,7 @@ release::create() {
 
   git clone --quiet repo "${release_dir}" || softfail || return $?
 
-  (
-    cd "${release_dir}" || softfail || return $?
-
-    runagfile::load --working-directory-only --tolerate-absence || softfail || return $?
-
-    if declare -F release::build >/dev/null; then
-      release::build || softfail || return $?
-    fi
-
-  ) || softfail || return $?
+  release::invoke_build --release-dir "${release_dir}" || softfail || return $?
 
   ln --symbolic --force --no-dereference "${release_dir}" "current" || softfail || return $?
 
@@ -174,7 +165,34 @@ release::create() {
 
   release::cleanup --kind successful || softfail || return $?
   release::cleanup --kind non-successful || softfail || return $?
-}
+)
+
+release::invoke_build() (
+  local release_dir
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -d|--release-dir)
+        release_dir="$2"
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  cd "${release_dir}" || softfail || return $?
+
+  runagfile::load --working-directory-only --tolerate-absence || softfail || return $?
+
+  if declare -F release::build >/dev/null; then
+    release::build || softfail || return $?
+  fi
+)
 
 # release::build() {
 
