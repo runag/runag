@@ -211,52 +211,9 @@ systemd::export_shell_function_as_command() {
   echo "/usr/bin/bash -c '${command//\'/\\\'}'"
 }
 
-systemd::on_calendar() {
-  local calendar_block; printf -v calendar_block "\nOnCalendar=%s" "$@" || softfail || return $?
-  echo "${calendar_block:1}"
-}
-
-systemd::exec() {
-  local command_name="ExecStart"
-  while [ "$#" -gt 0 ]; do
-    case $1 in
-      --start)
-        command_name="ExecStart"
-        shift
-        ;;
-      --start-pre)
-        command_name="ExecStartPre"
-        shift
-        ;;
-      --start-post)
-        command_name="ExecStartPost"
-        shift
-        ;;
-      --condition)
-        command_name="ExecCondition"
-        shift
-        ;;
-      --reload)
-        command_name="ExecReload"
-        shift
-        ;;
-      --stop)
-        command_name="ExecStop"
-        shift
-        ;;
-      --stop-post)
-        command_name="ExecStopPost"
-        shift
-        ;;
-      -*)
-        fail "Unknown argument: $1"
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
-
-  local exec_block; printf -v exec_block "\n${command_name}=%s" "$@" || softfail || return $?
-  echo "${exec_block:1}"
+systemd::block() {
+  local block_name="$1"
+  shift
+  local block_content; printf -v block_content "\n${block_name}=%s" "$@" || softfail || return $?
+  echo "${block_content:1}"
 }
