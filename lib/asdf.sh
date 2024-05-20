@@ -83,10 +83,25 @@ asdf::load() {
   . "${HOME}/.asdf/asdf.sh" || softfail "Unable to load asdf" || return $?
 }
 
-asdf::path_variable() {
-  local user_name="${1:-"${USER}"}"
-  local home_dir; home_dir="$(linux::get_home_dir "${user_name}")" || softfail || return $?
-  echo "${home_dir}/.asdf/shims:${home_dir}/.asdf/bin"
+asdf::get_path_env() {
+  local home_dir="${HOME}"
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -u|--user)
+        home_dir="$(linux::get_home_dir "$2")" || softfail || return $?
+        shift; shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  echo "${ASDF_DATA_DIR:-"${home_dir}/.asdf"}/shims:${ASDF_DIR:-"${home_dir}/.asdf"}/bin"
 }
 
 asdf::add_plugin() {
