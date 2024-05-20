@@ -17,6 +17,7 @@
 release::deploy() {
   local source_path
   local dest_path
+  local load_local_runagfile
   local ssh_call
   local ssh_call_prefix
 
@@ -29,6 +30,10 @@ release::deploy() {
       -d|--dest)
         dest_path="$2"
         shift; shift
+        ;;
+      -l|--load-local-runagfile)
+        load_local_runagfile=true
+        shift
         ;;
       -c|--ssh-call)
         ssh_call=true
@@ -57,7 +62,7 @@ release::deploy() {
 
   release::push --source "${source_path}" --dest "${dest_path}" || softfail || return $?
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::create --dest "${dest_path}" || softfail || return $?
+  ${ssh_call:+"${ssh_call_prefix}"} release::create ${load_local_runagfile:+"--load-local-runagfile"} --dest "${dest_path}" || softfail || return $?
 }
 
 release::init() {
@@ -133,12 +138,17 @@ release::push() (
 
 release::create() (
   local dest_path
+  local load_local_runagfile
 
   while [ "$#" -gt 0 ]; do
     case $1 in
       -d|--dest)
         dest_path="$2"
         shift; shift
+        ;;
+      -l|--load-local-runagfile)
+        load_local_runagfile=true
+        shift
         ;;
       -*)
         softfail "Unknown argument: $1" || return $?
@@ -157,7 +167,7 @@ release::create() (
 
   git clone --quiet repo "${release_dir}" || softfail || return $?
 
-  release::build_and_deploy_services --release-dir "${release_dir}" || softfail || return $?
+  release::build_and_deploy_services ${load_local_runagfile:+"--load-local-runagfile"} --release-dir "${release_dir}" || softfail || return $?
 
   ln --symbolic --force --no-dereference "${release_dir}" "current" || softfail || return $?
 
@@ -169,12 +179,17 @@ release::create() (
 
 release::build_and_deploy_services() (
   local release_dir
+  local load_local_runagfile
 
   while [ "$#" -gt 0 ]; do
     case $1 in
       -d|--release-dir)
         release_dir="$2"
         shift; shift
+        ;;
+      -l|--load-local-runagfile)
+        load_local_runagfile=true
+        shift
         ;;
       -*)
         softfail "Unknown argument: $1" || return $?
@@ -187,7 +202,9 @@ release::build_and_deploy_services() (
 
   cd "${release_dir}" || softfail || return $?
 
-  runagfile::load --working-directory-only --tolerate-absence || softfail || return $?
+  if [ "${load_local_runagfile}" = true ]; then
+    runagfile::load --working-directory-only --tolerate-absence || softfail || return $?
+  fi
 
   if declare -F release::env >/dev/null; then
     release::env || softfail || return $?
