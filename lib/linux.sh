@@ -243,7 +243,7 @@ linux::get_cpu_count() {
   fi
 }
 
-linux::get_default_path_variable() {(
+linux::get_default_path_env() {(
   . /etc/environment && echo "${PATH}" || softfail || return $?
 )}
 
