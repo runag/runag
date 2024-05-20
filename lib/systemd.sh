@@ -41,6 +41,9 @@ systemd::menu() {
   local user_services
   local with_timer
 
+  local perhaps_sudo_for_logs
+  local perhaps_sudo_for_services
+
   while [ "$#" -gt 0 ]; do
     case $1 in
       -n|--name)
@@ -74,22 +77,30 @@ systemd::menu() {
     esac
   done
 
+  if [ "${ssh_call:-}" != true ]; then
+    perhaps_sudo_for_logs=true
+  fi
+
+  if [ "${user_services:-}" != true ] && [ "${ssh_call:-}" != true ]; then
+    perhaps_sudo_for_services=true
+  fi
+
   menu::add --header "Actions on ${service_name} services" || softfail || return $?
 
   # start
   # TODO: see how it goes without --no-block here
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} start "${service_name}.service" || softfail || return $?
+  menu::add --comment "Start" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} start "${service_name}.service" || softfail || return $?
 
   # stop
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
+  menu::add --comment "Stop" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
 
   # disable timer
   if [ "${with_timer:-}" = true ]; then
-    menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::disable_timer ${user_services:+"--user"} "${service_name}" || softfail || return $?
+    menu::add --comment "Disable timer" ${ssh_call:+"${ssh_call_prefix}"} systemd::disable_timer ${perhaps_sudo_for_services:+"--sudo"} ${user_services:+"--user"} "${service_name}" || softfail || return $?
   fi
 
   # show status
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemd::show_status ${user_services:+"--user"} ${with_timer:+"--with-timer"} "${service_name}" || softfail || return $?
+  menu::add --comment "Show status" ${ssh_call:+"${ssh_call_prefix}"} systemd::show_status ${user_services:+"--user"} ${with_timer:+"--with-timer"} "${service_name}" || softfail || return $?
 
   # view/follow log for older systemd
   # TODO: remove this block eventually
@@ -97,10 +108,16 @@ systemd::menu() {
     local release_codename; release_codename="$(${ssh_call:+"${ssh_call_prefix}"} lsb_release --codename --short)" || softfail || return $?
     if [ "${release_codename}" = focal ]; then
       # view log
-      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 || softfail || return $?
+      menu::add --comment "View recent log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 || softfail || return $?
 
       # follow log
-      menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --follow || softfail || return $?
+      menu::add --comment "Follow log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --follow || softfail || return $?
+      
+      # follow systemd log
+      menu::add --comment "Follow systemd log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --identifier systemd --lines 2048 --follow || softfail || return $?
+      
+      # follow all logs
+      menu::add --comment "Follow all logs" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --lines 2048 --follow || softfail || return $?
       
       # Watch out!
       return
@@ -108,19 +125,30 @@ systemd::menu() {
   fi
 
   # view log
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 || softfail || return $?
+  menu::add --comment "View recent log" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 || softfail || return $?
 
   # follow log
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 --follow || softfail || return $?
+  menu::add --comment "Follow log" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 --follow || softfail || return $?
+
+  # follow systemd log
+  menu::add --comment "Follow systemd log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --identifier systemd --lines 2048 --follow || softfail || return $?
+
+  # follow all logs
+  menu::add --comment "Follow all logs" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --lines 2048 --follow || softfail || return $?
 }
 
 systemd::disable_timer() {
   local user_services
+  local perhaps_sudo
 
   while [ "$#" -gt 0 ]; do
     case $1 in
       -u|--user)
         user_services=true
+        shift
+        ;;
+      -s|--sudo)
+        perhaps_sudo=true
         shift
         ;;
       -*)
@@ -132,17 +160,22 @@ systemd::disable_timer() {
     esac
   done
 
-  systemctl ${user_services:+"--user"} stop "${1}.timer" || softfail || return $?
-  systemctl ${user_services:+"--user"} --quiet disable "${1}.timer" || softfail || return $?
+  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} stop "${1}.timer" || softfail || return $?
+  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} --quiet disable "${1}.timer" || softfail || return $?
 }
 
 systemd::enable_timer() {
   local user_services
+  local perhaps_sudo
 
   while [ "$#" -gt 0 ]; do
     case $1 in
       -u|--user)
         user_services=true
+        shift
+        ;;
+      -s|--sudo)
+        perhaps_sudo=true
         shift
         ;;
       -*)
@@ -155,8 +188,8 @@ systemd::enable_timer() {
   done
 
   systemd-analyze ${user_services:+"--user"} verify "${1}.service" || fail
-  systemctl ${user_services:+"--user"} --quiet reenable "${1}.timer" || fail
-  systemctl ${user_services:+"--user"} start "${1}.timer" || fail
+  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} --quiet reenable "${1}.timer" || fail
+  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} start "${1}.timer" || fail
 }
 
 systemd::show_status() {
