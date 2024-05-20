@@ -77,7 +77,8 @@ systemd::menu() {
   menu::add --header "Actions on ${service_name} services" || softfail || return $?
 
   # start
-  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} --no-block start "${service_name}.service" || softfail || return $?
+  # TODO: see how it goes without --no-block here
+  menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} start "${service_name}.service" || softfail || return $?
 
   # stop
   menu::add ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
