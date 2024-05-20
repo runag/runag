@@ -253,7 +253,11 @@ menu::add() {
         shift
         ;;
       -c|--comment)
-        comment_postfix=" # $2"
+        # not sure if that's a right place to keep color
+        local comment_color; test -t 0 && comment_color="$(printf "setaf 13\nbold" | tput -S 2>/dev/null)" || comment_color=""
+        local reset_attrs; test -t 0 && reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
+
+        comment_postfix=" # ${comment_color}$2${reset_attrs}"
         shift; shift
         ;;
       -m|--menu)
