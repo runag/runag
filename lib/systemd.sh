@@ -179,9 +179,9 @@ systemd::service_action::start() {
   done
 
   if [ "${user_services}" = true ]; then
-    systemctl --user start "${service_name}.service" || softfail || return $?
+    systemctl --user --no-block start "${service_name}.service" || softfail || return $?
   else
-    sudo systemctl start "${service_name}.service" || softfail || return $?
+    sudo systemctl --no-block start "${service_name}.service" || softfail || return $?
   fi
 }
 

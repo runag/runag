@@ -139,7 +139,7 @@ SHELL
 Description=vmware-vm-network-loss-workaround
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/usr/local/bin/vmware-vm-network-loss-workaround
 WorkingDirectory=/
 EOF
