@@ -281,9 +281,9 @@ menu::add() {
 
   if [ "${add_delimiter}" = false ]; then
     if [ "${add_menu}" = true ]; then
-      if [ -z "${signal_message:-}" ]; then
-        signal_message="#* * $*"
-      fi
+      # if [ -z "${signal_message:-}" ]; then
+      #   signal_message="#* * $*"
+      # fi
       set -- menu::display_for "$@"
     fi
 
