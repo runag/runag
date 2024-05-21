@@ -47,25 +47,71 @@ systemd::block() {
   echo "${block_content:1}"
 }
 
-systemd::menu() {
-  local service_name
-  local ssh_call
-  local ssh_call_prefix
-  local user_services
+systemd::service_menu() {
   local with_timer
-
-  local perhaps_sudo_for_logs
-  local perhaps_sudo_for_services
+  local action_args=()
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
-      -n|--name)
-        service_name="$2"
+    case "$1" in
+      -t|--with-timer)
+        action_args+=("$1")
+        with_timer=true
+        shift
+        ;;
+      -n|--service-name|-w|--ssh-call-with)
+        action_args+=("$1" "$2")
         shift; shift
+        ;;
+      -u|--user|-c|--ssh-call)
+        action_args+=("$1")
+        shift
+        ;;
+      *)
+        softfail "Unknown argument: $1" || return $?
+        break
+        ;;
+    esac
+  done
+
+  menu::add --header "Service actions" || softfail || return $?
+
+  menu::add systemd::service_action "${action_args[@]}" start || softfail || return $?
+  menu::add systemd::service_action "${action_args[@]}" stop || softfail || return $?
+  
+  if [ "${with_timer:-}" = true ]; then
+    menu::add systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?
+    menu::add systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?
+  fi
+
+  menu::add systemd::service_action "${action_args[@]}" status || softfail || return $?
+  menu::add systemd::service_action "${action_args[@]}" journal  || softfail || return $?
+  menu::add systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
+}
+
+systemd::service_action() {
+  local action_args=()
+
+  local user_services=false
+  local ssh_call=false
+  local ssh_call_prefix="ssh::call"
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--service-name)
+        action_args+=("$1" "$2")
+        shift; shift
+        ;;
+      -u|--user)
+        action_args+=("$1")
+        user_services=true
+        shift
+        ;;
+      -t|--with-timer)
+        action_args+=("$1")
+        shift
         ;;
       -c|--ssh-call)
         ssh_call=true
-        ssh_call_prefix="ssh::call"
         shift
         ;;
       -w|--ssh-call-with)
@@ -73,14 +119,6 @@ systemd::menu() {
         ssh_call_prefix="$2"
         shift; shift
         ;;
-      -u|--user)
-        user_services=true
-        shift
-        ;;
-      -t|--with-timer)
-        with_timer=true
-        shift
-        ;;
       -*)
         softfail "Unknown argument: $1" || return $?
         ;;
@@ -90,115 +128,176 @@ systemd::menu() {
     esac
   done
 
-  if [ "${ssh_call:-}" != true ]; then
-    perhaps_sudo_for_logs=true
-  fi
+  local action="$1"; shift
 
-  if [ "${user_services:-}" != true ] && [ "${ssh_call:-}" != true ]; then
-    perhaps_sudo_for_services=true
-  fi
+  local ssh_call_command=()
 
-  menu::add --header "Actions on ${service_name} services" || softfail || return $?
+  if [ "${ssh_call}" = true ]; then
+    ssh_call_command+=("${ssh_call_prefix}")
 
-  # start
-  # TODO: see how it goes without --no-block here
-  menu::add --comment "Start service" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} start "${service_name}.service" || softfail || return $?
-
-  # stop
-  menu::add --comment "Stop service" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} systemctl ${user_services:+"--user"} stop "${service_name}.service" || softfail || return $?
-
-  # disable timer
-  if [ "${with_timer:-}" = true ]; then
-    menu::add --comment "Disable timer" ${ssh_call:+"${ssh_call_prefix}"} systemd::disable_timer ${perhaps_sudo_for_services:+"--sudo"} ${user_services:+"--user"} "${service_name}" || softfail || return $?
-  fi
-
-  # show status
-  menu::add --comment "Show service status" ${ssh_call:+"${ssh_call_prefix}"} systemd::show_status ${user_services:+"--user"} ${with_timer:+"--with-timer"} "${service_name}" || softfail || return $?
-
-  # view/follow log for older systemd
-  # TODO: remove this block eventually
-  if [ "${user_services:-}" = true ]; then
-    local release_codename; release_codename="$(${ssh_call:+"${ssh_call_prefix}"} lsb_release --codename --short)" || softfail || return $?
-    if [ "${release_codename}" = focal ]; then
-      # view log
-      menu::add --comment "View recent service log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 || softfail || return $?
-
-      # follow log
-      menu::add --comment "Follow service log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --follow || softfail || return $?
-      
-      # Watch out!
-      return
+    if [ "${user_services}" != true ]; then
+      ssh_call_command+=(--root)
     fi
   fi
 
-  # view log
-  menu::add --comment "View recent service log" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 || softfail || return $?
+  # remove eventually
+  if [ "${user_services}" = true ] && [ "${action}" = "journal" ]; then
+    local release_codename; release_codename="$("${ssh_call_command[@]}" lsb_release --codename --short)" || softfail || return $?
+    if [ "${release_codename}" = "focal" ]; then
+      ssh_call_command+=(--root)
+    fi
+  fi
 
-  # follow log
-  menu::add --comment "Follow service log" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 --follow || softfail || return $?
+  if [ "${action}" = "journal" ] && [ "${1:-}" = "--follow" ]; then
+    ssh_call_command+=(--direct)
+  fi
+
+  "${ssh_call_command[@]}" "systemd::service_action::${action}" "${action_args[@]}" "$@" || softfail || return $?
 }
 
-systemd::disable_timer() {
-  local user_services
-  local perhaps_sudo
+systemd::service_action::start() {
+  local service_name
+  local user_services=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
+      -n|--service-name)
+        service_name="$2"
+        shift; shift
+        ;;
       -u|--user)
         user_services=true
         shift
         ;;
-      -s|--sudo)
-        perhaps_sudo=true
+      -t|--with-timer)
         shift
         ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
       *)
-        break
+        softfail "Unknown argument: $1" || return $?
         ;;
     esac
   done
 
-  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} stop "${1}.timer" || softfail || return $?
-  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} --quiet disable "${1}.timer" || softfail || return $?
+  if [ "${user_services}" = true ]; then
+    systemctl --user start "${service_name}.service" || softfail || return $?
+  else
+    sudo systemctl start "${service_name}.service" || softfail || return $?
+  fi
 }
 
-systemd::enable_timer() {
-  local user_services
-  local perhaps_sudo
+systemd::service_action::stop() {
+  local service_name
+  local user_services=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
+      -n|--service-name)
+        service_name="$2"
+        shift; shift
+        ;;
       -u|--user)
         user_services=true
         shift
         ;;
-      -s|--sudo)
-        perhaps_sudo=true
+      -t|--with-timer)
         shift
         ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
       *)
-        break
+        softfail "Unknown argument: $1" || return $?
         ;;
     esac
   done
 
-  systemd-analyze ${user_services:+"--user"} verify "${1}.service" || fail
-  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} --quiet reenable "${1}.timer" || fail
-  ${perhaps_sudo:+"sudo"} systemctl ${user_services:+"--user"} start "${1}.timer" || fail
+  if [ "${user_services}" = true ]; then
+    systemctl --user stop "${service_name}.service" || softfail || return $?
+  else
+    sudo systemctl stop "${service_name}.service" || softfail || return $?
+  fi
 }
 
-systemd::show_status() {
-  local user_services
+systemd::service_action::disable_timer() {
+  local service_name
+  local user_services=false
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--service-name)
+        service_name="$2"
+        shift; shift
+        ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      -t|--with-timer)
+        shift
+        ;;
+      *)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+    esac
+  done
+
+  if [ "${user_services}" = true ]; then
+    local systemctl_command=(systemctl --user)
+  else
+    local systemctl_command=(sudo systemctl)
+  fi
+
+  "${systemctl_command[@]}" stop "${service_name}.timer" || softfail || return $?
+  "${systemctl_command[@]}" --quiet disable "${service_name}.timer" || softfail || return $?
+}
+
+systemd::service_action::enable_timer() {
+  local service_name
+  local user_services=false
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--service-name)
+        service_name="$2"
+        shift; shift
+        ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      -t|--with-timer)
+        shift
+        ;;
+      *)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+    esac
+  done
+
+  if [ "${user_services}" = true ]; then
+    systemd-analyze --user verify "${service_name}.service" || softfail || return $?
+  else
+    systemd-analyze verify "${service_name}.service" || softfail || return $?
+  fi
+
+  if [ "${user_services}" = true ]; then
+    local systemctl_command=(systemctl --user)
+  else
+    local systemctl_command=(sudo systemctl)
+  fi
+
+  "${systemctl_command[@]}" --quiet reenable "${service_name}.timer" || softfail || return $?
+  "${systemctl_command[@]}" start "${service_name}.timer" || softfail || return $?
+}
+
+systemd::service_action::status() {
+  local service_name
+  local user_services=false
   local with_timer=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
+      -n|--service-name)
+        service_name="$2"
+        shift; shift
+        ;;
       -u|--user)
         user_services=true
         shift
@@ -207,34 +306,84 @@ systemd::show_status() {
         with_timer=true
         shift
         ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
       *)
-        break
+        softfail "Unknown argument: $1" || return $?
         ;;
     esac
   done
+
+  if [ "${user_services}" = true ]; then
+    local systemctl_command=(systemctl --user)
+  else
+    local systemctl_command=(sudo systemctl)
+  fi
 
   local exit_statuses=()
 
   printf "\n"
 
   if [ "${with_timer}" = true ]; then
-    systemctl ${user_services:+"--user"} list-timers "${1}.timer" --all || softfail || return $?
+    "${systemctl_command[@]}" list-timers "${service_name}.timer" --all || softfail || return $?
     exit_statuses+=($?)
     printf "\n\n\n"
 
-    systemctl ${user_services:+"--user"} status "${1}.timer"
+    "${systemctl_command[@]}" status "${service_name}.timer"
     exit_statuses+=($?)
     printf "\n\n\n"
   fi
 
-  systemctl ${user_services:+"--user"} status "${1}.service"
+  "${systemctl_command[@]}" status "${service_name}.service"
   exit_statuses+=($?)
   printf "\n"
 
   if [[ "${exit_statuses[*]}" =~ [^03[:space:]] ]]; then # I'm not sure about number 3 here
     softfail || return $?
   fi
+}
+
+systemd::service_action::journal() {
+  local service_name
+  local user_services=false
+  local follow_argument=()
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--service-name)
+        service_name="$2"
+        shift; shift
+        ;;
+      -u|--user)
+        user_services=true
+        shift
+        ;;
+      --follow)
+        follow_argument=(--follow)
+        shift
+        ;;
+      -t|--with-timer)
+        shift
+        ;;
+      *)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+    esac
+  done
+
+  # remove eventually
+  if [ "${user_services}" = true ];  then
+    local release_codename; release_codename="$(lsb_release --codename --short)" || softfail || return $?
+
+    if [ "${release_codename}" = "focal" ]; then
+      sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
+      return
+    fi
+  fi
+
+  if [ "${user_services}" = true ]; then
+    local journalctl_command=(journalctl --user)
+  else
+    local journalctl_command=(sudo journalctl)
+  fi
+
+  "${journalctl_command[@]}" -u "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
 }
