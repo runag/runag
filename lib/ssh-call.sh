@@ -411,13 +411,15 @@ ssh::call::internal() {
 
     if [ -s "${temp_dir}/stderr" ]; then
       if test -t 2; then
-        printf "setaf 9\nbold" | tput -S >&2 2>/dev/null && true
-      fi
+        local error_color; error_color="$(printf "setaf 9\nbold" | tput -S 2>/dev/null)" || error_color=""
+        local reset_attrs; reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
-      cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
-
-      if test -t 2; then
-        tput sgr 0 >&2 2>/dev/null && true
+        local error_line
+        while IFS="" read -r error_line; do
+          echo "${error_color}${error_line}${reset_attrs}" >&2
+        done <"${temp_dir}/stderr" || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
+      else
+        cat "${temp_dir}/stderr" >&2 || { echo "Unable to display task stderr ($?)" >&2; error_state=true; }
       fi
     fi
 
