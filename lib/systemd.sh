@@ -272,12 +272,6 @@ systemd::service_action::enable_timer() {
   done
 
   if [ "${user_services}" = true ]; then
-    systemd-analyze --user verify "${service_name}.service" || softfail || return $?
-  else
-    systemd-analyze verify "${service_name}.service" || softfail || return $?
-  fi
-
-  if [ "${user_services}" = true ]; then
     local systemctl_command=(systemctl --user)
   else
     local systemctl_command=(sudo systemctl)
