@@ -126,12 +126,6 @@ systemd::menu() {
       # follow log
       menu::add --comment "Follow service log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --follow || softfail || return $?
       
-      # follow systemd log
-      menu::add --comment "Follow systemd log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --identifier systemd --lines 2048 --follow || softfail || return $?
-      
-      # follow all logs
-      menu::add --comment "Follow host logs" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --lines 2048 --follow || softfail || return $?
-      
       # Watch out!
       return
     fi
@@ -142,12 +136,6 @@ systemd::menu() {
 
   # follow log
   menu::add --comment "Follow service log" ${perhaps_sudo_for_services:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--direct"} journalctl ${user_services:+"--user"} -u "${service_name}.service" --lines 2048 --follow || softfail || return $?
-
-  # follow systemd log
-  menu::add --comment "Follow systemd log" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --identifier systemd --lines 2048 --follow || softfail || return $?
-
-  # follow all logs
-  menu::add --comment "Follow host logs" ${perhaps_sudo_for_logs:+"sudo"} ${ssh_call:+"${ssh_call_prefix}"} ${ssh_call:+"--root"} ${ssh_call:+"--direct"} journalctl --lines 2048 --follow || softfail || return $?
 }
 
 systemd::disable_timer() {
