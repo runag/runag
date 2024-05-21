@@ -34,6 +34,19 @@ systemd::write_system_unit() {
   file::write --sudo --mode 0644 "/etc/systemd/system/${name}" || softfail || return $?
 }
 
+systemd::export_shell_function_as_command() {
+  # https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html#Quoting
+  local command; command="$(declare -f "$1" | tail -n +3 | head -n -1 | sed -E "s/^\s*//"; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
+  echo "/usr/bin/bash -c '${command//\'/\\\'}'"
+}
+
+systemd::block() {
+  local block_name="$1"
+  shift
+  local block_content; printf -v block_content "\n${block_name}=%s" "$@" || softfail || return $?
+  echo "${block_content:1}"
+}
+
 systemd::menu() {
   local service_name
   local ssh_call
@@ -236,18 +249,4 @@ systemd::show_status() {
   if [[ "${exit_statuses[*]}" =~ [^03[:space:]] ]]; then # I'm not sure about number 3 here
     softfail || return $?
   fi
-}
-
-# https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html#Quoting
-
-systemd::export_shell_function_as_command() {
-  local command; command="$(declare -f "$1" | tail -n +3 | head -n -1 | sed -E "s/^\s*//"; test "${PIPESTATUS[*]}" = "0 0 0 0")" || softfail || return $?
-  echo "/usr/bin/bash -c '${command//\'/\\\'}'"
-}
-
-systemd::block() {
-  local block_name="$1"
-  shift
-  local block_content; printf -v block_content "\n${block_name}=%s" "$@" || softfail || return $?
-  echo "${block_content:1}"
 }
