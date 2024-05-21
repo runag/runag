@@ -59,7 +59,7 @@ SHELL
 Description=tailscale-issue-2541-workaround
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/usr/local/bin/tailscale-issue-2541-workaround
 WorkingDirectory=/
 EOF
