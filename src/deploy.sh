@@ -27,7 +27,7 @@ runag::online_deploy_script() {
   git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       add)
         runagfile::add "$2" || softfail || return $?
         shift; shift

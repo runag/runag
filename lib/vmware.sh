@@ -70,7 +70,7 @@ vmware::symlink_hgfs_mounts() {
   local symlinks_directory="${HOME}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -m|--mount-point)
         mount_point="$2"
         shift; shift

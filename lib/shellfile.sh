@@ -20,7 +20,7 @@ shellfile::write_loader_block() {
   local block_name="shellfile-d-loader"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -f|--file)
         file_path="$2"
         shift; shift

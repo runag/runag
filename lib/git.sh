@@ -52,7 +52,7 @@ git::place_up_to_date_clone() {
   local branch_name
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -b|--branch)
         local branch_name="$2"
         shift; shift

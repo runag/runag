@@ -22,7 +22,7 @@ release::deploy() {
   local ssh_call_prefix
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -s|--source)
         source_path="$2"
         shift; shift
@@ -69,7 +69,7 @@ release::init() {
   local dest_path
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -d|--dest)
         dest_path="$2"
         shift; shift
@@ -98,7 +98,7 @@ release::push() (
   local dest_path
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -s|--source)
         source_path="$2"
         shift; shift
@@ -144,7 +144,7 @@ release::create() (
   local load_local_runagfile
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -d|--dest)
         dest_path="$2"
         shift; shift
@@ -185,7 +185,7 @@ release::build_and_deploy_services() (
   local load_local_runagfile
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -d|--release-dir)
         release_dir="$2"
         shift; shift
@@ -231,7 +231,7 @@ release::cleanup() {
   local keep_amount=6
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -k|--kind)
         cleanup_kind="$2"
         shift; shift

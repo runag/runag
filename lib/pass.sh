@@ -87,7 +87,7 @@ pass::use() {
   local absorb_in_callback=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -a|--absorb-in-callback)
         absorb_in_callback=true
         shift

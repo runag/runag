@@ -19,7 +19,7 @@ direnv::save_variable_block() {
   local envrc_path=".envrc"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -b|--block-name)
         block_name="$2"
         shift; shift

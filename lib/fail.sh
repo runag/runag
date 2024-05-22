@@ -25,7 +25,7 @@ fail() {
   local message
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -e|--exit-status)
         exit_status="$2"
         shift; shift

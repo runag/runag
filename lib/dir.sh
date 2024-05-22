@@ -27,7 +27,7 @@ dir::should_exists() {
   local keep_permissions=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -m|--mode)
         dir_mode="$2"
         shift; shift

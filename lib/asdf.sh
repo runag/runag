@@ -64,7 +64,7 @@ SHELL
 
 asdf::load() {
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -i|--if-installed)
         if [ ! -f "${HOME}/.asdf/asdf.sh" ]; then
           return 0
@@ -87,7 +87,7 @@ asdf::shim_dir() {
   local home_dir="${HOME}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -u|--user)
         home_dir="$(linux::get_home_dir "$2")" || softfail || return $?
         shift; shift
@@ -108,7 +108,7 @@ asdf::path_env() {
   local home_dir="${HOME}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -u|--user)
         home_dir="$(linux::get_home_dir "$2")" || softfail || return $?
         shift; shift
