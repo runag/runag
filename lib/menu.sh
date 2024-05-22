@@ -186,7 +186,7 @@ menu::is_present() {
 
 menu::is_necessary() {
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -o|--os)
         local os_type="$2"
         if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
@@ -221,7 +221,7 @@ menu::add() {
   local add_menu=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -o|--os)
         local os_type="$2"
         if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then

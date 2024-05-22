@@ -19,7 +19,7 @@ postfix::install() {
   local root_address
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -m|--mailname)
         mailname="$2"
         shift; shift

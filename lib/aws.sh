@@ -21,7 +21,7 @@ aws::pass::write_credentials_file() {
   local ssh_call=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -c|--credentials-file)
         credentials_file="$2"
         shift; shift
@@ -75,7 +75,7 @@ aws::pass::create_access_key() {
   local user_name
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--pass-path)
         pass_path="$2"
         shift; shift

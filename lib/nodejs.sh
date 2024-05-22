@@ -56,7 +56,7 @@ npm::auth_token() {
   local project_config
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -r|--registry)
         registry="$2"
         shift; shift

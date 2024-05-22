@@ -54,7 +54,7 @@ runagfile::load() {
   local tolerate_absence=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -w|--working-directory-only)
         working_directory_only=true
         shift

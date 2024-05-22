@@ -52,7 +52,7 @@ postgresql::psql() {
   local arguments_list=()
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --sudo)
         local user_name
 
@@ -89,7 +89,7 @@ postgresql::create_role_if_not_exists() {
   local with_string
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --with)
         with_string="WITH $2"
         shift; shift

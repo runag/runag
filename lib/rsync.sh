@@ -20,7 +20,7 @@ rsync::sync() {
   local rsync_args=()
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --from-remote)
         from_remote=true
         shift

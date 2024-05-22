@@ -70,7 +70,7 @@ linux::update_remote_locale() (
 
 linux::update_locale() {
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --lang)
         linux::update_locale::do LANG "$2" || softfail || return $?
         shift; shift
@@ -125,7 +125,7 @@ linux::configure_inotify() {
   local max_user_instances="2048"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -w|--max-user-watches)
         max_user_watches="$2"
         shift; shift
@@ -291,7 +291,7 @@ linux::set_battery_charge_control_threshold() {
   local end_threshold=100
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -b|--battery)
         battery_number="$2"
         shift; shift

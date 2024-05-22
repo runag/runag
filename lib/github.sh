@@ -32,7 +32,7 @@ github::query_release() {
   local query_string
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -r|--release-id)
         release_id="$2"
         shift; shift
@@ -72,7 +72,7 @@ github::download_release() {
   local query_string
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -r|--release-id)
         release_id="$2"
         shift; shift

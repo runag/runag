@@ -34,7 +34,7 @@ ssh::call() {
   local terminal_mode=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -[46AaCfGgKkMNnqsTtVvXxYy]*)
         Ssh_Args+=("$1")
         shift
@@ -108,7 +108,7 @@ ssh::call::internal() {
   local ssh_destination
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --absorb)
         absorb_file="$2"
         shift; shift
@@ -503,7 +503,7 @@ ssh::call::produce_script() {
   local cd_to_home=false
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --command)
         command_mode=true
         shift
@@ -635,7 +635,7 @@ ssh::call::invoke() {
   local terminal_mode
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       --nohup)
         nohup_mode=true
         shift

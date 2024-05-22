@@ -42,7 +42,7 @@ ssh::install_authorized_keys_from_pass() {
   local ssh_call_prefix
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--profile-name)
         profile_name="$2"
         shift; shift
@@ -110,7 +110,7 @@ ssh::install_ssh_profile_from_pass() {
   local profile_name
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--profile-name)
         profile_name="$2"
         shift; shift
@@ -193,7 +193,7 @@ ssh::install_ssh_key_from_pass_to_remote() {
   local pass_args=()
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -*)
         pass_args+=("$1")
         shift
@@ -272,7 +272,7 @@ ssh::refresh_host_in_known_hosts() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--port)
         ssh_port="$2"
         shift; shift
@@ -297,7 +297,7 @@ ssh::wait_for_host_to_become_available() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--port)
         ssh_port="$2"
         shift; shift
@@ -331,7 +331,7 @@ ssh::add_host_to_known_hosts() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--port)
         ssh_port="$2"
         shift; shift
@@ -373,7 +373,7 @@ ssh::remove_host_from_known_hosts() {
   local ssh_port="${REMOTE_PORT:-"22"}"
 
   while [ "$#" -gt 0 ]; do
-    case $1 in
+    case "$1" in
       -p|--port)
         ssh_port="$2"
         shift; shift
