@@ -133,7 +133,10 @@ release::push() (
     git pull --quiet "${remote_name}" main || fail
   fi
 
-  git push --quiet --set-upstream "${remote_name}" main || fail
+  # if I use --set-upstream here, then on every deploy main.remote will be set to deploy remote
+  # but maybe I need that somehow for the first deploy?
+  # TODO: check that later
+  git push --quiet "${remote_name}" main || fail
 )
 
 release::create() (
