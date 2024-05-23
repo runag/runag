@@ -549,7 +549,18 @@ ssh::call::produce_script() {
   fi
 
   # env list
-  local env_list; IFS=" " read -r -a env_list <<<"${REMOTE_ENV:-} RUNAG_VERBOSE" || softfail || return $?
+  local env_list=()
+
+  # check if REMOTE_ENV is array
+  # TODO: bash regexp (faster)?
+  if declare -p REMOTE_ENV 2>/dev/null | grep -q '^declare \-a'; then
+    env_list+=("${REMOTE_ENV[@]}")
+
+  elif [ -n "${REMOTE_ENV:-}" ]; then
+    IFS=" " read -r -a env_list <<<"${REMOTE_ENV}" || softfail || return $?
+  fi
+
+  env_list+=(RUNAG_VERBOSE)
 
   local env_list_item; for env_list_item in "${env_list[@]}"; do
     if [ -n "${!env_list_item:-}" ]; then
@@ -562,6 +573,7 @@ ssh::call::produce_script() {
   local remote_rc_require_functions=false
 
   # check if REMOTE_RC is array
+  # TODO: bash regexp (faster)?
   if declare -p REMOTE_RC 2>/dev/null | grep -q '^declare \-a'; then
 
     # if it contains more than 0 elements
