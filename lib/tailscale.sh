@@ -51,6 +51,7 @@ tailscale::install_issue_2541_workaround() {
   file::write --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround <<SHELL || softfail || return $?
 $(runag::mini_library)
 $(declare -f tailscale::issue_2541_workaround)
+set -o nounset
 tailscale::issue_2541_workaround || fail "Unable to perform tailscale::issue_2541_workaround"
 SHELL
 
