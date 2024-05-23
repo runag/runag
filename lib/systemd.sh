@@ -58,7 +58,7 @@ systemd::service_menu() {
         with_timer=true
         shift
         ;;
-      -n|--service-name|-w|--ssh-call-with)
+      -n|--service-name)
         action_args+=("$1" "$2")
         shift; shift
         ;;
@@ -93,7 +93,6 @@ systemd::service_action() {
 
   local user_services=false
   local ssh_call=false
-  local ssh_call_prefix="ssh::call"
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -114,11 +113,6 @@ systemd::service_action() {
         ssh_call=true
         shift
         ;;
-      -w|--ssh-call-with)
-        ssh_call=true
-        ssh_call_prefix="$2"
-        shift; shift
-        ;;
       -*)
         softfail "Unknown argument: $1" || return $?
         ;;
@@ -133,7 +127,7 @@ systemd::service_action() {
   local ssh_call_command=()
 
   if [ "${ssh_call}" = true ]; then
-    ssh_call_command+=("${ssh_call_prefix}")
+    ssh_call_command+=(ssh::call)
 
     if [ "${user_services}" != true ]; then
       ssh_call_command+=(--root)

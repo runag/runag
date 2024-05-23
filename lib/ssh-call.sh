@@ -35,11 +35,21 @@ ssh::call() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
+      --root)
+        local REMOTE_USER=root
+        shift
+        ;;
+      # 'l' is here
+      --user|-l)
+        local REMOTE_USER="$2"
+        shift; shift
+        ;;
       -[46AaCfGgKkMNnqsTtVvXxYy]*)
         Ssh_Args+=("$1")
         shift
         ;;
-      -[BbcDEeFIiJLlmOopQRSWw])
+      # no 'l'!
+      -[BbcDEeFIiJLmOopQRSWw])
         Ssh_Args+=("$1" "$2")
         shift; shift
         ;;
