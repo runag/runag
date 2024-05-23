@@ -22,32 +22,30 @@ leaseweb::domains::get_short_record() {
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-leaseweb::domains::list() {(
+leaseweb::domains::list() {
   local record="$1"
   local record_type="$2"
 
   local domain; domain="$(leaseweb::domains::extract_domain_from_host "${record}")" || softfail || return $?
-  local api_key; api_key="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
   curl \
     --fail \
-    --header "X-Lsw-Auth: ${api_key}" \
+    --header "X-Lsw-Auth: ${LEASEWEB_API_KEY}" \
     --request GET \
     --show-error \
     --silent \
     --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
       || softfail || return $?
-)}
+}
 
 # 1m 5m 30m 1h 4h 8h 12h 1d
-leaseweb::domains::set_record() {(
+leaseweb::domains::set_record() {
   local record="$1"
   local record_ttl="$2"
   local record_type="$3"
   local record_data="$4"
 
   local domain; domain="$(leaseweb::domains::extract_domain_from_host "${record}")" || softfail || return $?
-  local api_key; api_key="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
   if [ "${record_ttl}" = 1m ]; then
     record_ttl=60
@@ -68,7 +66,7 @@ leaseweb::domains::set_record() {(
   fi
 
   local domain_exists; domain_exists="$(curl \
-    --header "X-Lsw-Auth: ${api_key}" \
+    --header "X-Lsw-Auth: ${LEASEWEB_API_KEY}" \
     --output /dev/null \
     --request GET \
     --show-error \
@@ -82,7 +80,7 @@ leaseweb::domains::set_record() {(
       --data "{ \"content\": [\"${record_data}\"], \"ttl\": ${record_ttl} }" \
       --fail \
       --header "content-type: application/json" \
-      --header "X-Lsw-Auth: ${api_key}" \
+      --header "X-Lsw-Auth: ${LEASEWEB_API_KEY}" \
       --output /dev/null \
       --request PUT \
       --show-error \
@@ -90,12 +88,12 @@ leaseweb::domains::set_record() {(
       --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
         || softfail || return $?
 
-  elif [ "$domain_exists" = 404 ]; then
+  elif [ "${domain_exists}" = 404 ]; then
     curl \
       --data "{ \"name\": \"${record}.\", \"type\": \"${record_type}\", \"content\": [\"${record_data}\"], \"ttl\": ${record_ttl} }" \
       --fail \
       --header "content-type: application/json" \
-      --header "X-Lsw-Auth: ${api_key}" \
+      --header "X-Lsw-Auth: ${LEASEWEB_API_KEY}" \
       --output /dev/null \
       --request POST \
       --show-error \
@@ -107,36 +105,45 @@ leaseweb::domains::set_record() {(
     softfail "Domain check returned HTTP status code: ${domain_exists}"
     return $?
   fi
-)}
+}
 
-leaseweb::domains::clear_record() {(
+leaseweb::domains::clear_record() {
   local record="$1"
   local record_type="$2"
 
   local domain; domain="$(leaseweb::domains::extract_domain_from_host "${record}")" || softfail || return $?
-  local api_key; api_key="$(cat "${LEASEWEB_KEY_FILE}")" || softfail || return $?
 
   curl \
     --fail \
-    --header "X-Lsw-Auth: ${api_key}" \
+    --header "X-Lsw-Auth: ${LEASEWEB_API_KEY}" \
     --output /dev/null \
     --request DELETE \
     --show-error \
     --silent \
     --url "https://api.leaseweb.com/hosting/v2/domains/${domain}/resourceRecordSets/${record}./${record_type}" \
       || softfail || return $?
-)}
+}
 
 leaseweb::domains::set_acme_challenge() {
-  export LEASEWEB_KEY_FILE="$1"
   leaseweb::domains::set_record "_acme-challenge.${CERTBOT_DOMAIN}" 1m TXT "${CERTBOT_VALIDATION}" || softfail || return $?
 }
 
 leaseweb::domains::clear_acme_challenge() {
-  export LEASEWEB_KEY_FILE="$1"
   leaseweb::domains::clear_record "_acme-challenge.${CERTBOT_DOMAIN}" TXT || softfail || return $?
 }
 
 leaseweb::domains::extract_domain_from_host() {
   grep -E --only-matching "[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-]+$" <<< "$1" || softfail || return $?
+}
+
+leaseweb::function_sources() {
+  cat <<SHELL || softfail || return $?
+$(declare -f leaseweb::domains::get_short_record)
+$(declare -f leaseweb::domains::list)
+$(declare -f leaseweb::domains::set_record)
+$(declare -f leaseweb::domains::clear_record)
+$(declare -f leaseweb::domains::set_acme_challenge)
+$(declare -f leaseweb::domains::clear_acme_challenge)
+$(declare -f leaseweb::domains::extract_domain_from_host)
+SHELL
 }
