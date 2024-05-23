@@ -131,6 +131,7 @@ vmware::install_vm_network_loss_workaround() {
   file::write --sudo --mode 0755 /usr/local/bin/vmware-vm-network-loss-workaround <<SHELL || softfail || return $?
 $(runag::mini_library)
 $(declare -f vmware::vm_network_loss_workaround)
+set -o nounset
 vmware::vm_network_loss_workaround || fail "Unable to perform vmware::vm_network_loss_workaround"
 SHELL
 
