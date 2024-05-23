@@ -137,7 +137,7 @@ systemd::service_action() {
   # remove eventually
   if [ "${user_services}" = true ] && [ "${action}" = "journal" ]; then
     local release_codename; release_codename="$("${ssh_call_command[@]}" lsb_release --codename --short)" || softfail || return $?
-    if [ "${release_codename}" = "focal" ]; then
+    if [ "${ssh_call}" = true ] && [ "${release_codename}" = "focal" ]; then
       ssh_call_command+=(--root)
     fi
   fi
