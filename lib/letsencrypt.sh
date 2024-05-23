@@ -23,9 +23,3 @@ letsencrypt::agree_tos_and_register_unsafely_without_email() {
         || softfail || return $?
   fi
 }
-
-letsencrypt::make_domains_string() {
-  local domains_list; IFS=" " read -r -a domains_list <<< "${LETSENCRYPT_DOMAINS:-"${APP_DOMAINS:?}"}" || softfail || return $?
-  local domains_string; printf -v domains_string ",%s" "${domains_list[@]}" || softfail || return $?
-  echo "${domains_string:1}"
-}
