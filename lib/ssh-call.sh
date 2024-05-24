@@ -39,7 +39,7 @@ ssh::call() {
         local REMOTE_USER=root
         shift
         ;;
-      # 'l' is here
+      # 'l' is here!
       --user|-l)
         local REMOTE_USER="$2"
         shift; shift
@@ -48,7 +48,7 @@ ssh::call() {
         Ssh_Args+=("$1")
         shift
         ;;
-      # no 'l'!
+      # no 'l' here!
       -[BbcDEeFIiJLmOopQRSWw])
         Ssh_Args+=("$1" "$2")
         shift; shift
