@@ -131,19 +131,19 @@ systemd::service_action() {
 
     if [ "${user_services}" != true ]; then
       ssh_call_command+=(--root)
-    fi
-  fi
 
-  # remove eventually
-  if [ "${user_services}" = true ] && [ "${action}" = "journal" ]; then
-    local release_codename; release_codename="$("${ssh_call_command[@]}" lsb_release --codename --short)" || softfail || return $?
-    if [ "${ssh_call}" = true ] && [ "${release_codename}" = "focal" ]; then
-      ssh_call_command+=(--root)
-    fi
-  fi
+    elif [ "${action}" = "journal" ]; then
+      # remove this block eventually
+      local release_codename; release_codename="$("${ssh_call_command[@]}" lsb_release --codename --short)" || softfail || return $?
 
-  if [ "${action}" = "journal" ] && [ "${1:-}" = "--follow" ]; then
-    ssh_call_command+=(--direct)
+      if [ "${release_codename}" = "focal" ]; then
+        ssh_call_command+=(--root)
+      fi
+    fi
+
+    if [ "${action}" = "journal" ] && [ "${1:-}" = "--follow" ]; then
+      ssh_call_command+=(--direct)
+    fi
   fi
 
   "${ssh_call_command[@]}" "systemd::service_action::${action}" "${action_args[@]}" "$@" || softfail || return $?
