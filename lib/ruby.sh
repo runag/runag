@@ -54,7 +54,7 @@ YAML
 rubygems::direnv_credentials() {
   local GEM_HOST_API_KEY="$1"
 
-  shell::export_variables_as_code GEM_HOST_API_KEY | file::write_block --mode 0600 .envrc RUBYGEMS-CREDENTIALS
+  shell::dump_variables --as-exports GEM_HOST_API_KEY | file::write_block --mode 0600 .envrc RUBYGEMS-CREDENTIALS
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
   file::append_line_unless_present ".gitignore" "/.envrc" || softfail || return $?

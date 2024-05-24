@@ -36,10 +36,27 @@ shell::with() (
   "$@"
 )
 
-shell::export_variables_as_code() {
+shell::dump_variables() {
+  local prefix
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -e|--as-exports)
+        prefix="export "
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   local list_item; for list_item in "$@"; do
     if [ -n "${!list_item:-}" ]; then
-      echo "export $(printf "%q=%q" "${list_item}" "${!list_item}")"
+      echo "${prefix:-}$(printf "%q=%q" "${list_item}" "${!list_item}")"
     fi
   done
 }
@@ -50,6 +67,8 @@ shell::enable_trace() {
   set -o xtrace
 }
 
-shell::export_variable() {
+shell::assign_and_mark_for_export() {
+  # -g make variable not local
+  # -x export
   declare -gx "$1"="$2"
 }
