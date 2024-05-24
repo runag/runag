@@ -18,8 +18,7 @@ release::deploy() {
   local source_path
   local dest_path
   local load_local_runagfile
-  local ssh_call
-  local ssh_call_prefix
+  local ssh_call_command=()
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -36,14 +35,8 @@ release::deploy() {
         shift
         ;;
       -c|--ssh-call)
-        ssh_call=true
-        ssh_call_prefix="ssh::call"
+        ssh_call_command+=(ssh::call)
         shift
-        ;;
-      -w|--ssh-call-with)
-        ssh_call=true
-        ssh_call_prefix="$2"
-        shift; shift
         ;;
       -*)
         softfail "Unknown argument: $1" || return $?
@@ -58,11 +51,11 @@ release::deploy() {
     dest_path="$(basename "${source_path}")" || softfail || return $?
   fi
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::init --dest "${dest_path}" || softfail || return $?
+  "${ssh_call_command[@]}" release::init --dest "${dest_path}" || softfail || return $?
 
   release::push --source "${source_path}" --dest "${dest_path}" || softfail || return $?
 
-  ${ssh_call:+"${ssh_call_prefix}"} release::create ${load_local_runagfile:+"--load-local-runagfile"} --dest "${dest_path}" || softfail || return $?
+  "${ssh_call_command[@]}" release::create ${load_local_runagfile:+"--load-local-runagfile"} --dest "${dest_path}" || softfail || return $?
 }
 
 release::init() {
