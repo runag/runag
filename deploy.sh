@@ -26,7 +26,7 @@ fail ()
     local trace_start=1;
     local message;
     while [ "$#" -gt 0 ]; do
-        case $1 in 
+        case "$1" in 
             -e | --exit-status)
                 exit_status="$2";
                 shift;
@@ -123,7 +123,7 @@ git::place_up_to_date_clone ()
 { 
     local branch_name;
     while [ "$#" -gt 0 ]; do
-        case $1 in 
+        case "$1" in 
             -b | --branch)
                 local branch_name="$2";
                 shift;
@@ -189,7 +189,7 @@ runag::online_deploy_script ()
     git::install_git || softfail || return $?;
     git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
     while [ "$#" -gt 0 ]; do
-        case $1 in 
+        case "$1" in 
             add)
                 runagfile::add "$2" || softfail || return $?;
                 shift;
