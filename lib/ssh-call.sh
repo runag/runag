@@ -630,7 +630,7 @@ ssh::call::produce_script() {
   fi
 
   if [ -n "${REMOTE_NON_ROOT_UMASK:-}" ]; then
-    printf "if [ \"\${UID}\" != 0 ]; then umask %q || exit \$?; fi\n" "${REMOTE_NON_ROOT_UMASK}"
+    printf "if [ \"\${EUID}\" != 0 ]; then umask %q || exit \$?; fi\n" "${REMOTE_NON_ROOT_UMASK}"
   fi
 
   if [ -n "${REMOTE_UMASK:-}" ]; then
