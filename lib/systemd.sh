@@ -51,8 +51,14 @@ systemd::service_menu() {
   local with_timer
   local action_args=()
 
+  local envelope_command=()
+
   while [ "$#" -gt 0 ]; do
     case "$1" in
+      -e|--envelope)
+        envelope_command+=("$2")
+        shift; shift
+        ;;
       -t|--with-timer)
         action_args+=("$1")
         with_timer=true
@@ -75,17 +81,17 @@ systemd::service_menu() {
 
   menu::add --header "Service actions" || softfail || return $?
 
-  menu::add systemd::service_action "${action_args[@]}" start || softfail || return $?
-  menu::add systemd::service_action "${action_args[@]}" stop || softfail || return $?
+  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?
+  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?
   
   if [ "${with_timer:-}" = true ]; then
-    menu::add systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?
-    menu::add systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?
+    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?
+    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?
   fi
 
-  menu::add systemd::service_action "${action_args[@]}" status || softfail || return $?
-  menu::add systemd::service_action "${action_args[@]}" journal  || softfail || return $?
-  menu::add systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
+  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" status || softfail || return $?
+  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal  || softfail || return $?
+  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
 }
 
 systemd::service_action() {
