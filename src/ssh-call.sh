@@ -24,6 +24,7 @@ $(runag::print_license)
 # set shell options if we are not sourced
 if [ "\${BASH_SOURCE[0]}" = "\$0" ]; then
   if [ "\${RUNAG_VERBOSE:-}" = true ]; then
+    PS4='+\${BASH_SUBSHELL} \${BASH_SOURCE:+"\${BASH_SOURCE}:\${LINENO}: "}\${FUNCNAME[0]:+"in \\\`\${FUNCNAME[0]}'"'"' "}** '
     set -o xtrace
   fi
   set -o nounset
