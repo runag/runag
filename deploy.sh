@@ -183,6 +183,7 @@ runagfile::add ()
 runag::online_deploy_script () 
 { 
     if [ "${RUNAG_VERBOSE:-}" = true ]; then
+        PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** ';
         set -o xtrace;
     fi;
     set -o nounset;

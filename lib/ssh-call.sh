@@ -550,7 +550,10 @@ ssh::call::produce_script() {
   fi
 
   # shell options
-  if shopt -o -q xtrace || [ "${RUNAG_VERBOSE:-}" = true ]; then
+  if [ "${RUNAG_VERBOSE:-}" = true ]; then
+    echo PS4=\'+\$\{BASH_SUBSHELL\}\ \$\{BASH_SOURCE:+\"\$\{BASH_SOURCE\}:\$\{LINENO\}:\ \"\}\$\{FUNCNAME\[0\]:+\"in\ \\\`\$\{FUNCNAME\[0\]\}\'\"\'\"\'\ \"\}\*\*\ \'
+    echo "set -o xtrace"
+  elif shopt -o -q xtrace; then
     echo "set -o xtrace"
   fi
 
