@@ -42,7 +42,7 @@ direnv::save_variable_block() {
     ( cd "${envrc_dir}" && direnv status | grep -qFx "Found RC allowed true" ) || softfail "Direnv rc file should be allowed first" || return $?
   fi
 
-  shell::dump_variables --as-exports "$@" | file::write_block --mode 0600 "${envrc_path}" "${block_name}"
+  shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_path}" "${block_name}"
 
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   
