@@ -180,7 +180,7 @@ menu::render() {
   echo ""
 }
 
-menu::is_present() {
+menu::present() {
   test -n "${RUNAGFILE_MENU:+x}"
 }
 
@@ -304,7 +304,7 @@ menu::add() {
 }
 
 menu::display() {
-  if ! menu::is_present; then
+  if ! menu::present; then
     softfail "Menu is empty"
     return $?
   fi
