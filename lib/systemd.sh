@@ -74,7 +74,6 @@ systemd::service_menu() {
         ;;
       *)
         softfail "Unknown argument: $1" || return $?
-        break
         ;;
     esac
   done
