@@ -368,7 +368,7 @@ systemd::service_action::journal() {
     local release_codename; release_codename="$(lsb_release --codename --short)" || softfail || return $?
 
     if [ "${release_codename}" = "focal" ]; then
-      sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
+      sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --catalog "${follow_argument[@]}" || softfail || return $?
       return
     fi
   fi
@@ -379,5 +379,5 @@ systemd::service_action::journal() {
     local journalctl_command=(sudo journalctl)
   fi
 
-  "${journalctl_command[@]}" -u "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
+  "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 --catalog "${follow_argument[@]}" || softfail || return $?
 }
