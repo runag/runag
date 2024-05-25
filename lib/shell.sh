@@ -41,7 +41,7 @@ shell::dump_variables() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -e|--as-exports)
+      -e|--export)
         prefix="export "
         shift
         ;;
