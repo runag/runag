@@ -68,7 +68,7 @@ shell::enable_trace() {
 }
 
 shell::assign_and_mark_for_export() {
-  # -g make variable not local
+  # -g global variable scope
   # -x export
   declare -gx "$1"="$2"
 }
