@@ -44,7 +44,7 @@ menu::select_and_run() {
   read_status=$?
 
   if [ ${read_status} != 0 ]; then
-    if [ ${read_status} = 1 ] && [ -z "${input_text}" ]; then
+    if [ ${read_status} = 1 ] && [ -z "${input_text}" ]; then # ^d was pressed
       echo "cancelled" >&2
       exit 0
     else
