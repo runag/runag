@@ -276,6 +276,7 @@ menu::display() {
           continue
         fi
       else
+        echo $'\n'"${Prompt_Color}> ${Selected_Command[*]}${Reset_Attrs}" 
         "${Selected_Command[@]}"
         command_exit_status=$?
       fi
