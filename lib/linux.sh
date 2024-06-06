@@ -189,11 +189,6 @@ linux::get_default_route() {
   test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
 }
 
-linux::get_distributor_id_lowercase() {
-  lsb_release --id --short | tr '[:upper:]' '[:lower:]'
-  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
-}
-
 linux::with_secure_temp_dir() {
   local secure_temp_dir
   

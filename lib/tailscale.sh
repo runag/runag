@@ -14,18 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-tailscale::install() {
-  local distributor_id distribution_codename
-
-  distributor_id="$(linux::get_distributor_id_lowercase)" || softfail || return $?
-  distribution_codename="$(lsb_release --codename --short)" || softfail || return $?
+tailscale::install() (
+  . /etc/os-release || softfail || return $?
 
   apt::add_source_with_key "tailscale" \
-    "https://pkgs.tailscale.com/stable/${distributor_id} ${distribution_codename} main" \
-    "https://pkgs.tailscale.com/stable/${distributor_id}/${distribution_codename}.gpg" || softfail || return $?
+    "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" \
+    "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?
 
   apt::install tailscale || softfail || return $?
-}
+)
 
 tailscale::is_logged_in() {
   # this function is intent to use fail (and not softfail) in case of errors
