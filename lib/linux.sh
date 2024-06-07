@@ -46,78 +46,45 @@ linux::set_hostname() {
 
 linux::update_remote_locale() (
   # The server may not have the locales that are present on the local machine
-  # If you pass these variables to him, an error may occur
-  unset LANG
+  # If you pass locale variables to it, a slight error may occur
+  lunux::unset_all_locales || fail
 
-  unset LC_ALL 
-  unset LC_CTYPE
-
-  unset LC_ADDRESS
-  unset LC_IDENTIFICATION
-  unset LC_MEASUREMENT
-  unset LC_MONETARY
-  unset LC_NAME
-  unset LC_NUMERIC
-  unset LC_PAPER
-  unset LC_TELEPHONE
-  unset LC_TIME
-
-  # without that, previous locale will stick to all commands within connection sharing session
+  # we disable control master to get a clean locale state and not to affect later sessions
   export REMOTE_CONTROL_MASTER=no
 
-  ssh::call linux::update_locale "$@" || fail
+  ssh::call linux::reset_locales "$@" || fail
 )
 
-linux::update_locale() {
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      --lang)
-        linux::update_locale::do LANG "$2" || softfail || return $?
-        shift; shift
-        ;;
-      --each-category)
-        linux::update_locale::do LC_ADDRESS "$2"        || softfail || return $?
-        linux::update_locale::do LC_IDENTIFICATION "$2" || softfail || return $?
-        linux::update_locale::do LC_MEASUREMENT "$2"    || softfail || return $?
-        linux::update_locale::do LC_MONETARY "$2"       || softfail || return $?
-        linux::update_locale::do LC_NAME "$2"           || softfail || return $?
-        linux::update_locale::do LC_NUMERIC "$2"        || softfail || return $?
-        linux::update_locale::do LC_PAPER "$2"          || softfail || return $?
-        linux::update_locale::do LC_TELEPHONE "$2"      || softfail || return $?
-        linux::update_locale::do LC_TIME "$2"           || softfail || return $?
-
-        shift; shift
-        ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
-
-  if [ $# -gt 1 ]; then
-    linux::update_locale::do "$@" || softfail || return $?
-  fi
+lunux::unset_all_locales() {
+  # man 5 locale
+  # https://wiki.debian.org/Locale
+  unset -v \
+    LANG \
+    LANGUAGE \
+    LC_ALL \
+    \
+    LC_COLLATE \
+    LC_CTYPE \
+    LC_MESSAGES \
+    LC_MONETARY \
+    LC_NUMERIC \
+    LC_TIME \
+    \
+    LC_ADDRESS \
+    LC_IDENTIFICATION \
+    LC_MEASUREMENT \
+    LC_NAME \
+    LC_PAPER \
+    LC_RESPONSE \
+    LC_TELEPHONE
 }
 
-linux::update_locale::do() {
-  local locale_kind="$1"
-  local locale_name="$2"
+linux::reset_locales() {
+  sudo locale-gen --keep-existing || softfail || return $?
+  sudo update-locale --reset "$@" || softfail || return $?
 
-  if ! locale -a | sed -E 's/\.utf8$/.UTF-8/' | grep -qFx "${locale_name}"; then
-    sudo locale-gen "${locale_name}" || softfail || return $?
-  fi
-
-  # TODO: Skip if already set
-  sudo update-locale "${locale_kind}=${locale_name}" || softfail || return $?
-
-  # "declare" will make local variable, so using "printf -v" here
-  printf -v "${locale_kind}" "%s" "${locale_name}" || softfail || return $?
-
-  # shellcheck disable=SC2163
-  export "${locale_kind}" || softfail || return $?
+  lunux::unset_all_locales || softfail || return $?
+  declare -x "$@" || softfail || return $?
 }
 
 linux::configure_inotify() {
