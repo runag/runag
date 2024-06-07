@@ -31,11 +31,12 @@ erlang::install_dependencies::apt() {
 }
 
 erlang::install_dependencies::observer::apt() {
+  local packages_list; mapfile -t packages_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?
+
   apt::install \
     libgl1-mesa-dev \
     libglu1-mesa-dev \
     libpng-dev \
-    libwxgtk-webview3.0-gtk3-dev \
-    libwxgtk3.0-gtk3-dev \
-      || softfail || return $?
+    "${packages_list[@]}" \
+    || softfail || return $?
 }
