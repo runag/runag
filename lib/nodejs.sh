@@ -77,10 +77,10 @@ npm::auth_token() {
   local token="$1"
 
   if [ "${project_config:-}" = true ]; then
-    file::append_line_unless_present ".gitignore" "/.npmrc" || softfail || return $?
+    file::append_line_unless_present --keep-permissions ".gitignore" "/.npmrc" || softfail || return $?
     
     if [ -f .npmignore ]; then
-      file::append_line_unless_present ".npmignore" "/.npmrc" || softfail || return $?
+      file::append_line_unless_present --keep-permissions ".npmignore" "/.npmrc" || softfail || return $?
     fi
   fi
 
