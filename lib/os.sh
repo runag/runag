@@ -29,10 +29,15 @@ os::hostname() {
 
 os::machine_id() {
   if [[ "${OSTYPE}" =~ ^linux ]]; then
-    if vmware::is_inside_vm; then
-      vmware::get_machine_uuid || softfail || return $?
-    else
-      cat /etc/machine-id || softfail || return $?
+    if [ "$(systemd-detect-virt)" = "vmware" ]; then
+      sudo dmidecode -t system | grep "^[[:blank:]]*Serial Number: VMware-" | sed "s/^[[:blank:]]*Serial Number: VMware-//" | sed "s/ //g"
+      test "${PIPESTATUS[*]}" = "0 0 0 0" && return
     fi
+
+    if systemd-detect-virt --quiet; then
+      sudo dmidecode --string system-uuid && return
+    fi
+
+    cat /etc/machine-id || softfail || return $?
   fi
 }

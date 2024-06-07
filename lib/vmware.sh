@@ -108,15 +108,6 @@ vmware::get_host_ip_address() {
   echo "${ip_address}"
 }
 
-vmware::configure_passwordless_sudo_for_dmidecode_in_get_machine_uuid() {
-  <<<"${USER} ALL=NOPASSWD: /usr/sbin/dmidecode" file::write --sudo --mode 0440 /etc/sudoers.d/dmidecode || softfail || return $?
-}
-
-vmware::get_machine_uuid() {
-  sudo dmidecode -t system | grep "^[[:blank:]]*Serial Number: VMware-" | sed "s/^[[:blank:]]*Serial Number: VMware-//" | sed "s/ //g"
-  test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
-}
-
 vmware::vm_network_loss_workaround() {
   if ip address show ens33 >/dev/null 2>&1; then
     if ! ip address show ens33 | grep -qF "inet "; then
