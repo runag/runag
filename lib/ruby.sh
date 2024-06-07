@@ -57,10 +57,10 @@ rubygems::direnv_credentials() {
   shell::dump_variables --export GEM_HOST_API_KEY | file::write_block --mode 0600 .envrc RUBYGEMS-CREDENTIALS
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 
-  file::append_line_unless_present ".gitignore" "/.envrc" || softfail || return $?
+  file::append_line_unless_present --keep-permissions ".gitignore" "/.envrc" || softfail || return $?
   
   if [ -f .npmignore ]; then
-    file::append_line_unless_present ".npmignore" "/.envrc" || softfail || return $?
+    file::append_line_unless_present --keep-permissions ".npmignore" "/.envrc" || softfail || return $?
   fi
 }
 
@@ -72,7 +72,7 @@ ruby::without_docs() {
 }
 
 ruby::dangerously_append_nodocument_to_gemrc() {
-  file::append_line_unless_present --mode 0600 "${HOME}/.gemrc" "gem: --no-document" || softfail || return $?
+  file::append_line_unless_present --keep-permissions "${HOME}/.gemrc" "gem: --no-document" || softfail || return $?
 }
 
 ruby::install_disable_spring_shellfile() {
