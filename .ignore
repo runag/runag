@@ -4,3 +4,6 @@
 # exclude derivative files from search
 /deploy.sh
 /bin/ssh-call
+
+# ignore test data
+/.test-data
