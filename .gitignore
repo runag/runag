@@ -1,1 +1,5 @@
+# ignore runagfiles
 /runagfiles/*
+
+# ignore test data
+/.test-data
