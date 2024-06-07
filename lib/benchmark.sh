@@ -28,7 +28,7 @@ benchmark::install::apt() {
 }
 
 benchmark::run() {
-  local hostname_string; hostname_string="$(os::hostname)" || softfail || return $?
+  local hostname_string; hostname_string="$(hostnamectl --static status)" || softfail || return $?
   local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
 
   local result_file; result_file="$(mktemp -u "${HOME}/benchmark ${hostname_string} ${current_date} XXXXXXXXXX")" || softfail || return $?
