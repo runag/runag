@@ -326,3 +326,7 @@ linux::set_battery_charge_control_threshold() {
   <<<"${start_threshold}" sudo tee "${battery_path}/charge_control_start_threshold" >/dev/null || softfail || return $?
   <<<"${end_threshold}" sudo tee "${battery_path}/charge_control_end_threshold" >/dev/null || softfail || return $?
 }
+
+linux::configure_passwordless_sudo_for_dmidecode() {
+  <<<"${USER} ALL=NOPASSWD: /usr/sbin/dmidecode" file::write --sudo --mode 0440 /etc/sudoers.d/passwordless-dmidecode || softfail || return $?
+}
