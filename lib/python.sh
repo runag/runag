@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-python::install_and_update::apt() {
+python::install::apt() {
   apt::install \
     python-is-python3 \
     python3 \
