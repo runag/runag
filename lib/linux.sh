@@ -84,7 +84,10 @@ linux::reset_locales() {
   sudo update-locale --reset "$@" || softfail || return $?
 
   lunux::unset_all_locales || softfail || return $?
-  declare -x "$@" || softfail || return $?
+
+  # -g global variable scope
+  # -x export
+  declare -gx "$@" || softfail || return $?
 }
 
 linux::configure_inotify() {
