@@ -61,7 +61,7 @@ dir::should_exists() {
 
   if ${perhaps_sudo:+"sudo"} mkdir ${dir_mode:+-m "${dir_mode}"} "${dir_path}" 2>/dev/null; then
     if [ -n "${dir_owner:-}" ]; then
-      ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
+      ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?
     fi
   else
     if ${perhaps_sudo:+"sudo"} test ! -d "${dir_path}"; then
@@ -74,7 +74,7 @@ dir::should_exists() {
       fi
 
       if [ -n "${dir_owner:-}" ]; then
-        ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+".${dir_group}"}" "${dir_path}" || softfail || return $?
+        ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?
       fi
     fi
   fi

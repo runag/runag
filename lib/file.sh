@@ -144,7 +144,7 @@ file::write() {
   fi
 
   if [ -n "${file_owner:-}" ]; then
-    ${perhaps_sudo:+"sudo"} chown "${file_owner}${file_group:+".${file_group}"}" "${temp_file}" || softfail || return $?
+    ${perhaps_sudo:+"sudo"} chown "${file_owner}${file_group:+":${file_group}"}" "${temp_file}" || softfail || return $?
 
   elif [ -n "${file_group:-}" ]; then
     ${perhaps_sudo:+"sudo"} chgrp "${file_group}" "${temp_file}" || softfail || return $?
