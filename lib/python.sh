@@ -18,6 +18,6 @@ python::install_and_update::apt() {
   apt::install \
     python-is-python3 \
     python3 \
-    python3-pip \
+    pipx \
       || softfail || return $?
 }
