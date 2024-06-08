@@ -163,7 +163,7 @@ linux::with_secure_temp_dir() {
 
   # data in tmpfs can be swapped to disk, data in ramfs can't be swapped so we are using ramfs here
   sudo mount -t ramfs -o mode=700 ramfs "${secure_temp_dir}" || softfail || return $?
-  sudo chown "${USER}.${USER}" "${secure_temp_dir}" || softfail || return $?
+  sudo chown "${USER}:${USER}" "${secure_temp_dir}" || softfail || return $?
 
   (
     export TMPDIR="${secure_temp_dir}"
