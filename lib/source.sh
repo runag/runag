@@ -42,7 +42,7 @@ source::recursive() {
 
   local item_path; for item_path in "${directory_path}"/*; do
     if [ -d "${item_path}" ]; then
-      source::recursive "${item_path}" || softfail || return $?
+      source::recursive "${item_path}" || softfail "Unable to load: ${item_path}" || return $?
     fi
   done
 }
