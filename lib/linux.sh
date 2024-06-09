@@ -121,29 +121,6 @@ EOF
   sudo sysctl --system || softfail || return $?
 }
 
-linux::display_if_restart_required() {
-  if command -v checkrestart >/dev/null; then
-    sudo checkrestart || softfail || return $?
-  fi
-
-  if [ -x /usr/lib/update-notifier/update-motd-reboot-required ]; then
-    /usr/lib/update-notifier/update-motd-reboot-required >&2 || softfail || return $?
-  fi
-}
-
-linux::display_if_restart_required::install::apt() {
-  apt::install debian-goodies || softfail || return $?
-}
-
-linux::display_if_restart_required::is_available() {
-  if [[ "${OSTYPE}" =~ ^linux ]]; then
-    if command -v checkrestart >/dev/null; then
-      return 0
-    fi
-  fi
-  return 1
-}
-
 linux::is_bare_metal() {
   # "hostnamectl status" could also be used to detect that we are running insde the vm
   ! grep -q "^flags.*:.*hypervisor" /proc/cpuinfo
