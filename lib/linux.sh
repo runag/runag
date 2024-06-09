@@ -121,11 +121,6 @@ EOF
   sudo sysctl --system || softfail || return $?
 }
 
-linux::is_bare_metal() {
-  # "hostnamectl status" could also be used to detect that we are running insde the vm
-  ! grep -q "^flags.*:.*hypervisor" /proc/cpuinfo
-}
-
 linux::is_user_exists() {
   local user_name="$1"
   id -u "${user_name}" >/dev/null 2>&1
