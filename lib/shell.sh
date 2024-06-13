@@ -73,7 +73,12 @@ shell::assign_and_mark_for_export() {
   declare -gx "$1"="$2"
 }
 
-shell::cd_file_source() {
+shell::related_cd() {
   local self_dir; self_dir="$(dirname "${BASH_SOURCE[1]}")" || softfail || return $?
+
   cd "${self_dir}" || softfail || return $?
+
+  if [ -n "${1:-}" ]; then
+    cd "$1" || softfail || return $?
+  fi
 }
