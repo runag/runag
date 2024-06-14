@@ -109,7 +109,7 @@ shell::related_source() {
   if [ "${recursive_flag}" = true ]; then
     shell::related_source::walk_directory "${caller_dir}/$1" "${@:2}" || softfail "Unable to load: ${caller_dir}/$1" || return $?
   else
-    source "${caller_dir}/$1" "${@:2}" || softfail "Unable to load: ${caller_dir}/$1" || return $?
+    . "${caller_dir}/$1" "${@:2}" || softfail "Unable to load: ${caller_dir}/$1" || return $?
   fi
 }
 
@@ -121,7 +121,7 @@ shell::related_source::walk_directory() {
     if [ -d "${item}" ]; then
       dir_list+=("${item}")
     elif [ -f "${item}" ] && [[ "${item}" =~ \.sh$ ]]; then
-      source "${item}" "${@:2}" || softfail "Unable to load: ${item}" || return $?
+      . "${item}" "${@:2}" || softfail "Unable to load: ${item}" || return $?
     fi
   done
 
