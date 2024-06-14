@@ -41,26 +41,25 @@ runagfile::each() {
 #
 # Possible locations are:
 #
-# ./runagfile
-# ./runagfile/index.sh
+# in current working directory
+# ./runagfile.sh
+# ./runagfile/runagfile.sh
 #
-# ~/.runagfile
-# ~/.runagfile/index.sh
+# in home directory
+# ~/.runagfile.sh
+# ~/.runagfile/runagfile.sh
 #
-# ~/.runag/runagfiles/*/index.sh
+# inside of the collection of rùnagfiles that were added to a rùnag installation
+# ~/.runag/runagfiles/*/runagfile.sh
+# ~/.runag/runagfiles/*/runagfile/runagfile.sh
 #
 runagfile::load() {
   local working_directory_only=false
-  local tolerate_absence=false
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -w|--working-directory-only)
         working_directory_only=true
-        shift
-        ;;
-      -t|--tolerate-absence)
-        tolerate_absence=true
         shift
         ;;
       -*)
@@ -77,40 +76,34 @@ runagfile::load() {
     softfail --unless-good --exit-status $? "Unable to load './runagfile.sh' ($?)"
     return $?
 
-  elif [ -f "./runagfile/index.sh" ]; then
-    . "./runagfile/index.sh"
-    softfail --unless-good --exit-status $? "Unable to load './runagfile/index.sh' ($?)"
+  elif [ -f "./runagfile/runagfile.sh" ]; then
+    . "./runagfile/runagfile.sh"
+    softfail --unless-good --exit-status $? "Unable to load './runagfile/runagfile.sh' ($?)"
     return $?
 
-  elif [ "${working_directory_only}" = true ]; then
-    if [ "${tolerate_absence}" = true ]; then
-      return
+  elif [ "${working_directory_only}" = false ] && [ -n "${HOME:-}" ]; then
+
+    if [ -f "${HOME}/.runagfile.sh" ]; then
+      . "${HOME}/.runagfile.sh"
+      softfail --unless-good --exit-status $? "Unable to load '${HOME}/.runagfile.sh' ($?)" || return $?
+
+    elif [ -f "${HOME}/.runagfile/runagfile.sh" ]; then
+      . "${HOME}/.runagfile/runagfile.sh"
+      softfail --unless-good --exit-status $? "Unable to load '${HOME}/.runagfile/runagfile.sh' ($?)" || return $?
     fi
-    softfail "Unable to find runagfile"
-    return $?
 
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile.sh" ]; then
-    . "${HOME:-}/.runagfile.sh"
-    softfail --unless-good --exit-status $? "Unable to load '${HOME:-}/.runagfile.sh' ($?)"
-    return $?
+    local dir_path; for dir_path in "${HOME}/.runag/runagfiles/"*; do
+      if [ -d "${dir_path}" ]; then
+        if [ -f "${dir_path}/runagfile.sh" ]; then
+          . "${dir_path}/runagfile.sh"
+          softfail --unless-good --exit-status $? "Unable to load '${dir_path}/runagfile.sh' ($?)" || return $?
 
-  elif [ -n "${HOME:-}" ] && [ -f "${HOME:-}/.runagfile/index.sh" ]; then
-    . "${HOME:-}/.runagfile/index.sh"
-    softfail --unless-good --exit-status $? "Unable to load '${HOME:-}/.runagfile/index.sh' ($?)"
-    return $?
+        elif [ -f "${dir_path}/runagfile/runagfile.sh" ]; then
+          . "${dir_path}/runagfile/runagfile.sh"
+          softfail --unless-good --exit-status $? "Unable to load '${dir_path}/runagfile/runagfile.sh' ($?)" || return $?
+        fi
+      fi
+    done
 
-  else
-    # TODO: tolerate_absence
-    runagfile::load_everything_from_runag
-    softfail --unless-good --exit-status $? "Unable to load rùnagfiles from .runag ($?)" || return $?
   fi
-}
-
-runagfile::load_everything_from_runag() {
-  local file_path; for file_path in "${HOME}/.runag/runagfiles"/*/index.sh; do
-    if [ -f "${file_path}" ]; then
-      . "${file_path}"
-      softfail --unless-good --exit-status $? "Unable to load '${file_path}' ($?)" || return $?
-    fi
-  done
 }

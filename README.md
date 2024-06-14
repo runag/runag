@@ -58,21 +58,20 @@ bash deploy-offline.sh
 
 ## Rùnagfile
 
-You could make a file called `runagfile` and then run `runag` to execute commands from it. You could also have a directory called `runagfile` that must contain an `index.sh` file. You could organise the rest of the files in that directory at your convenience.
-
 Possible rùnagfile locations are:
 
 ```sh
 # in current working directory
 ./runagfile.sh
-./runagfile/index.sh
+./runagfile/runagfile.sh
 
-# in users home directory
+# in home directory
 ~/.runagfile.sh
-~/.runagfile/index.sh
+~/.runagfile/runagfile.sh
 
 # inside of the collection of rùnagfiles that were added to a rùnag installation
-~/.runag/runagfiles/*/index.sh
+~/.runag/runagfiles/*/runagfile.sh
+~/.runag/runagfiles/*/runagfile/runagfile.sh
 ```
 
 
