@@ -104,7 +104,6 @@ Please refer to the source code for now.
 * [fs](lib/fs.sh)
 * [shell](lib/shell.sh)
 * [snapshot](lib/snapshot.sh)
-* [source](lib/source.sh)
 * [ui](lib/ui.sh)
 
 ### Interfacing with OS anv VMs
