@@ -14,19 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-runagfile::add_from_list() {
-  local line; while IFS="" read -r line; do
-    if [ -n "${line}" ]; then
-      echo "Adding rùnagfile from ${line}..."
-      runagfile::add "${line}" || softfail "Unable to add rùnagfile ${line}" || return $?
-    fi
-  done || softfail "Unable to add rùnagfiles from list" || return $?
-}
-
 runagfile::add() {
   local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
   local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
   git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
+}
+
+runagfile::add_from_list() {
+  local line; while IFS="" read -r line; do
+    if [ -n "${line}" ]; then
+      runagfile::add "${line}" || softfail "Unable to add rùnagfile ${line}" || return $?
+    fi
+  done || softfail "Unable to add rùnagfiles from list" || return $?
 }
 
 runagfile::each() {
@@ -37,22 +36,8 @@ runagfile::each() {
   done
 }
 
-# Find and load rùnagfile.
-#
-# Possible locations are:
-#
-# in current working directory
-# ./runagfile.sh
-# ./runagfile/runagfile.sh
-#
-# in home directory
-# ~/.runagfile.sh
-# ~/.runagfile/runagfile.sh
-#
-# inside of the collection of rùnagfiles that were added to a rùnag installation
-# ~/.runag/runagfiles/*/runagfile.sh
-# ~/.runag/runagfiles/*/runagfile/runagfile.sh
-#
+# Find and load rùnagfiles
+
 runagfile::load() {
   local working_directory_only=false
 
@@ -73,37 +58,19 @@ runagfile::load() {
 
   if [ -f "./runagfile.sh" ]; then
     . "./runagfile.sh"
-    softfail --unless-good --exit-status $? "Unable to load './runagfile.sh' ($?)"
-    return $?
-
-  elif [ -f "./runagfile/runagfile.sh" ]; then
-    . "./runagfile/runagfile.sh"
-    softfail --unless-good --exit-status $? "Unable to load './runagfile/runagfile.sh' ($?)"
-    return $?
+    softfail --unless-good --exit-status $? "Unable to load ./runagfile.sh ($?)" || return $?
 
   elif [ "${working_directory_only}" = false ] && [ -n "${HOME:-}" ]; then
-
-    if [ -f "${HOME}/.runagfile.sh" ]; then
-      . "${HOME}/.runagfile.sh"
-      softfail --unless-good --exit-status $? "Unable to load '${HOME}/.runagfile.sh' ($?)" || return $?
-
-    elif [ -f "${HOME}/.runagfile/runagfile.sh" ]; then
-      . "${HOME}/.runagfile/runagfile.sh"
-      softfail --unless-good --exit-status $? "Unable to load '${HOME}/.runagfile/runagfile.sh' ($?)" || return $?
-    fi
-
-    local dir_path; for dir_path in "${HOME}/.runag/runagfiles/"*; do
-      if [ -d "${dir_path}" ]; then
-        if [ -f "${dir_path}/runagfile.sh" ]; then
-          . "${dir_path}/runagfile.sh"
-          softfail --unless-good --exit-status $? "Unable to load '${dir_path}/runagfile.sh' ($?)" || return $?
-
-        elif [ -f "${dir_path}/runagfile/runagfile.sh" ]; then
-          . "${dir_path}/runagfile/runagfile.sh"
-          softfail --unless-good --exit-status $? "Unable to load '${dir_path}/runagfile/runagfile.sh' ($?)" || return $?
-        fi
-      fi
-    done
-
+    runagfile::load_dir "${HOME}/.runag/runagfiles"
+    softfail --unless-good --exit-status $? "Unable to load ${HOME}/.runag/runagfiles ($?)" || return $?
   fi
+}
+
+runagfile::load_dir() {
+  local dir_path; for dir_path in "$1/"*; do
+    if [ -f "${dir_path}/runagfile.sh" ]; then
+      . "${dir_path}/runagfile.sh"
+      softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?
+    fi
+  done
 }

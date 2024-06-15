@@ -63,15 +63,9 @@ Possible rùnagfile locations are:
 ```sh
 # in current working directory
 ./runagfile.sh
-./runagfile/runagfile.sh
 
 # in home directory
-~/.runagfile.sh
-~/.runagfile/runagfile.sh
-
-# inside of the collection of rùnagfiles that were added to a rùnag installation
 ~/.runag/runagfiles/*/runagfile.sh
-~/.runag/runagfiles/*/runagfile/runagfile.sh
 ```
 
 
