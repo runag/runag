@@ -399,7 +399,11 @@ file::get_block() {
   local block_name="$2"
 
   if [ -f "${file_path}" ]; then
+    # NOTE: TOCTOU
+    test "$(<"${file_path}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" | tail -n +2 | head -n -1 | wc -l)" -ge 1 || softfail "Block ${block_name} not found in ${file_path}" || return $?
+
     <"${file_path}" sed -n "/^# BEGIN ${block_name}$/,/^# END ${block_name}$/p" | tail -n +2 | head -n -1
+
     test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
   fi
 }
