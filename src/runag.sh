@@ -18,14 +18,17 @@
 
 temp_file="$(mktemp)" || fail
 
-printf "#!/usr/bin/env bash\n\n" >"${temp_file}" || fail
+{
+  printf "#!/usr/bin/env bash\n\n" || fail
 
-runag::print_license >>"${temp_file}" || fail
+  runag::print_license || fail
 
-file::get_block bin/runag set_shell_options >>"${temp_file}" || fail
+  file::get_block bin/runag set_shell_options || fail
 
-declare -f >>"${temp_file}" || fail
+  declare -f || fail
 
-file::get_block bin/runag invoke_runagfile >>"${temp_file}" || fail
+  file::get_block bin/runag invoke_runagfile || fail
+
+} >"${temp_file}" || fail
 
 file::write --absorb "${temp_file}" --mode 0755 dist/runag || fail

@@ -18,19 +18,22 @@
 
 temp_file="$(mktemp)" || fail
 
-printf "#!/usr/bin/env bash\n\n" >"${temp_file}" || fail
+{
+  printf "#!/usr/bin/env bash\n\n" || fail
 
-runag::print_license >>"${temp_file}" || fail
+  runag::print_license || fail
 
-file::get_block bin/ssh-call set_shell_options >>"${temp_file}" || fail
+  file::get_block bin/ssh-call set_shell_options || fail
 
-fail::function_sources >>"${temp_file}" || fail
+  fail::function_sources || fail
 
-ssh::call::function_sources >>"${temp_file}" || fail
+  ssh::call::function_sources || fail
 
-declare -f log::notice >>"${temp_file}" || fail
-declare -f dir::should_exists >>"${temp_file}" || fail
+  declare -f log::notice || fail
+  declare -f dir::should_exists || fail
 
-file::get_block bin/ssh-call run_ssh_call_command >>"${temp_file}" || fail
+  file::get_block bin/ssh-call run_ssh_call_command || fail
+
+} >"${temp_file}" || fail
 
 file::write --absorb "${temp_file}" --mode 0755 dist/ssh-call || fail
