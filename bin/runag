@@ -27,7 +27,6 @@ fi
 # END set_shell_options
 
 # BEGIN load_runag_library
-
 runag::load_runag_library() {
   local self_path
   local lib_dir
