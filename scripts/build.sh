@@ -71,7 +71,11 @@ fi
 
 # run shellcheck
 # shellcheck disable=SC2046
-shellcheck index.sh bin/runag $(find lib -name '*.sh') $(find src -name '*.sh')
+shellcheck index.sh \
+  bin/* \
+  $(find lib -name '*.sh') \
+  $(find scripts -name '*.sh') \
+  $(find src -name '*.sh')
 
 # make docs
 docs::make || fail
