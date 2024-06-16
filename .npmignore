@@ -1,3 +1,12 @@
+.virt-deploy-keys
+dist
 docs
 runagfiles
+scripts
 src
+tests
+
+.gitattributes
+.ignore
+deploy.sh
+runag-*.tgz

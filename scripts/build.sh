@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/runag || { echo "Unable to load rùnag" >&2; exit 1; }
+. bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
 shdoc::install() {
   local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?
@@ -69,4 +69,14 @@ if ! command -v shdoc >/dev/null; then
   shdoc::install || fail
 fi
 
+# run shellcheck
+# shellcheck disable=SC2046
+shellcheck runagfile.sh bin/runag $(find lib -name '*.sh') $(find src -name '*.sh')
+
+# make docs
 docs::make || fail
+
+# build files
+bash src/deploy.sh
+bash src/runag.sh
+bash src/ssh-call.sh

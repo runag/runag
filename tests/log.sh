@@ -14,6 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-bash src/deploy.sh
-bash src/ssh-call.sh
-bash docs/make.sh
+log::test() {
+  log::error log::error
+  log::warning log::warning
+  log::notice log::notice
+  log::success log::success
+}

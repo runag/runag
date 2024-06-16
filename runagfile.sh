@@ -14,20 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# BEGIN set_shell_options
-
-# set shell options if we are not sourced
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  if [ "${RUNAG_VERBOSE:-}" = true ]; then
-    PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
-    set -o xtrace
-  fi
-  set -o nounset
-fi
-# END set_shell_options
-
-# BEGIN load_runag_library
-
 runag::load_runag_library() {
   local self_path
   local lib_dir
@@ -46,15 +32,16 @@ runag::load_runag_library() {
   # check if lib dir exists
   test -d "${lib_dir}" || { echo "Unable to find rùnag library directory ${lib_dir}" >&2; return 1; }
 
-  # load some library files
-  . "${lib_dir}/fail.sh" || { echo "Unable to load ${lib_dir}/fail.sh ($?)" >&2; return 1; }
-  . "${lib_dir}/ssh-call.sh" || { echo "Unable to load ${lib_dir}/ssh-call.sh ($?)" >&2; return 1; }
-  . "${lib_dir}/log.sh" || { echo "Unable to load ${lib_dir}/log.sh ($?)" >&2; return 1; }
-  . "${lib_dir}/dir.sh" || { echo "Unable to load ${lib_dir}/dir.sh ($?)" >&2; return 1; }
+  # load library files
+  for file_path in "${lib_dir}"/*.sh; do
+    if [ -f "${file_path}" ]; then
+      . "${file_path}" || { echo "Unable to load ${file_path} ($?)" >&2; return 1; }
+    fi
+  done
 }
 
 # Load rùnag library
-runag::load_runag_library "../lib" || {
+runag::load_runag_library "lib" || {
   echo "Unable to load rùnag library ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
     return 1 # use return if we are sourced
@@ -62,14 +49,3 @@ runag::load_runag_library "../lib" || {
     exit 1 # use exit if not
   fi
 }
-# END load_runag_library
-
-# BEGIN run_ssh_call_command
-
-# run command if we are not sourced
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  ssh::call --command "$@"
-  softfail --unless-good --exit-status $? || exit $?
-fi
-SHELL
-# END run_ssh_call_command

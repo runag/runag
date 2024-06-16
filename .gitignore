@@ -3,3 +3,6 @@
 
 # ignore deploy keys for virtualized environments
 /.virt-deploy-keys
+
+# packages
+runag-*.tgz

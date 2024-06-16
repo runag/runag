@@ -50,7 +50,8 @@ snapshot::cleanup() {
     if [ "$(stat --format=%i "${remove_this_snapshot:?}")" -eq 256 ]; then
       sudo btrfs subvolume delete "${remove_this_snapshot:?}" || softfail || return $?
     else
-      rm -rf "${remove_this_snapshot:?}" || softfail || return $? # TODO: is it good idea to use rm here? maybe create another function or add --allow-rm flag?
+      # TODO: is it good idea to use rm here? maybe create another function or add --allow-rm flag?
+      rm -rf "${remove_this_snapshot:?}" || softfail || return $?
     fi
   done
 

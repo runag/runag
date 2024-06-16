@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/runag || { echo "Unable to load rùnag" >&2; exit 1; }
+. bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
 runag::online_deploy_script() {
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
@@ -47,31 +47,35 @@ runag::online_deploy_script() {
 
 runag_remote_url="$(git::get_remote_url_without_username)" || fail
 
-file::write deploy.sh <<SHELL || fail
-#!/usr/bin/env bash
 
-$(runag::print_license)
+temp_file="$(mktemp)" || fail
 
-# This script is wrapped inside a function with a random name to lower the chance for the bash
-# to run some unexpected commands in case if "curl | bash" fails in the middle of download.
-__xVhMyefCbBnZFUQtwqCs() {
+printf "#!/usr/bin/env bash\n\n" >"${temp_file}" || fail
 
-$(fail::function_sources)
+runag::print_license >>"${temp_file}" || fail
 
-$(declare -f apt::install)
-$(declare -f apt::update)
+echo '# This script is wrapped inside a function with a random name to lower the chance for the bash' >>"${temp_file}" || fail
+echo '# to run some unexpected commands in case if "curl | bash" fails in the middle of download.' >>"${temp_file}" || fail
+echo '__xVhMyefCbBnZFUQtwqCs() {' >>"${temp_file}" || fail
 
-$(declare -f git::install_git)
-$(declare -f git::place_up_to_date_clone)
-$(declare -f git::remove_current_clone)
+fail::function_sources >>"${temp_file}" || fail
 
-$(declare -f runagfile::add)
+declare -f apt::install >>"${temp_file}" || fail
+declare -f apt::update >>"${temp_file}" || fail
 
-$(declare -f runag::online_deploy_script)
+declare -f git::install_git >>"${temp_file}" || fail
+declare -f git::place_up_to_date_clone >>"${temp_file}" || fail
+declare -f git::remove_current_clone >>"${temp_file}" || fail
 
-export RUNAG_DIST_REPO="\${RUNAG_DIST_REPO:-$(printf "%q" "${runag_remote_url}")}"
+declare -f runagfile::add >>"${temp_file}" || fail
 
-runag::online_deploy_script "\$@"
+declare -f runag::online_deploy_script >>"${temp_file}" || fail
 
-}; __xVhMyefCbBnZFUQtwqCs "\$@"
-SHELL
+# shellcheck disable=SC2016
+echo 'export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-'"$(printf "%q" "${runag_remote_url}")"'}"' >>"${temp_file}" || fail
+
+echo 'runag::online_deploy_script "$@"' >>"${temp_file}" || fail
+
+echo '}; __xVhMyefCbBnZFUQtwqCs "$@"' >>"${temp_file}" || fail
+
+file::write --absorb "${temp_file}" --mode 0644 deploy.sh || fail

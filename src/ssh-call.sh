@@ -14,31 +14,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-. bin/runag || { echo "Unable to load rùnag" >&2; exit 1; }
+. bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
-file::write --mode 0755 bin/ssh-call <<SHELL || fail
-#!/usr/bin/env bash
+temp_file="$(mktemp)" || fail
 
-$(runag::print_license)
+printf "#!/usr/bin/env bash\n\n" >"${temp_file}" || fail
 
-# set shell options if we are not sourced
-if [ "\${BASH_SOURCE[0]}" = "\$0" ]; then
-  if [ "\${RUNAG_VERBOSE:-}" = true ]; then
-    PS4='+\${BASH_SUBSHELL} \${BASH_SOURCE:+"\${BASH_SOURCE}:\${LINENO}: "}\${FUNCNAME[0]:+"in \\\`\${FUNCNAME[0]}'"'"' "}** '
-    set -o xtrace
-  fi
-  set -o nounset
-fi
+runag::print_license >>"${temp_file}" || fail
 
-$(fail::function_sources)
-$(ssh::call::function_sources)
+file::get_block bin/ssh-call set_shell_options >>"${temp_file}" || fail
 
-$(declare -f log::notice)
-$(declare -f dir::should_exists)
+fail::function_sources >>"${temp_file}" || fail
 
-# run command if we are not sourced
-if [ "\${BASH_SOURCE[0]}" = "\$0" ]; then
-  ssh::call --command "\$@"
-  softfail --unless-good --exit-status \$? || exit \$?
-fi
-SHELL
+ssh::call::function_sources >>"${temp_file}" || fail
+
+declare -f log::notice >>"${temp_file}" || fail
+declare -f dir::should_exists >>"${temp_file}" || fail
+
+file::get_block bin/ssh-call run_ssh_call_command >>"${temp_file}" || fail
+
+file::write --absorb "${temp_file}" --mode 0755 dist/ssh-call || fail
