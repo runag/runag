@@ -13,11 +13,9 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
 # This script is wrapped inside a function with a random name to lower the chance for the bash
 # to run some unexpected commands in case if "curl | bash" fails in the middle of download.
 __xVhMyefCbBnZFUQtwqCs() {
-
 fail () 
 { 
     local exit_status;
@@ -92,7 +90,6 @@ softfail ()
 { 
     fail --wrapped-softfail "$@"
 }
-
 apt::install () 
 { 
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install "$@" || softfail || return $?
@@ -101,7 +98,6 @@ apt::update ()
 { 
     sudo DEBIAN_FRONTEND=noninteractive apt-get update || softfail || return $?
 }
-
 git::install_git () 
 { 
     if [[ "${OSTYPE}" =~ ^linux ]]; then
@@ -170,7 +166,6 @@ git::remove_current_clone ()
     backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
     mv "${dest_full_path}" "${backup_path}" || softfail || return $?
 }
-
 runagfile::add () 
 { 
     local user_name;
@@ -179,7 +174,6 @@ runagfile::add ()
     repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?;
     git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
-
 runag::online_deploy_script () 
 { 
     if [ "${RUNAG_VERBOSE:-}" = true ]; then
@@ -207,9 +201,6 @@ runag::online_deploy_script ()
         esac;
     done
 }
-
 export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"
-
 runag::online_deploy_script "$@"
-
 }; __xVhMyefCbBnZFUQtwqCs "$@"

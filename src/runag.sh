@@ -14,5 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# shellcheck disable=SC2046
-shellcheck index.sh bin/runag $(find lib -name '*.sh') $(find src -name '*.sh')
+. bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
+
+temp_file="$(mktemp)" || fail
+
+printf "#!/usr/bin/env bash\n\n" >"${temp_file}" || fail
+
+runag::print_license >>"${temp_file}" || fail
+
+file::get_block bin/runag set_shell_options >>"${temp_file}" || fail
+
+declare -f >>"${temp_file}" || fail
+
+file::get_block bin/runag invoke_runagfile >>"${temp_file}" || fail
+
+file::write --absorb "${temp_file}" --mode 0755 dist/runag || fail

@@ -3,4 +3,4 @@
 
 # exclude derivative files from search
 /deploy.sh
-/bin/ssh-call
+/dist

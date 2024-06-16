@@ -144,11 +144,5 @@ runag::create_or_update_offline_install() (
     fi
   done
 
-  cp -f "${runag_path}/src/deploy-offline.sh" . || softfail || return $?
+  cp -f "${runag_path}/scripts/deploy-offline.sh" . || softfail || return $?
 )
-
-runag::bundle() {
-  file::get_block "${RUNAG_BIN_PATH}" set_shell_options || softfail || return $?
-  declare -f || softfail || return $?
-  file::get_block "${RUNAG_BIN_PATH}" invoke_runagfile || softfail || return $?
-}

@@ -8,5 +8,8 @@
   "bin": {
     "runag": "bin/runag"
   },
-  "repository": "runag/runag"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/runag/runag.git"
+  }
 }

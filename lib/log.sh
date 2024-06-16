@@ -18,13 +18,6 @@
 # 1  3  5  6 - don't looks good in dark mode
 # 9 11 14 13 - looks good in dark mode, looks good in light only with bold
 
-# log::test() {
-#   log::error log::error
-#   log::warning log::warning
-#   log::notice log::notice
-#   log::success log::success
-# }
-
 log::error() {
   local message="${1:-"(empty log message)"}"
   if [ -t 2 ]; then
