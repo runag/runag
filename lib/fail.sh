@@ -90,8 +90,6 @@ softfail() {
 }
 
 fail::function_sources() {
-  cat <<SHELL || softfail || return $?
-$(declare -f fail)
-$(declare -f softfail)
-SHELL
+  declare -f fail || softfail || return $?
+  declare -f softfail || softfail || return $?
 }

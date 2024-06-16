@@ -137,13 +137,11 @@ leaseweb::domains::extract_domain_from_host() {
 }
 
 leaseweb::function_sources() {
-  cat <<SHELL || softfail || return $?
-$(declare -f leaseweb::domains::get_short_record)
-$(declare -f leaseweb::domains::list)
-$(declare -f leaseweb::domains::set_record)
-$(declare -f leaseweb::domains::clear_record)
-$(declare -f leaseweb::domains::set_acme_challenge)
-$(declare -f leaseweb::domains::clear_acme_challenge)
-$(declare -f leaseweb::domains::extract_domain_from_host)
-SHELL
+  declare -f leaseweb::domains::get_short_record || softfail || return $?
+  declare -f leaseweb::domains::list || softfail || return $?
+  declare -f leaseweb::domains::set_record || softfail || return $?
+  declare -f leaseweb::domains::clear_record || softfail || return $?
+  declare -f leaseweb::domains::set_acme_challenge || softfail || return $?
+  declare -f leaseweb::domains::clear_acme_challenge || softfail || return $?
+  declare -f leaseweb::domains::extract_domain_from_host || softfail || return $?
 }
