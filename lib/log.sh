@@ -59,11 +59,9 @@ log::elapsed_time() {
 }
 
 log::function_sources() {
-  cat <<SHELL || softfail || return $?
-$(declare -f log::error)
-$(declare -f log::warning)
-$(declare -f log::notice)
-$(declare -f log::success)
-$(declare -f log::elapsed_time)
-SHELL
+  declare -f log::error || softfail || return $?
+  declare -f log::warning || softfail || return $?
+  declare -f log::notice || softfail || return $?
+  declare -f log::success || softfail || return $?
+  declare -f log::elapsed_time || softfail || return $?
 }

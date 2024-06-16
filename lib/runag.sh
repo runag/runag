@@ -15,16 +15,16 @@
 #  limitations under the License.
 
 runag::mini_library() {
-  cat <<SHELL || softfail || return $?
-#!/usr/bin/env bash
+  printf "#!/usr/bin/env bash\n\n" || fail
 
-$(runag::print_license)
+  runag::print_license || fail
 
-$(declare -f fail)
-$(declare -f softfail)
-$(declare -f dir::should_exists)
-$(declare -f file::write)
-SHELL
+  printf "\n" || fail
+
+  declare -f fail || softfail || return $?
+  declare -f softfail || softfail || return $?
+  declare -f dir::should_exists || softfail || return $?
+  declare -f file::write || softfail || return $?
 }
 
 runag::print_license() {

@@ -45,12 +45,18 @@ tailscale::issue_2541_workaround() {
 }
 
 tailscale::install_issue_2541_workaround() {
-  file::write --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround <<SHELL || softfail || return $?
-$(runag::mini_library)
-$(declare -f tailscale::issue_2541_workaround)
-set -o nounset
-tailscale::issue_2541_workaround || fail "Unable to perform tailscale::issue_2541_workaround"
-SHELL
+  temp_file="$(mktemp)" || fail
+  {
+    runag::mini_library || fail
+
+    declare -f tailscale::issue_2541_workaround || fail
+
+    echo 'set -o nounset' || fail
+    echo 'tailscale::issue_2541_workaround || fail' || fail
+
+  } >"${temp_file}" || fail
+  
+  file::write --absorb "${temp_file}" --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround || softfail || return $?
 
   file::write --sudo --mode 0644 /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || softfail || return $?
 [Unit]

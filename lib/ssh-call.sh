@@ -699,12 +699,10 @@ ssh::call::invoke() {
 }
 
 ssh::call::function_sources() {
-  cat <<SHELL || softfail || return $?
-$(declare -f ssh::call)
-$(declare -f ssh::call::internal)
-$(declare -f ssh::call::set_ssh_args)
-$(declare -f ssh::call::produce_script)
-$(declare -f ssh::call::interactive_terminal_functions_filter)
-$(declare -f ssh::call::invoke)
-SHELL
+  declare -f ssh::call || softfail || return $?
+  declare -f ssh::call::internal || softfail || return $?
+  declare -f ssh::call::set_ssh_args || softfail || return $?
+  declare -f ssh::call::produce_script || softfail || return $?
+  declare -f ssh::call::interactive_terminal_functions_filter || softfail || return $?
+  declare -f ssh::call::invoke || softfail || return $?
 }
