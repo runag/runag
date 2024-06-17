@@ -47,7 +47,7 @@ systemd::block() {
   echo "${block_content:1}"
 }
 
-systemd::service_menu() {
+systemd::service_tasks() {
   local with_timer
   local action_args=()
 
@@ -78,19 +78,19 @@ systemd::service_menu() {
     esac
   done
 
-  menu::add --header "Service actions" || softfail || return $?
+  task::add --header "Service actions" || softfail || return $?
 
-  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?
-  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?
+  task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?
+  task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?
   
   if [ "${with_timer:-}" = true ]; then
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?
   fi
 
-  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" status || softfail || return $?
-  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal  || softfail || return $?
-  menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
+  task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" status || softfail || return $?
+  task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal  || softfail || return $?
+  task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
 }
 
 systemd::service_action() {

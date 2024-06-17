@@ -84,9 +84,9 @@ Please refer to the source code for now.
 
 * [fail](lib/fail.sh)
 * [log](lib/log.sh)
-* [menu](lib/menu.sh)
 * [runag](lib/runag.sh)
 * [runagfile](lib/runagfile.sh)
+* [task](lib/task.sh)
 * [terminal](lib/terminal.sh)
 
 ### General utility
