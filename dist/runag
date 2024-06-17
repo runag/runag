@@ -719,11 +719,8 @@ fail ()
 }
 fail::function_sources () 
 { 
-    cat <<SHELL || 
-$(declare -f fail)
-$(declare -f softfail)
-SHELL
- softfail || return $?
+    declare -f fail || softfail || return $?;
+    declare -f softfail || softfail || return $?
 }
 file::append_line_unless_present () 
 { 
@@ -1614,16 +1611,13 @@ leaseweb::domains::set_record ()
 }
 leaseweb::function_sources () 
 { 
-    cat <<SHELL || 
-$(declare -f leaseweb::domains::get_short_record)
-$(declare -f leaseweb::domains::list)
-$(declare -f leaseweb::domains::set_record)
-$(declare -f leaseweb::domains::clear_record)
-$(declare -f leaseweb::domains::set_acme_challenge)
-$(declare -f leaseweb::domains::clear_acme_challenge)
-$(declare -f leaseweb::domains::extract_domain_from_host)
-SHELL
- softfail || return $?
+    declare -f leaseweb::domains::get_short_record || softfail || return $?;
+    declare -f leaseweb::domains::list || softfail || return $?;
+    declare -f leaseweb::domains::set_record || softfail || return $?;
+    declare -f leaseweb::domains::clear_record || softfail || return $?;
+    declare -f leaseweb::domains::set_acme_challenge || softfail || return $?;
+    declare -f leaseweb::domains::clear_acme_challenge || softfail || return $?;
+    declare -f leaseweb::domains::extract_domain_from_host || softfail || return $?
 }
 letsencrypt::agree_tos_and_register_unsafely_without_email () 
 { 
@@ -1838,14 +1832,11 @@ log::error ()
 }
 log::function_sources () 
 { 
-    cat <<SHELL || 
-$(declare -f log::error)
-$(declare -f log::warning)
-$(declare -f log::notice)
-$(declare -f log::success)
-$(declare -f log::elapsed_time)
-SHELL
- softfail || return $?
+    declare -f log::error || softfail || return $?;
+    declare -f log::warning || softfail || return $?;
+    declare -f log::notice || softfail || return $?;
+    declare -f log::success || softfail || return $?;
+    declare -f log::elapsed_time || softfail || return $?
 }
 log::notice () 
 { 
@@ -1923,491 +1914,6 @@ macos::install_homebrew ()
     if ! command -v brew > /dev/null; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" < /dev/null || softfail "Unable to install homebrew" || return $?;
     fi
-}
-menu::add () 
-{ 
-    local store_name=DEFAULT;
-    local menu_item_type="menu-item";
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            -o | --os)
-                if [[ ! "${OSTYPE}" =~ ^"$2" ]]; then
-                    return;
-                fi;
-                shift;
-                shift
-            ;;
-            -m | --menu)
-                menu_item_type="submenu-item";
-                shift
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    declare -n menu_data="RUNAG_MENU_${store_name}";
-    if [[ ! -v menu_data ]]; then
-        declare -ga "RUNAG_MENU_${store_name}=()";
-    fi;
-    menu_data+=("${menu_item_type}" "$#" "$@")
-}
-menu::clear () 
-{ 
-    local store_name=DEFAULT;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            *)
-                softfail "Unknown argument: $1" || return $?
-            ;;
-        esac;
-    done;
-    declare -ga "RUNAG_MENU_${store_name}=()"
-}
-menu::display () 
-{ 
-    local store_name=DEFAULT;
-    local enable_return=false;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            -r | --enable-return)
-                enable_return=true;
-                shift
-            ;;
-            *)
-                softfail "Unknown argument: $1" || return $?
-            ;;
-        esac;
-    done;
-    declare -n Menu_Data="RUNAG_MENU_${store_name}";
-    if [[ ! -v Menu_Data ]]; then
-        declare -ga "RUNAG_MENU_${store_name}=()";
-    fi;
-    if [ "${#Menu_Data[@]}" = 0 ]; then
-        softfail "Menu is empty";
-        return $?;
-    fi;
-    local Prompt_Color="";
-    local Color_A="";
-    local Color_B="";
-    local Color_A_Accent="";
-    local Color_B_Accent="";
-    local Header_Color="";
-    local Comment_Color="";
-    local Cursor_Up_Seq;
-    local Reset_Attrs="";
-    local Clear_Line="";
-    local Leading_Spacer=" ";
-    if [ -t 0 ]; then
-        Prompt_Color="$(printf "setaf 11\nbold" | tput -S 2>/dev/null)" || Prompt_Color="";
-    fi;
-    if [ -t 1 ]; then
-        Color_A="$(tput setaf 9 2>/dev/null)" || Color_A="";
-        Color_A_Accent="$(printf "setaf 15\nsetab 9" | tput -S 2>/dev/null)" || Color_A_Accent="";
-        Color_B_Accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || Color_B_Accent="";
-        Header_Color="$(printf "setaf 14\nbold" | tput -S 2>/dev/null)" || Header_Color="";
-        Comment_Color="$(printf "setaf 13\nbold" | tput -S 2>/dev/null)" || Comment_Color="";
-        Cursor_Up_Seq="$(tput cuu1 2>/dev/null)" || softfail || return $?;
-    fi;
-    if [ -t 0 ] || [ -t 1 ]; then
-        Reset_Attrs="$(tput sgr 0 2>/dev/null)" || softfail || return $?;
-        Clear_Line="$(tput el 2>/dev/null)" || softfail || return $?;
-    fi;
-    local Item_Position=undefined;
-    local Section_Position=undefined;
-    local First_Render=true;
-    local Lines_Drawn;
-    local Non_Interactive=false;
-    local Should_Perform_Command;
-    local Should_Exit;
-    local Should_Return;
-    local Should_Enter;
-    local Selected_Command;
-    local Selected_Command_Type;
-    local command_exit_status;
-    if ! [ -t 0 ] || ! [ -t 1 ]; then
-        Non_Interactive=true;
-        Leading_Spacer="";
-        menu::render || softfail || return $?;
-        return 0;
-    fi;
-    while :; do
-        menu::render || softfail || return $?;
-        Should_Perform_Command=false;
-        Should_Exit=false;
-        Should_Return=false;
-        Should_Enter=false;
-        menu::read_input || softfail || return $?;
-        if [ "${enable_return}" = true ] && [ "${Should_Return}" = true ]; then
-            return 254;
-        else
-            if [ "${Should_Exit}" = true ]; then
-                return 0;
-            else
-                if [ "${Should_Perform_Command}" = true ] || { 
-                    [ "${Should_Enter}" = true ] && [ "${Selected_Command_Type}" = "submenu-item" ]
-                }; then
-                    if [ "${Selected_Command_Type}" = "submenu-item" ]; then
-                        printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n";
-                        menu::with --enable-return "${Selected_Command[@]}";
-                        command_exit_status=$?;
-                        if [ "${command_exit_status}" = 254 ]; then
-                            First_Render=true;
-                            printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n";
-                            continue;
-                        fi;
-                    else
-                        echo '
-'"${Prompt_Color}> ${Selected_Command[*]}${Reset_Attrs}";
-                        "${Selected_Command[@]}";
-                        command_exit_status=$?;
-                    fi;
-                    softfail --unless-good --exit-status "${command_exit_status}" "Error performing ${Selected_Command[0]} (${command_exit_status})" || return $?;
-                    if [ -t 1 ]; then
-                        log::success "Done: ${Selected_Command[*]}";
-                    fi;
-                    return 0;
-                fi;
-            fi;
-        fi;
-    done
-}
-menu::is_necessary () 
-{ 
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -o | --os)
-                local os_type="$2";
-                if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
-                    return 1;
-                fi;
-                shift;
-                shift
-            ;;
-            *)
-                fail "Unknown argument: $1"
-            ;;
-        esac;
-    done
-}
-menu::present () 
-{ 
-    local store_name=DEFAULT;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            *)
-                fail "Unknown argument: $1"
-            ;;
-        esac;
-    done;
-    declare -n menu_data="RUNAG_MENU_${store_name}";
-    [[ -v menu_data ]] && (( ${#menu_data[@]} > 0 ))
-}
-menu::read_input () 
-{ 
-    local input_text;
-    local read_status;
-    IFS="" read -n 1 -r -s input_text || softfail "Read failed: $?" || return $?;
-    if [ "${input_text}" = '' ]; then
-        Should_Exit=true;
-    fi;
-    if [ "${input_text}" = '' ]; then
-        IFS="" read -n 5 -r -s -t 0.01 input_text;
-        read_status=$?;
-        if [ ${read_status} -gt 128 ]; then
-            if [ -z "${input_text}" ]; then
-                Should_Exit=true;
-            fi;
-        else
-            if [ ${read_status} != 0 ]; then
-                softfail "Read failed: ${read_status}";
-                return $?;
-            fi;
-        fi;
-        case "${input_text}" in 
-            "[5~" | "[1;5A")
-                if [ "${Section_Position}" != undefined ]; then
-                    Item_Position=undefined;
-                    (( Section_Position -= 1 )) || true;
-                fi
-            ;;
-            "[6~" | "[1;5B")
-                if [ "${Section_Position}" != undefined ]; then
-                    Item_Position=undefined;
-                    (( Section_Position += 1 ));
-                fi
-            ;;
-            "[A")
-                if [ "${Item_Position}" != undefined ]; then
-                    ((Item_Position-=1));
-                    Section_Position=undefined;
-                fi
-            ;;
-            "[B")
-                if [ "${Item_Position}" != undefined ]; then
-                    ((Item_Position+=1));
-                    Section_Position=undefined;
-                fi
-            ;;
-            "[C")
-                if [ "${Item_Position}" != undefined ]; then
-                    Should_Enter=true;
-                fi
-            ;;
-            "[D")
-                Should_Return=true
-            ;;
-            "[F")
-                if [ "${Item_Position}" != undefined ]; then
-                    Item_Position=-1;
-                    Section_Position=undefined;
-                fi
-            ;;
-            "[H")
-                if [ "${Item_Position}" != undefined ]; then
-                    Item_Position=0;
-                    Section_Position=0;
-                fi
-            ;;
-        esac;
-    else
-        if [ "${input_text}" = "" ]; then
-            if [ "${Item_Position}" != undefined ]; then
-                Should_Perform_Command=true;
-            fi;
-        fi;
-    fi
-}
-menu::render () 
-{ 
-    local main_pointer;
-    local item_pointer;
-    local comment;
-    local is_command;
-    local item_length;
-    local item_type;
-    local command;
-    local command_display_prefix;
-    local Current_Color;
-    local current_color_accent;
-    local Meta_Lines=();
-    local meta_line_pointer;
-    local selection_marker;
-    local enter_marker;
-    local current_item_index=undefined;
-    local current_section_index=undefined;
-    local current_line_color;
-    if [ "${First_Render}" != true ]; then
-        if [ -t 1 ]; then
-            for ((1; Lines_Drawn > 0; Lines_Drawn--))
-            do
-                printf "%s" "${Cursor_Up_Seq}";
-            done;
-        fi;
-    else
-        First_Render=false;
-    fi;
-    Lines_Drawn=0;
-    for ((main_pointer = 0; main_pointer < ${#Menu_Data[@]}; main_pointer++ ))
-    do
-        if [ "${Menu_Data[main_pointer]}" = "menu-item" ] || [ "${Menu_Data[main_pointer]}" = "submenu-item" ]; then
-            comment="";
-            is_command=true;
-            item_length="${Menu_Data[main_pointer + 1]}";
-            item_type="${Menu_Data[main_pointer]}";
-            for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
-            do
-                case "${Menu_Data[item_pointer]}" in 
-                    -h | --header)
-                        (( item_pointer += 1 ));
-                        is_command=false;
-                        Meta_Lines+=("header" "${Menu_Data[item_pointer]}")
-                    ;;
-                    -n | --note)
-                        (( item_pointer += 1 ));
-                        is_command=false;
-                        Meta_Lines+=("note" "${Menu_Data[item_pointer]}")
-                    ;;
-                    -c | --comment)
-                        (( item_pointer += 1 ));
-                        comment="${Menu_Data[item_pointer]}"
-                    ;;
-                    -*)
-                        softfail "Unknown argument: ${Menu_Data[item_pointer]}" || return $?
-                    ;;
-                    *)
-                        break
-                    ;;
-                esac;
-            done;
-            if [ "${is_command}" = true ] && (( item_pointer <= main_pointer + item_length + 1 )); then
-                command=("${Menu_Data[@]:item_pointer:((item_length-(item_pointer-main_pointer-2)))}");
-                if [ "${current_item_index}" = undefined ]; then
-                    current_item_index=0;
-                fi;
-                if [ "${current_section_index}" = undefined ]; then
-                    current_section_index=0;
-                fi;
-                if (( current_item_index > 0 && ${#Meta_Lines[@]} > 0)); then
-                    for ((meta_line_pointer = 0; meta_line_pointer < ${#Meta_Lines[@]}; meta_line_pointer+=2 ))
-                    do
-                        if [ "${Meta_Lines[meta_line_pointer]}" = "header" ]; then
-                            (( current_section_index += 1 ));
-                            break;
-                        fi;
-                    done;
-                fi;
-                menu::render::meta_lines "${current_item_index}" || softfail || return $?;
-                if [ "${Current_Color:-}" = "${Color_A}" ]; then
-                    Current_Color="${Color_B:-}";
-                    current_color_accent="${Color_B_Accent}";
-                else
-                    Current_Color="${Color_A}";
-                    current_color_accent="${Color_A_Accent}";
-                fi;
-                if [ "${Item_Position}" = undefined ] && [ "${Section_Position}" = undefined ]; then
-                    Item_Position=current_item_index;
-                    Section_Position=current_section_index;
-                else
-                    if [ "${Item_Position}" = undefined ] && [ "${Section_Position}" = "${current_section_index}" ]; then
-                        (( Item_Position = current_item_index ));
-                    else
-                        if [ "${Section_Position}" = undefined ] && [ "${Item_Position}" = "${current_item_index}" ]; then
-                            (( Section_Position = current_section_index ));
-                        fi;
-                    fi;
-                fi;
-                enter_marker="";
-                if [ "${Non_Interactive}" != true ] && [ "${Item_Position}" = "${current_item_index}" ]; then
-                    Selected_Command=("${command[@]}");
-                    Selected_Command_Type="${item_type}";
-                    selection_marker+="${Current_Color}!${Reset_Attrs}";
-                    current_line_color="${current_color_accent}";
-                    if [ "${item_type}" = "submenu-item" ]; then
-                        enter_marker=" ${Current_Color}# -->${Reset_Attrs}";
-                    fi;
-                else
-                    selection_marker="";
-                    current_line_color="${Current_Color}";
-                fi;
-                if [ "${Menu_Data[main_pointer]}" = "submenu-item" ]; then
-                    command_display_prefix="menu::with ";
-                else
-                    command_display_prefix="";
-                fi;
-                echo "${Clear_Line}${selection_marker}${Leading_Spacer}${current_line_color}${command_display_prefix}${command[*]}${Reset_Attrs}${comment:+" ${Comment_Color}#  ${comment}${Reset_Attrs}"}${enter_marker}";
-                (( Lines_Drawn+=1 ));
-                (( current_item_index+=1 ));
-            fi;
-            (( main_pointer += item_length + 1 ));
-        else
-            softfail "Unknown menu operation" || return $?;
-        fi;
-    done;
-    menu::render::meta_lines "${current_item_index}" || softfail || return $?;
-    if [ "${Non_Interactive}" != true ]; then
-        if [ "${Item_Position}" = undefined ]; then
-            if [ "${Section_Position}" != undefined ] && [ "${current_section_index}" != undefined ]; then
-                if (( Section_Position < 0 )); then
-                    (( Section_Position = current_section_index ));
-                    menu::render;
-                else
-                    if (( Section_Position >= current_section_index )); then
-                        Item_Position=0;
-                        Section_Position=0;
-                        menu::render;
-                    fi;
-                fi;
-            fi;
-        else
-            if [ "${current_item_index}" != undefined ]; then
-                if (( Item_Position < 0 )); then
-                    (( Item_Position = current_item_index - 1 ));
-                    menu::render;
-                else
-                    if (( Item_Position >= current_item_index )); then
-                        Item_Position=0;
-                        Section_Position=0;
-                        menu::render;
-                    fi;
-                fi;
-            fi;
-        fi;
-    fi
-}
-menu::render::meta_lines () 
-{ 
-    local current_item_index="$1";
-    local meta_line_pointer;
-    local spacer_required=false;
-    if (( ${#Meta_Lines[@]} > 0)); then
-        if [ "${current_item_index}" != undefined ] && [ "${current_item_index}" -gt 0 ]; then
-            spacer_required=true;
-        fi;
-        for ((meta_line_pointer = 0; meta_line_pointer < ${#Meta_Lines[@]}; meta_line_pointer+=2 ))
-        do
-            if [ "${Meta_Lines[meta_line_pointer]}" = "header" ]; then
-                if [ "${spacer_required}" = true ]; then
-                    echo "${Clear_Line}";
-                    (( Lines_Drawn += 1 ));
-                    spacer_required=false;
-                fi;
-                echo "${Clear_Line}${Header_Color}${Leading_Spacer}# ${Meta_Lines[meta_line_pointer+1]}${Reset_Attrs}";
-            else
-                if [ "${Meta_Lines[meta_line_pointer]}" = "note" ]; then
-                    echo "${Clear_Line}${Comment_Color}${Leading_Spacer}# -- ${Meta_Lines[meta_line_pointer+1]}${Reset_Attrs}";
-                    spacer_required=true;
-                fi;
-            fi;
-            (( Lines_Drawn+=1 ));
-        done;
-        Current_Color="";
-        Meta_Lines=();
-    fi
-}
-menu::with () 
-{ 
-    ( local enable_return;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -r | --enable-return)
-                enable_return=true;
-                shift
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    menu::clear || softfail || return $?;
-    "$@";
-    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || return $?;
-    menu::display ${enable_return:+"--enable-return"};
-    local command_exit_status=$?;
-    if [ "${command_exit_status}" = 254 ]; then
-        return "${command_exit_status}";
-    fi;
-    softfail --unless-good --exit-status "${command_exit_status}" "Error performing menu::display (${command_exit_status})" || return $? )
 }
 nodejs::install::apt () 
 { 
@@ -3323,29 +2829,15 @@ runag::load_runag_library ()
         fi;
     done
 }
-runag::menu () 
-{ 
-    if [ -d "${HOME}/.runag" ]; then
-        menu::add --header "Rùnag and rùnagfiles" || softfail || return $?;
-        menu::add runag::pull || softfail || return $?;
-        menu::add runag::push || softfail || return $?;
-        menu::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?;
-        menu::add runag::update_current_offline_install_if_connected || softfail || return $?;
-    fi
-}
 runag::mini_library () 
 { 
-    cat <<SHELL || 
-#!/usr/bin/env bash
-
-$(runag::print_license)
-
-$(declare -f fail)
-$(declare -f softfail)
-$(declare -f dir::should_exists)
-$(declare -f file::write)
-SHELL
- softfail || return $?
+    printf "#!/usr/bin/env bash\n\n" || fail;
+    runag::print_license || fail;
+    printf "\n" || fail;
+    declare -f fail || softfail || return $?;
+    declare -f softfail || softfail || return $?;
+    declare -f dir::should_exists || softfail || return $?;
+    declare -f file::write || softfail || return $?
 }
 runag::print_license () 
 { 
@@ -3379,6 +2871,16 @@ runag::push ()
         git -C "${HOME}/.runag" push || softfail || return $?;
     fi;
     runagfile::each git push || softfail || return $?
+}
+runag::tasks () 
+{ 
+    if [ -d "${HOME}/.runag" ]; then
+        task::add --header "Rùnag and rùnagfiles" || softfail || return $?;
+        task::add runag::pull || softfail || return $?;
+        task::add runag::push || softfail || return $?;
+        task::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?;
+        task::add runag::update_current_offline_install_if_connected || softfail || return $?;
+    fi
 }
 runag::update_current_offline_install_if_connected () 
 { 
@@ -3858,15 +3360,12 @@ ssh::call ()
 }
 ssh::call::function_sources () 
 { 
-    cat <<SHELL || 
-$(declare -f ssh::call)
-$(declare -f ssh::call::internal)
-$(declare -f ssh::call::set_ssh_args)
-$(declare -f ssh::call::produce_script)
-$(declare -f ssh::call::interactive_terminal_functions_filter)
-$(declare -f ssh::call::invoke)
-SHELL
- softfail || return $?
+    declare -f ssh::call || softfail || return $?;
+    declare -f ssh::call::internal || softfail || return $?;
+    declare -f ssh::call::set_ssh_args || softfail || return $?;
+    declare -f ssh::call::produce_script || softfail || return $?;
+    declare -f ssh::call::interactive_terminal_functions_filter || softfail || return $?;
+    declare -f ssh::call::invoke || softfail || return $?
 }
 ssh::call::interactive_terminal_functions_filter () 
 { 
@@ -5017,7 +4516,7 @@ systemd::service_action::stop ()
         sudo systemctl stop "${service_name}.service" || softfail || return $?;
     fi
 }
-systemd::service_menu () 
+systemd::service_tasks () 
 { 
     local with_timer;
     local action_args=();
@@ -5048,16 +4547,16 @@ systemd::service_menu ()
             ;;
         esac;
     done;
-    menu::add --header "Service actions" || softfail || return $?;
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?;
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?;
+    task::add --header "Service actions" || softfail || return $?;
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?;
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?;
     if [ "${with_timer:-}" = true ]; then
-        menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?;
-        menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?;
+        task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" enable_timer || softfail || return $?;
+        task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" disable_timer || softfail || return $?;
     fi;
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" status || softfail || return $?;
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal || softfail || return $?;
-    menu::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" status || softfail || return $?;
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal || softfail || return $?;
+    task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" journal --follow || softfail || return $?
 }
 systemd::write_system_unit () 
 { 
@@ -5081,13 +4580,14 @@ tailscale::install ()
 }
 tailscale::install_issue_2541_workaround () 
 { 
-    file::write --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround <<SHELL || 
-$(runag::mini_library)
-$(declare -f tailscale::issue_2541_workaround)
-set -o nounset
-tailscale::issue_2541_workaround || fail "Unable to perform tailscale::issue_2541_workaround"
-SHELL
- softfail || return $?
+    temp_file="$(mktemp)" || fail;
+    { 
+        runag::mini_library || fail;
+        declare -f tailscale::issue_2541_workaround || fail;
+        echo 'set -o nounset' || fail;
+        echo 'tailscale::issue_2541_workaround || fail' || fail
+    } > "${temp_file}" || fail;
+    file::write --absorb "${temp_file}" --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround || softfail || return $?;
     file::write --sudo --mode 0644 /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || 
 [Unit]
 Description=tailscale-issue-2541-workaround
@@ -5131,6 +4631,491 @@ tailscale::issue_2541_workaround ()
             sudo systemctl restart tailscaled || fail "Unable to restart tailscaled";
         fi;
     fi
+}
+task::add () 
+{ 
+    local store_name=DEFAULT;
+    local task_type="basic-task";
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -s | --store)
+                store_name="$2";
+                shift;
+                shift
+            ;;
+            -o | --os)
+                if [[ ! "${OSTYPE}" =~ ^"$2" ]]; then
+                    return;
+                fi;
+                shift;
+                shift
+            ;;
+            -g | --group)
+                task_type="task-group";
+                shift
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    declare -n task_data="RUNAG_TASK_${store_name}";
+    if [[ ! -v task_data ]]; then
+        declare -ga "RUNAG_TASK_${store_name}=()";
+    fi;
+    task_data+=("${task_type}" "$#" "$@")
+}
+task::any () 
+{ 
+    local store_name=DEFAULT;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -s | --store)
+                store_name="$2";
+                shift;
+                shift
+            ;;
+            *)
+                fail "Unknown argument: $1"
+            ;;
+        esac;
+    done;
+    declare -n task_data="RUNAG_TASK_${store_name}";
+    [[ -v task_data ]] && (( ${#task_data[@]} > 0 ))
+}
+task::clear () 
+{ 
+    local store_name=DEFAULT;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -s | --store)
+                store_name="$2";
+                shift;
+                shift
+            ;;
+            *)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+        esac;
+    done;
+    declare -ga "RUNAG_TASK_${store_name}=()"
+}
+task::display () 
+{ 
+    local store_name=DEFAULT;
+    local enable_return=false;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -s | --store)
+                store_name="$2";
+                shift;
+                shift
+            ;;
+            -r | --enable-return)
+                enable_return=true;
+                shift
+            ;;
+            *)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+        esac;
+    done;
+    declare -n Task_Data="RUNAG_TASK_${store_name}";
+    if [[ ! -v Task_Data ]]; then
+        declare -ga "RUNAG_TASK_${store_name}=()";
+    fi;
+    if [ "${#Task_Data[@]}" = 0 ]; then
+        softfail "Task list is empty";
+        return $?;
+    fi;
+    local Prompt_Color="";
+    local Color_A="";
+    local Color_B="";
+    local Color_A_Accent="";
+    local Color_B_Accent="";
+    local Header_Color="";
+    local Comment_Color="";
+    local Cursor_Up_Seq;
+    local Reset_Attrs="";
+    local Clear_Line="";
+    local Leading_Spacer=" ";
+    if [ -t 0 ]; then
+        Prompt_Color="$(printf "setaf 11\nbold" | tput -S 2>/dev/null)" || Prompt_Color="";
+    fi;
+    if [ -t 1 ]; then
+        Color_A="$(tput setaf 9 2>/dev/null)" || Color_A="";
+        Color_A_Accent="$(printf "setaf 15\nsetab 9" | tput -S 2>/dev/null)" || Color_A_Accent="";
+        Color_B_Accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || Color_B_Accent="";
+        Header_Color="$(printf "setaf 14\nbold" | tput -S 2>/dev/null)" || Header_Color="";
+        Comment_Color="$(printf "setaf 13\nbold" | tput -S 2>/dev/null)" || Comment_Color="";
+        Cursor_Up_Seq="$(tput cuu1 2>/dev/null)" || softfail || return $?;
+    fi;
+    if [ -t 0 ] || [ -t 1 ]; then
+        Reset_Attrs="$(tput sgr 0 2>/dev/null)" || softfail || return $?;
+        Clear_Line="$(tput el 2>/dev/null)" || softfail || return $?;
+    fi;
+    local Item_Position=undefined;
+    local Section_Position=undefined;
+    local First_Render=true;
+    local Lines_Drawn;
+    local Non_Interactive=false;
+    local Should_Perform_Command;
+    local Should_Exit;
+    local Should_Return;
+    local Should_Enter;
+    local Selected_Command;
+    local Selected_Command_Type;
+    local command_exit_status;
+    if ! [ -t 0 ] || ! [ -t 1 ]; then
+        Non_Interactive=true;
+        Leading_Spacer="";
+        task::render || softfail || return $?;
+        return 0;
+    fi;
+    while :; do
+        task::render || softfail || return $?;
+        Should_Perform_Command=false;
+        Should_Exit=false;
+        Should_Return=false;
+        Should_Enter=false;
+        task::read_input || softfail || return $?;
+        if [ "${enable_return}" = true ] && [ "${Should_Return}" = true ]; then
+            return 254;
+        else
+            if [ "${Should_Exit}" = true ]; then
+                return 0;
+            else
+                if [ "${Should_Perform_Command}" = true ] || { 
+                    [ "${Should_Enter}" = true ] && [ "${Selected_Command_Type}" = "task-group" ]
+                }; then
+                    if [ "${Selected_Command_Type}" = "task-group" ]; then
+                        printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n";
+                        task::group --enable-return "${Selected_Command[@]}";
+                        command_exit_status=$?;
+                        if [ "${command_exit_status}" = 254 ]; then
+                            First_Render=true;
+                            printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n";
+                            continue;
+                        fi;
+                    else
+                        echo '
+'"${Prompt_Color}> ${Selected_Command[*]}${Reset_Attrs}";
+                        "${Selected_Command[@]}";
+                        command_exit_status=$?;
+                    fi;
+                    softfail --unless-good --exit-status "${command_exit_status}" "Error performing ${Selected_Command[0]} (${command_exit_status})" || return $?;
+                    if [ -t 1 ]; then
+                        log::success "Done: ${Selected_Command[*]}";
+                    fi;
+                    return 0;
+                fi;
+            fi;
+        fi;
+    done
+}
+task::group () 
+{ 
+    ( local enable_return;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -r | --enable-return)
+                enable_return=true;
+                shift
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    task::clear || softfail || return $?;
+    "$@";
+    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || return $?;
+    task::display ${enable_return:+"--enable-return"};
+    local command_exit_status=$?;
+    if [ "${command_exit_status}" = 254 ]; then
+        return "${command_exit_status}";
+    fi;
+    softfail --unless-good --exit-status "${command_exit_status}" "Error performing task::display (${command_exit_status})" || return $? )
+}
+task::read_input () 
+{ 
+    local input_text;
+    local read_status;
+    IFS="" read -n 1 -r -s input_text || softfail "Read failed: $?" || return $?;
+    if [ "${input_text}" = '' ]; then
+        Should_Exit=true;
+    fi;
+    if [ "${input_text}" = '' ]; then
+        IFS="" read -n 5 -r -s -t 0.01 input_text;
+        read_status=$?;
+        if [ ${read_status} -gt 128 ]; then
+            if [ -z "${input_text}" ]; then
+                Should_Exit=true;
+            fi;
+        else
+            if [ ${read_status} != 0 ]; then
+                softfail "Read failed: ${read_status}";
+                return $?;
+            fi;
+        fi;
+        case "${input_text}" in 
+            "[5~" | "[1;5A")
+                if [ "${Section_Position}" != undefined ]; then
+                    Item_Position=undefined;
+                    (( Section_Position -= 1 )) || true;
+                fi
+            ;;
+            "[6~" | "[1;5B")
+                if [ "${Section_Position}" != undefined ]; then
+                    Item_Position=undefined;
+                    (( Section_Position += 1 ));
+                fi
+            ;;
+            "[A")
+                if [ "${Item_Position}" != undefined ]; then
+                    ((Item_Position-=1));
+                    Section_Position=undefined;
+                fi
+            ;;
+            "[B")
+                if [ "${Item_Position}" != undefined ]; then
+                    ((Item_Position+=1));
+                    Section_Position=undefined;
+                fi
+            ;;
+            "[C")
+                if [ "${Item_Position}" != undefined ]; then
+                    Should_Enter=true;
+                fi
+            ;;
+            "[D")
+                Should_Return=true
+            ;;
+            "[F")
+                if [ "${Item_Position}" != undefined ]; then
+                    Item_Position=-1;
+                    Section_Position=undefined;
+                fi
+            ;;
+            "[H")
+                if [ "${Item_Position}" != undefined ]; then
+                    Item_Position=0;
+                    Section_Position=0;
+                fi
+            ;;
+        esac;
+    else
+        if [ "${input_text}" = "" ]; then
+            if [ "${Item_Position}" != undefined ]; then
+                Should_Perform_Command=true;
+            fi;
+        fi;
+    fi
+}
+task::render () 
+{ 
+    local main_pointer;
+    local item_pointer;
+    local comment;
+    local is_command;
+    local item_length;
+    local item_type;
+    local command;
+    local command_display_prefix;
+    local Current_Color;
+    local current_color_accent;
+    local Meta_Lines=();
+    local meta_line_pointer;
+    local selection_marker;
+    local enter_marker;
+    local current_item_index=undefined;
+    local current_section_index=undefined;
+    local current_line_color;
+    if [ "${First_Render}" != true ]; then
+        if [ -t 1 ]; then
+            for ((1; Lines_Drawn > 0; Lines_Drawn--))
+            do
+                printf "%s" "${Cursor_Up_Seq}";
+            done;
+        fi;
+    else
+        First_Render=false;
+    fi;
+    Lines_Drawn=0;
+    for ((main_pointer = 0; main_pointer < ${#Task_Data[@]}; main_pointer++ ))
+    do
+        if [ "${Task_Data[main_pointer]}" = "basic-task" ] || [ "${Task_Data[main_pointer]}" = "task-group" ]; then
+            comment="";
+            is_command=true;
+            item_length="${Task_Data[main_pointer + 1]}";
+            item_type="${Task_Data[main_pointer]}";
+            for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
+            do
+                case "${Task_Data[item_pointer]}" in 
+                    -h | --header)
+                        (( item_pointer += 1 ));
+                        is_command=false;
+                        Meta_Lines+=("header" "${Task_Data[item_pointer]}")
+                    ;;
+                    -n | --note)
+                        (( item_pointer += 1 ));
+                        is_command=false;
+                        Meta_Lines+=("note" "${Task_Data[item_pointer]}")
+                    ;;
+                    -c | --comment)
+                        (( item_pointer += 1 ));
+                        comment="${Task_Data[item_pointer]}"
+                    ;;
+                    -*)
+                        softfail "Unknown argument: ${Task_Data[item_pointer]}" || return $?
+                    ;;
+                    *)
+                        break
+                    ;;
+                esac;
+            done;
+            if [ "${is_command}" = true ] && (( item_pointer <= main_pointer + item_length + 1 )); then
+                command=("${Task_Data[@]:item_pointer:((item_length-(item_pointer-main_pointer-2)))}");
+                if [ "${current_item_index}" = undefined ]; then
+                    current_item_index=0;
+                fi;
+                if [ "${current_section_index}" = undefined ]; then
+                    current_section_index=0;
+                fi;
+                if (( current_item_index > 0 && ${#Meta_Lines[@]} > 0)); then
+                    for ((meta_line_pointer = 0; meta_line_pointer < ${#Meta_Lines[@]}; meta_line_pointer+=2 ))
+                    do
+                        if [ "${Meta_Lines[meta_line_pointer]}" = "header" ]; then
+                            (( current_section_index += 1 ));
+                            break;
+                        fi;
+                    done;
+                fi;
+                task::render::meta_lines "${current_item_index}" || softfail || return $?;
+                if [ "${Current_Color:-}" = "${Color_A}" ]; then
+                    Current_Color="${Color_B:-}";
+                    current_color_accent="${Color_B_Accent}";
+                else
+                    Current_Color="${Color_A}";
+                    current_color_accent="${Color_A_Accent}";
+                fi;
+                if [ "${Item_Position}" = undefined ] && [ "${Section_Position}" = undefined ]; then
+                    Item_Position=current_item_index;
+                    Section_Position=current_section_index;
+                else
+                    if [ "${Item_Position}" = undefined ] && [ "${Section_Position}" = "${current_section_index}" ]; then
+                        (( Item_Position = current_item_index ));
+                    else
+                        if [ "${Section_Position}" = undefined ] && [ "${Item_Position}" = "${current_item_index}" ]; then
+                            (( Section_Position = current_section_index ));
+                        fi;
+                    fi;
+                fi;
+                enter_marker="";
+                if [ "${Non_Interactive}" != true ] && [ "${Item_Position}" = "${current_item_index}" ]; then
+                    Selected_Command=("${command[@]}");
+                    Selected_Command_Type="${item_type}";
+                    selection_marker+="${Current_Color}!${Reset_Attrs}";
+                    current_line_color="${current_color_accent}";
+                    if [ "${item_type}" = "task-group" ]; then
+                        enter_marker=" ${Current_Color}# -->${Reset_Attrs}";
+                    fi;
+                else
+                    selection_marker="";
+                    current_line_color="${Current_Color}";
+                fi;
+                if [ "${Task_Data[main_pointer]}" = "task-group" ]; then
+                    command_display_prefix="task::group ";
+                else
+                    command_display_prefix="";
+                fi;
+                echo "${Clear_Line}${selection_marker}${Leading_Spacer}${current_line_color}${command_display_prefix}${command[*]}${Reset_Attrs}${comment:+" ${Comment_Color}#  ${comment}${Reset_Attrs}"}${enter_marker}";
+                (( Lines_Drawn+=1 ));
+                (( current_item_index+=1 ));
+            fi;
+            (( main_pointer += item_length + 1 ));
+        else
+            softfail "Unknown operation" || return $?;
+        fi;
+    done;
+    task::render::meta_lines "${current_item_index}" || softfail || return $?;
+    if [ "${Non_Interactive}" != true ]; then
+        if [ "${Item_Position}" = undefined ]; then
+            if [ "${Section_Position}" != undefined ] && [ "${current_section_index}" != undefined ]; then
+                if (( Section_Position < 0 )); then
+                    (( Section_Position = current_section_index ));
+                    task::render;
+                else
+                    if (( Section_Position >= current_section_index )); then
+                        Item_Position=0;
+                        Section_Position=0;
+                        task::render;
+                    fi;
+                fi;
+            fi;
+        else
+            if [ "${current_item_index}" != undefined ]; then
+                if (( Item_Position < 0 )); then
+                    (( Item_Position = current_item_index - 1 ));
+                    task::render;
+                else
+                    if (( Item_Position >= current_item_index )); then
+                        Item_Position=0;
+                        Section_Position=0;
+                        task::render;
+                    fi;
+                fi;
+            fi;
+        fi;
+    fi
+}
+task::render::meta_lines () 
+{ 
+    local current_item_index="$1";
+    local meta_line_pointer;
+    local spacer_required=false;
+    if (( ${#Meta_Lines[@]} > 0)); then
+        if [ "${current_item_index}" != undefined ] && [ "${current_item_index}" -gt 0 ]; then
+            spacer_required=true;
+        fi;
+        for ((meta_line_pointer = 0; meta_line_pointer < ${#Meta_Lines[@]}; meta_line_pointer+=2 ))
+        do
+            if [ "${Meta_Lines[meta_line_pointer]}" = "header" ]; then
+                if [ "${spacer_required}" = true ]; then
+                    echo "${Clear_Line}";
+                    (( Lines_Drawn += 1 ));
+                    spacer_required=false;
+                fi;
+                echo "${Clear_Line}${Header_Color}${Leading_Spacer}# ${Meta_Lines[meta_line_pointer+1]}${Reset_Attrs}";
+            else
+                if [ "${Meta_Lines[meta_line_pointer]}" = "note" ]; then
+                    echo "${Clear_Line}${Comment_Color}${Leading_Spacer}# -- ${Meta_Lines[meta_line_pointer+1]}${Reset_Attrs}";
+                    spacer_required=true;
+                fi;
+            fi;
+            (( Lines_Drawn+=1 ));
+        done;
+        Current_Color="";
+        Meta_Lines=();
+    fi
+}
+task::suits () 
+{ 
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -o | --os)
+                local os_type="$2";
+                if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
+                    return 1;
+                fi;
+                shift;
+                shift
+            ;;
+            *)
+                fail "Unknown argument: $1"
+            ;;
+        esac;
+    done
 }
 terminal::color_table () 
 { 
@@ -5257,18 +5242,19 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
-# if we are not sourced, try to run runagfile::main or display runag-menu 
+# if we are not sourced, try to run runagfile::main or display tasks 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -F runagfile::main >/dev/null; then
     runagfile::main
     softfail --unless-good --exit-status $? "Error performing runagfile::main ($?)"
     exit $?
-  elif menu::present && [ -t 0 ] && [ -t 1 ]; then
-    menu::display
-    softfail --unless-good --exit-status $? "Error performing menu::display ($?)"
+  elif task::any && [ -t 0 ] && [ -t 1 ]; then
+    task::display
+    softfail --unless-good --exit-status $? "Error performing task::display ($?)"
     exit $?
   fi
 
-  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to runag_menu to see it if you run rùnag in terminal"
+  log::error "Please specify a function name or command to run, or define a runagfile::main"
+  log::error "You could also add items to task list and choose between them if you run rùnag in interactive terminal"
   exit 1
 fi

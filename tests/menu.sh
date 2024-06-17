@@ -14,46 +14,46 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-menu::test() {
-  menu::clear || fail
-  menu::add --header "Section 0"
-  menu::add --note "Note"
-  menu::add --comment "list things" ls -la /
-  menu::add false
+task::test() {
+  task::clear || fail
+  task::add --header "Section 0"
+  task::add --note "Note"
+  task::add --comment "list things" ls -la /
+  task::add false
 
-  menu::add --header "Section 1"
-  menu::add --header "Section 1.1"
-  menu::add --note "Note"
-  menu::add --header "Section 1.2"
-  menu::add true
-  menu::add false
-  menu::add --menu menu::test::submenu
-  menu::add --menu menu::test::submenu_without_commands
+  task::add --header "Section 1"
+  task::add --header "Section 1.1"
+  task::add --note "Note"
+  task::add --header "Section 1.2"
+  task::add true
+  task::add false
+  task::add --group task::test::group
+  task::add --group task::test::group_without_commands
 
-  menu::add --os linux --header "Section 2"
-  menu::add --os linux true
-  menu::add --os linux false
+  task::add --os linux --header "Section 2"
+  task::add --os linux true
+  task::add --os linux false
 
-  menu::add --header "Section 3"
-  menu::add --header "Section 3.1"
-  menu::add --note "Note"
-  menu::add --header "Section 3.2"
+  task::add --header "Section 3"
+  task::add --header "Section 3.1"
+  task::add --note "Note"
+  task::add --header "Section 3.2"
   
-  menu::display
+  task::display
 }
 
-menu::test::submenu() {
-  menu::add --header "Submenu section 0"
-  menu::add true
-  menu::add false
-  menu::add true
+task::test::group() {
+  task::add --header "Group section 0"
+  task::add true
+  task::add false
+  task::add true
 }
 
-menu::test::submenu_without_commands() {
-  menu::add --header "Submenu section 0"
-  menu::add --note "Note"
-  menu::add --header "Submenu section 0"
-  menu::add --note "Note"
-  menu::add --header "Submenu section 0"
-  menu::add --note "Note"
+task::test::group_without_commands() {
+  task::add --header "Group section 0"
+  task::add --note "Note"
+  task::add --header "Group section 0"
+  task::add --note "Note"
+  task::add --header "Group section 0"
+  task::add --note "Note"
 }

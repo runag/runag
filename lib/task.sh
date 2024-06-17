@@ -14,12 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# TODO: return from menu as actionable item
+# TODO: "go up one level" menu item
 # TODO: screen width overflow limit
 # TODO: screen height overflow scroll (how to scroll in case with trailing or leading headers?)
-# TODO: keyboard input filter
+# TODO: filter menu items based on keyboard input
 
-menu::present() {
+task::any() {
   local store_name=DEFAULT
 
   while [ "$#" -gt 0 ]; do
@@ -34,12 +34,12 @@ menu::present() {
     esac
   done
 
-  declare -n menu_data="RUNAG_MENU_${store_name}"
+  declare -n task_data="RUNAG_TASK_${store_name}"
 
-  [[ -v menu_data ]] && (( ${#menu_data[@]} > 0 ))
+  [[ -v task_data ]] && (( ${#task_data[@]} > 0 ))
 }
 
-menu::is_necessary() {
+task::suits() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -o|--os)
@@ -56,7 +56,7 @@ menu::is_necessary() {
   done
 }
 
-menu::clear() {
+task::clear() {
   local store_name=DEFAULT
 
   while [ "$#" -gt 0 ]; do
@@ -73,12 +73,12 @@ menu::clear() {
 
   # -g global variable scope
   # -a array
-  declare -ga "RUNAG_MENU_${store_name}=()"
+  declare -ga "RUNAG_TASK_${store_name}=()"
 }
 
-menu::add() {
+task::add() {
   local store_name=DEFAULT
-  local menu_item_type="menu-item"
+  local task_type="basic-task"
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -92,8 +92,8 @@ menu::add() {
         fi
         shift; shift
         ;;
-      -m|--menu)
-        menu_item_type="submenu-item"
+      -g|--group)
+        task_type="task-group"
         shift
         ;;
       *)
@@ -102,17 +102,17 @@ menu::add() {
     esac
   done
 
-  declare -n menu_data="RUNAG_MENU_${store_name}"
+  declare -n task_data="RUNAG_TASK_${store_name}"
 
-  if [[ ! -v menu_data ]]; then
-    declare -ga "RUNAG_MENU_${store_name}=()"
+  if [[ ! -v task_data ]]; then
+    declare -ga "RUNAG_TASK_${store_name}=()"
   fi
 
   # I guess I could just assign to an empty undeclared variable but better to init it anyway
-  menu_data+=("${menu_item_type}" "$#" "$@")
+  task_data+=("${task_type}" "$#" "$@")
 }
 
-menu::with() (
+task::group() (
   local enable_return
 
   while [ "$#" -gt 0 ]; do
@@ -127,22 +127,22 @@ menu::with() (
     esac
   done
 
-  menu::clear || softfail || return $?
+  task::clear || softfail || return $?
 
   "$@"
   softfail --unless-good --exit-status $? "Error performing $1 ($?)" || return $?
 
-  menu::display ${enable_return:+"--enable-return"}
+  task::display ${enable_return:+"--enable-return"}
   local command_exit_status=$?
 
   if [ "${command_exit_status}" = 254 ]; then
     return "${command_exit_status}"
   fi
 
-  softfail --unless-good --exit-status "${command_exit_status}" "Error performing menu::display (${command_exit_status})" || return $?
+  softfail --unless-good --exit-status "${command_exit_status}" "Error performing task::display (${command_exit_status})" || return $?
 )
 
-menu::display() {
+task::display() {
   local store_name=DEFAULT
   local enable_return=false
 
@@ -164,14 +164,14 @@ menu::display() {
 
   # NOTE: strange transgressive variables Like_This all around!
   # shellcheck disable=SC2178
-  declare -n Menu_Data="RUNAG_MENU_${store_name}"
+  declare -n Task_Data="RUNAG_TASK_${store_name}"
 
-  if [[ ! -v Menu_Data ]]; then
-    declare -ga "RUNAG_MENU_${store_name}=()"
+  if [[ ! -v Task_Data ]]; then
+    declare -ga "RUNAG_TASK_${store_name}=()"
   fi
 
-  if [ "${#Menu_Data[@]}" = 0 ]; then
-    softfail "Menu is empty"
+  if [ "${#Task_Data[@]}" = 0 ]; then
+    softfail "Task list is empty"
     return $?
   fi
 
@@ -246,29 +246,29 @@ menu::display() {
   if ! [ -t 0 ] || ! [ -t 1 ]; then # stdin (0) or stdout (1) are not a terminal
     Non_Interactive=true
     Leading_Spacer=""
-    menu::render || softfail || return $?
+    task::render || softfail || return $?
     return 0
   fi
 
   while : ; do
-    menu::render || softfail || return $?
+    task::render || softfail || return $?
 
     Should_Perform_Command=false
     Should_Exit=false
     Should_Return=false
     Should_Enter=false
 
-    menu::read_input || softfail || return $?
+    task::read_input || softfail || return $?
 
     if [ "${enable_return}" = true ] && [ "${Should_Return}" = true ]; then
       return 254
     elif [ "${Should_Exit}" = true ]; then
       return 0
-    elif [ "${Should_Perform_Command}" = true ] || { [ "${Should_Enter}" = true ] && [ "${Selected_Command_Type}" = "submenu-item" ]; }; then
+    elif [ "${Should_Perform_Command}" = true ] || { [ "${Should_Enter}" = true ] && [ "${Selected_Command_Type}" = "task-group" ]; }; then
 
-      if [ "${Selected_Command_Type}" = "submenu-item" ]; then
+      if [ "${Selected_Command_Type}" = "task-group" ]; then
         printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n"
-        menu::with --enable-return "${Selected_Command[@]}"
+        task::group --enable-return "${Selected_Command[@]}"
         command_exit_status=$?
         if [ "${command_exit_status}" = 254 ]; then
           First_Render=true
@@ -295,17 +295,17 @@ menu::display() {
   done
 }
 
-#           |             |     |     |     |           |
-# 0         | 1           | 2   | 3   | 4   | 5         | 6
-# 4         | 5           | 6   | 7   | 8   | 9         | 10
-# op        | item_length |     |     |     | op        | item_length
-# menu-item | 3           | foo | bar | qux | menu-item |
+#            |             |     |     |     |            |
+# 0          | 1           | 2   | 3   | 4   | 5          | 6
+# 4          | 5           | 6   | 7   | 8   | 9          | 10
+# op         | item_length |     |     |     | op         | item_length
+# basic-task | 3           | foo | bar | qux | basic-task |
 
 # main_pointer 4
 # item_pointer 7
 # item_length  3
 
-menu::render() {
+task::render() {
   local main_pointer
   local item_pointer
 
@@ -342,31 +342,31 @@ menu::render() {
 
   Lines_Drawn=0
 
-  for (( main_pointer = 0; main_pointer < ${#Menu_Data[@]}; main_pointer++ )); do 
-    if [ "${Menu_Data[main_pointer]}" = "menu-item" ] || [ "${Menu_Data[main_pointer]}" = "submenu-item" ]; then
+  for (( main_pointer = 0; main_pointer < ${#Task_Data[@]}; main_pointer++ )); do 
+    if [ "${Task_Data[main_pointer]}" = "basic-task" ] || [ "${Task_Data[main_pointer]}" = "task-group" ]; then
       comment=""
       is_command=true
-      item_length="${Menu_Data[main_pointer + 1]}"
-      item_type="${Menu_Data[main_pointer]}"
+      item_length="${Task_Data[main_pointer + 1]}"
+      item_type="${Task_Data[main_pointer]}"
 
       for (( item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ )); do 
-        case "${Menu_Data[item_pointer]}" in
+        case "${Task_Data[item_pointer]}" in
           -h|--header)
             (( item_pointer += 1 ))
             is_command=false
-            Meta_Lines+=("header" "${Menu_Data[item_pointer]}")
+            Meta_Lines+=("header" "${Task_Data[item_pointer]}")
             ;;
           -n|--note)
             (( item_pointer += 1 ))
             is_command=false
-            Meta_Lines+=("note" "${Menu_Data[item_pointer]}")
+            Meta_Lines+=("note" "${Task_Data[item_pointer]}")
             ;;
           -c|--comment)
             (( item_pointer += 1 ))
-            comment="${Menu_Data[item_pointer]}"
+            comment="${Task_Data[item_pointer]}"
             ;;
           -*)
-            softfail "Unknown argument: ${Menu_Data[item_pointer]}" || return $?
+            softfail "Unknown argument: ${Task_Data[item_pointer]}" || return $?
             ;;
           *)
             break
@@ -376,7 +376,7 @@ menu::render() {
 
       if [ "${is_command}" = true ] && (( item_pointer <= main_pointer + item_length + 1 )); then
 
-        command=("${Menu_Data[@]:item_pointer:((item_length-(item_pointer-main_pointer-2)))}")
+        command=("${Task_Data[@]:item_pointer:((item_length-(item_pointer-main_pointer-2)))}")
 
         if [ "${current_item_index}" = undefined ]; then
           current_item_index=0
@@ -395,7 +395,7 @@ menu::render() {
           done
         fi
 
-        menu::render::meta_lines "${current_item_index}" || softfail || return $?
+        task::render::meta_lines "${current_item_index}" || softfail || return $?
 
         if [ "${Current_Color:-}" = "${Color_A}" ]; then
           Current_Color="${Color_B:-}"
@@ -425,7 +425,7 @@ menu::render() {
           selection_marker+="${Current_Color}!${Reset_Attrs}"
           current_line_color="${current_color_accent}"
 
-          if [ "${item_type}" = "submenu-item" ]; then
+          if [ "${item_type}" = "task-group" ]; then
             enter_marker=" ${Current_Color}# -->${Reset_Attrs}"
           fi
         else
@@ -433,8 +433,8 @@ menu::render() {
           current_line_color="${Current_Color}"
         fi
 
-        if [ "${Menu_Data[main_pointer]}" = "submenu-item" ]; then
-          command_display_prefix="menu::with "
+        if [ "${Task_Data[main_pointer]}" = "task-group" ]; then
+          command_display_prefix="task::group "
         else
           command_display_prefix=""
         fi
@@ -448,11 +448,11 @@ menu::render() {
 
       (( main_pointer += item_length + 1 ))
     else
-      softfail "Unknown menu operation" || return $?
+      softfail "Unknown operation" || return $?
     fi
   done
 
-  menu::render::meta_lines "${current_item_index}" || softfail || return $?
+  task::render::meta_lines "${current_item_index}" || softfail || return $?
 
   # echo "${Clear_Line}Item_Position: ${Item_Position}, Section_Position: ${Section_Position}, current_item_index: ${current_item_index}, current_section_index: ${current_section_index}"; ((Lines_Drawn+=1))
 
@@ -462,27 +462,27 @@ menu::render() {
       if [ "${Section_Position}" != undefined ] && [ "${current_section_index}" != undefined ]; then
         if (( Section_Position < 0 )); then
           (( Section_Position = current_section_index ))
-          menu::render
+          task::render
         elif (( Section_Position >= current_section_index )); then
           Item_Position=0
           Section_Position=0
-          menu::render
+          task::render
         fi
       fi
     elif [ "${current_item_index}" != undefined ]; then
       if (( Item_Position < 0 )); then
         (( Item_Position = current_item_index - 1 ))
-        menu::render
+        task::render
       elif (( Item_Position >= current_item_index )); then
         Item_Position=0
         Section_Position=0
-        menu::render
+        task::render
       fi
     fi
   fi
 }
 
-menu::render::meta_lines() {
+task::render::meta_lines() {
   local current_item_index="$1"
   local meta_line_pointer
   local spacer_required=false
@@ -517,7 +517,7 @@ menu::render::meta_lines() {
 # https://tldp.org/HOWTO/Bash-Prompt-HOWTO/x405.html
 # https://www.manpagez.com/man/5/terminfo/
 
-menu::read_input() {
+task::read_input() {
   local input_text
   local read_status
 

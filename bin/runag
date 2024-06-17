@@ -100,19 +100,20 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
-# if we are not sourced, try to run runagfile::main or display runag-menu 
+# if we are not sourced, try to run runagfile::main or display tasks 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -F runagfile::main >/dev/null; then
     runagfile::main
     softfail --unless-good --exit-status $? "Error performing runagfile::main ($?)"
     exit $?
-  elif menu::present && [ -t 0 ] && [ -t 1 ]; then
-    menu::display
-    softfail --unless-good --exit-status $? "Error performing menu::display ($?)"
+  elif task::any && [ -t 0 ] && [ -t 1 ]; then
+    task::display
+    softfail --unless-good --exit-status $? "Error performing task::display ($?)"
     exit $?
   fi
 
-  log::error "Please specify a function name or command to run, or define a runagfile::main, or add one or more items to runag_menu to see it if you run rùnag in terminal"
+  log::error "Please specify a function name or command to run, or define a runagfile::main"
+  log::error "You could also add items to task list and choose between them if you run rùnag in interactive terminal"
   exit 1
 fi
 # END invoke_runagfile

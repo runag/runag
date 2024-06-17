@@ -45,14 +45,14 @@ runag::print_license() {
 SHELL
 }
 
-runag::menu() {
+runag::tasks() {
   if [ -d "${HOME}/.runag" ]; then
-    menu::add --header "Rùnag and rùnagfiles" || softfail || return $?
+    task::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
-    menu::add runag::pull || softfail || return $?
-    menu::add runag::push || softfail || return $?
-    menu::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?
-    menu::add runag::update_current_offline_install_if_connected || softfail || return $?
+    task::add runag::pull || softfail || return $?
+    task::add runag::push || softfail || return $?
+    task::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?
+    task::add runag::update_current_offline_install_if_connected || softfail || return $?
   fi
 }
 

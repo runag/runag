@@ -45,7 +45,7 @@ if [ ${#input_text} -gt 1 ]; then
   echo double!
 fi
 
-menu::read_input::dump() {
+task::read_input::dump() {
   local input_text
   while : ; do
     IFS="" read -n 10 -s -r -t 0.01 input_text
