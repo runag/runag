@@ -17,3 +17,8 @@
 ubuntu::pro::is_attached() {
   pro status --format json | jq --raw-output --exit-status '.attached == true' >/dev/null
 }
+
+ubuntu::pro::available() (
+  . /etc/os-release || softfail || return $?
+  test "${ID:-}" = ubuntu && command -v pro >/dev/null
+)
