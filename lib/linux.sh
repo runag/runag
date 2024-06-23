@@ -218,6 +218,7 @@ linux::install_runag_essential_dependencies::apt() {
     gpg \
     jq \
     pass \
+    xxd \
       || softfail || return $?
 }
 
