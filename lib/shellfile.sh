@@ -66,6 +66,23 @@ shellfile::install_loader::zsh() {
 }
 
 shellfile::write() {
+  local source_now=false
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -s|--source-now)
+        source_now=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   local file_path="$1"
 
   # TODO: handle --absorb as an argument and propogate it down to file::write
@@ -76,7 +93,13 @@ shellfile::write() {
   dir::should_exists --mode 0700 "${shellfile_dir_path}/rc" || softfail || return $?
   dir::should_exists --mode 0700 "${shellfile_dir_path}/profile" || softfail || return $?
 
-  file::write --mode 0600 "${shellfile_dir_path}/${file_path}.sh" || softfail || return $?
+  local output_path="${shellfile_dir_path}/${file_path}.sh"
+  
+  file::write --mode 0600 "${output_path}" || softfail || return $?
+
+  if [ "${source_now}" = true ]; then
+    . "${output_path}" || softfail || return $?
+  fi
 }
 
 
@@ -85,7 +108,7 @@ shellfile::write() {
 shellfile::install_runag_path_profile() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfile::write "profile/runag-path" <<SHELL || softfail || return $?
+  shellfile::write "$@" "profile/runag-path" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -d "\${HOME}/.runag/bin" ]; then
@@ -104,7 +127,7 @@ SHELL
 shellfile::install_direnv_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfile::write "rc/direnv" <<SHELL || softfail || return $?
+  shellfile::write "$@" "rc/direnv" <<SHELL || softfail || return $?
 ${license_text}
 
 if command -v direnv >/dev/null; then
@@ -123,7 +146,7 @@ shellfile::install_editor_rc() {
 
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfile::write "rc/editor" <<SHELL || softfail || return $?
+  shellfile::write "$@" "rc/editor" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -z "\${EDITOR:-}" ]; then
@@ -135,7 +158,7 @@ SHELL
 shellfile::install_flush_history_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfile::write "rc/flush-history" <<SHELL || softfail || return $?
+  shellfile::write "$@" "rc/flush-history" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -n "\${BASH_VERSION:-}" ]; then
@@ -147,7 +170,7 @@ SHELL
 shellfile::install_short_prompt_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  shellfile::write "rc/short-prompt" <<SHELL || softfail || return $?
+  shellfile::write "$@" "rc/short-prompt" <<SHELL || softfail || return $?
 ${license_text}
 
 if [ -n "\${BASH_VERSION:-}" ]; then
