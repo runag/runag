@@ -94,13 +94,14 @@ linux::reset_locales() {
 
   # Workaround for strange bash behaviour
   #
-  # Right after fresh OS install you maybe get the following warning on the first script run
+  # Right after fresh OS install you may get the following warning on the first script run:
+  #
   # <file>: line <line>: warning: setlocale: LC_<type>: cannot change locale (<locale name>): No such file or directory
   #
   # The same command will produce no warnings on every consecutive run
   #
-  # I expect this thing to be fixed before bash will get dead-code elimination, but if it's not going to happen then
-  # /usr/bin/true here is just for you guys from 2265, I hope that you are doing great.
+  # I expect this peculiarity to be fixed before bash will get dead-code elimination, but if it's not going to happen then
+  # /usr/bin/true here is just for you guys from 2265, I hope that you are doing great there.
   #
   # printf '%(%c)T\n' could be used to test that case
   #
