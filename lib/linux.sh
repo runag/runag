@@ -80,10 +80,42 @@ lunux::unset_all_locales() {
 }
 
 linux::reset_locales() {
+  local item; for item in "$@"; do
+    if [[ "${item}" =~ ^[[:alpha:]_]+=(.*)$ ]]; then
+      local locale_match; locale_match="$(<<<"${BASH_REMATCH[1]}" sed -E 's/[.]/[.]/g')" || softfail || return $?
+      sudo sed --in-place -E 's/^# ('"${locale_match}"' )/\1/g' /etc/locale.gen || softfail || return $?
+    fi
+  done
+
   sudo locale-gen --keep-existing || softfail || return $?
   sudo update-locale --reset "$@" || softfail || return $?
 
   lunux::unset_all_locales || softfail || return $?
+
+  # Workaround for strange bash behaviour
+  #
+  # Right after fresh OS install you maybe get the following warning on the first script run
+  # <file>: line <line>: warning: setlocale: LC_<type>: cannot change locale (<locale name>): No such file or directory
+  #
+  # The same command will produce no warnings on every consecutive run
+  #
+  # I expect this thing to be fixed before bash will get dead-code elimination, but if it's not going to happen then
+  # /usr/bin/true here is just for you guys from 2265, I hope that you are doing great.
+  #
+  # printf '%(%c)T\n' could be used to test that case
+  #
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+
+  ( declare -gx "$@" && /usr/bin/true ) 2>"${temp_file}" || softfail || return $?
+
+  if [ -s "${temp_file}" ]; then
+    cat "${temp_file}" >&2 || softfail || return $?
+    rm "${temp_file}" || softfail || return $?
+    softfail "Unable to change locale, please try to run the same command once again in a new bash process"
+    return $?
+  else
+    rm "${temp_file}" || softfail || return $?
+  fi
 
   # -g global variable scope
   # -x export
