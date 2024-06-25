@@ -73,6 +73,30 @@ shell::assign_and_mark_for_export() {
   declare -gx "$1"="$2"
 }
 
+shell::unset_locales() {
+  # man 5 locale
+  # https://wiki.debian.org/Locale
+  unset -v \
+    LANG \
+    LANGUAGE \
+    LC_ALL \
+    \
+    LC_COLLATE \
+    LC_CTYPE \
+    LC_MESSAGES \
+    LC_MONETARY \
+    LC_NUMERIC \
+    LC_TIME \
+    \
+    LC_ADDRESS \
+    LC_IDENTIFICATION \
+    LC_MEASUREMENT \
+    LC_NAME \
+    LC_PAPER \
+    LC_RESPONSE \
+    LC_TELEPHONE
+}
+
 shell::related_cd() {
   local caller_dir; caller_dir="$(dirname "${BASH_SOURCE[1]}")" || softfail || return $?
 
