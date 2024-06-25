@@ -87,7 +87,6 @@ Please refer to the source code for now.
 * [runag](lib/runag.sh)
 * [runagfile](lib/runagfile.sh)
 * [task](lib/task.sh)
-* [terminal](lib/terminal.sh)
 
 ### General utility
 
@@ -98,6 +97,7 @@ Please refer to the source code for now.
 * [shell](lib/shell.sh)
 * [snapshot](lib/snapshot.sh)
 * [ui](lib/ui.sh)
+* [terminal](lib/terminal.sh)
 
 ### Interfacing with OS anv VMs
 
