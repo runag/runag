@@ -15,15 +15,17 @@
 #  limitations under the License.
 
 ruby::install_dependencies::apt() {
-  apt::install \
-    build-essential `# new rails project requires some gems to be compiled` \
-    libedit-dev     `# dependency to install ruby 2.7.3 using ruby-build` \
-    libffi-dev      `# some gems require libffi, like fiddle-1.0.8.gem` \
-    libsqlite3-dev  `# new rails project uses sqlite` \
-    libssl-dev      `# dependency to install ruby 2.7.3 using ruby-build` \
-    libyaml-dev     `# dependency to install ruby 3.2.2 using ruby-build` \
-    zlib1g-dev      `# dependency to install ruby 2.7.3 using ruby-build` \
-      || softfail || return $?
+  local packages_list=(
+    build-essential # new rails project requires some gems to be compiled
+    libedit-dev # dependency to install ruby 2.7.3 using ruby-build
+    libffi-dev # some gems require libffi, like fiddle-1.0.8.gem
+    libsqlite3-dev # new rails project uses sqlite
+    libssl-dev # dependency to install ruby 2.7.3 using ruby-build
+    libyaml-dev # dependency to install ruby 3.2.2 using ruby-build
+    zlib1g-dev # dependency to install ruby 2.7.3 using ruby-build
+  )
+
+  apt::install "${packages_list[@]}" || softfail || return $?
 }
 
 ruby::install::apt() {
