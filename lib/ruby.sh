@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 ruby::install_dependencies::apt() {
-  local packages_list=(
+  local package_list=(
     build-essential # new rails project requires some gems to be compiled
     libedit-dev # dependency to install ruby 2.7.3 using ruby-build
     libffi-dev # some gems require libffi, like fiddle-1.0.8.gem
@@ -25,7 +25,7 @@ ruby::install_dependencies::apt() {
     zlib1g-dev # dependency to install ruby 2.7.3 using ruby-build
   )
 
-  apt::install "${packages_list[@]}" || softfail || return $?
+  apt::install "${package_list[@]}" || softfail || return $?
 }
 
 ruby::install::apt() {

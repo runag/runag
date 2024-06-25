@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 erlang::install_dependencies::apt() {
-  local packages_list=(
+  local package_list=(
     autoconf # build
     build-essential # build
     fop # documentation
@@ -28,16 +28,16 @@ erlang::install_dependencies::apt() {
     xsltproc # documentation
   )
 
-  apt::install "${packages_list[@]}" || softfail || return $?
+  apt::install "${package_list[@]}" || softfail || return $?
 }
 
 erlang::install_dependencies::observer::apt() {
-  local packages_list; mapfile -t packages_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?
+  local package_list; mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?
 
   apt::install \
     libgl1-mesa-dev \
     libglu1-mesa-dev \
     libpng-dev \
-    "${packages_list[@]}" \
+    "${package_list[@]}" \
     || softfail || return $?
 }

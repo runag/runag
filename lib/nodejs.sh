@@ -17,14 +17,14 @@
 nodejs::install_dependencies::apt() {
   # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
 
-  local packages_list=(
+  local package_list=(
     curl # asdf-specific
     dirmngr # asdf-specific
     gawk # asdf-specific
     gpg # asdf-specific
   )
 
-  apt::install "${packages_list[@]}" || softfail || return $?
+  apt::install "${package_list[@]}" || softfail || return $?
 }
 
 nodejs::install::apt() (
