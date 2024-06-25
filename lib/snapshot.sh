@@ -161,42 +161,42 @@ snapshot::create() {
   local snapshot_path
 
   if [ "${daily_snapshot}" = true ]; then
-    snapshots_path="${dest}/daily-snapshots/$(date --utc "+%Y-%m-%d")" || softfail || return $?
-    if [ ! -d "${snapshots_path}" ]; then
-      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    snapshot_path="${dest}/daily-snapshots/$(date --utc "+%Y-%m-%d")" || softfail || return $?
+    if [ ! -d "${snapshot_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?
     fi
   fi
 
   if [ "${weekly_snapshot}" = true ]; then
-    snapshots_path="${dest}/weekly-snapshots/$(date --utc "+%G-W%V")" || softfail || return $?
-    if [ ! -d "${snapshots_path}" ]; then
-      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    snapshot_path="${dest}/weekly-snapshots/$(date --utc "+%G-W%V")" || softfail || return $?
+    if [ ! -d "${snapshot_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?
     fi
   fi
 
   if [ "${monthly_snapshot}" = true ]; then
-    snapshots_path="${dest}/monthly-snapshots/$(date --utc "+%Y-%m")" || softfail || return $?
-    if [ ! -d "${snapshots_path}" ]; then
-      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    snapshot_path="${dest}/monthly-snapshots/$(date --utc "+%Y-%m")" || softfail || return $?
+    if [ ! -d "${snapshot_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?
     fi
   fi
 
   if [ "${snapshots_by_name}" = true ]; then
-    snapshots_path="${dest}/snapshots-by-name/${snapshot_name}"
-    if [ ! -d "${snapshots_path}" ]; then
-      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    snapshot_path="${dest}/snapshots-by-name/${snapshot_name}"
+    if [ ! -d "${snapshot_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?
     else
-      softfail "Snapshot directory already exist: ${snapshots_path}"
+      softfail "Snapshot directory already exist: ${snapshot_path}"
       return $?
     fi
   fi
 
   if [ "${snapshots_by_time}" = true ]; then
-    snapshots_path="${dest}/snapshots-by-time/$(date --utc "+%Y-%m-%dT%H%M%SZ")" || softfail || return $?
-    if [ ! -d "${snapshots_path}" ]; then
-      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    snapshot_path="${dest}/snapshots-by-time/$(date --utc "+%Y-%m-%dT%H%M%SZ")" || softfail || return $?
+    if [ ! -d "${snapshot_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?
     else
-      softfail "Snapshot directory already exist: ${snapshots_path}"
+      softfail "Snapshot directory already exist: ${snapshot_path}"
       return $?
     fi
   fi
@@ -208,8 +208,8 @@ snapshot::cleanup() {
   local monthly_snapshot=false
   local snapshots_by_time=false
 
-  local daily_snapshot_count=7
-  local weekly_snapshot_count=4
+  local daily_snapshot_count=30
+  local weekly_snapshot_count=14
   local monthly_snapshot_count=12
   local snapshots_by_time_count=14
 
