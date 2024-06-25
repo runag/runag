@@ -14,19 +14,280 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# :? here is to make sure we don't accidentally cleanup root directory or some other unexpected location
+# snapshot::init --monthly .
+#
+snapshot::init() {
+  local daily_snapshot=false
+  local weekly_snapshot=false
+  local monthly_snapshot=false
+  local snapshots_by_name=false
+  local snapshots_by_time=false
+
+  if [ "$#" = 1 ]; then
+    snapshots_by_time=true
+  fi
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -d|--daily)
+        daily_snapshot=true
+        shift
+        ;;
+      -w|--weekly)
+        weekly_snapshot=true
+        shift
+        ;;
+      -m|--monthly)
+        monthly_snapshot=true
+        shift
+        ;;
+      -n|--name)
+        snapshots_by_name=true
+        shift
+        ;;
+      -t|--time)
+        snapshots_by_time=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  if [ "$#" != 1 ]; then
+    softfail "Snapshots directory must be specified"
+    return $?
+  else
+    local dest="${1:?}"
+  fi
+
+  dir::should_exists --mode 0700 "${dest}" || softfail || return $?
+
+  local snapshots_path
+  
+  if [ "${daily_snapshot}" = true ]; then
+    snapshots_path="${dest}/daily-snapshots"
+
+    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
+  fi
+
+  if [ "${weekly_snapshot}" = true ]; then
+    snapshots_path="${dest}/weekly-snapshots"
+
+    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
+  fi
+
+  if [ "${monthly_snapshot}" = true ]; then
+    snapshots_path="${dest}/monthly-snapshots"
+
+    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
+  fi
+
+  if [ "${snapshots_by_name}" = true ]; then
+    snapshots_path="${dest}/snapshots-by-name"
+
+    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
+  fi
+
+  if [ "${snapshots_by_time}" = true ]; then
+    snapshots_path="${dest}/snapshots-by-time"
+
+    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
+  fi
+}
 
 snapshot::create() {
-  local source="${1:?}"
-  local dest="${2:?}"
-  local snapshot_name="${3:-}"
+  local daily_snapshot=false
+  local weekly_snapshot=false
+  local monthly_snapshot=false
+  local snapshots_by_name=false
+  local snapshots_by_time=false
 
-  local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
+  local snapshot_name
 
-  btrfs subvolume snapshot -r "${source}" "${dest}/${current_date}${snapshot_name:+"-${snapshot_name}"}" || softfail || return $?
+  if [ "$#" = 2 ]; then
+    snapshots_by_time=true
+  fi
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -d|--daily)
+        daily_snapshot=true
+        shift
+        ;;
+      -w|--weekly)
+        weekly_snapshot=true
+        shift
+        ;;
+      -m|--monthly)
+        monthly_snapshot=true
+        shift
+        ;;
+      -n|--name)
+        snapshots_by_name=true
+        snapshot_name="${2:?}"
+        shift; shift
+        ;;
+      -t|--time)
+        snapshots_by_time=true
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  if [ "$#" != 2 ]; then
+    softfail "Source and snapshot directories must be specified"
+    return $?
+  else
+    local source="${1:?}"
+    local dest="${2:?}"
+  fi
+
+  local snapshot_path
+
+  if [ "${daily_snapshot}" = true ]; then
+    snapshots_path="${dest}/daily-snapshots/$(date --utc "+%Y-%m-%d")" || softfail || return $?
+    if [ ! -d "${snapshots_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    fi
+  fi
+
+  if [ "${weekly_snapshot}" = true ]; then
+    snapshots_path="${dest}/weekly-snapshots/$(date --utc "+%G-W%V")" || softfail || return $?
+    if [ ! -d "${snapshots_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    fi
+  fi
+
+  if [ "${monthly_snapshot}" = true ]; then
+    snapshots_path="${dest}/monthly-snapshots/$(date --utc "+%Y-%m")" || softfail || return $?
+    if [ ! -d "${snapshots_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    fi
+  fi
+
+  if [ "${snapshots_by_name}" = true ]; then
+    snapshots_path="${dest}/snapshots-by-name/${snapshot_name}"
+    if [ ! -d "${snapshots_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    else
+      softfail "Snapshot directory already exist: ${snapshots_path}"
+      return $?
+    fi
+  fi
+
+  if [ "${snapshots_by_time}" = true ]; then
+    snapshots_path="${dest}/snapshots-by-time/$(date --utc "+%Y-%m-%dT%H%M%SZ")" || softfail || return $?
+    if [ ! -d "${snapshots_path}" ]; then
+      btrfs subvolume snapshot -r "${source}" "${snapshots_path}" || softfail || return $?
+    else
+      softfail "Snapshot directory already exist: ${snapshots_path}"
+      return $?
+    fi
+  fi
 }
 
 snapshot::cleanup() {
+  local daily_snapshot=false
+  local weekly_snapshot=false
+  local monthly_snapshot=false
+  local snapshots_by_time=false
+
+  local daily_snapshot_count=7
+  local weekly_snapshot_count=4
+  local monthly_snapshot_count=12
+  local snapshots_by_time_count=14
+
+  if [ "$#" = 1 ]; then
+    snapshots_by_time=true
+  fi
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -d|--daily)
+        daily_snapshot=true
+        if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+          daily_snapshot_count="$2"
+          shift
+        fi
+        shift
+        ;;
+      -w|--weekly)
+        weekly_snapshot=true
+        if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+          weekly_snapshot_count="$2"
+          shift
+        fi
+        shift
+        ;;
+      -m|--monthly)
+        monthly_snapshot=true
+        if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+          monthly_snapshot_count="$2"
+          shift
+        fi
+        shift
+        ;;
+      -t|--time)
+        snapshots_by_time=true
+        if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+          snapshots_by_time_count="$2"
+          shift
+        fi
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  if [ "$#" != 1 ]; then
+    softfail "Snapshots directory must be specified"
+    return $?
+  else
+    local dest="${1:?}"
+  fi
+
+  if [ "${daily_snapshot}" = true ]; then
+    snapshot::cleanup::dir "${dest}/daily-snapshots" "${daily_snapshot_count}"
+  fi
+
+  if [ "${weekly_snapshot}" = true ]; then
+    snapshot::cleanup::dir "${dest}/weekly-snapshots" "${weekly_snapshot_count}"
+  fi
+
+  if [ "${monthly_snapshot}" = true ]; then
+    snapshot::cleanup::dir "${dest}/monthly-snapshots" "${monthly_snapshot_count}"
+  fi
+
+  if [ "${snapshots_by_time}" = true ]; then
+    snapshot::cleanup::dir "${dest}/snapshots-by-time" "${snapshots_by_time_count}"
+  fi
+}
+
+snapshot::cleanup::dir() {
+  # use of :? in this function is to ensure we don't accidentally cleanup root directory
+  # or some other unexpected location
+
   local snapshots_dir="${1:?}" 
   local keep_amount="${2:-10}"
 
@@ -35,16 +296,18 @@ snapshot::cleanup() {
 
   if [ ! -f "${snapshots_dir:?}"/.safe-to-cleanup ]; then
     softfail "Unable to find safe to cleanup flag. To indicate that it is safe to perform automatic cleanup please put \".safe-to-cleanup\" file in the directory that you are sure it is safe to cleanup."
-    return $? # the expression takes a line of its own, because if softfail fails to set non-zero exit status, then we still need to make sure a return from the function will happen here
+    # the return expression takes a line of its own, because if softfail fails to set non-zero exit status,
+    # then we still need to make sure a return from the function will happen here
+    return $? 
   fi
 
-  for snapshot_path in "${snapshots_dir:?}"/*; do # :?}" here is to make sure we don't accidentally cleanup root directory
+  # :?}" here is to make sure we don't accidentally cleanup root directory
+  for snapshot_path in "${snapshots_dir:?}"/*; do
     if [ -d "${snapshot_path:?}" ]; then
       echo "${snapshot_path:?}"
     fi
   done | sort | head "--lines=-${keep_amount:?}" | \
   while IFS="" read -r remove_this_snapshot; do
-    # :?}" down here is for no reason?
     echo "Removing ${remove_this_snapshot:?}..."
 
     if [ "$(stat --format=%i "${remove_this_snapshot:?}")" -eq 256 ]; then
