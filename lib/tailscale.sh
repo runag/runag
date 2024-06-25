@@ -51,8 +51,8 @@ tailscale::install_issue_2541_workaround() {
 
     declare -f tailscale::issue_2541_workaround || fail
 
-    echo 'set -o nounset' || fail
-    echo 'tailscale::issue_2541_workaround || fail' || fail
+    echo 'set -o nounset'
+    echo 'tailscale::issue_2541_workaround || fail'
 
   } >"${temp_file}" || fail
   
