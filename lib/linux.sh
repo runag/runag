@@ -47,37 +47,13 @@ linux::set_hostname() {
 linux::update_remote_locale() (
   # The server may not have the locales that are present on the local machine
   # If you pass locale variables to it, a slight error may occur
-  lunux::unset_all_locales || fail
+  shell::unset_locales || fail
 
   # we disable control master to get a clean locale state and not to affect later sessions
   export REMOTE_CONTROL_MASTER=no
 
   ssh::call linux::reset_locales "$@" || fail
 )
-
-lunux::unset_all_locales() {
-  # man 5 locale
-  # https://wiki.debian.org/Locale
-  unset -v \
-    LANG \
-    LANGUAGE \
-    LC_ALL \
-    \
-    LC_COLLATE \
-    LC_CTYPE \
-    LC_MESSAGES \
-    LC_MONETARY \
-    LC_NUMERIC \
-    LC_TIME \
-    \
-    LC_ADDRESS \
-    LC_IDENTIFICATION \
-    LC_MEASUREMENT \
-    LC_NAME \
-    LC_PAPER \
-    LC_RESPONSE \
-    LC_TELEPHONE
-}
 
 linux::reset_locales() {
   local carry_on=false
@@ -107,7 +83,7 @@ linux::reset_locales() {
   sudo locale-gen --keep-existing || softfail || return $?
   sudo update-locale --reset "$@" || softfail || return $?
 
-  lunux::unset_all_locales || softfail || return $?
+  shell::unset_locales || softfail || return $?
 
   # Workaround for strange bash behaviour
   #
