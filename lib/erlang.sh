@@ -15,19 +15,20 @@
 #  limitations under the License.
 
 erlang::install_dependencies::apt() {
-  apt::install \
-    autoconf        `# build` \
-    build-essential `# build` \
-    m4              `# build` \
-    fop             `# documentation` \
-    libxml2-utils   `# documentation` \
-    xsltproc        `# documentation` \
-    libssh-dev      `# ssl` \
-    libncurses5-dev `# terminal` \
-      || softfail || return $?
+  local packages_list=(
+    autoconf # build
+    build-essential # build
+    fop # documentation
+    libncurses5-dev # terminal
+    libssh-dev # ssl
+    libxml2-utils # documentation
+    m4 # build
+    # openjdk-11-jdk # jinterface
+    # unixodbc-dev # odbc
+    xsltproc # documentation
+  )
 
-    # openjdk-11-jdk  `# jinterface` \
-    # unixodbc-dev    `# odbc` \
+  apt::install "${packages_list[@]}" || softfail || return $?
 }
 
 erlang::install_dependencies::observer::apt() {
