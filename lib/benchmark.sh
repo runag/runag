@@ -23,10 +23,6 @@ benchmark::is_available() {
   return 1
 }
 
-benchmark::install::apt() {
-  apt::install sysbench || softfail || return $?
-}
-
 benchmark::run() {
   local hostname_string; hostname_string="$(hostnamectl --static status)" || softfail || return $?
   local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
