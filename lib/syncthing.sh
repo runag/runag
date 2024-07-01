@@ -39,5 +39,5 @@ SHELL
 }
 
 syncthing::open() {
-  xdg-open "http://localhost:8384" || softfail || return $?
+  xdg-open "http://127.0.0.1:8384" || softfail || return $?
 }
