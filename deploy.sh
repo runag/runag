@@ -111,7 +111,7 @@ git::install_git ()
         fi;
     else
         if [[ "${OSTYPE}" =~ ^darwin ]]; then
-            git --version > /dev/null || softfail || return $?;
+            git --version > /dev/null || softfail "Please install git" || return $?;
         fi;
     fi
 }

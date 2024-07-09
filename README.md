@@ -139,6 +139,7 @@ Please refer to the source code for now.
 * [ssh](lib/ssh.sh)
 * [syncthing](lib/syncthing.sh)
 * [tailscale](lib/tailscale.sh)
+* [wifi](lib/wifi.sh)
 
 ### API access to cloud services
 

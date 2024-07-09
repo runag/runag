@@ -328,10 +328,6 @@ benchmark::fileio ()
     sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || softfail || return $?;
     sysbench fileio cleanup --verbosity=2 || softfail || return $?
 }
-benchmark::install::apt () 
-{ 
-    apt::install sysbench || softfail || return $?
-}
 benchmark::is_available () 
 { 
     if [[ "${OSTYPE}" =~ ^linux ]] || [[ "${OSTYPE}" =~ ^darwin ]]; then
@@ -639,13 +635,14 @@ direnv::save_variable_block ()
 }
 erlang::install_dependencies::apt () 
 { 
-    apt::install autoconf `# build` build-essential `# build` m4 `# build` fop `# documentation` libxml2-utils `# documentation` xsltproc `# documentation` libssh-dev `# ssl` libncurses5-dev `# terminal` || softfail || return $?
+    local package_list=(autoconf build-essential fop libncurses5-dev libssh-dev libxml2-utils m4 xsltproc);
+    apt::install "${package_list[@]}" || softfail || return $?
 }
 erlang::install_dependencies::observer::apt () 
 { 
-    local packages_list;
-    mapfile -t packages_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?;
-    apt::install libgl1-mesa-dev libglu1-mesa-dev libpng-dev "${packages_list[@]}" || softfail || return $?
+    local package_list;
+    mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?;
+    apt::install libgl1-mesa-dev libglu1-mesa-dev libpng-dev "${package_list[@]}" || softfail || return $?
 }
 fail () 
 { 
@@ -1043,6 +1040,13 @@ file::write_block ()
     file::read_with_updated_block ${perhaps_sudo:+"--sudo"} ${source_file:+"--source" "${source_file}"} ${temp_file:+"--absorb" "${temp_file}"} ${allow_empty:+"--allow-empty"} "${file_path}" "${block_name}" ${content_string:+"${content_string}"} > "${result_temp_file}" || softfail || return $?;
     file::write ${perhaps_sudo:+"--sudo"} ${keep_permissions:+"--keep-permissions"} ${file_mode:+--mode "${file_mode}"} ${file_owner:+--owner "${file_owner}"} ${file_group:+--group "${file_group}"} --absorb "${result_temp_file}" ${allow_empty:+"--allow-empty"} "${file_path}" || softfail || return $?
 }
+firefox::enable_wayland () 
+{ 
+    shellfile::write "$@" "profile/firefox-enable-wayland" <<SHELL || 
+export MOZ_ENABLE_WAYLAND=1
+SHELL
+ softfail || return $?
+}
 firefox::set_pref () 
 { 
     local name="$1";
@@ -1221,7 +1225,7 @@ git::install_git ()
         fi;
     else
         if [[ "${OSTYPE}" =~ ^darwin ]]; then
-            git --version > /dev/null || softfail || return $?;
+            git --version > /dev/null || softfail "Please install git" || return $?;
         fi;
     fi
 }
@@ -1712,7 +1716,7 @@ linux::install_gnome_keyring_and_libsecret::apt ()
 }
 linux::install_runag_essential_dependencies::apt () 
 { 
-    apt::install apt-transport-https curl git gpg jq pass || softfail || return $?
+    apt::install apt-transport-https curl git gpg jq pass xxd || softfail || return $?
 }
 linux::is_user_exists () 
 { 
@@ -1721,9 +1725,46 @@ linux::is_user_exists ()
 }
 linux::reset_locales () 
 { 
+    local carry_on=false;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -c | --carry-on-with-disparities)
+                carry_on=true;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    local item;
+    for item in "$@";
+    do
+        if [[ "${item}" =~ ^[[:alpha:]_]+=(.*)$ ]]; then
+            local locale_match;
+            locale_match="$(<<<"${BASH_REMATCH[1]}" sed -E 's/[.]/[.]/g')" || softfail || return $?;
+            sudo sed --in-place -E 's/^# ('"${locale_match}"' )/\1/g' /etc/locale.gen || softfail || return $?;
+        fi;
+    done;
     sudo locale-gen --keep-existing || softfail || return $?;
     sudo update-locale --reset "$@" || softfail || return $?;
-    lunux::unset_all_locales || softfail || return $?;
+    shell::unset_locales || softfail || return $?;
+    if [ "${carry_on}" = false ]; then
+        local temp_file;
+        temp_file="$(mktemp)" || softfail || return $?;
+        ( declare -gx "$@" && /usr/bin/true ) 2> "${temp_file}" || softfail || return $?;
+        if [ -s "${temp_file}" ]; then
+            cat "${temp_file}" 1>&2 || softfail || return $?;
+            rm "${temp_file}" || softfail || return $?;
+            softfail "Unable to change locale, please try to run the same command once again in a new bash process";
+            return $?;
+        else
+            rm "${temp_file}" || softfail || return $?;
+        fi;
+    fi;
     declare -gx "$@" || softfail || return $?
 }
 linux::set_battery_charge_control_threshold () 
@@ -1798,7 +1839,7 @@ linux::set_timezone ()
 }
 linux::update_remote_locale () 
 { 
-    ( lunux::unset_all_locales || fail;
+    ( shell::unset_locales || fail;
     export REMOTE_CONTROL_MASTER=no;
     ssh::call linux::reset_locales "$@" || fail )
 }
@@ -1865,10 +1906,6 @@ log::warning ()
         echo "[WARNING] ${message}" 1>&2;
     fi
 }
-lunux::unset_all_locales () 
-{ 
-    unset -v LANG LANGUAGE LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME LC_ADDRESS LC_IDENTIFICATION LC_MEASUREMENT LC_NAME LC_PAPER LC_RESPONSE LC_TELEPHONE
-}
 macos::hide_dir () 
 { 
     if [ -d "$1" ]; then
@@ -1924,7 +1961,8 @@ nodejs::install::apt ()
 }
 nodejs::install_dependencies::apt () 
 { 
-    apt::install curl `# asdf-specific` dirmngr `# asdf-specific` gawk `# asdf-specific` gpg `# asdf-specific` || softfail || return $?
+    local package_list=(curl dirmngr gawk gpg);
+    apt::install "${package_list[@]}" || softfail || return $?
 }
 nodejs::install_yarn::apt () 
 { 
@@ -2710,7 +2748,8 @@ ruby::install::apt ()
 }
 ruby::install_dependencies::apt () 
 { 
-    apt::install build-essential `# new rails project requires some gems to be compiled` libedit-dev `# dependency to install ruby 2.7.3 using ruby-build` libffi-dev `# some gems require libffi, like fiddle-1.0.8.gem` libsqlite3-dev `# new rails project uses sqlite` libssl-dev `# dependency to install ruby 2.7.3 using ruby-build` libyaml-dev `# dependency to install ruby 3.2.2 using ruby-build` zlib1g-dev `# dependency to install ruby 2.7.3 using ruby-build` || softfail || return $?
+    local package_list=(build-essential libedit-dev libffi-dev libsqlite3-dev libssl-dev libyaml-dev zlib1g-dev);
+    apt::install "${package_list[@]}" || softfail || return $?
 }
 ruby::install_disable_spring_shellfile () 
 { 
@@ -3047,6 +3086,10 @@ shell::related_source::walk_directory ()
         shell::related_source::walk_directory "${dir_item}" "${@:2}" || softfail "Unable to load: ${dir_item}" || return $?;
     done
 }
+shell::unset_locales () 
+{ 
+    unset -v LANG LANGUAGE LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME LC_ADDRESS LC_IDENTIFICATION LC_MEASUREMENT LC_NAME LC_PAPER LC_RESPONSE LC_TELEPHONE
+}
 shell::with () 
 { 
     ( local call_array=();
@@ -3070,7 +3113,7 @@ shellfile::install_direnv_rc ()
 { 
     local license_text;
     license_text="$(runag::print_license)" || softfail || return $?;
-    shellfile::write "rc/direnv" <<SHELL || 
+    shellfile::write "$@" "rc/direnv" <<SHELL || 
 ${license_text}
 
 if command -v direnv >/dev/null; then
@@ -3090,7 +3133,7 @@ shellfile::install_editor_rc ()
     editor_path="$(command -v "$1")" || softfail || return $?;
     local license_text;
     license_text="$(runag::print_license)" || softfail || return $?;
-    shellfile::write "rc/editor" <<SHELL || 
+    shellfile::write "$@" "rc/editor" <<SHELL || 
 ${license_text}
 
 if [ -z "\${EDITOR:-}" ]; then
@@ -3103,7 +3146,7 @@ shellfile::install_flush_history_rc ()
 { 
     local license_text;
     license_text="$(runag::print_license)" || softfail || return $?;
-    shellfile::write "rc/flush-history" <<SHELL || 
+    shellfile::write "$@" "rc/flush-history" <<SHELL || 
 ${license_text}
 
 if [ -n "\${BASH_VERSION:-}" ]; then
@@ -3126,7 +3169,7 @@ shellfile::install_runag_path_profile ()
 { 
     local license_text;
     license_text="$(runag::print_license)" || softfail || return $?;
-    shellfile::write "profile/runag-path" <<SHELL || 
+    shellfile::write "$@" "profile/runag-path" <<SHELL || 
 ${license_text}
 
 if [ -d "\${HOME}/.runag/bin" ]; then
@@ -3146,7 +3189,7 @@ shellfile::install_short_prompt_rc ()
 { 
     local license_text;
     license_text="$(runag::print_license)" || softfail || return $?;
-    shellfile::write "rc/short-prompt" <<SHELL || 
+    shellfile::write "$@" "rc/short-prompt" <<SHELL || 
 ${license_text}
 
 if [ -n "\${BASH_VERSION:-}" ]; then
@@ -3159,12 +3202,31 @@ SHELL
 }
 shellfile::write () 
 { 
+    local source_now=false;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -s | --source-now)
+                source_now=true;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
     local file_path="$1";
     local shellfile_dir_path="${HOME}/.shellfile.d";
     dir::should_exists --mode 0700 "${shellfile_dir_path}" || softfail || return $?;
     dir::should_exists --mode 0700 "${shellfile_dir_path}/rc" || softfail || return $?;
     dir::should_exists --mode 0700 "${shellfile_dir_path}/profile" || softfail || return $?;
-    file::write --mode 0600 "${shellfile_dir_path}/${file_path}.sh" || softfail || return $?
+    local output_path="${shellfile_dir_path}/${file_path}.sh";
+    file::write --mode 0600 "${output_path}" || softfail || return $?;
+    if [ "${source_now}" = true ]; then
+        . "${output_path}" || softfail || return $?;
+    fi
 }
 shellfile::write_loader_block () 
 { 
@@ -3210,6 +3272,80 @@ SHELL
 }
 snapshot::cleanup () 
 { 
+    local daily_snapshot=false;
+    local weekly_snapshot=false;
+    local monthly_snapshot=false;
+    local snapshots_by_time=false;
+    local daily_snapshot_count=30;
+    local weekly_snapshot_count=14;
+    local monthly_snapshot_count=12;
+    local snapshots_by_time_count=14;
+    if [ "$#" = 1 ]; then
+        snapshots_by_time=true;
+    fi;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -d | --daily)
+                daily_snapshot=true;
+                if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+                    daily_snapshot_count="$2";
+                    shift;
+                fi;
+                shift
+            ;;
+            -w | --weekly)
+                weekly_snapshot=true;
+                if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+                    weekly_snapshot_count="$2";
+                    shift;
+                fi;
+                shift
+            ;;
+            -m | --monthly)
+                monthly_snapshot=true;
+                if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+                    monthly_snapshot_count="$2";
+                    shift;
+                fi;
+                shift
+            ;;
+            -t | --time)
+                snapshots_by_time=true;
+                if [[ "${2:-}" =~ ^[[:digit:]]+$ ]]; then
+                    snapshots_by_time_count="$2";
+                    shift;
+                fi;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    if [ "$#" != 1 ]; then
+        softfail "Snapshots directory must be specified";
+        return $?;
+    else
+        local dest="${1:?}";
+    fi;
+    if [ "${daily_snapshot}" = true ]; then
+        snapshot::cleanup::dir "${dest}/daily-snapshots" "${daily_snapshot_count}";
+    fi;
+    if [ "${weekly_snapshot}" = true ]; then
+        snapshot::cleanup::dir "${dest}/weekly-snapshots" "${weekly_snapshot_count}";
+    fi;
+    if [ "${monthly_snapshot}" = true ]; then
+        snapshot::cleanup::dir "${dest}/monthly-snapshots" "${monthly_snapshot_count}";
+    fi;
+    if [ "${snapshots_by_time}" = true ]; then
+        snapshot::cleanup::dir "${dest}/snapshots-by-time" "${snapshots_by_time_count}";
+    fi
+}
+snapshot::cleanup::dir () 
+{ 
     local snapshots_dir="${1:?}";
     local keep_amount="${2:-10}";
     local snapshot_path;
@@ -3237,12 +3373,165 @@ snapshot::cleanup ()
 }
 snapshot::create () 
 { 
-    local source="${1:?}";
-    local dest="${2:?}";
-    local snapshot_name="${3:-}";
-    local current_date;
-    current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?;
-    btrfs subvolume snapshot -r "${source}" "${dest}/${current_date}${snapshot_name:+"-${snapshot_name}"}" || softfail || return $?
+    local daily_snapshot=false;
+    local weekly_snapshot=false;
+    local monthly_snapshot=false;
+    local snapshots_by_name=false;
+    local snapshots_by_time=false;
+    local snapshot_name;
+    if [ "$#" = 2 ]; then
+        snapshots_by_time=true;
+    fi;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -d | --daily)
+                daily_snapshot=true;
+                shift
+            ;;
+            -w | --weekly)
+                weekly_snapshot=true;
+                shift
+            ;;
+            -m | --monthly)
+                monthly_snapshot=true;
+                shift
+            ;;
+            -n | --name)
+                snapshots_by_name=true;
+                snapshot_name="${2:?}";
+                shift;
+                shift
+            ;;
+            -t | --time)
+                snapshots_by_time=true;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    if [ "$#" != 2 ]; then
+        softfail "Source and snapshot directories must be specified";
+        return $?;
+    else
+        local source="${1:?}";
+        local dest="${2:?}";
+    fi;
+    local snapshot_path;
+    if [ "${daily_snapshot}" = true ]; then
+        snapshot_path="${dest}/daily-snapshots/$(date --utc "+%Y-%m-%d")" || softfail || return $?;
+        if [ ! -d "${snapshot_path}" ]; then
+            btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?;
+        fi;
+    fi;
+    if [ "${weekly_snapshot}" = true ]; then
+        snapshot_path="${dest}/weekly-snapshots/$(date --utc "+%G-W%V")" || softfail || return $?;
+        if [ ! -d "${snapshot_path}" ]; then
+            btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?;
+        fi;
+    fi;
+    if [ "${monthly_snapshot}" = true ]; then
+        snapshot_path="${dest}/monthly-snapshots/$(date --utc "+%Y-%m")" || softfail || return $?;
+        if [ ! -d "${snapshot_path}" ]; then
+            btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?;
+        fi;
+    fi;
+    if [ "${snapshots_by_name}" = true ]; then
+        snapshot_path="${dest}/snapshots-by-name/${snapshot_name}";
+        if [ ! -d "${snapshot_path}" ]; then
+            btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?;
+        else
+            softfail "Snapshot directory already exist: ${snapshot_path}";
+            return $?;
+        fi;
+    fi;
+    if [ "${snapshots_by_time}" = true ]; then
+        snapshot_path="${dest}/snapshots-by-time/$(date --utc "+%Y-%m-%dT%H%M%SZ")" || softfail || return $?;
+        if [ ! -d "${snapshot_path}" ]; then
+            btrfs subvolume snapshot -r "${source}" "${snapshot_path}" || softfail || return $?;
+        else
+            softfail "Snapshot directory already exist: ${snapshot_path}";
+            return $?;
+        fi;
+    fi
+}
+snapshot::init () 
+{ 
+    local daily_snapshot=false;
+    local weekly_snapshot=false;
+    local monthly_snapshot=false;
+    local snapshots_by_name=false;
+    local snapshots_by_time=false;
+    if [ "$#" = 1 ]; then
+        snapshots_by_time=true;
+    fi;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -d | --daily)
+                daily_snapshot=true;
+                shift
+            ;;
+            -w | --weekly)
+                weekly_snapshot=true;
+                shift
+            ;;
+            -m | --monthly)
+                monthly_snapshot=true;
+                shift
+            ;;
+            -n | --name)
+                snapshots_by_name=true;
+                shift
+            ;;
+            -t | --time)
+                snapshots_by_time=true;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    if [ "$#" != 1 ]; then
+        softfail "Snapshots directory must be specified";
+        return $?;
+    else
+        local dest="${1:?}";
+    fi;
+    dir::should_exists --mode 0700 "${dest}" || softfail || return $?;
+    local snapshots_path;
+    if [ "${daily_snapshot}" = true ]; then
+        snapshots_path="${dest}/daily-snapshots";
+        dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?;
+        touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?;
+    fi;
+    if [ "${weekly_snapshot}" = true ]; then
+        snapshots_path="${dest}/weekly-snapshots";
+        dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?;
+        touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?;
+    fi;
+    if [ "${monthly_snapshot}" = true ]; then
+        snapshots_path="${dest}/monthly-snapshots";
+        dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?;
+        touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?;
+    fi;
+    if [ "${snapshots_by_name}" = true ]; then
+        snapshots_path="${dest}/snapshots-by-name";
+        dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?;
+        touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?;
+    fi;
+    if [ "${snapshots_by_time}" = true ]; then
+        snapshots_path="${dest}/snapshots-by-time";
+        dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?;
+        touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?;
+    fi
 }
 softfail () 
 { 
@@ -4235,7 +4524,7 @@ syncthing::install::macos ()
 }
 syncthing::open () 
 { 
-    xdg-open "http://localhost:8384" || softfail || return $?
+    xdg-open "http://127.0.0.1:8384" || softfail || return $?
 }
 systemd::block () 
 { 
@@ -4400,7 +4689,7 @@ systemd::service_action::journal ()
         local release_codename;
         release_codename="$(lsb_release --codename --short)" || softfail || return $?;
         if [ "${release_codename}" = "focal" ]; then
-            sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 --catalog "${follow_argument[@]}" || softfail || return $?;
+            sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?;
             return;
         fi;
     fi;
@@ -4409,7 +4698,7 @@ systemd::service_action::journal ()
     else
         local journalctl_command=(sudo journalctl);
     fi;
-    "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 --catalog "${follow_argument[@]}" || softfail || return $?
+    "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
 }
 systemd::service_action::start () 
 { 
@@ -4584,8 +4873,8 @@ tailscale::install_issue_2541_workaround ()
     { 
         runag::mini_library || fail;
         declare -f tailscale::issue_2541_workaround || fail;
-        echo 'set -o nounset' || fail;
-        echo 'tailscale::issue_2541_workaround || fail' || fail
+        echo 'set -o nounset';
+        echo 'tailscale::issue_2541_workaround || fail'
     } > "${temp_file}" || fail;
     file::write --absorb "${temp_file}" --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround || softfail || return $?;
     file::write --sudo --mode 0644 /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || 
@@ -5128,6 +5417,11 @@ terminal::color_table ()
         echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)";
     done
 }
+ubuntu::pro::available () 
+{ 
+    ( . /etc/os-release || softfail || return $?;
+    test "${ID:-}" = ubuntu && command -v pro > /dev/null )
+}
 ubuntu::pro::is_attached () 
 { 
     pro status --format json | jq --raw-output --exit-status '.attached == true' > /dev/null
@@ -5206,6 +5500,51 @@ vscode::list_extensions_to_temp_file ()
     code --list-extensions | sort > "${temp_file}";
     test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to list extensions" || return $?;
     echo "${temp_file}"
+}
+wifi::connect () 
+{ 
+    local pass_path;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -p | --pass-path)
+                pass_path="$2";
+                shift;
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    if [ -z "${pass_path:-}" ]; then
+        softfail "--pass-path should be specified" || return $?;
+    fi;
+    local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}";
+    local absolute_item_path;
+    for absolute_item_path in "${password_store_dir}/${pass_path}"/*;
+    do
+        if [ -f "${absolute_item_path}/ssid.gpg" ] && [ -f "${absolute_item_path}/password.gpg" ]; then
+            local item_path="${absolute_item_path:$((${#password_store_dir}+1))}";
+            local ssid;
+            ssid="$(pass::use "${item_path}/ssid")" || softfail || return $?;
+            local password;
+            password="$(pass::use "${item_path}/password")" || softfail || return $?;
+            if nmcli device wifi connect "${ssid}" password "${password}"; then
+                return 0;
+            fi;
+        fi;
+    done
+}
+wifi::is_available () 
+{ 
+    nmcli --terse device wifi rescan 2> /dev/null
+}
+wifi::is_connected () 
+{ 
+    nmcli --terse device wifi list | grep -E "^[*]" > /dev/null
 }
 
 # == we should have all library functions available by now ==
