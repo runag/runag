@@ -145,7 +145,7 @@ git::install_git() {
 
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
     # on macos that will start git install process
-    git --version >/dev/null || softfail || return $?
+    git --version >/dev/null || softfail "Please install git" || return $?
   fi
 }
 
