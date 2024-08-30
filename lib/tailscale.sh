@@ -15,6 +15,7 @@
 #  limitations under the License.
 
 tailscale::install() (
+  # Load operating system identification data
   . /etc/os-release || softfail || return $?
 
   apt::add_source_with_key "tailscale" \

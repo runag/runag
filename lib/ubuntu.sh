@@ -19,6 +19,8 @@ ubuntu::pro::is_attached() {
 }
 
 ubuntu::pro::available() (
+  # Load operating system identification data
   . /etc/os-release || softfail || return $?
+  
   test "${ID:-}" = ubuntu && command -v pro >/dev/null
 )
