@@ -234,7 +234,7 @@ ssh::call::internal ()
     local upload_basename;
     if [ -n "${upload_path:-}" ]; then
         if [ -d "${upload_path}" ]; then
-            resolved_upload_path="$(cd "${upload_path}" >/dev/null 2>&1 && pwd)" || softfail "Unable to resolve upload directory: ${upload_path}" || return $?;
+            resolved_upload_path="$(cd "${upload_path}" > /dev/null 2>&1 && pwd)" || softfail "Unable to resolve upload directory: ${upload_path}" || return $?;
             upload_basename="$(basename "${resolved_upload_path}")" || softfail || return $?;
             if [ "${upload_basename}" = "/" ]; then
                 upload_basename=root;
@@ -249,18 +249,18 @@ ssh::call::internal ()
         local ssh_args_item;
         for ssh_args_item in "${Ssh_Args[@]}";
         do
-            rsync_ssh_args_string+=" '$(<<<"${ssh_args_item}" sed -E "s/'/''/")'" || softfail || return $?;
+            rsync_ssh_args_string+=" '$(sed -E "s/'/''/" <<< "${ssh_args_item}")'" || softfail || return $?;
         done;
         rsync --rsh "ssh ${rsync_ssh_args_string:1}" --checksum --links --perms --recursive --safe-links --times "${upload_rsync_src}" "${ssh_destination}:${upload_rsync_dest}" || softfail || return $?;
         set -- "$@" "${upload_rsync_dest}";
     fi;
     local script_checksum;
     ssh::call::produce_script "${produce_script_args[@]}" "$@" > "${temp_dir}/script" || softfail "Unable to produce script" || return $?;
-    script_checksum="$(cksum <"${temp_dir}/script")" || softfail "Unable to calculate script checksum" || return $?;
+    script_checksum="$(cksum < "${temp_dir}/script")" || softfail "Unable to calculate script checksum" || return $?;
     local script_upload_command;
     printf -v script_upload_command 'temp_dir="$(mktemp -d)" && cat>"${temp_dir}/script" && { if [ "$(cksum <"${temp_dir}/script")" != %q ]; then exit 254; fi; } && echo "${temp_dir}"' "${script_checksum}" || softfail || return $?;
     local remote_temp_dir;
-    remote_temp_dir="$(ssh "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "${script_upload_command}")" <"${temp_dir}/script")" || softfail --exit-status $? "Unable to upload script" || return $?;
+    remote_temp_dir="$(ssh "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "${script_upload_command}")" < "${temp_dir}/script")" || softfail --exit-status $? "Unable to upload script" || return $?;
     if [ -z "${remote_temp_dir}" ]; then
         softfail "Unable to get remote temp file name" || return $?;
     fi;
@@ -281,7 +281,7 @@ ssh::call::internal ()
                 fi;
                 if [ -s "${temp_dir}/stdin" ]; then
                     local stdin_checksum;
-                    stdin_checksum="$(cksum <"${temp_dir}/stdin")" || softfail "Unable to get stdin checksum" || return $?;
+                    stdin_checksum="$(cksum < "${temp_dir}/stdin")" || softfail "Unable to get stdin checksum" || return $?;
                     ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'cat >"${temp_dir}/stdin"; if [ "$(cksum <"${temp_dir}/stdin")" != %q ]; then exit 254; fi' "${stdin_checksum}" < "${temp_dir}/stdin" || softfail --exit-status $? "Unable to store stdin data on remote" || return $?;
                     remote_stdin_file="${remote_temp_dir}/stdin";
                 fi;
@@ -401,9 +401,9 @@ ssh::call::internal ()
             if [ -s "${temp_dir}/stderr" ]; then
                 if test -t 2; then
                     local error_color;
-                    error_color="$(printf "setaf 9\nbold" | tput -S 2>/dev/null)" || error_color="";
+                    error_color="$(printf "setaf 9\nbold" | tput -S 2> /dev/null)" || error_color="";
                     local reset_attrs;
-                    reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs="";
+                    reset_attrs="$(tput sgr 0 2> /dev/null)" || reset_attrs="";
                     local error_line;
                     while IFS="" read -r error_line; do
                         echo "${error_color}${error_line}${reset_attrs}" 1>&2;
@@ -632,7 +632,7 @@ log::notice ()
 { 
     local message="${1:-"(empty log message)"}";
     if [ -t 2 ]; then
-        echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" 1>&2;
+        echo "$(printf "setaf 14\nbold" | tput -S 2> /dev/null)${message}$(tput sgr 0 2> /dev/null)" 1>&2;
     else
         echo "[NOTICE] ${message}" 1>&2;
     fi

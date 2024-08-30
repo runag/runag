@@ -157,7 +157,7 @@ git::remove_current_clone ()
 { 
     local dest_path="$1";
     local dest_full_path;
-    dest_full_path="$(cd "${dest_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?;
+    dest_full_path="$(cd "${dest_path}" > /dev/null 2>&1 && pwd)" || softfail || return $?;
     local dest_parent_dir;
     dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
     local dest_dir_name;
@@ -169,9 +169,9 @@ git::remove_current_clone ()
 runagfile::add () 
 { 
     local user_name;
-    user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?;
+    user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;
     local repo_name;
-    repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?;
+    repo_name="$(cut -d "/" -f 2 <<< "$1")" || softfail || return $?;
     git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
 }
 runag::online_deploy_script () 
