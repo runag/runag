@@ -27,17 +27,15 @@ nodejs::install_dependencies::apt() {
   apt::install "${package_list[@]}" || softfail || return $?
 }
 
-nodejs::install::apt() (
+nodejs::install::apt() {
   local version="$1"
 
-  . /etc/os-release || softfail || return $?
-
   apt::add_source_with_key "nodesource" \
-    "https://deb.nodesource.com/node_${version}.x ${VERSION_CODENAME} main" \
+    "https://deb.nodesource.com/node_${version}.x nodistro main" \
     "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" || softfail || return $?
 
   apt::install nodejs || softfail || return $?
-)
+}
 
 nodejs::install_yarn::apt() {
   apt::add_source_with_key "yarnpkg" \
