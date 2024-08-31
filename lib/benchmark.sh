@@ -27,7 +27,7 @@ benchmark::run() {
   local hostname_string; hostname_string="$(hostnamectl --static status)" || softfail || return $?
   local current_date; current_date="$(date --utc "+%Y-%m-%dT%H%M%SZ")" || softfail || return $?
 
-  local result_file; result_file="$(mktemp "benchmark-${hostname_string}-${current_date}-XXX.txt")" || softfail || return $?
+  local result_file; result_file="$(mktemp "benchmark-${hostname_string}-${current_date}-XXXX.txt")" || softfail || return $?
 
   benchmark::run::indeed | tee "${result_file}"
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
