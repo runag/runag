@@ -47,31 +47,65 @@ benchmark::run::indeed() (
 
   cd "${temp_dir}" || softfail || return $?
 
-  sysbench fileio prepare --verbosity=2 --file-extra-flags=direct || softfail || return $?
+  sysbench fileio prepare \
+    --verbosity=2 \
+    --file-extra-flags=direct || softfail || return $?
+
+  sync || softfail || return $?
 
   echo "## RANDOM READ QD1 ##"
-  sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-extra-flags=direct || softfail || return $?
+  sysbench fileio run \
+    --file-test-mode=rndrd \
+    --file-block-size=4096 \
+    --file-fsync-freq=0 \
+    --file-fsync-end=off \
+    --file-extra-flags=direct || softfail || return $?
 
   echo "## RANDOM WRITE QD1 ##"
-  sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-extra-flags=direct || softfail || return $?
+  sysbench fileio run \
+    --file-test-mode=rndwr \
+    --file-block-size=4096 \
+    --file-fsync-freq=0 \
+    --file-fsync-end=on \
+    --file-extra-flags=direct || softfail || return $?
 
   if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
     echo "## RANDOM READ QD32 ##"
-    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 || softfail || return $?
+    sysbench fileio run \
+      --file-test-mode=rndrd \
+      --file-io-mode=async \
+      --file-async-backlog=32 \
+      --file-block-size=4096 \
+      --file-fsync-freq=0 \
+      --file-fsync-end=off || softfail || return $?
 
     echo "## RANDOM WRITE QD32 ##"
-    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 || softfail || return $?
+    sysbench fileio run \
+      --file-test-mode=rndwr \
+      --file-io-mode=async \
+      --file-async-backlog=32 \
+      --file-block-size=4096 \
+      --file-fsync-freq=0 \
+      --file-fsync-end=on || softfail || return $?
   fi
 
   echo "## SEQUENTIAL READ ##"
-  sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 --file-extra-flags=direct || softfail || return $?
+  sysbench fileio run \
+    --file-test-mode=seqrd \
+    --file-block-size=4096 \
+    --file-fsync-freq=0 \
+    --file-fsync-end=off \
+    --file-extra-flags=direct || softfail || return $?
 
   # this should be final tests as they truncate files
   echo "## SEQUENTIAL WRITE ##"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-extra-flags=direct || softfail || return $?
-
-  echo "## SEQUENTIAL WRITE IN SYNC MODE ##"
-  sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on --file-extra-flags=direct || softfail || return $?
+  sysbench fileio run \
+    --file-test-mode=seqwr \
+    --file-extra-flags=sync \
+    --file-block-size=4096 \
+    --file-fsync-freq=0 \
+    --file-fsync-end=on \
+    --file-extra-flags=direct || softfail || return $?
 
   sysbench fileio cleanup --verbosity=2 || softfail || return $?
 
