@@ -14,18 +14,32 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-nodejs::install_dependencies::apt() {
+nodejs::install_dependencies() (
+  . /etc/os-release || softfail || return $?
+
   # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
+  # https://github.com/nodejs/node/blob/main/BUILDING.md#building-nodejs-on-supported-platforms
 
-  local package_list=(
-    curl # asdf-specific
-    dirmngr # asdf-specific
-    gawk # asdf-specific
-    gpg # asdf-specific
-  )
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    local package_list=(
+      curl # asdf requires that
+      dirmngr # asdf requires that
+      gawk # asdf requires that
+      gpg # asdf requires that
+    )
 
-  apt::install "${package_list[@]}" || softfail || return $?
-}
+    apt::install "${package_list[@]}" || softfail || return $?
+        
+  elif [ "${ID:-}" = arch ]; then
+    local package_list=(
+      curl # asdf requires that
+      gawk # asdf requires that
+      gnupg # asdf requires that, dirmngr is in gnupg
+    )
+
+    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+  fi
+)
 
 nodejs::install::apt() {
   local version="$1"

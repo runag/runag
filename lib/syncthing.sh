@@ -19,24 +19,34 @@ syncthing::install::macos() {
   brew services start syncthing || softfail || return $?
 }
 
-syncthing::install::apt() {
-  apt::add_source_with_key "syncthing" \
-    "https://apt.syncthing.net/ syncthing stable" \
-    "https://syncthing.net/release-key.txt" || softfail "Unable to add syncthing apt source" || return $?
+syncthing::install() (
+  . /etc/os-release || softfail || return $?
 
-  apt::install syncthing || softfail || return $?
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::add_source_with_key "syncthing" \
+      "https://apt.syncthing.net/ syncthing stable" \
+      "https://syncthing.net/release-key.txt" || softfail "Unable to add syncthing apt source" || return $?
+
+    apt::install syncthing || softfail || return $?
+        
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm \
+      syncthing \
+        || softfail || return $?
+  fi
+
   systemctl --user --quiet --now enable syncthing.service || softfail || return $?
 
-  # https://wiki.archlinux.org/title/Desktop_entries#Hide_desktop_entries
-  file::write "${HOME}/.local/share/applications/syncthing-start.desktop" <<SHELL || fail
-[Desktop Entry]
-Type=Application
-NoDisplay=true
-Hidden=true
-SHELL
-
-  sudo update-desktop-database || fail
-}
+#   # https://wiki.archlinux.org/title/Desktop_entries#Hide_desktop_entries
+#   file::write "${HOME}/.local/share/applications/syncthing-start.desktop" <<SHELL || fail
+# [Desktop Entry]
+# Type=Application
+# NoDisplay=true
+# Hidden=true
+# SHELL
+#
+#   sudo update-desktop-database || fail
+)
 
 syncthing::open() {
   xdg-open "http://127.0.0.1:8384" || softfail || return $?

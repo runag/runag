@@ -14,12 +14,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-asdf::install_dependencies::apt() {
-  apt::install \
-    curl \
-    git \
-      || softfail || return $?
-}
+asdf::install_dependencies() (
+  . /etc/os-release || softfail || return $?
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::install \
+      curl \
+      git \
+        || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm \
+      curl \
+      git \
+        || softfail || return $?
+  fi
+)
 
 asdf::install() {
   local asdf_version; asdf_version="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" || softfail || return $?

@@ -14,30 +14,63 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-erlang::install_dependencies::apt() {
-  local package_list=(
-    autoconf # build
-    build-essential # build
-    fop # documentation
-    libncurses5-dev # terminal
-    libssh-dev # ssl
-    libxml2-utils # documentation
-    m4 # build
-    # openjdk-11-jdk # jinterface
-    # unixodbc-dev # odbc
-    xsltproc # documentation
-  )
+erlang::install_dependencies() (
+  . /etc/os-release || softfail || return $?
 
-  apt::install "${package_list[@]}" || softfail || return $?
-}
+  # https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#before-asdf-install
 
-erlang::install_dependencies::observer::apt() {
-  local package_list; mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    local package_list=(
+      autoconf         # build
+      build-essential  # build
+      fop              # documentation
+      libncurses5-dev  # terminal
+      libssh-dev       # ssl
+      libxml2-utils    # documentation
+      m4               # build
+      # openjdk-11-jdk # jinterface
+      # unixodbc-dev   # odbc
+      xsltproc         # documentation
+    )
 
-  apt::install \
-    libgl1-mesa-dev \
-    libglu1-mesa-dev \
-    libpng-dev \
-    "${package_list[@]}" \
-    || softfail || return $?
-}
+    apt::install "${package_list[@]}" || softfail || return $?
+        
+  elif [ "${ID:-}" = arch ]; then
+    local package_list=(
+      base-devel # build tools
+      fop # documentation
+      libssh # ssl
+      libxslt # documentation
+      ncurses # terminal
+    )
+
+    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+  fi
+)
+
+erlang::install_dependencies::observer() (
+  . /etc/os-release || softfail || return $?
+
+  # https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#before-asdf-install
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    local package_list; mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?
+
+    apt::install \
+      libgl1-mesa-dev \
+      libglu1-mesa-dev \
+      libpng-dev \
+      "${package_list[@]}" \
+      || softfail || return $?
+        
+  elif [ "${ID:-}" = arch ]; then
+    local package_list=(
+      glu
+      libpng
+      mesa
+      wxwidgets-gtk3
+    )
+
+    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+  fi
+)

@@ -14,10 +14,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-python::install::apt() {
-  apt::install \
-    python-is-python3 \
-    python3 \
-    pipx \
-      || softfail || return $?
-}
+python::install() (
+  . /etc/os-release || softfail || return $?
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::install \
+      python-is-python3 \
+      python3 \
+      pipx \
+        || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm \
+      python \
+      python-pipx \
+        || softfail || return $?
+  fi
+)

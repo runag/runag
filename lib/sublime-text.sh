@@ -14,13 +14,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-sublime_text::install::apt() {
-  apt::add_source_with_key "sublimetext" \
-    "https://download.sublimetext.com/ apt/stable/" \
-    "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?
+sublime_text::install() (
+  . /etc/os-release || softfail || return $?
 
-  apt::install sublime-text || softfail || return $?
-}
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::add_source_with_key "sublimetext" \
+      "https://download.sublimetext.com/ apt/stable/" \
+      "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?
+
+    apt::install sublime-text || softfail || return $?
+        
+  elif [ "${ID:-}" = arch ]; then
+    true # TODO: pacman install
+  fi
+)
 
 sublime_text::get_config_path() {
   local config_path
