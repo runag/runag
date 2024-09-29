@@ -14,17 +14,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-vscode::install::snap() {
-  sudo snap install code --classic || softfail || return $?
-}
+vscode::install() (
+  . /etc/os-release || softfail || return $?
 
-vscode::install::apt() {
-  apt::add_source_with_key "vscode" \
-    "https://packages.microsoft.com/repos/code stable main" \
-    "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
+  # sudo snap install code --classic || softfail || return $?
 
-  apt::install code || softfail || return $?
-}
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::add_source_with_key "vscode" \
+      "https://packages.microsoft.com/repos/code stable main" \
+      "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
+
+    apt::install code || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm \
+      code \
+        || softfail || return $?
+  fi
+)
 
 vscode::get_config_path() {
   local config_path

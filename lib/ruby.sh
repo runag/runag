@@ -14,22 +14,41 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-ruby::install_dependencies::apt() {
-  local package_list=(
-    build-essential # new rails project requires some gems to be compiled
-    libedit-dev # dependency to install ruby 2.7.3 using ruby-build
-    libffi-dev # some gems require libffi, like fiddle-1.0.8.gem
-    libsqlite3-dev # new rails project uses sqlite
-    libssl-dev # dependency to install ruby 2.7.3 using ruby-build
-    libyaml-dev # dependency to install ruby 3.2.2 using ruby-build
-    zlib1g-dev # dependency to install ruby 2.7.3 using ruby-build
-  )
+ruby::install_dependencies() (
+  . /etc/os-release || softfail || return $?
 
-  apt::install "${package_list[@]}" || softfail || return $?
-}
+  # https://github.com/rbenv/ruby-build/wiki#suggested-build-environment
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    local package_list=(
+      build-essential # new rails project requires some gems to be compiled
+      libedit-dev     # ruby install via ruby-build (for ruby versions: 2.7.3)
+      libffi-dev      # some gems require libffi (fiddle-1.0.8.gem)
+      libsqlite3-dev  # new rails project uses sqlite
+      libssl-dev      # ruby install via ruby-build (for ruby versions: 2.7.3)
+      libyaml-dev     # ruby install via ruby-build (for ruby versions: 3.2.2)
+      zlib1g-dev      # ruby install via ruby-build (for ruby versions: 2.7.3)
+    )
+
+    apt::install "${package_list[@]}" || softfail || return $?
+        
+  elif [ "${ID:-}" = arch ]; then
+    local package_list=(
+      base-devel # ruby install via ruby-build
+      libffi     # ruby install via ruby-build
+      libyaml    # ruby install via ruby-build
+      openssl    # ruby install via ruby-build
+      rust       # ruby install via ruby-build
+      sqlite     # new rails project uses sqlite
+      zlib       # ruby install via ruby-build
+    )
+
+    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+  fi
+)
 
 ruby::install::apt() {
-  ruby::install_dependencies::apt || softfail || return $?
+  ruby::install_dependencies || softfail || return $?
   apt::install ruby-full || softfail || return $?
 }
 

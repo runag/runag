@@ -232,26 +232,50 @@ linux::get_ipv6_address() {
 }
 
 # gnome-keyring and libsecret (for git and ssh)
-linux::install_gnome_keyring_and_libsecret::apt() {
-  apt::install \
-    gnome-keyring \
-    libsecret-tools \
-    libsecret-1-0 \
-    libsecret-1-dev \
-      || softfail || return $?
-}
+linux::install_gnome_keyring_and_libsecret() (
+  . /etc/os-release || softfail || return $?
 
-linux::install_runag_essential_dependencies::apt() {
-  apt::install \
-    apt-transport-https \
-    curl \
-    git \
-    gpg \
-    jq \
-    pass \
-    xxd \
-      || softfail || return $?
-}
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::install \
+      gnome-keyring \
+      libsecret-tools \
+      libsecret-1-0 \
+      libsecret-1-dev \
+        || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm \
+      gnome-keyring \
+      libsecret \
+        || softfail || return $?
+  fi
+)
+
+linux::install_runag_essential_dependencies() (
+  . /etc/os-release || softfail || return $?
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::install \
+      apt-transport-https \
+      curl \
+      git \
+      gpg \
+      jq \
+      pass \
+      xxd \
+        || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm \
+      curl \
+      git \
+      gnupg \
+      jq \
+      pass \
+      tinyxxd \
+        || softfail || return $?
+  fi
+)
 
 linux::set_battery_charge_control_threshold() {
   local battery_number=0
