@@ -1203,9 +1203,9 @@ git::clone_or_update_local_mirror ()
     local source_path_full;
     source_path_full="$(cd "${source_path}" > /dev/null 2>&1 && pwd)" || fail;
     if [ ! -d "${dest_path}" ]; then
-        git clone "${source_path}" "${dest_path}" || fail;
+        git clone "${source_path_full}" "${dest_path}" || fail;
         local mirror_origin;
-        mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail;
+        mirror_origin="$(git -C "${source_path_full}" remote get-url origin)" || fail;
         git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail;
         if [ -n "${remote_name}" ]; then
             git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail;
