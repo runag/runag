@@ -244,7 +244,7 @@ linux::install_gnome_keyring_and_libsecret() (
         || softfail || return $?
 
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm \
+    sudo pacman --sync --needed --noconfirm \
       gnome-keyring \
       libsecret \
         || softfail || return $?
@@ -266,7 +266,7 @@ linux::install_runag_essential_dependencies() (
         || softfail || return $?
 
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm \
+    sudo pacman --sync --needed --noconfirm \
       curl \
       git \
       gnupg \

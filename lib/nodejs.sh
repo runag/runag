@@ -37,7 +37,7 @@ nodejs::install_dependencies() (
       gnupg # asdf requires that, dirmngr is in gnupg
     )
 
-    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+    sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
   fi
 )
 

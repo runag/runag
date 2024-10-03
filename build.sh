@@ -72,7 +72,7 @@ if ! command -v gawk >/dev/null; then
       apt::install gawk || fail
 
     elif [ "${ID:-}" = arch ]; then
-      pacman --sync --needed --noconfirm gawk || fail
+      sudo pacman --sync --needed --noconfirm gawk || fail
     fi
   ) || fail
 fi
