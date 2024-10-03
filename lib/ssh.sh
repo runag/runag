@@ -18,7 +18,10 @@ sshd::disable_password_authentication() {
   dir::should_exists --sudo --mode 0755 /etc/ssh  || softfail || return $?
   dir::should_exists --sudo --mode 0755 /etc/ssh/sshd_config.d || softfail || return $?
 
-  <<<"PasswordAuthentication no" file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf || softfail || return $?
+  file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf <<SHELL || softfail || return $?
+PasswordAuthentication no
+AuthenticationMethods publickey
+SHELL
 }
 
 ssh::add_ssh_config_d_include_directive() {
@@ -29,8 +32,10 @@ ssh::add_ssh_config_d_include_directive() {
   # as the last of "Host" will catch this "Include" in their scope
   #
   # Note that the scope of any "Host" directives in *.conf files are contained within their respective files
-
-  printf "Host *\nInclude ~/.ssh/ssh_config.d/*.conf\n" | file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" || softfail "Unable to add configuration to user ssh config" || return $?
+  file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" <<SHELL || softfail "Unable to add configuration to user ssh config" || return $?
+Host *
+Include ~/.ssh/ssh_config.d/*.conf
+SHELL
 }
 
 ssh::install_authorized_keys_from_pass() {

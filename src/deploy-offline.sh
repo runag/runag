@@ -18,7 +18,7 @@ set -o nounset
 
 . bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
-runag::online_deploy_script() {
+runag::offline_deploy_script() (
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
     set -o xtrace
@@ -26,28 +26,24 @@ runag::online_deploy_script() {
 
   git::ensure_git_is_installed || softfail || return $?
 
-  git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?
+  local install_path="${HOME}/.runag"
 
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      add)
-        runagfile::add "$2" || softfail || return $?
-        shift; shift
-        ;;
-      run)
-        shift
-        "${HOME}/.runag/bin/runag" "$@" || softfail || return $?
-        break
-        ;;
-      *)
-        softfail "runag::online_deploy_script: command not found: $*" || return $?
-        ;;
-    esac
+  if [ ! -d runag.git ]; then
+    fail "Unable to find runag.git directory"
+  fi
+
+  git::clone_or_update_local_mirror runag.git "${install_path}" "offline-install" || fail
+
+  local runagfile; for runagfile in runagfiles/*; do
+    if [ -d "${runagfile}" ]; then
+      git::clone_or_update_local_mirror "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail
+    fi
   done
-}
 
-runag_remote_url="$(git::get_remote_url_without_username)" || fail
+  cd "${HOME}" || fail
 
+  "${install_path}"/bin/runag
+)
 
 temp_file="$(mktemp)" || fail
 
@@ -58,29 +54,18 @@ temp_file="$(mktemp)" || fail
 
   printf "set -o nounset\n\n" || fail
 
-  echo '# This script is wrapped inside a function with a random name to lower the chance for the bash'
-  echo '# to run some unexpected commands in case if "curl | bash" fails in the middle of download.'
-  echo '__xVhMyefCbBnZFUQtwqCs() {'
-
   fail::function_sources || fail
 
   declare -f apt::install || fail
   declare -f apt::update || fail
 
   declare -f git::ensure_git_is_installed || fail
-  declare -f git::place_up_to_date_clone || fail
-  declare -f git::remove_current_clone || fail
+  declare -f git::clone_or_update_local_mirror || fail
 
-  declare -f runagfile::add || fail
-  declare -f runag::online_deploy_script || fail
+  declare -f runag::offline_deploy_script || fail
 
-  # shellcheck disable=SC2016
-  printf 'export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-%q}"\n' "${runag_remote_url}"
-
-  echo 'runag::online_deploy_script "$@"'
-
-  echo '}; __xVhMyefCbBnZFUQtwqCs "$@"'
+  echo 'runag::offline_deploy_script "$@"'
 
 } >"${temp_file}" || fail
 
-file::write --absorb "${temp_file}" --mode 0644 deploy.sh || fail
+file::write --absorb "${temp_file}" --mode 0644 deploy-offline.sh || fail

@@ -90,6 +90,27 @@ git::place_up_to_date_clone() {
   fi
 }
 
+git::clone_or_update_local_mirror() {
+  local source_path="$1"
+  local dest_path="$2"
+  local remote_name="${3:-}"
+
+  local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || fail
+
+  if [ ! -d "${dest_path}" ]; then
+    git clone "${source_path}" "${dest_path}" || fail
+
+    local mirror_origin; mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail
+    git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail
+
+    if [ -n "${remote_name}" ]; then
+      git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail
+    fi
+  else
+    git -C "${dest_path}" pull "${remote_name}" main || fail
+  fi
+}
+
 git::remove_current_clone() {
   local dest_path="$1"
 
@@ -131,23 +152,33 @@ git::gnome_keyring_credentials() {
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
 }
 
-git::install_git() {
+git::ensure_git_is_installed() (
   if [[ "${OSTYPE}" =~ ^linux ]]; then
-
     if ! command -v git >/dev/null; then
-      if command -v apt-get >/dev/null; then
+      # Load operating system identification data
+      . /etc/os-release || softfail || return $?
+
+      if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
         apt::update || softfail || return $?
         apt::install git || softfail || return $?
+
+      elif [ "${ID:-}" = arch ]; then
+        pacman --sync --needed --noconfirm git || softfail || return $?
+
       else
-        softfail "Unable to install git, apt-get not found" || return $?
+        softfail "Unable to install git, unknown operating system" || return $?
       fi
     fi
 
   elif [[ "${OSTYPE}" =~ ^darwin ]]; then
     # on macos that will start git install process
+    # I need to test if `command -v git` leads to the same
     git --version >/dev/null || softfail "Please install git" || return $?
+
+  elif ! command -v git >/dev/null; then
+    softfail "Unable to install git, unknown operating system" || return $?
   fi
-}
+)
 
 git::is_remote_local() {
   local remote_name="${1:-"origin"}"

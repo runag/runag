@@ -144,5 +144,5 @@ runag::create_or_update_offline_install() (
     fi
   done
 
-  cp -f "${runag_path}/scripts/deploy-offline.sh" . || softfail || return $?
+  cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $?
 )

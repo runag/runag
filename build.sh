@@ -14,6 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+set -o nounset
+
 . bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
 shdoc::install() {
@@ -62,7 +64,17 @@ docs::make() {
 }
 
 if ! command -v gawk >/dev/null; then
-  sudo apt install gawk || fail
+  (
+    # Load operating system identification data
+    . /etc/os-release || fail
+    
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+      apt::install gawk || fail
+
+    elif [ "${ID:-}" = arch ]; then
+      pacman --sync --needed --noconfirm gawk || fail
+    fi
+  ) || fail
 fi
 
 if ! command -v shdoc >/dev/null; then
@@ -84,3 +96,4 @@ docs::make || fail
 bash src/deploy.sh
 bash src/runag.sh
 bash src/ssh-call.sh
+bash src/deploy-offline.sh
