@@ -24,7 +24,7 @@ asdf::install_dependencies() (
         || softfail || return $?
 
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm \
+    sudo pacman --sync --needed --noconfirm \
       curl \
       git \
         || softfail || return $?

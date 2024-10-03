@@ -25,7 +25,7 @@ python::install() (
         || softfail || return $?
 
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm \
+    sudo pacman --sync --needed --noconfirm \
       python \
       python-pipx \
         || softfail || return $?

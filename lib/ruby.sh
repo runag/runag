@@ -43,7 +43,7 @@ ruby::install_dependencies() (
       zlib       # ruby install via ruby-build
     )
 
-    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+    sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
   fi
 )
 

@@ -44,7 +44,7 @@ erlang::install_dependencies() (
       ncurses # terminal
     )
 
-    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+    sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
   fi
 )
 
@@ -71,6 +71,6 @@ erlang::install_dependencies::observer() (
       wxwidgets-gtk3
     )
 
-    pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
+    sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
   fi
 )

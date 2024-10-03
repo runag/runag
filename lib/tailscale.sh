@@ -26,7 +26,7 @@ tailscale::install() (
     apt::install tailscale || softfail || return $?
 
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm tailscale || softfail || return $?
+    sudo pacman --sync --needed --noconfirm tailscale || softfail || return $?
   fi
 )
 

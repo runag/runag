@@ -30,7 +30,7 @@ syncthing::install() (
     apt::install syncthing || softfail || return $?
         
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm syncthing || softfail || return $?
+    sudo pacman --sync --needed --noconfirm syncthing || softfail || return $?
   fi
 
   systemctl --user --quiet --now enable syncthing.service || softfail || return $?

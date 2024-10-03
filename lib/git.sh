@@ -163,7 +163,7 @@ git::ensure_git_is_installed() (
         apt::install git || softfail || return $?
 
       elif [ "${ID:-}" = arch ]; then
-        pacman --sync --needed --noconfirm git || softfail || return $?
+        sudo pacman --sync --needed --noconfirm git || softfail || return $?
 
       else
         softfail "Unable to install git, unknown operating system" || return $?
