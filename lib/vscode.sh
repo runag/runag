@@ -27,9 +27,7 @@ vscode::install() (
     apt::install code || softfail || return $?
 
   elif [ "${ID:-}" = arch ]; then
-    pacman --sync --needed --noconfirm \
-      code \
-        || softfail || return $?
+    pacman --sync --needed --noconfirm code || softfail || return $?
   fi
 )
 

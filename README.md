@@ -51,7 +51,7 @@ run [function_name [function_arguments]]
 mkdir runag-offline-install && cd runag-offline-install
 runag offline_runag_install::create_or_update
 
-# install from it
+# perform offline install from the runag-offline-install directory
 bash deploy-offline.sh
 ```
 

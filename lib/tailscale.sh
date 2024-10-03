@@ -18,11 +18,16 @@ tailscale::install() (
   # Load operating system identification data
   . /etc/os-release || softfail || return $?
 
-  apt::add_source_with_key "tailscale" \
-    "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" \
-    "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::add_source_with_key "tailscale" \
+      "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" \
+      "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?
 
-  apt::install tailscale || softfail || return $?
+    apt::install tailscale || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    pacman --sync --needed --noconfirm tailscale || softfail || return $?
+  fi
 )
 
 tailscale::is_logged_in() {
