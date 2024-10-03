@@ -2,11 +2,12 @@
 dist
 docs
 runagfiles
-scripts
 src
 tests
 
 .gitattributes
 .ignore
+.shellcheckrc
+build.sh
 deploy.sh
 runag-*.tgz

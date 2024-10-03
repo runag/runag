@@ -101,9 +101,16 @@ asdf::install ()
     git::place_up_to_date_clone --branch "${asdf_version}" "https://github.com/asdf-vm/asdf.git" "${HOME}/.asdf" || softfail || return $?;
     asdf::load || softfail || return $?
 }
-asdf::install_dependencies::apt () 
+asdf::install_dependencies () 
 { 
-    apt::install curl git || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::install curl git || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm curl git || softfail || return $?;
+        fi;
+    fi )
 }
 asdf::install_shellfile () 
 { 
@@ -288,46 +295,6 @@ aws_secret_access_key=${aws_secret_access_key}
 INI
  softfail || return $?
 }
-benchmark::actually_run () 
-{ 
-    local result_file="$1";
-    echo "### CPU SPEED ###" >> "${result_file}";
-    sysbench cpu run >> "${result_file}" || softfail || return $?;
-    echo "### THREADS ###" >> "${result_file}";
-    sysbench threads run >> "${result_file}" || softfail || return $?;
-    echo "### RAM WRITE, 4KiB BLOCKS ###" >> "${result_file}";
-    sysbench memory run --memory-block-size=4096 >> "${result_file}" || softfail || return $?;
-    ( local temp_dir;
-    temp_dir="$(mktemp -d "${HOME}/benchmark-XXXXXXXXXX")" || softfail || return $?;
-    cd "${temp_dir}" || softfail || return $?;
-    benchmark::fileio "${result_file}" || softfail || return $?;
-    benchmark::fileio "${result_file}" --file-extra-flags=direct || softfail || return $?;
-    rmdir "${temp_dir}" || softfail || return $? ) || softfail || return $?
-}
-benchmark::fileio () 
-{ 
-    local result_file="$1";
-    sysbench fileio prepare --verbosity=2 ${2:-} || softfail || return $?;
-    echo "### SEQUENTIAL READ ${2:-} ###" >> "${result_file}";
-    sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 ${2:-} >> "${result_file}" || softfail || return $?;
-    echo "### RANDOM READ QD1 ${2:-} ###" >> "${result_file}";
-    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 ${2:-} >> "${result_file}" || softfail || return $?;
-    if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
-        echo "### RANDOM READ QD32 ${2:-} ###" >> "${result_file}";
-        sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${result_file}" || softfail || return $?;
-    fi;
-    echo "### RANDOM WRITE QD1 ${2:-} ###" >> "${result_file}";
-    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || softfail || return $?;
-    if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
-        echo "### RANDOM WRITE QD32 ${2:-} ###" >> "${result_file}";
-        sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-io-mode=async --file-async-backlog=32 ${2:-} >> "${result_file}" || softfail || return $?;
-    fi;
-    echo "### SEQUENTIAL WRITE ${2:-} ###" >> "${result_file}";
-    sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || softfail || return $?;
-    echo "### SEQUENTIAL WRITE IN SYNC MODE ${2:-} ###" >> "${result_file}";
-    sysbench fileio run --file-test-mode=seqwr --file-block-size=4096 --file-extra-flags=sync --file-fsync-freq=0 --file-fsync-end=on ${2:-} >> "${result_file}" || softfail || return $?;
-    sysbench fileio cleanup --verbosity=2 || softfail || return $?
-}
 benchmark::is_available () 
 { 
     if [[ "${OSTYPE}" =~ ^linux ]] || [[ "${OSTYPE}" =~ ^darwin ]]; then
@@ -342,11 +309,41 @@ benchmark::run ()
     local hostname_string;
     hostname_string="$(hostnamectl --static status)" || softfail || return $?;
     local current_date;
-    current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?;
+    current_date="$(date --utc "+%Y-%m-%dT%H%M%SZ")" || softfail || return $?;
     local result_file;
-    result_file="$(mktemp -u "${HOME}/benchmark ${hostname_string} ${current_date} XXXXXXXXXX")" || softfail || return $?;
-    benchmark::actually_run "${result_file}.txt" || softfail || return $?;
-    echo "${result_file}.txt"
+    result_file="$(mktemp "benchmark-${hostname_string}-${current_date}-XXXX.txt")" || softfail || return $?;
+    benchmark::run::indeed | tee "${result_file}";
+    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}
+benchmark::run::indeed () 
+{ 
+    ( echo "## CPU SPEED ##";
+    sysbench cpu run || softfail || return $?;
+    echo "## THREADS ##";
+    sysbench threads run || softfail || return $?;
+    echo "## RAM WRITE, 4KiB BLOCKS ##";
+    sysbench memory run --memory-block-size=4096 || softfail || return $?;
+    local temp_dir;
+    temp_dir="$(mktemp -d "${HOME}/.benchmark-XXXXXX")" || softfail || return $?;
+    cd "${temp_dir}" || softfail || return $?;
+    sysbench fileio prepare --verbosity=2 --file-extra-flags=direct || softfail || return $?;
+    sync || softfail || return $?;
+    echo "## RANDOM READ QD1 ##";
+    sysbench fileio run --file-test-mode=rndrd --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=off --file-extra-flags=direct || softfail || return $?;
+    echo "## RANDOM WRITE QD1 ##";
+    sysbench fileio run --file-test-mode=rndwr --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-extra-flags=direct || softfail || return $?;
+    if ! [[ "${OSTYPE}" =~ ^darwin ]]; then
+        echo "## RANDOM READ QD32 ##";
+        sysbench fileio run --file-test-mode=rndrd --file-io-mode=async --file-async-backlog=32 --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=off || softfail || return $?;
+        echo "## RANDOM WRITE QD32 ##";
+        sysbench fileio run --file-test-mode=rndwr --file-io-mode=async --file-async-backlog=32 --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on || softfail || return $?;
+    fi;
+    echo "## SEQUENTIAL READ ##";
+    sysbench fileio run --file-test-mode=seqrd --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=off --file-extra-flags=direct || softfail || return $?;
+    echo "## SEQUENTIAL WRITE ##";
+    sysbench fileio run --file-test-mode=seqwr --file-extra-flags=sync --file-block-size=4096 --file-fsync-freq=0 --file-fsync-end=on --file-extra-flags=direct || softfail || return $?;
+    sysbench fileio cleanup --verbosity=2 || softfail || return $?;
+    rmdir "${temp_dir}" || softfail || return $? )
 }
 btrfs::check () 
 { 
@@ -633,16 +630,32 @@ direnv::save_variable_block ()
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?;
     direnv allow "${envrc_path}" || softfail || return $?
 }
-erlang::install_dependencies::apt () 
+erlang::install_dependencies () 
 { 
-    local package_list=(autoconf build-essential fop libncurses5-dev libssh-dev libxml2-utils m4 xsltproc);
-    apt::install "${package_list[@]}" || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        local package_list=(autoconf build-essential fop libncurses5-dev libssh-dev libxml2-utils m4 xsltproc);
+        apt::install "${package_list[@]}" || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            local package_list=(base-devel fop libssh libxslt ncurses);
+            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+        fi;
+    fi )
 }
-erlang::install_dependencies::observer::apt () 
+erlang::install_dependencies::observer () 
 { 
-    local package_list;
-    mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?;
-    apt::install libgl1-mesa-dev libglu1-mesa-dev libpng-dev "${package_list[@]}" || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        local package_list;
+        mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?;
+        apt::install libgl1-mesa-dev libglu1-mesa-dev libpng-dev "${package_list[@]}" || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            local package_list=(glu libpng mesa wxwidgets-gtk3);
+            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+        fi;
+    fi )
 }
 fail () 
 { 
@@ -1182,6 +1195,25 @@ git interpret-trailers --if-exists addIfDifferent --trailer "Signed-off-by: \${u
 SHELL
  softfail || return $? )
 }
+git::clone_or_update_local_mirror () 
+{ 
+    local source_path="$1";
+    local dest_path="$2";
+    local remote_name="${3:-}";
+    local source_path_full;
+    source_path_full="$(cd "${source_path}" > /dev/null 2>&1 && pwd)" || fail;
+    if [ ! -d "${dest_path}" ]; then
+        git clone "${source_path}" "${dest_path}" || fail;
+        local mirror_origin;
+        mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail;
+        git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail;
+        if [ -n "${remote_name}" ]; then
+            git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail;
+        fi;
+    else
+        git -C "${dest_path}" pull "${remote_name}" main || fail;
+    fi
+}
 git::create_or_update_mirror () 
 { 
     local source_url="$1";
@@ -1191,6 +1223,32 @@ git::create_or_update_mirror ()
     else
         git clone --mirror "${source_url}" "${dest_path}" || softfail || return $?;
     fi
+}
+git::ensure_git_is_installed () 
+{ 
+    ( if [[ "${OSTYPE}" =~ ^linux ]]; then
+        if ! command -v git > /dev/null; then
+            . /etc/os-release || softfail || return $?;
+            if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+                apt::update || softfail || return $?;
+                apt::install git || softfail || return $?;
+            else
+                if [ "${ID:-}" = arch ]; then
+                    pacman --sync --needed --noconfirm git || softfail || return $?;
+                else
+                    softfail "Unable to install git, unknown operating system" || return $?;
+                fi;
+            fi;
+        fi;
+    else
+        if [[ "${OSTYPE}" =~ ^darwin ]]; then
+            git --version > /dev/null || softfail "Please install git" || return $?;
+        else
+            if ! command -v git > /dev/null; then
+                softfail "Unable to install git, unknown operating system" || return $?;
+            fi;
+        fi;
+    fi )
 }
 git::get_remote_url_without_username () 
 { 
@@ -1211,23 +1269,6 @@ git::gnome_keyring_credentials::exists ()
     local server="$1";
     local login="$2";
     secret-tool lookup server "${server}" user "${login}" protocol https xdg:schema org.gnome.keyring.NetworkPassword > /dev/null
-}
-git::install_git () 
-{ 
-    if [[ "${OSTYPE}" =~ ^linux ]]; then
-        if ! command -v git > /dev/null; then
-            if command -v apt-get > /dev/null; then
-                apt::update || softfail || return $?;
-                apt::install git || softfail || return $?;
-            else
-                softfail "Unable to install git, apt-get not found" || return $?;
-            fi;
-        fi;
-    else
-        if [[ "${OSTYPE}" =~ ^darwin ]]; then
-            git --version > /dev/null || softfail "Please install git" || return $?;
-        fi;
-    fi
 }
 git::install_libsecret_credential_helper () 
 { 
@@ -1710,13 +1751,27 @@ linux::get_ipv6_address ()
     fi;
     echo "${ip_address}"
 }
-linux::install_gnome_keyring_and_libsecret::apt () 
+linux::install_gnome_keyring_and_libsecret () 
 { 
-    apt::install gnome-keyring libsecret-tools libsecret-1-0 libsecret-1-dev || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::install gnome-keyring libsecret-tools libsecret-1-0 libsecret-1-dev || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm gnome-keyring libsecret || softfail || return $?;
+        fi;
+    fi )
 }
-linux::install_runag_essential_dependencies::apt () 
+linux::install_runag_essential_dependencies () 
 { 
-    apt::install apt-transport-https curl git gpg jq pass xxd || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::install apt-transport-https curl git gpg jq pass xxd || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm curl git gnupg jq pass tinyxxd || softfail || return $?;
+        fi;
+    fi )
 }
 linux::is_user_exists () 
 { 
@@ -1958,10 +2013,18 @@ nodejs::install::apt ()
     apt::add_source_with_key "nodesource" "https://deb.nodesource.com/node_${version}.x nodistro main" "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" || softfail || return $?;
     apt::install nodejs || softfail || return $?
 }
-nodejs::install_dependencies::apt () 
+nodejs::install_dependencies () 
 { 
-    local package_list=(curl dirmngr gawk gpg);
-    apt::install "${package_list[@]}" || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        local package_list=(curl dirmngr gawk gpg);
+        apt::install "${package_list[@]}" || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            local package_list=(curl gawk gnupg);
+            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+        fi;
+    fi )
 }
 nodejs::install_yarn::apt () 
 { 
@@ -2356,9 +2419,16 @@ postgresql::psql ()
     done;
     "${psql_command[@]}" "${arguments_list[@]}" "$@"
 }
-python::install::apt () 
+python::install () 
 { 
-    apt::install python-is-python3 python3 pipx || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::install python-is-python3 python3 pipx || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm python python-pipx || softfail || return $?;
+        fi;
+    fi )
 }
 rails::get_database_config () 
 { 
@@ -2742,13 +2812,21 @@ ruby::gem ()
 }
 ruby::install::apt () 
 { 
-    ruby::install_dependencies::apt || softfail || return $?;
+    ruby::install_dependencies || softfail || return $?;
     apt::install ruby-full || softfail || return $?
 }
-ruby::install_dependencies::apt () 
+ruby::install_dependencies () 
 { 
-    local package_list=(build-essential libedit-dev libffi-dev libsqlite3-dev libssl-dev libyaml-dev zlib1g-dev);
-    apt::install "${package_list[@]}" || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        local package_list=(build-essential libedit-dev libffi-dev libsqlite3-dev libssl-dev libyaml-dev zlib1g-dev);
+        apt::install "${package_list[@]}" || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            local package_list=(base-devel libffi libyaml openssl rust sqlite zlib);
+            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+        fi;
+    fi )
 }
 ruby::install_disable_spring_shellfile () 
 { 
@@ -2783,8 +2861,7 @@ rubygems::credentials::exists ()
 rubygems::direnv_credentials () 
 { 
     local GEM_HOST_API_KEY="$1";
-    shell::dump_variables --export GEM_HOST_API_KEY | file::write_block --mode 0600 .envrc RUBYGEMS-CREDENTIALS;
-    test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?;
+    direnv::save_variable_block --block-name RUBYGEMS-CREDENTIALS GEM_HOST_API_KEY || fail;
     file::append_line_unless_present --keep-permissions ".gitignore" "/.envrc" || softfail || return $?;
     if [ -f .npmignore ]; then
         file::append_line_unless_present --keep-permissions ".npmignore" "/.envrc" || softfail || return $?;
@@ -2820,7 +2897,7 @@ runag::create_or_update_offline_install ()
             ( cd "${runagfile_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runagfiles/${runagfile_dir_name}" && git fetch "offline-install" ) || softfail || return $?;
         fi;
     done;
-    cp -f "${runag_path}/scripts/deploy-offline.sh" . || softfail || return $? )
+    cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $? )
 }
 runag::is_current_offline_install_connected () 
 { 
@@ -3576,7 +3653,11 @@ ssh::add_ssh_config_d_include_directive ()
 { 
     dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?;
     dir::should_exists --mode 0700 "${HOME}/.ssh/ssh_config.d" || softfail "Unable to create ssh user config.d directory" || return $?;
-    printf "Host *\nInclude ~/.ssh/ssh_config.d/*.conf\n" | file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" || softfail "Unable to add configuration to user ssh config" || return $?
+    file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" <<SHELL || 
+Host *
+Include ~/.ssh/ssh_config.d/*.conf
+SHELL
+ softfail "Unable to add configuration to user ssh config" || return $?
 }
 ssh::call () 
 { 
@@ -4405,7 +4486,11 @@ sshd::disable_password_authentication ()
 { 
     dir::should_exists --sudo --mode 0755 /etc/ssh || softfail || return $?;
     dir::should_exists --sudo --mode 0755 /etc/ssh/sshd_config.d || softfail || return $?;
-    file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf <<< "PasswordAuthentication no" || softfail || return $?
+    file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf <<SHELL || 
+PasswordAuthentication no
+AuthenticationMethods publickey
+SHELL
+ softfail || return $?
 }
 sublime_merge::get_config_path () 
 { 
@@ -4423,10 +4508,17 @@ sublime_merge::get_config_path ()
     dir::should_exists --mode 0700 "${config_path}" || softfail || return $?;
     echo "${config_path}"
 }
-sublime_merge::install::apt () 
+sublime_merge::install () 
 { 
-    apt::add_source_with_key "sublimetext" "https://download.sublimetext.com/ apt/stable/" "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?;
-    apt::install sublime-merge || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::add_source_with_key "sublimetext" "https://download.sublimetext.com/ apt/stable/" "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?;
+        apt::install sublime-merge || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            true;
+        fi;
+    fi )
 }
 sublime_merge::install_config_file () 
 { 
@@ -4464,10 +4556,17 @@ sublime_text::get_config_path ()
     dir::should_exists --mode 0700 "${config_path}" || softfail || return $?;
     echo "${config_path}"
 }
-sublime_text::install::apt () 
+sublime_text::install () 
 { 
-    apt::add_source_with_key "sublimetext" "https://download.sublimetext.com/ apt/stable/" "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?;
-    apt::install sublime-text || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::add_source_with_key "sublimetext" "https://download.sublimetext.com/ apt/stable/" "https://download.sublimetext.com/sublimehq-pub.gpg" || softfail || return $?;
+        apt::install sublime-text || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            true;
+        fi;
+    fi )
 }
 sublime_text::install_config_file () 
 { 
@@ -4502,19 +4601,18 @@ sublime_text::merge_config_file ()
     config_path="$(sublime_text::get_config_path)" || softfail || return $?;
     config::merge "${src_path}" "${config_path}/Packages/User/${file_name}" || softfail || return $?
 }
-syncthing::install::apt () 
+syncthing::install () 
 { 
-    apt::add_source_with_key "syncthing" "https://apt.syncthing.net/ syncthing stable" "https://syncthing.net/release-key.txt" || softfail "Unable to add syncthing apt source" || return $?;
-    apt::install syncthing || softfail || return $?;
-    systemctl --user --quiet --now enable syncthing.service || softfail || return $?;
-    file::write "${HOME}/.local/share/applications/syncthing-start.desktop" <<SHELL || 
-[Desktop Entry]
-Type=Application
-NoDisplay=true
-Hidden=true
-SHELL
- fail
-    sudo update-desktop-database || fail
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::add_source_with_key "syncthing" "https://apt.syncthing.net/ syncthing stable" "https://syncthing.net/release-key.txt" || softfail "Unable to add syncthing apt source" || return $?;
+        apt::install syncthing || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm syncthing || softfail || return $?;
+        fi;
+    fi;
+    systemctl --user --quiet --now enable syncthing.service || softfail || return $? )
 }
 syncthing::install::macos () 
 { 
@@ -4863,8 +4961,14 @@ systemd::write_user_unit ()
 tailscale::install () 
 { 
     ( . /etc/os-release || softfail || return $?;
-    apt::add_source_with_key "tailscale" "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?;
-    apt::install tailscale || softfail || return $? )
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::add_source_with_key "tailscale" "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?;
+        apt::install tailscale || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm tailscale || softfail || return $?;
+        fi;
+    fi )
 }
 tailscale::install_issue_2541_workaround () 
 { 
@@ -5461,14 +5565,17 @@ vscode::get_config_path ()
     dir::should_exists --mode 0700 "${config_path}" || softfail || return $?;
     echo "${config_path}"
 }
-vscode::install::apt () 
+vscode::install () 
 { 
-    apt::add_source_with_key "vscode" "https://packages.microsoft.com/repos/code stable main" "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?;
-    apt::install code || softfail || return $?
-}
-vscode::install::snap () 
-{ 
-    sudo snap install code --classic || softfail || return $?
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::add_source_with_key "vscode" "https://packages.microsoft.com/repos/code stable main" "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?;
+        apt::install code || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            pacman --sync --needed --noconfirm code || softfail || return $?;
+        fi;
+    fi )
 }
 vscode::install_extensions () 
 { 
