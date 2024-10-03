@@ -3,4 +3,5 @@
 
 # exclude derivative files from search
 /deploy.sh
+/deploy-offline.sh
 /dist
