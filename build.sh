@@ -83,10 +83,9 @@ fi
 
 # run shellcheck
 # shellcheck disable=SC2046
-shellcheck index.sh \
+shellcheck build.sh index.sh \
   bin/* \
   $(find lib -name '*.sh') \
-  $(find scripts -name '*.sh') \
   $(find src -name '*.sh')
 
 # make docs

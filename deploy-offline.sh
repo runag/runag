@@ -15,9 +15,6 @@
 #  limitations under the License.
 set -o nounset
 
-# This script is wrapped inside a function with a random name to lower the chance for the bash
-# to run some unexpected commands in case if "curl | bash" fails in the middle of download.
-__xVhMyefCbBnZFUQtwqCs() {
 fail () 
 { 
     local exit_status;
@@ -126,91 +123,45 @@ git::ensure_git_is_installed ()
         fi;
     fi )
 }
-git::place_up_to_date_clone () 
+git::clone_or_update_local_mirror () 
 { 
-    local branch_name;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -b | --branch)
-                local branch_name="$2";
-                shift;
-                shift
-            ;;
-            -*)
-                softfail "Unknown argument: $1" || return $?
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    local remote_url="$1";
+    local source_path="$1";
     local dest_path="$2";
-    if [ -d "${dest_path}" ]; then
-        local current_url;
-        current_url="$(cd "${dest_path}" && git config remote.origin.url)" || softfail || return $?;
-        if [ "${current_url}" != "${remote_url}" ]; then
-            git::remove_current_clone "${dest_path}" || softfail || return $?;
-        fi;
-    fi;
+    local remote_name="${3:-}";
+    local source_path_full;
+    source_path_full="$(cd "${source_path}" > /dev/null 2>&1 && pwd)" || fail;
     if [ ! -d "${dest_path}" ]; then
-        git clone "${remote_url}" "${dest_path}" || softfail "Unable to clone ${remote_url}" || return $?;
-    fi;
-    if [ -n "${branch_name:-}" ]; then
-        ( cd "${dest_path}" && git remote update ) || softfail "Unable to perform git remote update: ${dest_path}" || return $?;
-        ( cd "${dest_path}" && git fetch ) || softfail "Unable to perform git fetch: ${dest_path}" || return $?;
-        ( cd "${dest_path}" && git checkout "${branch_name}" ) || softfail "Unable to perform git checkout: ${dest_path}" || return $?;
+        git clone "${source_path}" "${dest_path}" || fail;
+        local mirror_origin;
+        mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail;
+        git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail;
+        if [ -n "${remote_name}" ]; then
+            git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail;
+        fi;
     else
-        ( cd "${dest_path}" && git pull ) || softfail "Unable to perform git pull: ${dest_path}" || return $?;
+        git -C "${dest_path}" pull "${remote_name}" main || fail;
     fi
 }
-git::remove_current_clone () 
+runag::offline_deploy_script () 
 { 
-    local dest_path="$1";
-    local dest_full_path;
-    dest_full_path="$(cd "${dest_path}" > /dev/null 2>&1 && pwd)" || softfail || return $?;
-    local dest_parent_dir;
-    dest_parent_dir="$(dirname "${dest_full_path}")" || softfail || return $?;
-    local dest_dir_name;
-    dest_dir_name="$(basename "${dest_full_path}")" || softfail || return $?;
-    local backup_path;
-    backup_path="$(mktemp -u "${dest_parent_dir}/${dest_dir_name}-PREVIOUS-CLONE-XXXXXXXXXX")" || softfail || return $?;
-    mv "${dest_full_path}" "${backup_path}" || softfail || return $?
-}
-runagfile::add () 
-{ 
-    local user_name;
-    user_name="$(cut -d "/" -f 1 <<< "$1")" || softfail || return $?;
-    local repo_name;
-    repo_name="$(cut -d "/" -f 2 <<< "$1")" || softfail || return $?;
-    git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
-}
-runag::online_deploy_script () 
-{ 
-    if [ "${RUNAG_VERBOSE:-}" = true ]; then
+    ( if [ "${RUNAG_VERBOSE:-}" = true ]; then
         PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** ';
         set -o xtrace;
     fi;
     git::ensure_git_is_installed || softfail || return $?;
-    git::place_up_to_date_clone "${RUNAG_DIST_REPO}" "${HOME}/.runag" || softfail || return $?;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            add)
-                runagfile::add "$2" || softfail || return $?;
-                shift;
-                shift
-            ;;
-            run)
-                shift;
-                "${HOME}/.runag/bin/runag" "$@" || softfail || return $?;
-                break
-            ;;
-            *)
-                softfail "runag::online_deploy_script: command not found: $*" || return $?
-            ;;
-        esac;
-    done
+    local install_path="${HOME}/.runag";
+    if [ ! -d runag.git ]; then
+        fail "Unable to find runag.git directory";
+    fi;
+    git::clone_or_update_local_mirror runag.git "${install_path}" "offline-install" || fail;
+    local runagfile;
+    for runagfile in runagfiles/*;
+    do
+        if [ -d "${runagfile}" ]; then
+            git::clone_or_update_local_mirror "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail;
+        fi;
+    done;
+    cd "${HOME}" || fail;
+    "${install_path}"/bin/runag )
 }
-export RUNAG_DIST_REPO="${RUNAG_DIST_REPO:-https://github.com/runag/runag.git}"
-runag::online_deploy_script "$@"
-}; __xVhMyefCbBnZFUQtwqCs "$@"
+runag::offline_deploy_script "$@"
