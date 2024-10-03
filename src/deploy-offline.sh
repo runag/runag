@@ -34,9 +34,9 @@ runag::offline_deploy_script() (
 
   git::clone_or_update_local_mirror runag.git "${install_path}" "offline-install" || fail
 
-  local runagfile; for runagfile in runagfiles/*; do
-    if [ -d "${runagfile}" ]; then
-      git::clone_or_update_local_mirror "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail
+  local runagfile_path; for runagfile_path in runagfiles/*; do
+    if [ -d "${runagfile_path}" ]; then
+      git::clone_or_update_local_mirror "${runagfile_path}" "${install_path}/${runagfile_path}" "offline-install" || fail
     fi
   done
 

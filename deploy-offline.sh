@@ -132,9 +132,9 @@ git::clone_or_update_local_mirror ()
     local source_path_full;
     source_path_full="$(cd "${source_path}" > /dev/null 2>&1 && pwd)" || fail;
     if [ ! -d "${dest_path}" ]; then
-        git clone "${source_path}" "${dest_path}" || fail;
+        git clone "${source_path_full}" "${dest_path}" || fail;
         local mirror_origin;
-        mirror_origin="$(git -C "${source_path}" remote get-url origin)" || fail;
+        mirror_origin="$(git -C "${source_path_full}" remote get-url origin)" || fail;
         git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail;
         if [ -n "${remote_name}" ]; then
             git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail;
@@ -155,11 +155,11 @@ runag::offline_deploy_script ()
         fail "Unable to find runag.git directory";
     fi;
     git::clone_or_update_local_mirror runag.git "${install_path}" "offline-install" || fail;
-    local runagfile;
-    for runagfile in runagfiles/*;
+    local runagfile_path;
+    for runagfile_path in runagfiles/*;
     do
-        if [ -d "${runagfile}" ]; then
-            git::clone_or_update_local_mirror "${runagfile}" "${install_path}/runagfiles/${runagfile}" "offline-install" || fail;
+        if [ -d "${runagfile_path}" ]; then
+            git::clone_or_update_local_mirror "${runagfile_path}" "${install_path}/${runagfile_path}" "offline-install" || fail;
         fi;
     done;
     cd "${HOME}" || fail;
