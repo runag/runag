@@ -108,7 +108,7 @@ asdf::install_dependencies ()
         apt::install curl git || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm curl git || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm curl git || softfail || return $?;
         fi;
     fi )
 }
@@ -639,7 +639,7 @@ erlang::install_dependencies ()
     else
         if [ "${ID:-}" = arch ]; then
             local package_list=(base-devel fop libssh libxslt ncurses);
-            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
         fi;
     fi )
 }
@@ -653,7 +653,7 @@ erlang::install_dependencies::observer ()
     else
         if [ "${ID:-}" = arch ]; then
             local package_list=(glu libpng mesa wxwidgets-gtk3);
-            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
         fi;
     fi )
 }
@@ -1234,7 +1234,8 @@ git::ensure_git_is_installed ()
                 apt::install git || softfail || return $?;
             else
                 if [ "${ID:-}" = arch ]; then
-                    pacman --sync --needed --noconfirm git || softfail || return $?;
+                    sudo pacman --sync --refresh --sysupgrade --noconfirm || softfail || return $?;
+                    sudo pacman --sync --needed --noconfirm git || softfail || return $?;
                 else
                     softfail "Unable to install git, unknown operating system" || return $?;
                 fi;
@@ -1758,7 +1759,7 @@ linux::install_gnome_keyring_and_libsecret ()
         apt::install gnome-keyring libsecret-tools libsecret-1-0 libsecret-1-dev || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm gnome-keyring libsecret || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm gnome-keyring libsecret || softfail || return $?;
         fi;
     fi )
 }
@@ -1769,7 +1770,7 @@ linux::install_runag_essential_dependencies ()
         apt::install apt-transport-https curl git gpg jq pass xxd || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm curl git gnupg jq pass tinyxxd || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm curl git gnupg jq pass tinyxxd || softfail || return $?;
         fi;
     fi )
 }
@@ -2022,7 +2023,7 @@ nodejs::install_dependencies ()
     else
         if [ "${ID:-}" = arch ]; then
             local package_list=(curl gawk gnupg);
-            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
         fi;
     fi )
 }
@@ -2426,7 +2427,7 @@ python::install ()
         apt::install python-is-python3 python3 pipx || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm python python-pipx || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm python python-pipx || softfail || return $?;
         fi;
     fi )
 }
@@ -2824,7 +2825,7 @@ ruby::install_dependencies ()
     else
         if [ "${ID:-}" = arch ]; then
             local package_list=(base-devel libffi libyaml openssl rust sqlite zlib);
-            pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?;
         fi;
     fi )
 }
@@ -4609,7 +4610,7 @@ syncthing::install ()
         apt::install syncthing || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm syncthing || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm syncthing || softfail || return $?;
         fi;
     fi;
     systemctl --user --quiet --now enable syncthing.service || softfail || return $? )
@@ -4966,7 +4967,7 @@ tailscale::install ()
         apt::install tailscale || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm tailscale || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm tailscale || softfail || return $?;
         fi;
     fi )
 }
@@ -5573,7 +5574,7 @@ vscode::install ()
         apt::install code || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
-            pacman --sync --needed --noconfirm code || softfail || return $?;
+            sudo pacman --sync --needed --noconfirm code || softfail || return $?;
         fi;
     fi )
 }
