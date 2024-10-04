@@ -76,7 +76,7 @@ linux::reset_locales() {
   local item; for item in "$@"; do
     if [[ "${item}" =~ ^[[:alpha:]_]+=(.*)$ ]]; then
       local locale_match; locale_match="$(<<<"${BASH_REMATCH[1]}" sed -E 's/[.]/[.]/g')" || softfail || return $?
-      sudo sed --in-place -E 's/^# ('"${locale_match}"' )/\1/g' /etc/locale.gen || softfail || return $?
+      sudo sed --in-place -E 's/^#\s*('"${locale_match}"'(\s|$))/\1/g' /etc/locale.gen || softfail || return $?
     fi
   done
 
