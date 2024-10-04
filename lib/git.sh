@@ -132,9 +132,26 @@ git::install_libsecret_credential_helper() {
   fi
 }
 
-git::use_libsecret_credential_helper() {
-  git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || softfail || return $?
-}
+git::use_libsecret_credential_helper() (
+  local libsecret_path
+
+  # Load operating system identification data
+  . /etc/os-release || fail
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    libsecret_path="/usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret"
+  elif [ "${ID:-}" = arch ]; then
+    libsecret_path="/usr/lib/git-core/git-credential-libsecret"
+  else
+    softfail "Unsupported operating system" || return $?
+  fi
+
+  if [ ! -f "${libsecret_path}" ]; then
+    softfail "Unable to find libsecret: ${libsecret_path}" || return $?
+  fi
+
+  git config --global credential.helper "${libsecret_path}" || softfail || return $?
+)
 
 git::gnome_keyring_credentials::exists() {
   local server="$1"
@@ -167,7 +184,7 @@ git::ensure_git_is_installed() (
         sudo pacman --sync --needed --noconfirm git || softfail || return $?
 
       else
-        softfail "Unable to install git, unknown operating system" || return $?
+        softfail "Unable to install git, unsupported operating system" || return $?
       fi
     fi
 
@@ -177,7 +194,7 @@ git::ensure_git_is_installed() (
     git --version >/dev/null || softfail "Please install git" || return $?
 
   elif ! command -v git >/dev/null; then
-    softfail "Unable to install git, unknown operating system" || return $?
+    softfail "Unable to install git, unsupported operating system" || return $?
   fi
 )
 
