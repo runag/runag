@@ -81,7 +81,18 @@ linux::reset_locales() {
   done
 
   sudo locale-gen --keep-existing || softfail || return $?
-  sudo update-locale --reset "$@" || softfail || return $?
+
+  # sudo update-locale --reset "$@" || softfail || return $?
+  # the following should do the same
+
+  local temp_file; temp_file="$(mktemp)" || softfail || return $?
+  {
+    local locale_line; for locale_line in "$@"; do
+      printf "%q\n" "${locale_line}" || softfail || return $?
+    done
+  } >"${temp_file}" || softfail || return $?
+
+  file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || fail
 
   shell::unset_locales || softfail || return $?
 
