@@ -130,6 +130,25 @@ fi
 SHELL
 }
 
+shellfile::install_local_bin_path_profile() {
+  local license_text; license_text="$(runag::print_license)" || softfail || return $?
+
+  shellfile::write "$@" "profile/local-bin-path" <<SHELL || softfail || return $?
+${license_text}
+
+if [ -d "\${HOME}/.local/bin" ]; then
+  case ":\${PATH}:" in
+  *":\${HOME}/.local/bin:"*)
+    true
+    ;;
+  *)
+    export PATH="\${HOME}/.local/bin:\${PATH}"
+    ;;
+  esac
+fi
+SHELL
+}
+
 shellfile::install_direnv_rc() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
