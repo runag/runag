@@ -92,7 +92,7 @@ linux::reset_locales() {
     done
   } >"${temp_file}" || softfail || return $?
 
-  file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || fail
+  file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || softfail || return $?
 
   shell::unset_locales || softfail || return $?
 

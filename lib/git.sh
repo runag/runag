@@ -95,19 +95,21 @@ git::clone_or_update_local_mirror() {
   local dest_path="$2"
   local remote_name="${3:-}"
 
-  local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || fail
+  local source_path_full; source_path_full="$(cd "${source_path}" >/dev/null 2>&1 && pwd)" || softfail || return $?
 
   if [ ! -d "${dest_path}" ]; then
-    git clone "${source_path_full}" "${dest_path}" || fail
+    git clone "${source_path_full}" "${dest_path}" || softfail || return $?
 
-    local mirror_origin; mirror_origin="$(git -C "${source_path_full}" remote get-url origin)" || fail
-    git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail
+    local mirror_origin; mirror_origin="$(git -C "${source_path_full}" remote get-url origin)" || softfail || return $?
+
+    git -C "${dest_path}" remote set-url origin "${mirror_origin}" || softfail || return $?
 
     if [ -n "${remote_name}" ]; then
-      git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail
+      git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || softfail || return $?
     fi
+
   else
-    git -C "${dest_path}" pull "${remote_name}" main || fail
+    git -C "${dest_path}" pull "${remote_name}" main || softfail || return $?
   fi
 }
 
@@ -136,7 +138,7 @@ git::use_libsecret_credential_helper() (
   local libsecret_path
 
   # Load operating system identification data
-  . /etc/os-release || fail
+  . /etc/os-release || softfail || return $?
 
   if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
     libsecret_path="/usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret"
