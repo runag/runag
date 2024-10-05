@@ -1237,7 +1237,7 @@ git::ensure_git_is_installed ()
                     sudo pacman --sync --refresh --sysupgrade --noconfirm || softfail || return $?;
                     sudo pacman --sync --needed --noconfirm git || softfail || return $?;
                 else
-                    softfail "Unable to install git, unknown operating system" || return $?;
+                    softfail "Unable to install git, unsupported operating system" || return $?;
                 fi;
             fi;
         fi;
@@ -1246,7 +1246,7 @@ git::ensure_git_is_installed ()
             git --version > /dev/null || softfail "Please install git" || return $?;
         else
             if ! command -v git > /dev/null; then
-                softfail "Unable to install git, unknown operating system" || return $?;
+                softfail "Unable to install git, unsupported operating system" || return $?;
             fi;
         fi;
     fi )
@@ -1370,7 +1370,21 @@ git::remove_current_clone ()
 }
 git::use_libsecret_credential_helper () 
 { 
-    git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret || softfail || return $?
+    ( local libsecret_path;
+    . /etc/os-release || fail;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        libsecret_path="/usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret";
+    else
+        if [ "${ID:-}" = arch ]; then
+            libsecret_path="/usr/lib/git-core/git-credential-libsecret";
+        else
+            softfail "Unsupported operating system" || return $?;
+        fi;
+    fi;
+    if [ ! -f "${libsecret_path}" ]; then
+        softfail "Unable to find libsecret: ${libsecret_path}" || return $?;
+    fi;
+    git config --global credential.helper "${libsecret_path}" || softfail || return $? )
 }
 github::download_release () 
 { 
@@ -1802,11 +1816,20 @@ linux::reset_locales ()
         if [[ "${item}" =~ ^[[:alpha:]_]+=(.*)$ ]]; then
             local locale_match;
             locale_match="$(sed -E 's/[.]/[.]/g' <<< "${BASH_REMATCH[1]}")" || softfail || return $?;
-            sudo sed --in-place -E 's/^# ('"${locale_match}"' )/\1/g' /etc/locale.gen || softfail || return $?;
+            sudo sed --in-place -E 's/^#\s*('"${locale_match}"'(\s|$))/\1/g' /etc/locale.gen || softfail || return $?;
         fi;
     done;
     sudo locale-gen --keep-existing || softfail || return $?;
-    sudo update-locale --reset "$@" || softfail || return $?;
+    local temp_file;
+    temp_file="$(mktemp)" || softfail || return $?;
+    { 
+        local locale_line;
+        for locale_line in "$@";
+        do
+            printf "%q\n" "${locale_line}" || softfail || return $?;
+        done
+    } > "${temp_file}" || softfail || return $?;
+    file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || fail;
     shell::unset_locales || softfail || return $?;
     if [ "${carry_on}" = false ]; then
         local temp_file;
@@ -1898,6 +1921,18 @@ linux::update_remote_locale ()
     ( shell::unset_locales || fail;
     export REMOTE_CONTROL_MASTER=no;
     ssh::call linux::reset_locales "$@" || fail )
+}
+linux::user_media_path () 
+{ 
+    if [ -d /run/media ]; then
+        echo "/run/media/${USER}";
+    else
+        if [ -d /media ]; then
+            echo "/media/${USER}";
+        else
+            softfail "Unable to determine user mounts path" || return $?;
+        fi;
+    fi
 }
 linux::with_secure_temp_dir () 
 { 
@@ -2309,6 +2344,20 @@ EOF
     apt::install postfix || fail;
     sudo sed --in-place -E "s/^mydestination.*$/mydestination = localhost.localdomain, localhost/g" /etc/postfix/main.cf || fail;
     sudo systemctl reload postfix || fail
+}
+postgresql::as_postgres_user () 
+{ 
+    local postgres_user;
+    if [[ "${OSTYPE}" =~ ^darwin ]]; then
+        if [ -n "${SUDO_USER:-}" ]; then
+            postgres_user="${SUDO_USER}";
+        else
+            postgres_user="${USER}";
+        fi;
+    else
+        postgres_user=postgres;
+    fi;
+    sudo -i -u "${postgres_user}" "$@"
 }
 postgresql::create_role_if_not_exists () 
 { 
@@ -4969,7 +5018,8 @@ tailscale::install ()
         if [ "${ID:-}" = arch ]; then
             sudo pacman --sync --needed --noconfirm tailscale || softfail || return $?;
         fi;
-    fi )
+    fi;
+    sudo systemctl --quiet --now enable tailscaled || softfail || return $? )
 }
 tailscale::install_issue_2541_workaround () 
 { 
@@ -5009,7 +5059,7 @@ EOF
 tailscale::is_logged_in () 
 { 
     local backend_state;
-    backend_state="$(tailscale status --json | jq --raw-output --exit-status .BackendState; test "${PIPESTATUS[*]}" = "0 0")" || fail;
+    backend_state="$(tailscale status --json | jq --raw-output --exit-status .BackendState; test "${PIPESTATUS[*]}" = "0 0")" || fail "Unable to obtain tailscale status";
     if [ "${backend_state}" = "NeedsLogin" ]; then
         return 1;
     else
