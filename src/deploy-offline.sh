@@ -24,7 +24,7 @@ runag::offline_deploy_script() (
     set -o xtrace
   fi
 
-  git::ensure_git_is_installed || softfail || return $?
+  git::ensure_git_is_installed || fail
 
   local install_path="${HOME}/.runag"
 
