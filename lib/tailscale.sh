@@ -28,11 +28,13 @@ tailscale::install() (
   elif [ "${ID:-}" = arch ]; then
     sudo pacman --sync --needed --noconfirm tailscale || softfail || return $?
   fi
+
+  sudo systemctl --quiet --now enable tailscaled || softfail || return $?
 )
 
 tailscale::is_logged_in() {
   # this function is intent to use fail (and not softfail) in case of errors
-  local backend_state; backend_state="$(tailscale status --json | jq --raw-output --exit-status .BackendState; test "${PIPESTATUS[*]}" = "0 0")" || fail # no softfail here!
+  local backend_state; backend_state="$(tailscale status --json | jq --raw-output --exit-status .BackendState; test "${PIPESTATUS[*]}" = "0 0")" || fail "Unable to obtain tailscale status" # no softfail here!
 
   if [ "${backend_state}" = "NeedsLogin" ]; then
     return 1
