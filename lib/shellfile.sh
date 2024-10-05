@@ -57,12 +57,18 @@ SHELL
 
 shellfile::install_loader::bash() {
   shellfile::write_loader_block --file "${HOME}/.bashrc" --dir ".shellfile.d/rc" || softfail || return $?
-  shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
+
+  # Arch use .bash_profile, Debian use .profile
+  if [ -f "${HOME}/.bash_profile" ] || [ ! -f "${HOME}/.profile" ]; then
+    shellfile::write_loader_block --file "${HOME}/.bash_profile" --dir ".shellfile.d/profile" || softfail || return $?
+  else
+    shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
+  fi
 }
 
 shellfile::install_loader::zsh() {
   shellfile::write_loader_block --file "${HOME}/.zshrc" --dir ".shellfile.d/rc" || softfail || return $?
-  shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
+  shellfile::write_loader_block --file "${HOME}/.zprofile" --dir ".shellfile.d/profile" || softfail || return $?
 }
 
 shellfile::write() {
