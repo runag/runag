@@ -144,6 +144,8 @@ SHELL
 shellfile::install_editor_rc() {
   local editor_path; editor_path="$(command -v "$1")" || softfail || return $?
 
+  shift # TODO: arg parsing and passthrough
+
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
   shellfile::write "$@" "rc/editor" <<SHELL || softfail || return $?

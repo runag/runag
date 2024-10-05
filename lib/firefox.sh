@@ -15,7 +15,7 @@
 #  limitations under the License.
 
 firefox::enable_wayland() {
-  shellfile::write "$@" "profile/firefox-enable-wayland" <<SHELL || softfail || return $?
+  shellfile::write "profile/firefox-enable-wayland" <<SHELL || softfail || return $?
 export MOZ_ENABLE_WAYLAND=1
 SHELL
 }
