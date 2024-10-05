@@ -56,6 +56,7 @@ postgresql::psql() {
       --sudo)
         local user_name
 
+        # TODO: Check if that's ok for darwin
         if [[ "${OSTYPE}" =~ ^darwin ]]; then
           if [ -n "${SUDO_USER:-}" ]; then
             user_name="${SUDO_USER}"
@@ -81,6 +82,23 @@ postgresql::psql() {
   done
 
   "${psql_command[@]}" "${arguments_list[@]}" "$@"
+}
+
+postgresql::as_postgres_user() {
+  local postgres_user
+
+  # TODO: Check if that's ok for darwin
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
+    if [ -n "${SUDO_USER:-}" ]; then
+      postgres_user="${SUDO_USER}"
+    else
+      postgres_user="${USER}"
+    fi
+  else
+    postgres_user=postgres
+  fi
+
+  sudo -i -u "${postgres_user}" "$@"
 }
 
 # TODO: Library users probably will not have any untrusted input here, but perhaps I should account for possible SQL injections
