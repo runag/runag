@@ -335,3 +335,15 @@ linux::set_battery_charge_control_threshold() {
   <<<"${start_threshold}" sudo tee "${battery_path}/charge_control_start_threshold" >/dev/null || softfail || return $?
   <<<"${end_threshold}" sudo tee "${battery_path}/charge_control_end_threshold" >/dev/null || softfail || return $?
 }
+
+linux::user_media_path() {
+  if [ -d /run/media ]; then
+    echo "/run/media/${USER}"
+
+  elif [ -d /media ]; then
+    echo "/media/${USER}"
+
+  else
+    softfail "Unable to determine user mounts path" || return $?
+  fi
+}
