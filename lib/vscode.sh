@@ -14,39 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-vscode::install() (
-  . /etc/os-release || softfail || return $?
+vscode::install::apt() {
+  apt::add_source_with_key "vscode" \
+    "https://packages.microsoft.com/repos/code stable main" \
+    "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
 
-  # sudo snap install code --classic || softfail || return $?
-
-  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-    apt::add_source_with_key "vscode" \
-      "https://packages.microsoft.com/repos/code stable main" \
-      "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?
-
-    apt::install code || softfail || return $?
-
-  elif [ "${ID:-}" = arch ]; then
-    sudo pacman --sync --needed --noconfirm code || softfail || return $?
-  fi
-)
-
-vscode::get_config_path() {
-  local config_path
-
-  if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    config_path="${HOME}/Library/Application Support/Code"
-
-  elif [[ "${OSTYPE}" =~ ^msys ]]; then
-    config_path="${APPDATA}/Code"
-
-  else
-    dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?
-    config_path="${HOME}/.config/Code"
-  fi
-
-  dir::should_exists --mode 0700 "${config_path}" || softfail || return $?
-  echo "${config_path}"
+  apt::install code || softfail || return $?
 }
 
 vscode::list_extensions_to_temp_file() {
