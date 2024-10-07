@@ -103,6 +103,7 @@ Please refer to the source code for now.
 
 * [apt](lib/apt.sh)
 * [btrfs](lib/btrfs.sh)
+* [cross_platform](lib/cross_platform.sh)
 * [fstab](lib/fstab.sh)
 * [linux](lib/linux.sh)
 * [macos](lib/macos.sh)

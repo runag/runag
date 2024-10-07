@@ -523,6 +523,23 @@ config::merge ()
         fi;
     fi
 }
+cross_platform::config_home () 
+{ 
+    case "${OSTYPE}" in 
+        linux*)
+            echo "${XDG_CONFIG_HOME:-"${HOME}/.config"}"
+        ;;
+        darwin*)
+            echo "${HOME}/Library/Application Support"
+        ;;
+        msys*)
+            echo "${APPDATA}"
+        ;;
+        *)
+            softfail "Platform is not supported" || return $?
+        ;;
+    esac
+}
 dir::default_mode () 
 { 
     local umask_value;
@@ -599,7 +616,7 @@ dir::should_exists ()
 }
 direnv::save_variable_block () 
 { 
-    local block_name="SHELL VARIABLES";
+    ( local block_name="SHELL VARIABLES";
     local envrc_path=".envrc";
     while [ "$#" -gt 0 ]; do
         case "$1" in 
@@ -621,14 +638,24 @@ direnv::save_variable_block ()
             ;;
         esac;
     done;
-    if [ -e "${envrc_path}" ]; then
-        local envrc_dir;
-        envrc_dir="$(dirname "${envrc_path}")" || softfail || return $?;
-        ( cd "${envrc_dir}" && direnv status | grep -qFx "Found RC allowed true" ) || softfail "Direnv rc file should be allowed first" || return $?;
+    local envrc_dir;
+    envrc_dir="$(dirname "${envrc_path}")" || softfail || return $?;
+    local envrc_basename;
+    envrc_basename="$(basename "${envrc_path}")" || softfail || return $?;
+    cd "${envrc_dir}" || softfail "Unable to change directory: ${envrc_dir}" || return $?;
+    local found_any;
+    found_any="$(direnv status --json | jq --raw-output --exit-status 'if (.state | has("loadedRC")) and (.state | has("foundRC")) then if .state.loadedRC == null and .state.foundRC == null then "empty-ok" else "non-empty" end else false end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain empty list from direnv status" || return $?;
+    if [ "${found_any}" != "empty-ok" ]; then
+        local allowed_path;
+        allowed_path="$(direnv status --json | jq --raw-output --exit-status 'if .state.loadedRC.allowed == 0 then .state.loadedRC.path else "" end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain loadedRC.path from direnv status" || return $?;
+        if [ "${allowed_path}" != "${PWD}/${envrc_basename}" ]; then
+            softfail "Found envrc file that is not currently allowed, or allowed file is different than provided: ${PWD}/${envrc_basename}";
+            return $?;
+        fi;
     fi;
-    shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_path}" "${block_name}";
+    shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_basename}" "${block_name}";
     test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?;
-    direnv allow "${envrc_path}" || softfail || return $?
+    direnv allow || softfail || return $? )
 }
 erlang::install_dependencies () 
 { 
@@ -1055,7 +1082,7 @@ file::write_block ()
 }
 firefox::enable_wayland () 
 { 
-    shellfile::write "$@" "profile/firefox-enable-wayland" <<SHELL || 
+    shellfile::write "profile/firefox-enable-wayland" <<SHELL || 
 export MOZ_ENABLE_WAYLAND=1
 SHELL
  softfail || return $?
@@ -1201,17 +1228,17 @@ git::clone_or_update_local_mirror ()
     local dest_path="$2";
     local remote_name="${3:-}";
     local source_path_full;
-    source_path_full="$(cd "${source_path}" > /dev/null 2>&1 && pwd)" || fail;
+    source_path_full="$(cd "${source_path}" > /dev/null 2>&1 && pwd)" || softfail || return $?;
     if [ ! -d "${dest_path}" ]; then
-        git clone "${source_path_full}" "${dest_path}" || fail;
+        git clone "${source_path_full}" "${dest_path}" || softfail || return $?;
         local mirror_origin;
-        mirror_origin="$(git -C "${source_path_full}" remote get-url origin)" || fail;
-        git -C "${dest_path}" remote set-url origin "${mirror_origin}" || fail;
+        mirror_origin="$(git -C "${source_path_full}" remote get-url origin)" || softfail || return $?;
+        git -C "${dest_path}" remote set-url origin "${mirror_origin}" || softfail || return $?;
         if [ -n "${remote_name}" ]; then
-            git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || fail;
+            git -C "${dest_path}" remote add "${remote_name}" "${source_path_full}" || softfail || return $?;
         fi;
     else
-        git -C "${dest_path}" pull "${remote_name}" main || fail;
+        git -C "${dest_path}" pull "${remote_name}" main || softfail || return $?;
     fi
 }
 git::create_or_update_mirror () 
@@ -1371,7 +1398,7 @@ git::remove_current_clone ()
 git::use_libsecret_credential_helper () 
 { 
     ( local libsecret_path;
-    . /etc/os-release || fail;
+    . /etc/os-release || softfail || return $?;
     if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
         libsecret_path="/usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret";
     else
@@ -1829,7 +1856,7 @@ linux::reset_locales ()
             printf "%q\n" "${locale_line}" || softfail || return $?;
         done
     } > "${temp_file}" || softfail || return $?;
-    file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || fail;
+    file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || softfail || return $?;
     shell::unset_locales || softfail || return $?;
     if [ "${carry_on}" = false ]; then
         local temp_file;
@@ -1921,6 +1948,20 @@ linux::update_remote_locale ()
     ( shell::unset_locales || fail;
     export REMOTE_CONTROL_MASTER=no;
     ssh::call linux::reset_locales "$@" || fail )
+}
+linux::upgrade_system () 
+{ 
+    ( . /etc/os-release || softfail || return $?;
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+        apt::autoremove || softfail || return $?;
+        apt::update || softfail || return $?;
+        apt::dist_upgrade --skip-in-continuous-integration || softfail || return $?;
+    else
+        if [ "${ID:-}" = arch ]; then
+            sudo pacman --sync --clean --noconfirm || softfail || return $?;
+            sudo pacman --sync --sysupgrade --refresh --noconfirm || softfail || return $?;
+        fi;
+    fi )
 }
 linux::user_media_path () 
 { 
@@ -2384,43 +2425,53 @@ postgresql::create_role_if_not_exists ()
 }
 postgresql::install_dictionaries () 
 { 
-    local source_dir="$1";
-    if [ ! -d "${source_dir}" ]; then
-        softfail "source_dir does not exists: ${source_dir}";
-        return $?;
-    fi;
-    if [[ "${OSTYPE}" =~ ^darwin ]]; then
-        local dest;
-        for dest in /usr/local/Cellar/postgresql/*;
-        do
-            if [ -d "${dest}" ]; then
-                local file;
-                for file in "${source_dir}"/*;
-                do
-                    if [ -f "${file}" ]; then
-                        local file_basename;
-                        file_basename="$(basename "${file}")" || softfail || return $?;
-                        file::write --mode 0644 --source "${file}" "${dest}/share/postgresql/tsearch_data/${file_basename}" || softfail || return $?;
-                    fi;
-                done;
+    ( local source_dir="$1";
+    test -d "${source_dir}" || softfail "The directory does not exist: ${source_dir}" || return $?;
+    . /etc/os-release || softfail || return $?;
+    if [[ "${OSTYPE}" =~ ^linux ]]; then
+        if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+            local dest_found=false;
+            local dest;
+            for dest in /usr/share/postgresql/*;
+            do
+                test -d "${dest}" || continue;
+                postgresql::install_dictionaries::do || softfail || return $?;
+                dest_found=true;
+            done;
+            if [ "${dest_found}" = false ]; then
+                softfail "No destination were found for installation";
+                return $?;
             fi;
-        done;
+        else
+            if [ "${ID:-}" = arch ]; then
+                local dest="/usr/share/postgresql";
+                test -d "${dest}" || softfail "Destination directory not found: ${dest}" || return $?;
+                postgresql::install_dictionaries::do || softfail || return $?;
+            else
+                softfail "Your operating system is not supported";
+                return $?;
+            fi;
+        fi;
     else
-        local dest;
-        for dest in /usr/share/postgresql/*;
-        do
-            if [ -d "${dest}" ]; then
-                local file;
-                for file in "${source_dir}"/*;
-                do
-                    if [ -f "${file}" ]; then
-                        local file_basename;
-                        file_basename="$(basename "${file}")" || softfail || return $?;
-                        file::write --sudo --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?;
-                    fi;
-                done;
-            fi;
-        done;
+        softfail "Your operating system is not supported";
+        return $?;
+    fi )
+}
+postgresql::install_dictionaries::do () 
+{ 
+    local file_found=false;
+    local file;
+    for file in "${source_dir}"/*;
+    do
+        test -f "${file}" || continue;
+        local file_basename;
+        file_basename="$(basename "${file}")" || softfail || return $?;
+        file::write --sudo --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?;
+        file_found=true;
+    done;
+    if [ "${file_found}" = false ]; then
+        softfail "No files were found for installation";
+        return $?;
     fi
 }
 postgresql::is_database_exists () 
@@ -3257,6 +3308,7 @@ shellfile::install_editor_rc ()
 { 
     local editor_path;
     editor_path="$(command -v "$1")" || softfail || return $?;
+    shift;
     local license_text;
     license_text="$(runag::print_license)" || softfail || return $?;
     shellfile::write "$@" "rc/editor" <<SHELL || 
@@ -3284,12 +3336,36 @@ SHELL
 shellfile::install_loader::bash () 
 { 
     shellfile::write_loader_block --file "${HOME}/.bashrc" --dir ".shellfile.d/rc" || softfail || return $?;
-    shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
+    if [ -f "${HOME}/.bash_profile" ] || [ ! -f "${HOME}/.profile" ]; then
+        shellfile::write_loader_block --file "${HOME}/.bash_profile" --dir ".shellfile.d/profile" || softfail || return $?;
+    else
+        shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?;
+    fi
 }
 shellfile::install_loader::zsh () 
 { 
     shellfile::write_loader_block --file "${HOME}/.zshrc" --dir ".shellfile.d/rc" || softfail || return $?;
-    shellfile::write_loader_block --file "${HOME}/.profile" --dir ".shellfile.d/profile" || softfail || return $?
+    shellfile::write_loader_block --file "${HOME}/.zprofile" --dir ".shellfile.d/profile" || softfail || return $?
+}
+shellfile::install_local_bin_path_profile () 
+{ 
+    local license_text;
+    license_text="$(runag::print_license)" || softfail || return $?;
+    shellfile::write "$@" "profile/local-bin-path" <<SHELL || 
+${license_text}
+
+if [ -d "\${HOME}/.local/bin" ]; then
+  case ":\${PATH}:" in
+  *":\${HOME}/.local/bin:"*)
+    true
+    ;;
+  *)
+    export PATH="\${HOME}/.local/bin:\${PATH}"
+    ;;
+  esac
+fi
+SHELL
+ softfail || return $?
 }
 shellfile::install_runag_path_profile () 
 { 
@@ -5600,33 +5676,10 @@ ui::confirm ()
     done;
     return 0
 }
-vscode::get_config_path () 
+vscode::install::apt () 
 { 
-    local config_path;
-    if [[ "${OSTYPE}" =~ ^darwin ]]; then
-        config_path="${HOME}/Library/Application Support/Code";
-    else
-        if [[ "${OSTYPE}" =~ ^msys ]]; then
-            config_path="${APPDATA}/Code";
-        else
-            dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?;
-            config_path="${HOME}/.config/Code";
-        fi;
-    fi;
-    dir::should_exists --mode 0700 "${config_path}" || softfail || return $?;
-    echo "${config_path}"
-}
-vscode::install () 
-{ 
-    ( . /etc/os-release || softfail || return $?;
-    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-        apt::add_source_with_key "vscode" "https://packages.microsoft.com/repos/code stable main" "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?;
-        apt::install code || softfail || return $?;
-    else
-        if [ "${ID:-}" = arch ]; then
-            sudo pacman --sync --needed --noconfirm code || softfail || return $?;
-        fi;
-    fi )
+    apt::add_source_with_key "vscode" "https://packages.microsoft.com/repos/code stable main" "https://packages.microsoft.com/keys/microsoft.asc" || softfail || return $?;
+    apt::install code || softfail || return $?
 }
 vscode::install_extensions () 
 { 
