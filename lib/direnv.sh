@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-direnv::save_variable_block() {
+direnv::save_variable_block() (
   local block_name="SHELL VARIABLES"
   local envrc_path=".envrc"
 
@@ -37,14 +37,27 @@ direnv::save_variable_block() {
     esac
   done
 
-  if [ -e "${envrc_path}" ]; then
-    local envrc_dir; envrc_dir="$(dirname "${envrc_path}")" || softfail || return $?
-    ( cd "${envrc_dir}" && direnv status | grep -qFx "Found RC allowed true" ) || softfail "Direnv rc file should be allowed first" || return $?
+  # what is the difference between `loadedRC` and `foundRC` in `direnv status --json` output? Did I pick the right one for use below?
+
+  local envrc_dir; envrc_dir="$(dirname "${envrc_path}")" || softfail || return $?
+  local envrc_basename; envrc_basename="$(basename "${envrc_path}")" || softfail || return $?
+
+  cd "${envrc_dir}" || softfail "Unable to change directory: ${envrc_dir}" || return $?
+
+  local found_any; found_any="$(direnv status --json | jq --raw-output --exit-status 'if (.state | has("loadedRC")) and (.state | has("foundRC")) then if .state.loadedRC == null and .state.foundRC == null then "empty-ok" else "non-empty" end else false end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain empty list from direnv status" || return $?
+
+  if [ "${found_any}" != "empty-ok" ]; then
+    local allowed_path; allowed_path="$(direnv status --json | jq --raw-output --exit-status 'if .state.loadedRC.allowed == 0 then .state.loadedRC.path else "" end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain loadedRC.path from direnv status" || return $?
+
+    if [ "${allowed_path}" != "${PWD}/${envrc_basename}" ]; then
+      softfail "Found envrc file that is not currently allowed, or allowed file is different than provided: ${PWD}/${envrc_basename}"
+      return $?
+    fi
   fi
 
-  shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_path}" "${block_name}"
+  shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_basename}" "${block_name}"
 
   test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
   
-  direnv allow "${envrc_path}" || softfail || return $?
-}
+  direnv allow || softfail || return $?
+)

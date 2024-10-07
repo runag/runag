@@ -14,36 +14,62 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-postgresql::install_dictionaries() {
+# shellcheck disable=SC2030
+postgresql::install_dictionaries() (
   local source_dir="$1"
 
-  if [ ! -d "${source_dir}" ]; then
-    softfail "source_dir does not exists: ${source_dir}"
+  test -d "${source_dir}" || softfail "The directory does not exist: ${source_dir}" || return $?
+
+  # Load operating system identification data
+  . /etc/os-release || softfail || return $?
+
+  if [[ "${OSTYPE}" =~ ^linux ]]; then
+
+    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+      local dest_found=false
+ 
+      local dest; for dest in /usr/share/postgresql/*; do
+        test -d "${dest}" || continue
+        postgresql::install_dictionaries::do || softfail || return $?
+        dest_found=true
+      done
+ 
+      if [ "${dest_found}" = false ]; then
+        softfail "No destination were found for installation"
+        return $?
+      fi
+
+    elif [ "${ID:-}" = arch ]; then
+      local dest="/usr/share/postgresql"
+      test -d "${dest}" || softfail "Destination directory not found: ${dest}" || return $?
+      postgresql::install_dictionaries::do || softfail || return $?
+
+    else
+      softfail "Your operating system is not supported"
+      return $?
+    fi
+  else
+    softfail "Your operating system is not supported"
     return $?
   fi
+)
 
-  if [[ "${OSTYPE}" =~ ^darwin ]]; then
-    local dest; for dest in /usr/local/Cellar/postgresql/*; do
-      if [ -d "${dest}" ]; then
-        local file; for file in "${source_dir}"/*; do
-          if [ -f "${file}" ]; then
-            local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
-            file::write --mode 0644 --source "${file}" "${dest}/share/postgresql/tsearch_data/${file_basename}" || softfail || return $?
-          fi
-        done
-      fi
-    done
-  else
-    local dest; for dest in /usr/share/postgresql/*; do
-      if [ -d "${dest}" ]; then
-        local file; for file in "${source_dir}"/*; do
-          if [ -f "${file}" ]; then
-            local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
-            file::write --sudo --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
-          fi
-        done
-      fi
-    done
+# shellcheck disable=SC2031
+postgresql::install_dictionaries::do() {
+  local file_found=false
+ 
+  local file; for file in "${source_dir}"/*; do
+    test -f "${file}" || continue
+ 
+    local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
+    file::write --sudo --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
+ 
+    file_found=true
+  done
+ 
+  if [ "${file_found}" = false ]; then
+    softfail "No files were found for installation"
+    return $?
   fi
 }
 
