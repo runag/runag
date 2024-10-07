@@ -347,3 +347,18 @@ linux::user_media_path() {
     softfail "Unable to determine user mounts path" || return $?
   fi
 }
+
+linux::upgrade_system() (
+  # Load operating system identification data
+  . /etc/os-release || softfail || return $?
+
+  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
+    apt::autoremove || softfail || return $?
+    apt::update || softfail || return $?
+    apt::dist_upgrade --skip-in-continuous-integration || softfail || return $?
+
+  elif [ "${ID:-}" = arch ]; then
+    sudo pacman --sync --clean --noconfirm || softfail || return $?
+    sudo pacman --sync --sysupgrade --refresh --noconfirm || softfail || return $?
+  fi
+)
