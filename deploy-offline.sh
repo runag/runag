@@ -110,7 +110,7 @@ git::ensure_git_is_installed ()
                     sudo pacman --sync --refresh --sysupgrade --noconfirm || softfail || return $?;
                     sudo pacman --sync --needed --noconfirm git || softfail || return $?;
                 else
-                    softfail "Unable to install git, unsupported operating system" || return $?;
+                    softfail "Unable to install git, your operating system is not supported" || return $?;
                 fi;
             fi;
         fi;
@@ -119,7 +119,7 @@ git::ensure_git_is_installed ()
             git --version > /dev/null || softfail "Please install git" || return $?;
         else
             if ! command -v git > /dev/null; then
-                softfail "Unable to install git, unsupported operating system" || return $?;
+                softfail "Unable to install git, your operating system is not supported" || return $?;
             fi;
         fi;
     fi )
