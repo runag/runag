@@ -17,6 +17,7 @@
 direnv::save_variable_block() (
   local block_name="SHELL VARIABLES"
   local envrc_path=".envrc"
+  local skip_allow_check=false
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -27,6 +28,10 @@ direnv::save_variable_block() (
       -e|--envrc-path)
         envrc_path="$2"
         shift; shift
+        ;;
+      -s|--skip-allow-check)
+        skip_allow_check=true
+        shift
         ;;
       -*)
         softfail "Unknown argument: $1" || return $?
@@ -44,14 +49,16 @@ direnv::save_variable_block() (
 
   cd "${envrc_dir}" || softfail "Unable to change directory: ${envrc_dir}" || return $?
 
-  local found_any; found_any="$(direnv status --json | jq --raw-output --exit-status 'if (.state | has("loadedRC")) and (.state | has("foundRC")) then if .state.loadedRC == null and .state.foundRC == null then "empty-ok" else "non-empty" end else false end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain empty list from direnv status" || return $?
+  if [ "${skip_allow_check}" != true ]; then
+    local found_any; found_any="$(direnv status --json | jq --raw-output --exit-status 'if (.state | has("loadedRC")) and (.state | has("foundRC")) then if .state.loadedRC == null and .state.foundRC == null then "empty-ok" else "non-empty" end else false end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain empty list from direnv status" || return $?
 
-  if [ "${found_any}" != "empty-ok" ]; then
-    local allowed_path; allowed_path="$(direnv status --json | jq --raw-output --exit-status 'if .state.loadedRC.allowed == 0 then .state.loadedRC.path else "" end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain loadedRC.path from direnv status" || return $?
+    if [ "${found_any}" != "empty-ok" ]; then
+      local allowed_path; allowed_path="$(direnv status --json | jq --raw-output --exit-status 'if .state.loadedRC.allowed == 0 then .state.loadedRC.path else "" end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain loadedRC.path from direnv status" || return $?
 
-    if [ "${allowed_path}" != "${PWD}/${envrc_basename}" ]; then
-      softfail "Found envrc file that is not currently allowed, or allowed file is different than provided: ${PWD}/${envrc_basename}"
-      return $?
+      if [ "${allowed_path}" != "${PWD}/${envrc_basename}" ]; then
+        softfail "Found envrc file that is not currently allowed, or allowed file is different than provided: ${PWD}/${envrc_basename}"
+        return $?
+      fi
     fi
   fi
 
