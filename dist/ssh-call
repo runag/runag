@@ -462,7 +462,7 @@ ssh::call::set_ssh_args ()
     if [ -n "${REMOTE_USER:-}" ]; then
         Ssh_Args+=("-l" "${REMOTE_USER}");
     fi;
-    if declare -p REMOTE_SSH_ARGS 2> /dev/null | grep -q '^declare \-a'; then
+    if declare -p REMOTE_SSH_ARGS 2> /dev/null | grep -q '^declare -a'; then
         Ssh_Args+=("${REMOTE_SSH_ARGS[@]}");
     else
         if [ -n "${REMOTE_SSH_ARGS:-}" ]; then
@@ -521,7 +521,7 @@ ssh::call::produce_script ()
         echo "set -o nounset";
     fi;
     local env_list=();
-    if declare -p REMOTE_ENV 2> /dev/null | grep -q '^declare \-a'; then
+    if declare -p REMOTE_ENV 2> /dev/null | grep -q '^declare -a'; then
         env_list+=("${REMOTE_ENV[@]}");
     else
         if [ -n "${REMOTE_ENV:-}" ]; then
@@ -538,7 +538,7 @@ ssh::call::produce_script ()
     done;
     local remote_rc_string;
     local remote_rc_require_functions=false;
-    if declare -p REMOTE_RC 2> /dev/null | grep -q '^declare \-a'; then
+    if declare -p REMOTE_RC 2> /dev/null | grep -q '^declare -a'; then
         if [ "${#REMOTE_RC[@]}" -gt 0 ]; then
             if declare -F "${REMOTE_RC[0]}" > /dev/null; then
                 remote_rc_require_functions=true;
