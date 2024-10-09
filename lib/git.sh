@@ -145,7 +145,7 @@ git::use_libsecret_credential_helper() (
   elif [ "${ID:-}" = arch ]; then
     libsecret_path="/usr/lib/git-core/git-credential-libsecret"
   else
-    softfail "Unsupported operating system" || return $?
+    softfail "Your operating system is not supported" || return $?
   fi
 
   if [ ! -f "${libsecret_path}" ]; then
@@ -186,7 +186,7 @@ git::ensure_git_is_installed() (
         sudo pacman --sync --needed --noconfirm git || softfail || return $?
 
       else
-        softfail "Unable to install git, unsupported operating system" || return $?
+        softfail "Unable to install git, your operating system is not supported" || return $?
       fi
     fi
 
@@ -196,7 +196,7 @@ git::ensure_git_is_installed() (
     git --version >/dev/null || softfail "Please install git" || return $?
 
   elif ! command -v git >/dev/null; then
-    softfail "Unable to install git, unsupported operating system" || return $?
+    softfail "Unable to install git, your operating system is not supported" || return $?
   fi
 )
 

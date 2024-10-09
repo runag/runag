@@ -259,6 +259,9 @@ linux::install_gnome_keyring_and_libsecret() (
       gnome-keyring \
       libsecret \
         || softfail || return $?
+
+  else
+    softfail "Your operating system is not supported" || return $?
   fi
 )
 
