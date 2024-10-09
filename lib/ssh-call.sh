@@ -496,7 +496,7 @@ ssh::call::set_ssh_args() {
     Ssh_Args+=("-l" "${REMOTE_USER}")
   fi
 
-  if declare -p REMOTE_SSH_ARGS 2>/dev/null | grep -q '^declare \-a'; then
+  if declare -p REMOTE_SSH_ARGS 2>/dev/null | grep -q '^declare -a'; then
     Ssh_Args+=("${REMOTE_SSH_ARGS[@]}")
 
   elif [ -n "${REMOTE_SSH_ARGS:-}" ]; then
@@ -566,7 +566,7 @@ ssh::call::produce_script() {
 
   # check if REMOTE_ENV is array
   # TODO: bash regexp (faster)?
-  if declare -p REMOTE_ENV 2>/dev/null | grep -q '^declare \-a'; then
+  if declare -p REMOTE_ENV 2>/dev/null | grep -q '^declare -a'; then
     env_list+=("${REMOTE_ENV[@]}")
 
   elif [ -n "${REMOTE_ENV:-}" ]; then
@@ -587,7 +587,7 @@ ssh::call::produce_script() {
 
   # check if REMOTE_RC is array
   # TODO: bash regexp (faster)?
-  if declare -p REMOTE_RC 2>/dev/null | grep -q '^declare \-a'; then
+  if declare -p REMOTE_RC 2>/dev/null | grep -q '^declare -a'; then
 
     # if it contains more than 0 elements
     if [ "${#REMOTE_RC[@]}" -gt 0 ]; then
