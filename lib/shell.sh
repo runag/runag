@@ -153,3 +153,7 @@ shell::related_source::walk_directory() {
     shell::related_source::walk_directory "${dir_item}" "${@:2}" || softfail "Unable to load: ${dir_item}" || return $?
   done
 }
+
+shell::open() {
+  "${SHELL}" "$@" || true
+}
