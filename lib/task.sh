@@ -39,23 +39,6 @@ task::any() {
   [[ -v task_data ]] && (( ${#task_data[@]} > 0 ))
 }
 
-task::suits() {
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -o|--os)
-        local os_type="$2"
-        if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
-          return 1
-        fi
-        shift; shift
-        ;;
-      *)
-        fail "Unknown argument: $1" # no softfail here!
-        ;;
-    esac
-  done
-}
-
 task::clear() {
   local store_name=DEFAULT
 
