@@ -14,6 +14,47 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+pass::each() {
+  local test_expression="-f"
+  local search_extension=".gpg"
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -d|--dir|--directory)
+        test_expression="-d"
+        search_extension=""
+        shift
+        ;;
+      -*)
+        softfail "Unknown argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  local search_path="$1"; shift
+
+  local password_store_dir; password_store_dir="$(realpath "${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}")"
+  local absolute_search_path; absolute_search_path="$(realpath "${password_store_dir}/${search_path}")" || softfail || return $?
+
+  local found_path; for found_path in "${absolute_search_path}"/*"${search_extension}"; do
+    if test "${test_expression}" "${found_path}"; then
+      local found_relative_path="${found_path:$((${#password_store_dir}+1))}"
+
+      if [ "${test_expression}" = "-f" ]; then
+        local dir_name; dir_name="$(dirname "${found_relative_path}")" || softfail || return $?
+        local base_name; base_name="$(basename -s .gpg "${found_relative_path}")" || softfail || return $?
+        found_relative_path="${dir_name}/${base_name}"
+      fi
+      
+      "$@" "${found_relative_path}"
+      softfail --unless-good --exit-status $? || exit $?
+    fi
+  done
+}
+
 pass::exists() {
   local secret_path="$1"
   local password_store_dir="${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}"
