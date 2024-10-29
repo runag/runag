@@ -21,6 +21,10 @@ runag::mini_library() {
 
   printf "\n" || fail
 
+  if [ "${1:-}" = "--nounset" ]; then
+    printf "set -o nounset\n\n" || fail
+  fi
+
   declare -f fail || softfail || return $?
   declare -f softfail || softfail || return $?
   declare -f dir::should_exists || softfail || return $?
