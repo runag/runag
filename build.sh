@@ -19,7 +19,7 @@ set -o nounset
 . bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
 docs::make() {
-  rm docs/lib/*.md || softfail || return $?
+  # rm docs/lib/*.md || softfail || return $?
 
   local files_list; files_list="$(mktemp)" || softfail || return $?
   local readme_content; readme_content="$(mktemp)" || softfail || return $?
