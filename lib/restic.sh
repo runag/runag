@@ -63,15 +63,3 @@ restic::open_mount_when_available() {
     fi
   ) &
 }
-
-restic::is_repository_not_exists() {
-  restic cat config 2>&1 | grep -qFx "Is there a repository at the following location?"
-
-  local saved_pipe_status=("${PIPESTATUS[@]}")
-
-  if [ "${saved_pipe_status[0]}" != 0 ] && [ "${saved_pipe_status[1]}" = 0 ]; then
-    return 0
-  fi
-
-  return 1
-}
