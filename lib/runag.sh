@@ -55,8 +55,8 @@ runag::tasks() {
     
     task::add runag::pull || softfail || return $?
     task::add runag::push || softfail || return $?
-    task::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?
-    task::add runag::update_current_offline_install_if_connected || softfail || return $?
+    task::add runag::create_or_update_offline_install || softfail || return $?
+    task::add runag::update_current_offline_install || softfail || return $?
   fi
 }
 
@@ -76,48 +76,26 @@ runag::push() {
   runagfile::each git push || softfail || return $?
 }
 
-runag::is_current_offline_install_connected() {
-  local runag_path="${HOME}/.runag"
-
-  if [ ! -d "${runag_path}/.git" ]; then
-    fail "Unable to find rùnag checkout" # fail here is intentional
-  fi
-
-  local remote_path
-
-  if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
-    if [ -d "${remote_path}" ]; then
-      return 0
-    fi
-  fi
-
-  return 1
-}
-
-runag::update_current_offline_install_if_connected() {
+runag::update_current_offline_install() {
   local runag_path="${HOME}/.runag"
 
   if [ ! -d "${runag_path}/.git" ]; then
     softfail "Unable to find rùnag checkout" || return $?
   fi
 
-  local remote_path
-  
-  if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
-    if [ -d "${remote_path}" ]; then
-      runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?
-    fi
-  fi
+  local remote_path; remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")" || softfail || return $?
+ 
+  runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?
 }
 
 runag::create_or_update_offline_install() (
-  local target_directory="${1:-"."}"
-
-  cd "${target_directory}" || softfail || return $?
-
-  target_directory="$(pwd)" || softfail || return $?
-
   local runag_path="${HOME}/.runag"
+
+  if [ -n "$1" ]; then
+    cd "$1" || softfail || return $?
+  fi
+
+  local target_directory="${PWD}" || softfail || return $?
 
   if [ ! -d "${runag_path}/.git" ]; then
     softfail "Unable to find rùnag checkout" || return $?
