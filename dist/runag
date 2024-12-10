@@ -351,7 +351,7 @@ btrfs::check ()
 }
 btrfs::scrub () 
 { 
-    sudo btrfs scrub start -B -d "$@" || softfail || return $?
+    sudo btrfs scrub start "$@" || softfail || return $?
 }
 btrfs::scrub_status () 
 { 
@@ -2201,6 +2201,48 @@ pass::dir_exists ()
         return 1;
     fi
 }
+pass::each () 
+{ 
+    local test_expression="-f";
+    local search_extension=".gpg";
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -d | --dir | --directory)
+                test_expression="-d";
+                search_extension="";
+                shift
+            ;;
+            -*)
+                softfail "Unknown argument: $1" || return $?
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    local search_path="$1";
+    shift;
+    local password_store_dir;
+    password_store_dir="$(realpath "${PASSWORD_STORE_DIR:-"${HOME}/.password-store"}")";
+    local absolute_search_path;
+    absolute_search_path="$(realpath "${password_store_dir}/${search_path}")" || softfail || return $?;
+    local found_path;
+    for found_path in "${absolute_search_path}"/*"${search_extension}";
+    do
+        if test "${test_expression}" "${found_path}"; then
+            local found_relative_path="${found_path:$((${#password_store_dir}+1))}";
+            if [ "${test_expression}" = "-f" ]; then
+                local dir_name;
+                dir_name="$(dirname "${found_relative_path}")" || softfail || return $?;
+                local base_name;
+                base_name="$(basename -s .gpg "${found_relative_path}")" || softfail || return $?;
+                found_relative_path="${dir_name}/${base_name}";
+            fi;
+            "$@" "${found_relative_path}";
+            softfail --unless-good --exit-status $? || exit $?;
+        fi;
+    done
+}
 pass::exists () 
 { 
     local secret_path="$1";
@@ -2236,12 +2278,6 @@ pass::secret_exists ()
     else
         return 1;
     fi
-}
-pass::set_password_store_dir () 
-{ 
-    local dir_path="$1";
-    dir_path="$(cd "${dir_path}" > /dev/null 2>&1 && pwd)" || softfail || return $?;
-    export PASSWORD_STORE_DIR="${dir_path}"
 }
 pass::use () 
 { 
@@ -3080,6 +3116,9 @@ runag::mini_library ()
     printf "#!/usr/bin/env bash\n\n" || fail;
     runag::print_license || fail;
     printf "\n" || fail;
+    if [ "${1:-}" = "--nounset" ]; then
+        printf "set -o nounset\n\n" || fail;
+    fi;
     declare -f fail || softfail || return $?;
     declare -f softfail || softfail || return $?;
     declare -f dir::should_exists || softfail || return $?;
@@ -3239,6 +3278,10 @@ shell::enable_trace ()
 { 
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** ';
     set -o xtrace
+}
+shell::open () 
+{ 
+    "${SHELL}" "$@" || true
 }
 shell::related_cd () 
 { 
@@ -5127,41 +5170,6 @@ tailscale::install ()
     fi;
     sudo systemctl --quiet --now enable tailscaled || softfail || return $? )
 }
-tailscale::install_issue_2541_workaround () 
-{ 
-    temp_file="$(mktemp)" || fail;
-    { 
-        runag::mini_library || fail;
-        declare -f tailscale::issue_2541_workaround || fail;
-        echo 'set -o nounset';
-        echo 'tailscale::issue_2541_workaround || fail'
-    } > "${temp_file}" || fail;
-    file::write --absorb "${temp_file}" --sudo --mode 0755 /usr/local/bin/tailscale-issue-2541-workaround || softfail || return $?;
-    file::write --sudo --mode 0644 /etc/systemd/system/tailscale-issue-2541-workaround.service <<EOF || 
-[Unit]
-Description=tailscale-issue-2541-workaround
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/tailscale-issue-2541-workaround
-WorkingDirectory=/
-EOF
- softfail || return $?
-    file::write --sudo --mode 0644 /etc/systemd/system/tailscale-issue-2541-workaround.timer <<EOF || 
-[Unit]
-Description=tailscale-issue-2541-workaround
-
-[Timer]
-OnCalendar=minutely
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
- softfail || return $?
-    sudo systemctl --quiet reenable tailscale-issue-2541-workaround.timer || softfail || return $?;
-    sudo systemctl start tailscale-issue-2541-workaround.timer || softfail || return $?
-}
 tailscale::is_logged_in () 
 { 
     local backend_state;
@@ -5647,24 +5655,6 @@ task::render::meta_lines ()
         Current_Color="";
         Meta_Lines=();
     fi
-}
-task::suits () 
-{ 
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -o | --os)
-                local os_type="$2";
-                if [[ ! "${OSTYPE}" =~ ^"${os_type}" ]]; then
-                    return 1;
-                fi;
-                shift;
-                shift
-            ;;
-            *)
-                fail "Unknown argument: $1"
-            ;;
-        esac;
-    done
 }
 terminal::color_table () 
 { 
