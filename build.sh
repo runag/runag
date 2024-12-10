@@ -18,13 +18,6 @@ set -o nounset
 
 . bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
 
-shdoc::install() {
-  local temp_dir; temp_dir="$(mktemp -d)" || softfail || return $?
-  git clone --recursive https://github.com/reconquest/shdoc "${temp_dir}" || softfail || return $?
-  (cd "${temp_dir}" && make && sudo make install) || softfail || return $?
-  rm -rf "${temp_dir}" || softfail || return $?
-}
-
 docs::make() {
   rm docs/lib/*.md || softfail || return $?
 
@@ -33,13 +26,13 @@ docs::make() {
 
   local file; for file in lib/*.sh; do
     if [ -f "${file}" ]; then
-      local output; output="docs/${file%.*}.md" || softfail || return $?
       local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
 
-      shdoc <"${file}" >"${output}" || softfail || return $?
-      # TODO: I hope that happy moment to enable this line will come
-      # echo "* [${file_basename%%.*}](${output})" >> "${files_list}" || softfail || return $?
       echo "* [${file_basename%%.*}](${file})" >> "${files_list}" || softfail || return $?
+
+      # local output; output="docs/${file%.*}.md" || softfail || return $?
+      # ?? <"${file}" >"${output}" || softfail || return $?
+      # echo "* [${file_basename%%.*}](${output})" >> "${files_list}" || softfail || return $?
     fi
   done
 
@@ -75,10 +68,6 @@ if ! command -v gawk >/dev/null; then
       sudo pacman --sync --needed --noconfirm gawk || fail
     fi
   ) || fail
-fi
-
-if ! command -v shdoc >/dev/null; then
-  shdoc::install || fail
 fi
 
 # run shellcheck
