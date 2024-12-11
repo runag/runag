@@ -18,18 +18,17 @@
 # --owner
 # --group
 # --sudo
-# --keep-permissions
-dir::should_exists() {
+# --for-me-only
+dir::should_exists() (
   local dir_mode
   local dir_owner
   local dir_group
   local perhaps_sudo
-  local keep_permissions=false
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -m|--mode)
-        dir_mode="$2"
+        dir_mode="0$2"
         shift; shift
         ;;
       -o|--owner)
@@ -44,8 +43,10 @@ dir::should_exists() {
         perhaps_sudo=true
         shift
         ;;
-      -k|--keep-permissions)
-        keep_permissions=true
+      -f|--for-me-only)
+        dir_mode=0700
+        dir_owner="${USER}"
+        dir_group="$(grep -E "^${USER}:" /etc/passwd | cut -d: -f4; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?
         shift
         ;;
       -*)
@@ -59,37 +60,20 @@ dir::should_exists() {
 
   local dir_path="$1"
 
-  if ${perhaps_sudo:+"sudo"} mkdir ${dir_mode:+-m "${dir_mode}"} "${dir_path}" 2>/dev/null; then
-    if [ -n "${dir_owner:-}" ]; then
-      ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?
-    fi
-  else
-    if ${perhaps_sudo:+"sudo"} test ! -d "${dir_path}"; then
-      softfail "Unable to create directory" || return $?
-    fi
-
-    if [ "${keep_permissions}" = false ]; then
-      if [ -n "${dir_mode:-}" ]; then
-        ${perhaps_sudo:+"sudo"} chmod "${dir_mode}" "${dir_path}" || softfail || return $?
-      fi
-
-      if [ -n "${dir_owner:-}" ]; then
-        ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?
-      fi
-    fi
+  if [ -n "${dir_mode:-}" ]; then
+    umask "$(printf "0%o" "$(( 0777 - "${dir_mode}" ))")" || softfail || return $?
   fi
-}
 
-dir::remove_if_exists_and_empty() {
-  local dir_path="$1"
-  rmdir "${dir_path}" 2>/dev/null || true
-}
+  ${perhaps_sudo:+"sudo"} mkdir ${dir_mode:+-m "${dir_mode}"} -p "${dir_path}" || softfail || return $?
 
-dir::default_mode() {
-  local umask_value; umask_value="$(umask)" || softfail || return $?
-  printf "%o" "$(( 0777 ^ "${umask_value}" ))" || softfail || return $?
-}
+  if [ -n "${dir_mode:-}" ]; then
+    ${perhaps_sudo:+"sudo"} chmod "${dir_mode}" "${dir_path}" || softfail || return $?
+  fi
 
-dir::default_mode_with_remote_umask() {
-  printf "%o" "$(( 0777 ^ "0${REMOTE_UMASK}" ))" || softfail || return $?
-}
+  if [ -n "${dir_owner:-}" ]; then
+    ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?
+    
+  elif [ -n "${dir_group:-}" ]; then
+    ${perhaps_sudo:+"sudo"} chgrp "${dir_group}" "${dir_path}" || softfail || return $?
+  fi
+)
