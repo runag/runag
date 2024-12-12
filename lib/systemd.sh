@@ -334,7 +334,7 @@ systemd::service_action::status() {
   fi
 }
 
-systemd::service_action::journal() {
+systemd::service_action::journal() (
   local service_name
   local user_services=false
   local follow_argument=()
@@ -363,13 +363,11 @@ systemd::service_action::journal() {
   done
 
   # remove eventually
-  if [ "${user_services}" = true ];  then
-    local release_codename; release_codename="$(lsb_release --codename --short)" || softfail || return $?
+  . /etc/os-release || softfail || return $?
 
-    if [ "${release_codename}" = "focal" ]; then
-      sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
-      return
-    fi
+  if [ "${user_services}" = true ] && [ "${VERSION_CODENAME:-}" = "focal" ]; then
+    sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
+    return
   fi
 
   if [ "${user_services}" = true ]; then
@@ -379,4 +377,4 @@ systemd::service_action::journal() {
   fi
 
   "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
-}
+)
