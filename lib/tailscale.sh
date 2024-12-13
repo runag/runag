@@ -14,22 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-tailscale::install() (
+tailscale::add_apt_source() (
   # Load operating system identification data
   . /etc/os-release || softfail || return $?
 
-  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-    apt::add_source_with_key "tailscale" \
-      "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" \
-      "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?
-
-    apt::install tailscale || softfail || return $?
-
-  elif [ "${ID:-}" = arch ]; then
-    sudo pacman --sync --needed --noconfirm tailscale || softfail || return $?
-  fi
-
-  sudo systemctl --quiet --now enable tailscaled || softfail || return $?
+  apt::add_source_with_key "tailscale" \
+    "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" \
+    "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?
 )
 
 tailscale::is_logged_in() {
@@ -40,14 +31,5 @@ tailscale::is_logged_in() {
     return 1
   else
     return 0
-  fi
-}
-
-tailscale::issue_2541_workaround() {
-  if ip address show tailscale0 >/dev/null 2>&1; then
-    if ! ip address show tailscale0 | grep -qF "inet"; then
-      echo "tailscale::issue_2541_workaround: about to restart tailscaled"
-      sudo systemctl restart tailscaled || fail "Unable to restart tailscaled"
-    fi
   fi
 }
