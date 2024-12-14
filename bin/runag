@@ -23,7 +23,6 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   fi
   set -o nounset
 fi
-
 # END set_shell_options
 
 # BEGIN load_runag_library
@@ -54,7 +53,7 @@ runag::load_runag_library() {
   done
 }
 
-# Call function
+# Call function to load rùnag library
 runag::load_runag_library "../lib" || {
   echo "Unable to load rùnag library ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
