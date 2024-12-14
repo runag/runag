@@ -3022,7 +3022,7 @@ runag::create_or_update_offline_install ()
     local runag_remote_url;
     runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?;
     git -C "${runag_path}" pull origin main || softfail || return $?;
-    git -C "${runag_path}" push origin main || softfail || return $?;
+    git -C "${runag_path}" push --set-upstream origin main || softfail || return $?;
     git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?;
     ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?;
     dir::should_exists --mode 0700 "runagfiles" || softfail || return $?;
@@ -3035,7 +3035,7 @@ runag::create_or_update_offline_install ()
             local runagfile_remote_url;
             runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?;
             git -C "${runagfile_path}" pull origin main || softfail || return $?;
-            git -C "${runagfile_path}" push origin main || softfail || return $?;
+            git -C "${runagfile_path}" push --set-upstream origin main || softfail || return $?;
             git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?;
             ( cd "${runagfile_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runagfiles/${runagfile_dir_name}" && git fetch "offline-install" ) || softfail || return $?;
         fi;
@@ -3105,26 +3105,10 @@ runag::print_license ()
 SHELL
 
 }
-runag::pull () 
-{ 
-    if [ -d "${HOME}/.runag/.git" ]; then
-        git -C "${HOME}/.runag" pull || softfail || return $?;
-    fi;
-    runagfile::each git pull || softfail || return $?
-}
-runag::push () 
-{ 
-    if [ -d "${HOME}/.runag/.git" ]; then
-        git -C "${HOME}/.runag" push || softfail || return $?;
-    fi;
-    runagfile::each git push || softfail || return $?
-}
 runag::tasks () 
 { 
     if [ -d "${HOME}/.runag" ]; then
         task::add --header "Rùnag and rùnagfiles" || softfail || return $?;
-        task::add runag::pull || softfail || return $?;
-        task::add runag::push || softfail || return $?;
         task::add runag::create_or_update_offline_install || softfail || return $?;
         task::add runag::update_current_offline_install || softfail || return $?;
     fi
@@ -3156,16 +3140,6 @@ runagfile::add_from_list ()
         fi;
     done || softfail "Unable to add rùnagfiles from list" || return $?
 }
-runagfile::each () 
-{ 
-    local runagfile_dir;
-    for runagfile_dir in "${HOME}/.runag/runagfiles"/*;
-    do
-        if [ -d "${runagfile_dir}" ]; then
-            ( cd "${runagfile_dir}" && "$@" ) || softfail || return $?;
-        fi;
-    done
-}
 runagfile::load () 
 { 
     local working_directory_only=false;
@@ -3187,22 +3161,17 @@ runagfile::load ()
         . "./runagfile.sh";
         softfail --unless-good --exit-status $? "Unable to load ./runagfile.sh ($?)" || return $?;
     else
-        if [ "${working_directory_only}" = false ] && [ -n "${HOME:-}" ]; then
-            runagfile::load_dir "${HOME}/.runag/runagfiles";
-            softfail --unless-good --exit-status $? "Unable to load ${HOME}/.runag/runagfiles ($?)" || return $?;
+        if [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
+            local dir_path;
+            for dir_path in "${HOME}/.runag/runagfiles/"*;
+            do
+                if [ -f "${dir_path}/runagfile.sh" ]; then
+                    . "${dir_path}/runagfile.sh";
+                    softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?;
+                fi;
+            done;
         fi;
     fi
-}
-runagfile::load_dir () 
-{ 
-    local dir_path;
-    for dir_path in "$1/"*;
-    do
-        if [ -f "${dir_path}/runagfile.sh" ]; then
-            . "${dir_path}/runagfile.sh";
-            softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?;
-        fi;
-    done
 }
 shell::assign_and_mark_for_export () 
 { 

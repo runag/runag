@@ -53,27 +53,9 @@ runag::tasks() {
   if [ -d "${HOME}/.runag" ]; then
     task::add --header "Rùnag and rùnagfiles" || softfail || return $?
     
-    task::add runag::pull || softfail || return $?
-    task::add runag::push || softfail || return $?
     task::add runag::create_or_update_offline_install || softfail || return $?
     task::add runag::update_current_offline_install || softfail || return $?
   fi
-}
-
-runag::pull() {
-  if [ -d "${HOME}/.runag/.git" ]; then
-    git -C "${HOME}/.runag" pull || softfail || return $?
-  fi
-
-  runagfile::each git pull || softfail || return $?
-}
-
-runag::push() {
-  if [ -d "${HOME}/.runag/.git" ]; then
-    git -C "${HOME}/.runag" push || softfail || return $?
-  fi
-
-  runagfile::each git push || softfail || return $?
 }
 
 runag::update_current_offline_install() {
@@ -104,7 +86,7 @@ runag::create_or_update_offline_install() (
   local runag_remote_url; runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?
 
   git -C "${runag_path}" pull origin main || softfail || return $?
-  git -C "${runag_path}" push origin main || softfail || return $?
+  git -C "${runag_path}" push --set-upstream origin main || softfail || return $?
 
   git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?
 
@@ -118,7 +100,7 @@ runag::create_or_update_offline_install() (
       local runagfile_remote_url; runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?
 
       git -C "${runagfile_path}" pull origin main || softfail || return $?
-      git -C "${runagfile_path}" push origin main || softfail || return $?
+      git -C "${runagfile_path}" push --set-upstream origin main || softfail || return $?
 
       git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?
 

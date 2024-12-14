@@ -28,14 +28,6 @@ runagfile::add_from_list() {
   done || softfail "Unable to add rùnagfiles from list" || return $?
 }
 
-runagfile::each() {
-  local runagfile_dir; for runagfile_dir in "${HOME}/.runag/runagfiles"/*; do
-    if [ -d "${runagfile_dir}" ]; then
-      ( cd "${runagfile_dir}" && "$@" ) || softfail || return $?
-    fi
-  done
-}
-
 # Find and load rùnagfiles
 
 runagfile::load() {
@@ -60,17 +52,12 @@ runagfile::load() {
     . "./runagfile.sh"
     softfail --unless-good --exit-status $? "Unable to load ./runagfile.sh ($?)" || return $?
 
-  elif [ "${working_directory_only}" = false ] && [ -n "${HOME:-}" ]; then
-    runagfile::load_dir "${HOME}/.runag/runagfiles"
-    softfail --unless-good --exit-status $? "Unable to load ${HOME}/.runag/runagfiles ($?)" || return $?
+  elif [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
+    local dir_path; for dir_path in "${HOME}/.runag/runagfiles/"*; do
+      if [ -f "${dir_path}/runagfile.sh" ]; then
+        . "${dir_path}/runagfile.sh"
+        softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?
+      fi
+    done
   fi
-}
-
-runagfile::load_dir() {
-  local dir_path; for dir_path in "$1/"*; do
-    if [ -f "${dir_path}/runagfile.sh" ]; then
-      . "${dir_path}/runagfile.sh"
-      softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?
-    fi
-  done
 }
