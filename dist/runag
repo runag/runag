@@ -5300,9 +5300,6 @@ task::display ()
                         command_exit_status=$?;
                     fi;
                     softfail --unless-good --exit-status "${command_exit_status}" "Error performing ${Selected_Command[0]} (${command_exit_status})" || return $?;
-                    if [ -t 1 ]; then
-                        log::success "Done: ${Selected_Command[*]}";
-                    fi;
                     return 0;
                 fi;
             fi;
@@ -5730,22 +5727,16 @@ else
   fi
 fi
 
-# if there is something in the first argument, run it
+# if there is something in the first argument, run it then exit or return
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
     "$@"
-    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || return $?
-    if [ -t 1 ]; then
-      log::success "Done: $*"
-    fi
-    return 0
+    softfail --unless-good --exit-status $? "Error performing $1 ($?)"
+    return $?
   else # we are not sourced
     "$@"
-    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || exit $?
-    if [ -t 1 ]; then
-      log::success "Done: $*"
-    fi
-    exit 0
+    softfail --unless-good --exit-status $? "Error performing $1 ($?)"
+    exit $?
   fi
 fi
 
