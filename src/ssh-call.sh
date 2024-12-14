@@ -25,7 +25,11 @@ temp_file="$(mktemp)" || fail
 
   runag::print_license || fail
 
+  printf "\n"
+
   file::get_block bin/ssh-call set_shell_options || fail
+
+  printf "\n"
 
   fail::function_sources || fail
 
@@ -33,6 +37,8 @@ temp_file="$(mktemp)" || fail
 
   declare -f log::notice || fail
   declare -f dir::should_exists || fail
+
+  printf "\n"
 
   file::get_block bin/ssh-call run_ssh_call_command || fail
 
