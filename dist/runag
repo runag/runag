@@ -13,8 +13,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
-# set shell options if we are not sourced
+# Set shell options if we are not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
@@ -22,6 +21,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   fi
   set -o nounset
 fi
+
 apt::add_source_with_key () 
 { 
     local source_name="$1";
@@ -540,32 +540,16 @@ cross_platform::config_home ()
         ;;
     esac
 }
-dir::default_mode () 
-{ 
-    local umask_value;
-    umask_value="$(umask)" || softfail || return $?;
-    printf "%o" "$(( 0777 ^ "${umask_value}" ))" || softfail || return $?
-}
-dir::default_mode_with_remote_umask () 
-{ 
-    printf "%o" "$(( 0777 ^ "0${REMOTE_UMASK}" ))" || softfail || return $?
-}
-dir::remove_if_exists_and_empty () 
-{ 
-    local dir_path="$1";
-    rmdir "${dir_path}" 2> /dev/null || true
-}
 dir::should_exists () 
 { 
-    local dir_mode;
+    ( local dir_mode;
     local dir_owner;
     local dir_group;
     local perhaps_sudo;
-    local keep_permissions=false;
     while [ "$#" -gt 0 ]; do
         case "$1" in 
             -m | --mode)
-                dir_mode="$2";
+                dir_mode="0$2";
                 shift;
                 shift
             ;;
@@ -583,8 +567,10 @@ dir::should_exists ()
                 perhaps_sudo=true;
                 shift
             ;;
-            -k | --keep-permissions)
-                keep_permissions=true;
+            -f | --for-me-only)
+                dir_mode=0700;
+                dir_owner="${USER}";
+                dir_group="$(grep -E "^${USER}:" /etc/passwd | cut -d: -f4; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?;
                 shift
             ;;
             -*)
@@ -596,23 +582,20 @@ dir::should_exists ()
         esac;
     done;
     local dir_path="$1";
-    if ${perhaps_sudo:+"sudo"} mkdir ${dir_mode:+-m "${dir_mode}"} "${dir_path}" 2> /dev/null; then
-        if [ -n "${dir_owner:-}" ]; then
-            ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?;
-        fi;
+    if [ -n "${dir_mode:-}" ]; then
+        umask "$(printf "0%o" "$(( 0777 - "${dir_mode}" ))")" || softfail || return $?;
+    fi;
+    ${perhaps_sudo:+"sudo"} mkdir ${dir_mode:+-m "${dir_mode}"} -p "${dir_path}" || softfail || return $?;
+    if [ -n "${dir_mode:-}" ]; then
+        ${perhaps_sudo:+"sudo"} chmod "${dir_mode}" "${dir_path}" || softfail || return $?;
+    fi;
+    if [ -n "${dir_owner:-}" ]; then
+        ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?;
     else
-        if ${perhaps_sudo:+"sudo"} test ! -d "${dir_path}"; then
-            softfail "Unable to create directory" || return $?;
+        if [ -n "${dir_group:-}" ]; then
+            ${perhaps_sudo:+"sudo"} chgrp "${dir_group}" "${dir_path}" || softfail || return $?;
         fi;
-        if [ "${keep_permissions}" = false ]; then
-            if [ -n "${dir_mode:-}" ]; then
-                ${perhaps_sudo:+"sudo"} chmod "${dir_mode}" "${dir_path}" || softfail || return $?;
-            fi;
-            if [ -n "${dir_owner:-}" ]; then
-                ${perhaps_sudo:+"sudo"} chown "${dir_owner}${dir_group:+":${dir_group}"}" "${dir_path}" || softfail || return $?;
-            fi;
-        fi;
-    fi
+    fi )
 }
 direnv::save_variable_block () 
 { 
@@ -2872,15 +2855,6 @@ restic::install ()
     file::write --sudo --mode 0755 --absorb "${temp_file}.out" /usr/local/bin/restic || softfail || return $?;
     rm "${temp_file}" || softfail || return $?
 }
-restic::is_repository_not_exists () 
-{ 
-    restic cat config 2>&1 | grep -qFx "Is there a repository at the following location?";
-    local saved_pipe_status=("${PIPESTATUS[@]}");
-    if [ "${saved_pipe_status[0]}" != 0 ] && [ "${saved_pipe_status[1]}" = 0 ]; then
-        return 0;
-    fi;
-    return 1
-}
 restic::open_mount_when_available () 
 { 
     local mount_path="$1";
@@ -3036,10 +3010,11 @@ rubygems::direnv_credentials ()
 }
 runag::create_or_update_offline_install () 
 { 
-    ( local target_directory="${1:-"."}";
-    cd "${target_directory}" || softfail || return $?;
-    target_directory="$(pwd)" || softfail || return $?;
-    local runag_path="${HOME}/.runag";
+    ( local runag_path="${HOME}/.runag";
+    if [ -n "$1" ]; then
+        cd "$1" || softfail || return $?;
+    fi;
+    local target_directory="${PWD}" || softfail || return $?;
     if [ ! -d "${runag_path}/.git" ]; then
         softfail "Unable to find rùnag checkout" || return $?;
     fi;
@@ -3065,20 +3040,6 @@ runag::create_or_update_offline_install ()
         fi;
     done;
     cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $? )
-}
-runag::is_current_offline_install_connected () 
-{ 
-    local runag_path="${HOME}/.runag";
-    if [ ! -d "${runag_path}/.git" ]; then
-        fail "Unable to find rùnag checkout";
-    fi;
-    local remote_path;
-    if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
-        if [ -d "${remote_path}" ]; then
-            return 0;
-        fi;
-    fi;
-    return 1
 }
 runag::load_runag_library () 
 { 
@@ -3163,22 +3124,19 @@ runag::tasks ()
         task::add --header "Rùnag and rùnagfiles" || softfail || return $?;
         task::add runag::pull || softfail || return $?;
         task::add runag::push || softfail || return $?;
-        task::add runag::create_or_update_offline_install "$(pwd)" || softfail || return $?;
-        task::add runag::update_current_offline_install_if_connected || softfail || return $?;
+        task::add runag::create_or_update_offline_install || softfail || return $?;
+        task::add runag::update_current_offline_install || softfail || return $?;
     fi
 }
-runag::update_current_offline_install_if_connected () 
+runag::update_current_offline_install () 
 { 
     local runag_path="${HOME}/.runag";
     if [ ! -d "${runag_path}/.git" ]; then
         softfail "Unable to find rùnag checkout" || return $?;
     fi;
     local remote_path;
-    if remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")"; then
-        if [ -d "${remote_path}" ]; then
-            runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?;
-        fi;
-    fi
+    remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")" || softfail || return $?;
+    runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?
 }
 runagfile::add () 
 { 
@@ -4955,7 +4913,7 @@ systemd::service_action::enable_timer ()
 }
 systemd::service_action::journal () 
 { 
-    local service_name;
+    ( local service_name;
     local user_services=false;
     local follow_argument=();
     while [ "$#" -gt 0 ]; do
@@ -4981,20 +4939,17 @@ systemd::service_action::journal ()
             ;;
         esac;
     done;
-    if [ "${user_services}" = true ]; then
-        local release_codename;
-        release_codename="$(lsb_release --codename --short)" || softfail || return $?;
-        if [ "${release_codename}" = "focal" ]; then
-            sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?;
-            return;
-        fi;
+    . /etc/os-release || softfail || return $?;
+    if [ "${user_services}" = true ] && [ "${VERSION_CODENAME:-}" = "focal" ]; then
+        sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?;
+        return;
     fi;
     if [ "${user_services}" = true ]; then
         local journalctl_command=(journalctl --user);
     else
         local journalctl_command=(sudo journalctl);
     fi;
-    "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
+    "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $? )
 }
 systemd::service_action::start () 
 { 
@@ -5157,18 +5112,10 @@ systemd::write_user_unit ()
     dir::should_exists --mode 0700 "${user_units_dir}" || softfail || return $?;
     file::write --mode 0600 "${user_units_dir}/${name}" || softfail || return $?
 }
-tailscale::install () 
+tailscale::add_apt_source () 
 { 
     ( . /etc/os-release || softfail || return $?;
-    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-        apt::add_source_with_key "tailscale" "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $?;
-        apt::install tailscale || softfail || return $?;
-    else
-        if [ "${ID:-}" = arch ]; then
-            sudo pacman --sync --needed --noconfirm tailscale || softfail || return $?;
-        fi;
-    fi;
-    sudo systemctl --quiet --now enable tailscaled || softfail || return $? )
+    apt::add_source_with_key "tailscale" "https://pkgs.tailscale.com/stable/${ID} ${VERSION_CODENAME} main" "https://pkgs.tailscale.com/stable/${ID}/${VERSION_CODENAME}.gpg" || softfail || return $? )
 }
 tailscale::is_logged_in () 
 { 
@@ -5178,15 +5125,6 @@ tailscale::is_logged_in ()
         return 1;
     else
         return 0;
-    fi
-}
-tailscale::issue_2541_workaround () 
-{ 
-    if ip address show tailscale0 > /dev/null 2>&1; then
-        if ! ip address show tailscale0 | grep -qF "inet"; then
-            echo "tailscale::issue_2541_workaround: about to restart tailscaled";
-            sudo systemctl restart tailscaled || fail "Unable to restart tailscaled";
-        fi;
     fi
 }
 task::add () 
@@ -5776,9 +5714,7 @@ wifi::is_connected ()
 { 
     nmcli --terse device wifi list | grep -E "^[*]" > /dev/null
 }
-
 # == we should have all library functions available by now ==
-
 # Load rùnagfile
 if [ "${1:-}" == "--skip-runagfile-load" ]; then
   shift
