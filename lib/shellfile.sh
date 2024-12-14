@@ -14,6 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# TODO: refactor shellfile, bring better ideas
+
 shellfile::write_loader_block() {
   local file_path
   local directory_path
@@ -161,6 +163,26 @@ if command -v direnv >/dev/null; then
     eval "\$(direnv hook zsh)" || echo "Unable to hook direnv" >&2
   elif [ -n "\${BASH_VERSION:-}" ]; then
     eval "\$(direnv hook bash)" || echo "Unable to hook direnv" >&2
+  fi
+fi
+SHELL
+}
+
+# TODO: remove FZF_DEFAULT_OPTS from here
+
+shellfile::install_fzf_rc() {
+  local license_text; license_text="$(runag::print_license)" || softfail || return $?
+
+  shellfile::write "$@" "rc/fzf" <<SHELL || softfail || return $?
+${license_text}
+
+export FZF_DEFAULT_OPTS="--exact"
+
+if command -v fzf >/dev/null; then
+  if [ -n "\${ZSH_VERSION:-}" ]; then
+    source <(fzf --zsh) || echo "Unable to hook fzf" >&2
+  elif [ -n "\${BASH_VERSION:-}" ]; then
+    eval "\$(fzf --bash)" || echo "Unable to hook fzf" >&2
   fi
 fi
 SHELL
