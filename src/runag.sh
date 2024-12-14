@@ -25,9 +25,15 @@ temp_file="$(mktemp)" || fail
 
   runag::print_license || fail
 
+  printf "\n"
+
   file::get_block bin/runag set_shell_options || fail
 
+  printf "\n"
+
   declare -f || fail
+
+  printf "\n"
 
   file::get_block bin/runag invoke_runagfile || fail
 

@@ -56,20 +56,6 @@ docs::make() {
   rm "${readme_content}" || softfail || return $?
 }
 
-if ! command -v gawk >/dev/null; then
-  (
-    # Load operating system identification data
-    . /etc/os-release || fail
-    
-    if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-      apt::install gawk || fail
-
-    elif [ "${ID:-}" = arch ]; then
-      sudo pacman --sync --needed --noconfirm gawk || fail
-    fi
-  ) || fail
-fi
-
 # run shellcheck
 # shellcheck disable=SC2046
 shellcheck build.sh index.sh \

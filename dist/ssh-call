@@ -13,6 +13,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+
 # Set shell options if we are not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
@@ -21,6 +22,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   fi
   set -o nounset
 fi
+
 fail () 
 { 
     local exit_status;
@@ -693,6 +695,7 @@ dir::should_exists ()
         fi;
     fi )
 }
+
 # run command if we are not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   ssh::call --command "$@"
