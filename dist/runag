@@ -21,7 +21,6 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   fi
   set -o nounset
 fi
-
 apt::add_source_with_key () 
 { 
     local source_name="$1";
