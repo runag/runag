@@ -173,17 +173,13 @@ Please refer to the source code for now.
 
 ### General
 
-#### `RUNAG_BIN_PATH`
-
-That variable is here to help you to generate scripts or systemd units that might need to use rùnag.
-Anywhere you put rùnag, the variable will reflect it actual location.
-If you put rùnag into your home directory them value will be `"${HOME}/.runag/bin"`.
-You could use that file as an executable or you could source that file in your scripts.
-
 #### `RUNAG_VERBOSE`
 
 Could be set to `"true"`
 
+#### `RUNAG_DIST_REPO`
+
+TODO
 
 ### SSH-related variables
 
