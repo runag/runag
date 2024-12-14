@@ -15,8 +15,7 @@
 #  limitations under the License.
 
 # BEGIN set_shell_options
-
-# set shell options if we are not sourced
+# Set shell options if we are not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
@@ -24,9 +23,11 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   fi
   set -o nounset
 fi
+
 # END set_shell_options
 
 # BEGIN load_runag_library
+# Define function
 runag::load_runag_library() {
   local self_path
   local lib_dir
@@ -53,7 +54,7 @@ runag::load_runag_library() {
   done
 }
 
-# Load rùnag library
+# Call function
 runag::load_runag_library "../lib" || {
   echo "Unable to load rùnag library ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
@@ -65,9 +66,7 @@ runag::load_runag_library "../lib" || {
 # END load_runag_library
 
 # BEGIN invoke_runagfile
-
 # == we should have all library functions available by now ==
-
 # Load rùnagfile
 if [ "${1:-}" == "--skip-runagfile-load" ]; then
   shift
