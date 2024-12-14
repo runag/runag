@@ -268,11 +268,6 @@ task::display() {
       # to use "set -o errexit" in their functions
       softfail --unless-good --exit-status "${command_exit_status}" "Error performing ${Selected_Command[0]} (${command_exit_status})" || return $?
 
-      # Display "Done" message
-      if [ -t 1 ]; then
-        log::success "Done: ${Selected_Command[*]}"
-      fi
-
       return 0
     fi
   done
