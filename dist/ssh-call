@@ -14,13 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# Set shell options if we are not sourced
+# Set shell options only if the script is not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  # Enable verbose mode if RUNAG_VERBOSE is true
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
+    # PS4: Customize trace output to include subshell, filename, line number, and function name
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
-    set -o xtrace
+    set -o xtrace   # Enable command tracing
   fi
-  set -o nounset
+  set -o nounset    # Treat unset variables as an error
 fi
 
 fail () 
