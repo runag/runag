@@ -127,6 +127,7 @@ runag::create_or_update_offline_install() (
 # ```bash
 # runag::command action sub-action some-name --some-arg
 # ```
+#
 # In this case, the function will:
 # - Execute `action::env` and `action::sub_action::env` (if they exist) with the remaining arguments.
 # - Execute `action::sub_action` (if it exists) with the remaining arguments.
