@@ -15,97 +15,117 @@
 #  limitations under the License.
 
 # BEGIN set_shell_options
-# Set shell options if we are not sourced
+# Set shell options only if the script is not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  # Enable verbose mode if RUNAG_VERBOSE is true
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
+    # PS4: Customize trace output to include subshell, filename, line number, and function name
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
-    set -o xtrace
+    set -o xtrace   # Enable command tracing
   fi
-  set -o nounset
+  set -o nounset    # Treat unset variables as an error
 fi
 # END set_shell_options
 
 # BEGIN load_runag_library
-# Define function
+# Function to load the rùnag library from a given directory
 runag::load_runag_library() {
-  local self_path
-  local lib_dir
-  local file_path
+  local self_path   # Absolute path to this script
+  local lib_dir     # Library directory path
+  local file_path   # Path to individual library file
 
-  # resolve symlink if needed
+  # If the script is a symlink, resolve it to determine the actual script path
   if [ -L "${BASH_SOURCE[0]}" ]; then
-    self_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to resolve symlink ${BASH_SOURCE[0]} ($?)" >&2; return 1; }
+    self_path="$(readlink -f "${BASH_SOURCE[0]}")" || {
+      echo "Error: Unable to resolve symlink ${BASH_SOURCE[0]} ($?)" >&2
+      return 1
+    }
   else
     self_path="${BASH_SOURCE[0]}"
   fi
 
-  # get dirname
-  lib_dir="$(dirname "${self_path}")/$1" || { echo "Unable to get a dirname of ${self_path} ($?)" >&2; return 1; }
+  # Derive library directory path by appending provided argument to script directory
+  lib_dir="$(dirname "${self_path}")/$1" || {
+    echo "Error: Unable to determine directory for ${self_path} ($?)" >&2
+    return 1
+  }
 
-  # check if lib dir exists
-  test -d "${lib_dir}" || { echo "Unable to find rùnag library directory ${lib_dir}" >&2; return 1; }
+  # Verify that the library directory exists
+  if [ ! -d "${lib_dir}" ]; then
+    echo "Error: rùnag library directory not found: ${lib_dir}" >&2
+    return 1
+  fi
 
-  # load library files
+  # Source all .sh files in the library directory
   for file_path in "${lib_dir}"/*.sh; do
     if [ -f "${file_path}" ]; then
-      . "${file_path}" || { echo "Unable to load ${file_path} ($?)" >&2; return 1; }
+      . "${file_path}" || {
+        echo "Error: Unable to load library file ${file_path} ($?)" >&2
+        return 1
+      }
     fi
   done
 }
 
-# Call function to load rùnag library
+# Load the rùnag library
 runag::load_runag_library "../lib" || {
-  echo "Unable to load rùnag library ($?)" >&2
+  echo "Error: Failed to load rùnag library ($?)" >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
-    return 1 # use return if we are sourced
+    return 1  # Use return when sourced
   else
-    exit 1 # use exit if not
+    exit 1    # Use exit when run directly
   fi
 }
 # END load_runag_library
 
 # BEGIN invoke_runagfile
-# == we should have all library functions available by now ==
-# Load rùnagfile
+# == By now, all required library functions should be available ==
+
+# Option to skip loading the runagfile
 if [ "${1:-}" == "--skip-runagfile-load" ]; then
-  shift
+  shift  # Remove the argument from the positional parameters
 else
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
+  # Load the rùnagfile
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
     runagfile::load
-    softfail --unless-good --exit-status $? "Unable to load rùnagfile ($?)" || return $?
-  else # we are not sourced
+    softfail --unless-good --exit-status $? "Error: Failed to load rùnagfile ($?)" || return $?
+  else  # Script is run directly
     runagfile::load
-    softfail --unless-good --exit-status $? "Unable to load rùnagfile ($?)" || exit $?
+    softfail --unless-good --exit-status $? "Error: Failed to load rùnagfile ($?)" || exit $?
   fi
 fi
 
-# if there is something in the first argument, run it then exit or return
+# If the first argument is provided, treat it as a command, run it, and then exit or return depending on whether the script is sourced
 if [ -n "${1:-}" ]; then
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then # we are sourced
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
     "$@"
-    softfail --unless-good --exit-status $? "Error performing $1 ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed to run command $* ($?)"
     return $?
-  else # we are not sourced
+  else  # Script is run directly
     "$@"
-    softfail --unless-good --exit-status $? "Error performing $1 ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed to run command $* ($?)"
     exit $?
   fi
 fi
 
-# if we are not sourced, try to run runagfile::main or display tasks 
+# If no command is provided and the script is not sourced, attempt to run runagfile::main or display available tasks
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -F runagfile::main >/dev/null; then
+    # Call the main function if it exists
     runagfile::main
-    softfail --unless-good --exit-status $? "Error performing runagfile::main ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed to run runagfile::main ($?)"
     exit $?
   elif task::any && [ -t 0 ] && [ -t 1 ]; then
+    # Display tasks interactively if available
     task::display
-    softfail --unless-good --exit-status $? "Error performing task::display ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed to display tasks ($?)"
     exit $?
   fi
 
-  log::error "Please specify a function name or command to run, or define a runagfile::main"
-  log::error "You could also add items to task list and choose between them if you run rùnag in interactive terminal"
+  # If no main function or tasks are available, log an error
+  log::error "Error: It seems that no function name or command has been specified. Please define 'runagfile::main' or provide a command."
+  log::error "Hint: For easier usage, consider adding tasks to the task list and running interactively."
+
   exit 1
 fi
 # END invoke_runagfile
