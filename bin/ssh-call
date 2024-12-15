@@ -15,34 +15,45 @@
 #  limitations under the License.
 
 # BEGIN set_shell_options
-# Set shell options if we are not sourced
+# Set shell options only if the script is not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  # Enable verbose mode if RUNAG_VERBOSE is true
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
+    # PS4: Customize trace output to include subshell, filename, line number, and function name
     PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
-    set -o xtrace
+    set -o xtrace   # Enable command tracing
   fi
-  set -o nounset
+  set -o nounset    # Treat unset variables as an error
 fi
 # END set_shell_options
 
 # BEGIN load_runag_library
-# Define function
+# Function to load the rùnag library from a given directory
 runag::load_runag_library() {
-  local self_path
-  local lib_dir
+  local self_path   # Absolute path to this script
+  local lib_dir     # Library directory path
 
-  # resolve symlink if needed
+  # If the script is a symlink, resolve it to determine the actual script path
   if [ -L "${BASH_SOURCE[0]}" ]; then
-    self_path="$(readlink -f "${BASH_SOURCE[0]}")" || { echo "Unable to resolve symlink ${BASH_SOURCE[0]} ($?)" >&2; return 1; }
+    self_path="$(readlink -f "${BASH_SOURCE[0]}")" || {
+      echo "Error: Unable to resolve symlink ${BASH_SOURCE[0]} ($?)" >&2
+      return 1
+    }
   else
     self_path="${BASH_SOURCE[0]}"
   fi
 
-  # get dirname
-  lib_dir="$(dirname "${self_path}")/$1" || { echo "Unable to get a dirname of ${self_path} ($?)" >&2; return 1; }
+  # Derive library directory path by appending provided argument to script directory
+  lib_dir="$(dirname "${self_path}")/$1" || {
+    echo "Error: Unable to determine directory for ${self_path} ($?)" >&2
+    return 1
+  }
 
-  # check if lib dir exists
-  test -d "${lib_dir}" || { echo "Unable to find rùnag library directory ${lib_dir}" >&2; return 1; }
+  # Verify that the library directory exists
+  if [ ! -d "${lib_dir}" ]; then
+    echo "Error: rùnag library directory not found: ${lib_dir}" >&2
+    return 1
+  fi
 
   # load some library files
   . "${lib_dir}/fail.sh" || { echo "Unable to load ${lib_dir}/fail.sh ($?)" >&2; return 1; }
