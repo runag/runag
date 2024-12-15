@@ -186,6 +186,7 @@ runag::command() {
     "${found_name}" "${@:found_index+1}"
   else
     # If no valid function was found, handle the error gracefully
-    softfail --unless-good --exit-status $? "Error: Unable to find suitable function for the arguments: $*" || return $?
+    softfail "Error: Unable to find suitable function for the arguments: $*"
+    return $?
   fi
 }
