@@ -113,10 +113,10 @@ runag::create_or_update_offline_install() (
 
 # ### `runag::command`
 #
-# - Constructs a function name by concatenating the arguments with `::`, replacing `-` with `_`.
-# - Stops processing if an argument starts with `-`.
-# - If `::env` functions are present, they are executed first to handle any setup.
-# - Executes the identified function with the remaining arguments.
+# - Constructs a function name by combining the arguments with `::`, replacing `-` with `_`.
+# - Stops processing if an argument starts with `-` (indicating a flag).
+# - If `::env` functions are defined, they are invoked first to perform any setup.
+# - Invokes the identified function with the remaining arguments.
 #
 # #### Parameters:
 #
@@ -129,65 +129,69 @@ runag::create_or_update_offline_install() (
 # ```
 #
 # In this case, the function will:
-# - Execute `action::env` and `action::sub_action::env` (if they exist) with the remaining arguments.
-# - Execute `action::sub_action` (if it exists) with the remaining arguments.
-# - If `action::sub_action` does not exist but `action` does, execute `action` with the remaining arguments.
+#
+# - Call `action::env` and `action::sub_action::env` (if they exist) to handle setup tasks with the remaining arguments.
+# - Call `action::sub_action` (if it exists) with the remaining arguments.
+# - If `action::sub_action` does not exist but `action` does, call `action` with the remaining arguments.
 #
 # #### Notes:
 #
-# - The function uses `declare -F` to check for the existence of functions.
-# - It handles errors gracefully with `softfail` if the `::env` function fails to execute correctly.
+# - The function uses `declare -F` to verify the existence of functions.
+# - Errors during `::env` function calls are handled gracefully using `softfail`.
 #
 runag::command() {
-  # Declare local variables to store potential function names and indices
-  local try_name
-  local found_name
-  local found_index
+  # Check if no arguments are provided
+  if [ $# -eq 0 ]; then
+    softfail "Error: No arguments provided. Usage: runag::command <action> [...args]"
+    return 1
+  fi
 
-  local i=1 # Initialize pointer variable (index) to iterate through arguments
-  local item # Variable to store individual items in the argument list
+  # Declare local variables to track potential function names and indices
+  local try_name       # Candidate function name
+  local found_name     # Valid function name that will be invoked
+  local found_index    # Index where the function name was found
 
-  # Start a loop to iterate through all arguments
+  local i=1            # Index to iterate through arguments
+  local item           # Current argument being processed
+
+  # Iterate through all arguments until a flag (starting with '-') is encountered
   while [ $i -le $# ]; do
-    # Access each argument by its index using indirect variable reference
-    item="${!i}"
+    item="${!i}" # Access the current argument using indirect referencing
 
-    # If the current argument starts with a dash (indicating a flag or option), stop processing
+    # Stop processing if an argument starts with a dash (indicating a flag)
     if [[ "${item}" == -* ]]; then
       break
     fi
 
-    # If try_name is set, concatenate it with the current argument, separated by "::".
-    # If try_name is not set, use the current argument as is.
-    # Replace hyphens with underscores in the current argument.
+    # Construct the candidate function name:
+    # Append "::" to the previous name and replace hyphens with underscores.
     try_name="${try_name:+"${try_name}::"}${item//-/_}"
 
-    # Check if a function with the name `try_name` exists
+    # Check if a function named `try_name` exists
     if declare -F "${try_name}" >/dev/null; then
-      # If the function is found, store the function name and the argument index
+      # Save the function name and index for later invocation
       found_name="${try_name}"
       found_index="$i"
     fi
 
-    # Check if a function with the name `${try_name}::env` exists
+    # Check if a setup function named `${try_name}::env` exists
     if declare -F "${try_name}::env" >/dev/null; then
-      # If the `::env` function is found, run it with the remaining arguments
+      # Invoke the setup function with the remaining arguments
       "${try_name}::env" "${@:i+1}"
 
-      # If `::env` execution fails, handle the error using `softfail`
-      softfail --unless-good --exit-status $? "Error: Failed to run ${try_name}::env ($?)" || return $?
+      # Handle errors gracefully if the `::env` function call fails
+      softfail --unless-good --exit-status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?
     fi
 
-    # Increment the index to move to the next argument
-    ((i++))
+    ((i++)) # Move to the next argument
   done
 
-  # If a valid function name was found, execute it with the remaining arguments
+  # If a valid function name was found, call it with the remaining arguments
   if [ -n "${found_name:-}" ]; then
     "${found_name}" "${@:found_index+1}"
   else
-    # If no valid function was found, handle the error gracefully
-    softfail "Error: Unable to find suitable function for the arguments: $*"
-    return $?
+    # Handle cases where no matching function is found
+    softfail "Error: No suitable function found for the provided arguments: $*"
+    return 1
   fi
 }
