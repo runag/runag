@@ -99,11 +99,11 @@ fi
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
     runag::command "$@"
-    softfail --unless-good --exit-status $? "Error: Failed to run command $* ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     return $?
   else  # Script is run directly
     runag::command "$@"
-    softfail --unless-good --exit-status $? "Error: Failed to run command $* ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     exit $?
   fi
 fi
