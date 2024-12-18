@@ -78,7 +78,7 @@ systemd::service_tasks() {
     esac
   done
 
-  task::add --header "Service actions" || softfail || return $?
+  # Service actions (task header)
 
   task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?
   task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?
