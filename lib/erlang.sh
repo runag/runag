@@ -54,7 +54,7 @@ erlang::install_dependencies::observer() (
   # https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#before-asdf-install
 
   if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-    local package_list; mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?
+    local package_list; mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f 1) || softfail || return $?
 
     apt::install \
       libgl1-mesa-dev \
