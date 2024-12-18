@@ -51,7 +51,7 @@ SHELL
 
 runag::tasks() {
   if [ -d "${HOME}/.runag" ]; then
-    task::add --header "Rùnag and rùnagfiles" || softfail || return $?
+    # Rùnag and rùnagfiles (task header)
     
     task::add runag::create_or_update_offline_install || softfail || return $?
     task::add runag::update_current_offline_install || softfail || return $?
