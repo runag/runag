@@ -279,6 +279,11 @@ task::render() {
   #   3 - prompt
   #   5 - header
   #   6 - comment
+  #
+  # color_a="$(tput setaf 9 2>/dev/null)" || color_a=""
+  # color_a_accent="$(printf "setaf 15\nsetab 9" | tput -S 2>/dev/null)" || color_a_accent=""
+  # color_b_accent="$(printf "setaf 15\nsetab 8" | tput -S 2>/dev/null)" || color_b_accent=""
+  # header_color="$(printf "setaf 14\nbold" | tput -S 2>/dev/null)" || header_color=""
 
   # Standard streams:
   #   0 - stdin
