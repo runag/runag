@@ -367,7 +367,7 @@ systemd::service_action::journal() (
 
   if [ "${user_services}" = true ] && [ "${VERSION_CODENAME:-}" = "focal" ]; then
     sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
-    return
+    return $?
   fi
 
   if [ "${user_services}" = true ]; then
