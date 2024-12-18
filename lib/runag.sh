@@ -19,7 +19,7 @@ runag::mini_library() {
 
   runag::print_license || fail
 
-  printf "\n" || fail
+  printf "\n"
 
   if [ "${1:-}" = "--nounset" ]; then
     printf "set -o nounset\n\n" || fail
