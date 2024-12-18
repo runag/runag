@@ -77,6 +77,24 @@ task::add() {
 # and displays the updated task list.
 #
 task::group() (
+  local nested_display
+
+  # Parse function arguments
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--nested-display)
+        nested_display=true
+        shift
+        ;;
+      -*)
+        softfail "Unrecognized argument: $1" || return $?
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
   # Clear any existing tasks in the `RUNAG_TASK` array to start fresh.
   task::clear || softfail || return $?
 
@@ -85,12 +103,12 @@ task::group() (
   softfail --unless-good --exit-status $? "Error ($?) occurred while processing the task group function: $*" || return $?
 
   # Display the current task list with nested display mode.
-  task::display --nested-display
+  task::display ${nested_display:+"--nested-display"}
 
   local task_exit_status=$?
 
   # If the `task::display` function returns a status code of 130, propagate this status code upstream.
-  if [ "${task_exit_status}" = 130 ]; then
+  if [ "${task_exit_status}" = 130 ] && [ "${nested_display:-}" = true ]; then
     return "${task_exit_status}"
   fi
 
@@ -113,7 +131,7 @@ task::display() {
   # Validate if any tasks are present
   task::any || softfail "The task list is empty" || return $?
 
-  local nested_display=false
+  local nested_display
 
   # Parse function arguments
   while [ "$#" -gt 0 ]; do
@@ -122,8 +140,11 @@ task::display() {
         nested_display=true
         shift
         ;;
-      *)
+      -*)
         softfail "Unrecognized argument: $1" || return $?
+        ;;
+      *)
+        break
         ;;
     esac
   done
@@ -147,15 +168,17 @@ task::display() {
 
   # Begin interactive task selection loop
   while : ; do
+    local fzf_result_string
     local main_pointer
+    local line_number
 
     # The `read` command combined with the `lastpipe` shell option cannot be used here because it's uncertain whether job control is enabled.
 
     # Render tasks and use `fzf` for selection
-    main_pointer="$(
+    fzf_result_string="$(
       ( task::render --force-color-output || softfail "Error in task::render ($?)" || exit 2 ) |
-      fzf --ansi --tac --with-nth="2.." |
-      ( cut -d " " -f 1 || softfail "Error in cut ($?)" || exit 2 )
+      fzf --ansi --tac --with-nth="3.." ${line_number:+--bind "load:pos:-${line_number}"} |
+      ( cut -d " " -f 1-2 || softfail "Error in cut ($?)" || exit 2 )
       
       # Check pipeline statuses
       for status in "${PIPESTATUS[@]}"; do
@@ -171,7 +194,7 @@ task::display() {
     local fzf_status=$?
 
     if [ "${fzf_status}" = 1 ] || [ "${fzf_status}" = 130 ]; then
-      if [ "${nested_display}" = true ]; then
+      if [ "${nested_display:-}" = true ]; then
         return 130
       fi
       return 0
@@ -179,7 +202,10 @@ task::display() {
 
     softfail --unless-good --exit-status "${fzf_status}" "Task selection error" || return $?
 
+    <<<"${fzf_result_string}" IFS=" " read -r main_pointer line_number
+
     [[ "${main_pointer}" =~ ^[0-9]+$ ]] || softfail "Invalid task pointer: Non-numeric value" || return $?
+    [[ "${line_number}" =~ ^[0-9]+$ ]] || softfail "Invalid line_number: Non-numeric value" || return $?
 
     # Retrieve task information
     local item_type="${RUNAG_TASK[main_pointer]}"
@@ -195,7 +221,7 @@ task::display() {
 
     # Determine if the item is a task group or basic task
     if [ "${item_type}" = "task-group" ]; then
-      command_array+=(task::group)
+      command_array+=(task::group --nested-display)
     else
       command_array+=(runag::command)
     fi
@@ -314,6 +340,7 @@ task::render() {
 
   # Iterate through tasks and format their output
   local main_pointer
+  local output_line_number=1
 
   for (( main_pointer = 0; main_pointer < ${#RUNAG_TASK[@]}; main_pointer++ )); do 
     local item_type="${RUNAG_TASK[main_pointer]}"
@@ -331,7 +358,7 @@ task::render() {
     # Add task group-specific formatting
     if [ "${item_type}" = "task-group" ]; then
       comment="-->"
-      command_array+=("task::group")
+      command_array+=(task::group)
     fi
 
     local item_pointer
@@ -357,13 +384,14 @@ task::render() {
     local command_pointer=""
 
     if [ "${non_interactive}" = false ]; then
-      command_pointer="${main_pointer}"
+      command_pointer="${main_pointer} ${output_line_number}"
     fi
 
     command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}")
 
     echo "${command_pointer:+"${command_pointer} "}${command_array[*]}${comment:+" ${comment_color}# ${comment}${reset_attrs}"}"
 
+    (( output_line_number += 1 ))
     (( main_pointer += item_length + 1 ))
   done
 }
