@@ -670,7 +670,7 @@ dir::should_exists ()
             -f | --for-me-only)
                 dir_mode=0700;
                 dir_owner="${USER}";
-                dir_group="$(grep -E "^${USER}:" /etc/passwd | cut -d: -f4; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?;
+                dir_group="$(grep -E "^${USER}:" /etc/passwd | cut -d : -f 4; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?;
                 shift
             ;;
             -*)
