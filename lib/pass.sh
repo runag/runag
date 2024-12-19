@@ -106,9 +106,8 @@ pass::secret_exists() {
 #   pass::use secret/path file::write file/path
 #   pass::use secret/path ssh::call file::write file/path
 #   pass::use secret/path use_password_somewhere
-
+#
 pass::use() {
-
   # parse arguments
   local get_body=false
   local get_metadata=false metadata_name
@@ -288,4 +287,23 @@ pass::get_metadata(){
     fi
   done
   return 1
+}
+
+pass::install_fzf_extension() {
+  local extension_name="${1:-ff}"
+
+  local temp_file; temp_file="$(mktemp)" || fail
+  {
+    printf "#!/usr/bin/env bash\n\n" || fail
+    runag::print_license && printf "\n" || fail
+
+    cat <<'SHELL'
+pass_name=$(cd "${PREFIX}" && find -name "*.gpg" | cut -c 3- | sed 's/\.gpg$//' | fzf --query "$*" --select-1) || exit $?
+
+pass show --clip "${pass_name}" && printf "\n"
+pass show "${pass_name}" | tail -n +2
+SHELL
+  } >"${temp_file}" || fail
+
+  file::write --absorb "${temp_file}" --sudo --mode 0755 "/usr/lib/password-store/extensions/${extension_name}.bash" || fail
 }
