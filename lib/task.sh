@@ -126,7 +126,7 @@ task::group() (
 # #### Parameters:
 # - `-n`, `--nested-display`: Specifies that the function is running in a nested context.
 #                             Used to determine behavior when `fzf` selection is canceled.
-
+#
 task::display() {
   # Validate if any tasks are present
   task::any || softfail "The task list is empty" || return $?
@@ -278,7 +278,7 @@ task::display() {
 # #### Parameters:
 # - `-n`, `--non-interactive`: Disables colorized output and renders tasks in plain text.
 # - `-c`, `--force-color-output`: Forces colorized output, regardless of terminal detection.
-
+#
 task::render() {
   local non_interactive=false
   local force_color_output=false
