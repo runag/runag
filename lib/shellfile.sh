@@ -185,6 +185,8 @@ if command -v fzf >/dev/null; then
     eval "\$(fzf --bash)" || echo "Unable to hook fzf" >&2
   fi
 fi
+
+alias p="pass ff"
 SHELL
 }
 
