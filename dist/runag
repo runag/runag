@@ -573,7 +573,7 @@ dir::should_exists ()
             -f | --for-me-only)
                 dir_mode=0700;
                 dir_owner="${USER}";
-                dir_group="$(grep -E "^${USER}:" /etc/passwd | cut -d: -f4; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?;
+                dir_group="$(grep -E "^${USER}:" /etc/passwd | cut -d : -f 4; test "${PIPESTATUS[*]}" = "0 0")" || softfail || return $?;
                 shift
             ;;
             -*)
@@ -689,7 +689,7 @@ erlang::install_dependencies::observer ()
     ( . /etc/os-release || softfail || return $?;
     if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
         local package_list;
-        mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f1) || softfail || return $?;
+        mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f 1) || softfail || return $?;
         apt::install libgl1-mesa-dev libglu1-mesa-dev libpng-dev "${package_list[@]}" || softfail || return $?;
     else
         if [ "${ID:-}" = arch ]; then
@@ -2255,6 +2255,24 @@ pass::get_metadata ()
     done;
     return 1
 }
+pass::install_fzf_extension () 
+{ 
+    local extension_name="${1:-ff}";
+    local temp_file;
+    temp_file="$(mktemp)" || fail;
+    { 
+        printf "#!/usr/bin/env bash\n\n" || fail;
+        runag::print_license && printf "\n" || fail;
+        cat <<'SHELL'
+pass_name=$(cd "${PREFIX}" && find -name "*.gpg" | cut -c 3- | sed 's/\.gpg$//' | fzf --query "$*" --select-1) || exit $?
+
+pass show --clip "${pass_name}" && printf "\n"
+pass show "${pass_name}" | tail -n +2
+SHELL
+
+    } > "${temp_file}" || fail;
+    file::write --absorb "${temp_file}" --sudo --mode 0755 "/usr/lib/password-store/extensions/${extension_name}.bash" || fail
+}
 pass::secret_exists () 
 { 
     local secret_path="$1";
@@ -3013,6 +3031,10 @@ rubygems::direnv_credentials ()
 }
 runag::command () 
 { 
+    if [ $# -eq 0 ]; then
+        softfail "Error: No arguments provided. Usage: runag::command <action> [...args]";
+        return 1;
+    fi;
     local try_name;
     local found_name;
     local found_index;
@@ -3030,15 +3052,15 @@ runag::command ()
         fi;
         if declare -F "${try_name}::env" > /dev/null; then
             "${try_name}::env" "${@:i+1}";
-            softfail --unless-good --exit-status $? "Error: Failed to run ${try_name}::env ($?)" || return $?;
+            softfail --unless-good --exit-status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?;
         fi;
         ((i++));
     done;
     if [ -n "${found_name:-}" ]; then
         "${found_name}" "${@:found_index+1}";
     else
-        softfail "Error: Unable to find suitable function for the arguments: $*";
-        return $?;
+        softfail "Error: No suitable function found for the provided arguments: $*";
+        return 1;
     fi
 }
 runag::create_or_update_offline_install () 
@@ -3109,7 +3131,7 @@ runag::mini_library ()
 { 
     printf "#!/usr/bin/env bash\n\n" || fail;
     runag::print_license || fail;
-    printf "\n" || fail;
+    printf "\n";
     if [ "${1:-}" = "--nounset" ]; then
         printf "set -o nounset\n\n" || fail;
     fi;
@@ -3140,7 +3162,6 @@ SHELL
 runag::tasks () 
 { 
     if [ -d "${HOME}/.runag" ]; then
-        task::add --header "Rùnag and rùnagfiles" || softfail || return $?;
         task::add runag::create_or_update_offline_install || softfail || return $?;
         task::add runag::update_current_offline_install || softfail || return $?;
     fi
@@ -3382,6 +3403,8 @@ if command -v fzf >/dev/null; then
     eval "\$(fzf --bash)" || echo "Unable to hook fzf" >&2
   fi
 fi
+
+alias p="pass ff"
 SHELL
  softfail || return $?
 }
@@ -4963,7 +4986,7 @@ systemd::service_action::journal ()
     . /etc/os-release || softfail || return $?;
     if [ "${user_services}" = true ] && [ "${VERSION_CODENAME:-}" = "focal" ]; then
         sudo journalctl "_SYSTEMD_USER_UNIT=${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?;
-        return;
+        return $?;
     fi;
     if [ "${user_services}" = true ]; then
         local journalctl_command=(journalctl --user);
@@ -5108,7 +5131,6 @@ systemd::service_tasks ()
             ;;
         esac;
     done;
-    task::add --header "Service actions" || softfail || return $?;
     task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" start || softfail || return $?;
     task::add "${envelope_command[@]}" systemd::service_action "${action_args[@]}" stop || softfail || return $?;
     if [ "${with_timer:-}" = true ]; then
@@ -5150,22 +5172,9 @@ tailscale::is_logged_in ()
 }
 task::add () 
 { 
-    local store_name=DEFAULT;
     local task_type="basic-task";
     while [ "$#" -gt 0 ]; do
         case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            -o | --os)
-                if [[ ! "${OSTYPE}" =~ ^"$2" ]]; then
-                    return;
-                fi;
-                shift;
-                shift
-            ;;
             -g | --group)
                 task_type="task-group";
                 shift
@@ -5175,165 +5184,125 @@ task::add ()
             ;;
         esac;
     done;
-    declare -n task_data="RUNAG_TASK_${store_name}";
-    if [[ ! -v task_data ]]; then
-        declare -ga "RUNAG_TASK_${store_name}=()";
+    if [[ ! -v RUNAG_TASK ]]; then
+        declare -ga RUNAG_TASK=();
     fi;
-    task_data+=("${task_type}" "$#" "$@")
+    RUNAG_TASK+=("${task_type}" "$#" "$@")
 }
 task::any () 
 { 
-    local store_name=DEFAULT;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            *)
-                fail "Unknown argument: $1"
-            ;;
-        esac;
-    done;
-    declare -n task_data="RUNAG_TASK_${store_name}";
-    [[ -v task_data ]] && (( ${#task_data[@]} > 0 ))
+    [[ -v RUNAG_TASK ]] && (( ${#RUNAG_TASK[@]} > 0 ))
 }
 task::clear () 
 { 
-    local store_name=DEFAULT;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
-                shift
-            ;;
-            *)
-                softfail "Unknown argument: $1" || return $?
-            ;;
-        esac;
-    done;
-    declare -ga "RUNAG_TASK_${store_name}=()"
+    declare -ga RUNAG_TASK=()
 }
 task::display () 
 { 
-    local store_name=DEFAULT;
-    local enable_return=false;
+    task::any || softfail "The task list is empty" || return $?;
+    local nested_display;
     while [ "$#" -gt 0 ]; do
         case "$1" in 
-            -s | --store)
-                store_name="$2";
-                shift;
+            -n | --nested-display)
+                nested_display=true;
                 shift
             ;;
-            -r | --enable-return)
-                enable_return=true;
-                shift
+            -*)
+                softfail "Unrecognized argument: $1" || return $?
             ;;
             *)
-                softfail "Unknown argument: $1" || return $?
+                break
             ;;
         esac;
     done;
-    declare -n Task_Data="RUNAG_TASK_${store_name}";
-    if [[ ! -v Task_Data ]]; then
-        declare -ga "RUNAG_TASK_${store_name}=()";
-    fi;
-    if [ "${#Task_Data[@]}" = 0 ]; then
-        softfail "Task list is empty";
+    if ! [ -t 0 ] || ! [ -t 1 ] || ! command -v fzf > /dev/null; then
+        task::render --non-interactive || softfail || return $?;
         return $?;
     fi;
-    local Prompt_Color="";
-    local Color_A="";
-    local Color_B="";
-    local Color_A_Accent="";
-    local Color_B_Accent="";
-    local Header_Color="";
-    local Comment_Color="";
-    local Cursor_Up_Seq;
-    local Reset_Attrs="";
-    local Clear_Line="";
-    local Leading_Spacer=" ";
-    if [ -t 0 ]; then
-        Prompt_Color="$(printf "setaf 11\nbold" | tput -S 2> /dev/null)" || Prompt_Color="";
-    fi;
+    local prompt_color="";
+    local reset_attrs="";
     if [ -t 1 ]; then
-        Color_A="$(tput setaf 9 2> /dev/null)" || Color_A="";
-        Color_A_Accent="$(printf "setaf 15\nsetab 9" | tput -S 2> /dev/null)" || Color_A_Accent="";
-        Color_B_Accent="$(printf "setaf 15\nsetab 8" | tput -S 2> /dev/null)" || Color_B_Accent="";
-        Header_Color="$(printf "setaf 14\nbold" | tput -S 2> /dev/null)" || Header_Color="";
-        Comment_Color="$(printf "setaf 13\nbold" | tput -S 2> /dev/null)" || Comment_Color="";
-        Cursor_Up_Seq="$(tput cuu1 2> /dev/null)" || softfail || return $?;
-    fi;
-    if [ -t 0 ] || [ -t 1 ]; then
-        Reset_Attrs="$(tput sgr 0 2> /dev/null)" || softfail || return $?;
-        Clear_Line="$(tput el 2> /dev/null)" || softfail || return $?;
-    fi;
-    local Item_Position=undefined;
-    local Section_Position=undefined;
-    local First_Render=true;
-    local Lines_Drawn;
-    local Non_Interactive=false;
-    local Should_Perform_Command;
-    local Should_Exit;
-    local Should_Return;
-    local Should_Enter;
-    local Selected_Command;
-    local Selected_Command_Type;
-    local command_exit_status;
-    if ! [ -t 0 ] || ! [ -t 1 ]; then
-        Non_Interactive=true;
-        Leading_Spacer="";
-        task::render || softfail || return $?;
-        return 0;
+        prompt_color="$(printf "setaf 11\nbold" | tput -S 2> /dev/null)" || prompt_color="";
+        reset_attrs="$(tput sgr 0 2> /dev/null)" || reset_attrs="";
     fi;
     while :; do
-        task::render || softfail || return $?;
-        Should_Perform_Command=false;
-        Should_Exit=false;
-        Should_Return=false;
-        Should_Enter=false;
-        task::read_input || softfail || return $?;
-        if [ "${enable_return}" = true ] && [ "${Should_Return}" = true ]; then
-            return 254;
-        else
-            if [ "${Should_Exit}" = true ]; then
-                return 0;
-            else
-                if [ "${Should_Perform_Command}" = true ] || { 
-                    [ "${Should_Enter}" = true ] && [ "${Selected_Command_Type}" = "task-group" ]
-                }; then
-                    if [ "${Selected_Command_Type}" = "task-group" ]; then
-                        printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n";
-                        task::group --enable-return "${Selected_Command[@]}";
-                        command_exit_status=$?;
-                        if [ "${command_exit_status}" = 254 ]; then
-                            First_Render=true;
-                            printf "\n. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n";
-                            continue;
-                        fi;
-                    else
-                        echo '
-'"${Prompt_Color}> ${Selected_Command[*]}${Reset_Attrs}";
-                        "${Selected_Command[@]}";
-                        command_exit_status=$?;
-                    fi;
-                    softfail --unless-good --exit-status "${command_exit_status}" "Error performing ${Selected_Command[0]} (${command_exit_status})" || return $?;
-                    return 0;
-                fi;
+        local fzf_result_string;
+        local main_pointer;
+        local line_number;
+        fzf_result_string="$( ( task::render --force-color-output || softfail "Error in task::render ($?)" || exit 2 ) | fzf --ansi --tac --with-nth="3.." ${line_number:+--bind "load:pos:-${line_number}"} | ( cut -d " " -f 1-2 || softfail "Error in cut ($?)" || exit 2 )
+for status in "${PIPESTATUS[@]}";
+do
+    if [ "${status}" -ne 0 ]; then
+        exit "${status}";
+    fi;
+done
+exit 0)";
+        local fzf_status=$?;
+        if [ "${fzf_status}" = 1 ] || [ "${fzf_status}" = 130 ]; then
+            if [ "${nested_display:-}" = true ]; then
+                return 130;
             fi;
+            return 0;
         fi;
+        softfail --unless-good --exit-status "${fzf_status}" "Task selection error" || return $?;
+        IFS=" " read -r main_pointer line_number <<< "${fzf_result_string}";
+        [[ "${main_pointer}" =~ ^[0-9]+$ ]] || softfail "Invalid task pointer: Non-numeric value" || return $?;
+        [[ "${line_number}" =~ ^[0-9]+$ ]] || softfail "Invalid line_number: Non-numeric value" || return $?;
+        local item_type="${RUNAG_TASK[main_pointer]}";
+        local item_length="${RUNAG_TASK[main_pointer + 1]}";
+        [[ "${item_length}" =~ ^[0-9]+$ ]] || softfail "Invalid task length: Non-numeric value" || return $?;
+        if [ "${item_type}" != "basic-task" ] && [ "${item_type}" != "task-group" ]; then
+            softfail "Unrecognized item type: ${item_type}" || return $?;
+        fi;
+        local command_array=();
+        if [ "${item_type}" = "task-group" ]; then
+            command_array+=(task::group --nested-display);
+        else
+            command_array+=(runag::command);
+        fi;
+        local item_pointer;
+        for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
+        do
+            case "${RUNAG_TASK[item_pointer]}" in 
+                -c | --comment)
+                    (( item_pointer += 1 ))
+                ;;
+                -*)
+                    softfail "Unrecognized argument: ${RUNAG_TASK[item_pointer]}" || return $?
+                ;;
+                *)
+                    break
+                ;;
+            esac;
+        done;
+        if ! (( item_pointer <= main_pointer + item_length + 1 )); then
+            softfail "Task contains no actionable command" || return $?;
+        fi;
+        command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}");
+        if [ -t 1 ] && [ "${item_type}" != "task-group" ]; then
+            echo '
+'"${prompt_color}> ${command_array[*]}${reset_attrs}";
+        fi;
+        "${command_array[@]}";
+        local command_status=$?;
+        if [ "${command_status}" = 130 ] && [ "${item_type}" = "task-group" ]; then
+            continue;
+        fi;
+        softfail --unless-good --exit-status "${command_status}" "Error (${command_status}) performing command: ${command_array[*]}" || return $?;
+        return "${command_status}";
     done
 }
 task::group () 
 { 
-    ( local enable_return;
+    ( local nested_display;
     while [ "$#" -gt 0 ]; do
         case "$1" in 
-            -r | --enable-return)
-                enable_return=true;
+            -n | --nested-display)
+                nested_display=true;
                 shift
+            ;;
+            -*)
+                softfail "Unrecognized argument: $1" || return $?
             ;;
             *)
                 break
@@ -5341,276 +5310,82 @@ task::group ()
         esac;
     done;
     task::clear || softfail || return $?;
-    "$@";
-    softfail --unless-good --exit-status $? "Error performing $1 ($?)" || return $?;
-    task::display ${enable_return:+"--enable-return"};
-    local command_exit_status=$?;
-    if [ "${command_exit_status}" = 254 ]; then
-        return "${command_exit_status}";
+    runag::command "$@";
+    softfail --unless-good --exit-status $? "Error ($?) occurred while processing the task group function: $*" || return $?;
+    task::display ${nested_display:+"--nested-display"};
+    local task_exit_status=$?;
+    if [ "${task_exit_status}" = 130 ] && [ "${nested_display:-}" = true ]; then
+        return "${task_exit_status}";
     fi;
-    softfail --unless-good --exit-status "${command_exit_status}" "Error performing task::display (${command_exit_status})" || return $? )
-}
-task::read_input () 
-{ 
-    local input_text;
-    local read_status;
-    IFS="" read -n 1 -r -s input_text || softfail "Read failed: $?" || return $?;
-    if [ "${input_text}" = '' ]; then
-        Should_Exit=true;
-    fi;
-    if [ "${input_text}" = '' ]; then
-        IFS="" read -n 5 -r -s -t 0.01 input_text;
-        read_status=$?;
-        if [ ${read_status} -gt 128 ]; then
-            if [ -z "${input_text}" ]; then
-                Should_Exit=true;
-            fi;
-        else
-            if [ ${read_status} != 0 ]; then
-                softfail "Read failed: ${read_status}";
-                return $?;
-            fi;
-        fi;
-        case "${input_text}" in 
-            "[5~" | "[1;5A")
-                if [ "${Section_Position}" != undefined ]; then
-                    Item_Position=undefined;
-                    (( Section_Position -= 1 )) || true;
-                fi
-            ;;
-            "[6~" | "[1;5B")
-                if [ "${Section_Position}" != undefined ]; then
-                    Item_Position=undefined;
-                    (( Section_Position += 1 ));
-                fi
-            ;;
-            "[A")
-                if [ "${Item_Position}" != undefined ]; then
-                    ((Item_Position-=1));
-                    Section_Position=undefined;
-                fi
-            ;;
-            "[B")
-                if [ "${Item_Position}" != undefined ]; then
-                    ((Item_Position+=1));
-                    Section_Position=undefined;
-                fi
-            ;;
-            "[C")
-                if [ "${Item_Position}" != undefined ]; then
-                    Should_Enter=true;
-                fi
-            ;;
-            "[D")
-                Should_Return=true
-            ;;
-            "[F")
-                if [ "${Item_Position}" != undefined ]; then
-                    Item_Position=-1;
-                    Section_Position=undefined;
-                fi
-            ;;
-            "[H")
-                if [ "${Item_Position}" != undefined ]; then
-                    Item_Position=0;
-                    Section_Position=0;
-                fi
-            ;;
-        esac;
-    else
-        if [ "${input_text}" = "" ]; then
-            if [ "${Item_Position}" != undefined ]; then
-                Should_Perform_Command=true;
-            fi;
-        fi;
-    fi
+    softfail --unless-good --exit-status "${task_exit_status}" "Error: task::display encountered an issue (${task_exit_status})" || return $? )
 }
 task::render () 
 { 
-    local main_pointer;
-    local item_pointer;
-    local comment;
-    local is_command;
-    local item_length;
-    local item_type;
-    local command;
-    local command_display_prefix;
-    local Current_Color;
-    local current_color_accent;
-    local Meta_Lines=();
-    local meta_line_pointer;
-    local selection_marker;
-    local enter_marker;
-    local current_item_index=undefined;
-    local current_section_index=undefined;
-    local current_line_color;
-    if [ "${First_Render}" != true ]; then
-        if [ -t 1 ]; then
-            for ((1; Lines_Drawn > 0; Lines_Drawn--))
-            do
-                printf "%s" "${Cursor_Up_Seq}";
-            done;
-        fi;
-    else
-        First_Render=false;
-    fi;
-    Lines_Drawn=0;
-    for ((main_pointer = 0; main_pointer < ${#Task_Data[@]}; main_pointer++ ))
-    do
-        if [ "${Task_Data[main_pointer]}" = "basic-task" ] || [ "${Task_Data[main_pointer]}" = "task-group" ]; then
-            comment="";
-            is_command=true;
-            item_length="${Task_Data[main_pointer + 1]}";
-            item_type="${Task_Data[main_pointer]}";
-            for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
-            do
-                case "${Task_Data[item_pointer]}" in 
-                    -h | --header)
-                        (( item_pointer += 1 ));
-                        is_command=false;
-                        Meta_Lines+=("header" "${Task_Data[item_pointer]}")
-                    ;;
-                    -n | --note)
-                        (( item_pointer += 1 ));
-                        is_command=false;
-                        Meta_Lines+=("note" "${Task_Data[item_pointer]}")
-                    ;;
-                    -c | --comment)
-                        (( item_pointer += 1 ));
-                        comment="${Task_Data[item_pointer]}"
-                    ;;
-                    -*)
-                        softfail "Unknown argument: ${Task_Data[item_pointer]}" || return $?
-                    ;;
-                    *)
-                        break
-                    ;;
-                esac;
-            done;
-            if [ "${is_command}" = true ] && (( item_pointer <= main_pointer + item_length + 1 )); then
-                command=("${Task_Data[@]:item_pointer:((item_length-(item_pointer-main_pointer-2)))}");
-                if [ "${current_item_index}" = undefined ]; then
-                    current_item_index=0;
-                fi;
-                if [ "${current_section_index}" = undefined ]; then
-                    current_section_index=0;
-                fi;
-                if (( current_item_index > 0 && ${#Meta_Lines[@]} > 0)); then
-                    for ((meta_line_pointer = 0; meta_line_pointer < ${#Meta_Lines[@]}; meta_line_pointer+=2 ))
-                    do
-                        if [ "${Meta_Lines[meta_line_pointer]}" = "header" ]; then
-                            (( current_section_index += 1 ));
-                            break;
-                        fi;
-                    done;
-                fi;
-                task::render::meta_lines "${current_item_index}" || softfail || return $?;
-                if [ "${Current_Color:-}" = "${Color_A}" ]; then
-                    Current_Color="${Color_B:-}";
-                    current_color_accent="${Color_B_Accent}";
-                else
-                    Current_Color="${Color_A}";
-                    current_color_accent="${Color_A_Accent}";
-                fi;
-                if [ "${Item_Position}" = undefined ] && [ "${Section_Position}" = undefined ]; then
-                    Item_Position=current_item_index;
-                    Section_Position=current_section_index;
-                else
-                    if [ "${Item_Position}" = undefined ] && [ "${Section_Position}" = "${current_section_index}" ]; then
-                        (( Item_Position = current_item_index ));
-                    else
-                        if [ "${Section_Position}" = undefined ] && [ "${Item_Position}" = "${current_item_index}" ]; then
-                            (( Section_Position = current_section_index ));
-                        fi;
-                    fi;
-                fi;
-                enter_marker="";
-                if [ "${Non_Interactive}" != true ] && [ "${Item_Position}" = "${current_item_index}" ]; then
-                    Selected_Command=("${command[@]}");
-                    Selected_Command_Type="${item_type}";
-                    selection_marker+="${Current_Color}!${Reset_Attrs}";
-                    current_line_color="${current_color_accent}";
-                    if [ "${item_type}" = "task-group" ]; then
-                        enter_marker=" ${Current_Color}# -->${Reset_Attrs}";
-                    fi;
-                else
-                    selection_marker="";
-                    current_line_color="${Current_Color}";
-                fi;
-                if [ "${Task_Data[main_pointer]}" = "task-group" ]; then
-                    command_display_prefix="task::group ";
-                else
-                    command_display_prefix="";
-                fi;
-                echo "${Clear_Line}${selection_marker}${Leading_Spacer}${current_line_color}${command_display_prefix}${command[*]}${Reset_Attrs}${comment:+" ${Comment_Color}#  ${comment}${Reset_Attrs}"}${enter_marker}";
-                (( Lines_Drawn+=1 ));
-                (( current_item_index+=1 ));
-            fi;
-            (( main_pointer += item_length + 1 ));
-        else
-            softfail "Unknown operation" || return $?;
-        fi;
+    local non_interactive=false;
+    local force_color_output=false;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -n | --non-interactive)
+                non_interactive=true;
+                shift
+            ;;
+            -c | --force-color-output)
+                force_color_output=true;
+                shift
+            ;;
+            *)
+                softfail "Unrecognized argument: $1" || return $?
+            ;;
+        esac;
     done;
-    task::render::meta_lines "${current_item_index}" || softfail || return $?;
-    if [ "${Non_Interactive}" != true ]; then
-        if [ "${Item_Position}" = undefined ]; then
-            if [ "${Section_Position}" != undefined ] && [ "${current_section_index}" != undefined ]; then
-                if (( Section_Position < 0 )); then
-                    (( Section_Position = current_section_index ));
-                    task::render;
-                else
-                    if (( Section_Position >= current_section_index )); then
-                        Item_Position=0;
-                        Section_Position=0;
-                        task::render;
-                    fi;
-                fi;
-            fi;
-        else
-            if [ "${current_item_index}" != undefined ]; then
-                if (( Item_Position < 0 )); then
-                    (( Item_Position = current_item_index - 1 ));
-                    task::render;
-                else
-                    if (( Item_Position >= current_item_index )); then
-                        Item_Position=0;
-                        Section_Position=0;
-                        task::render;
-                    fi;
-                fi;
-            fi;
+    local comment_color="";
+    local reset_attrs="";
+    if [ -t 1 ] || [ "${force_color_output}" = true ]; then
+        comment_color="$(printf "setaf 13\nbold" | tput -S 2> /dev/null)" || comment_color="";
+        reset_attrs="$(tput sgr 0 2> /dev/null)" || reset_attrs="";
+    fi;
+    local main_pointer;
+    local output_line_number=1;
+    for ((main_pointer = 0; main_pointer < ${#RUNAG_TASK[@]}; main_pointer++ ))
+    do
+        local item_type="${RUNAG_TASK[main_pointer]}";
+        local item_length="${RUNAG_TASK[main_pointer + 1]}";
+        [[ "${item_length}" =~ ^[0-9]+$ ]] || softfail "Invalid task length: Non-numeric value" || return $?;
+        if [ "${item_type}" != "basic-task" ] && [ "${item_type}" != "task-group" ]; then
+            softfail "Unrecognized item type: ${item_type}" || return $?;
         fi;
-    fi
-}
-task::render::meta_lines () 
-{ 
-    local current_item_index="$1";
-    local meta_line_pointer;
-    local spacer_required=false;
-    if (( ${#Meta_Lines[@]} > 0)); then
-        if [ "${current_item_index}" != undefined ] && [ "${current_item_index}" -gt 0 ]; then
-            spacer_required=true;
+        local command_array=();
+        local comment="";
+        if [ "${item_type}" = "task-group" ]; then
+            comment="-->";
+            command_array+=(task::group);
         fi;
-        for ((meta_line_pointer = 0; meta_line_pointer < ${#Meta_Lines[@]}; meta_line_pointer+=2 ))
+        local item_pointer;
+        for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
         do
-            if [ "${Meta_Lines[meta_line_pointer]}" = "header" ]; then
-                if [ "${spacer_required}" = true ]; then
-                    echo "${Clear_Line}";
-                    (( Lines_Drawn += 1 ));
-                    spacer_required=false;
-                fi;
-                echo "${Clear_Line}${Header_Color}${Leading_Spacer}# ${Meta_Lines[meta_line_pointer+1]}${Reset_Attrs}";
-            else
-                if [ "${Meta_Lines[meta_line_pointer]}" = "note" ]; then
-                    echo "${Clear_Line}${Comment_Color}${Leading_Spacer}# -- ${Meta_Lines[meta_line_pointer+1]}${Reset_Attrs}";
-                    spacer_required=true;
-                fi;
-            fi;
-            (( Lines_Drawn+=1 ));
+            case "${RUNAG_TASK[item_pointer]}" in 
+                -c | --comment)
+                    (( item_pointer += 1 ));
+                    comment="${RUNAG_TASK[item_pointer]}"
+                ;;
+                -*)
+                    softfail "Unrecognized argument: ${RUNAG_TASK[item_pointer]}" || return $?
+                ;;
+                *)
+                    break
+                ;;
+            esac;
         done;
-        Current_Color="";
-        Meta_Lines=();
-    fi
+        (( item_pointer <= main_pointer + item_length + 1 )) || softfail "Task contains no actionable command" || return $?;
+        local command_pointer="";
+        if [ "${non_interactive}" = false ]; then
+            command_pointer="${main_pointer} ${output_line_number}";
+        fi;
+        command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}");
+        echo "${command_pointer:+"${command_pointer} "}${command_array[*]}${comment:+" ${comment_color}# ${comment}${reset_attrs}"}";
+        (( output_line_number += 1 ));
+        (( main_pointer += item_length + 1 ));
+    done
 }
 terminal::color_table () 
 { 
@@ -5753,11 +5528,11 @@ fi
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
     runag::command "$@"
-    softfail --unless-good --exit-status $? "Error: Failed to run command $* ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     return $?
   else  # Script is run directly
     runag::command "$@"
-    softfail --unless-good --exit-status $? "Error: Failed to run command $* ($?)"
+    softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     exit $?
   fi
 fi
@@ -5779,6 +5554,12 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   # If no main function or tasks are available, log an error
   log::error "Error: It seems that no function name or command has been specified. Please define 'runagfile::main' or provide a command."
   log::error "Hint: For easier usage, consider adding tasks to the task list and running interactively."
+
+  printf "\n"
+
+  if task::any; then
+    task::render --non-interactive || softfail || exit $?
+  fi
 
   exit 1
 fi
