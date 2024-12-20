@@ -73,8 +73,10 @@ task::add() {
     # Assign the task group function name from the first argument.
     local function_name="$1"
 
-    # If the function is not already declared, define it dynamically.
-    if ! declare -F "${function_name}" >/dev/null; then
+    # Verify if the specified task group function is already defined.
+    # If the function ${function_name} is not declared but its corresponding task set creation function
+    # ${function_name}::set is defined, dynamically create the task group function.
+    if ! declare -F "${function_name}" >/dev/null && declare -F "${function_name}::set" >/dev/null; then
       # Ensure the function name contains only valid characters.
       [[ "${function_name}" =~ ^[a-zA-Z0-9:_]+$ ]] || softfail "Error: Function name must contain only alphanumeric characters, colons (:), and underscores (_)." || return $?
 
