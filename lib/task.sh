@@ -31,7 +31,7 @@ task::any() {
 #
 task::clear() {
   # Declare RUNAG_TASK as a global (-g) empty array (-a).
-  declare -ga RUNAG_TASK=() || softfail || return $?
+  declare -ga RUNAG_TASK=() || softfail "Failed to clear the task array: unable to reset RUNAG_TASK." || return $?
 }
 
 # ### `task::add`
