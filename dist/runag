@@ -3029,39 +3029,6 @@ rubygems::direnv_credentials ()
         file::append_line_unless_present --keep-permissions ".npmignore" "/.envrc" || softfail || return $?;
     fi
 }
-runag::create_or_update_offline_install () 
-{ 
-    ( local runag_path="${HOME}/.runag";
-    if [ -n "$1" ]; then
-        cd "$1" || softfail || return $?;
-    fi;
-    local target_directory="${PWD}" || softfail || return $?;
-    if [ ! -d "${runag_path}/.git" ]; then
-        softfail "Unable to find rùnag checkout" || return $?;
-    fi;
-    local runag_remote_url;
-    runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?;
-    git -C "${runag_path}" pull origin main || softfail || return $?;
-    git -C "${runag_path}" push --set-upstream origin main || softfail || return $?;
-    git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?;
-    ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?;
-    dir::should_exists --mode 0700 "runagfiles" || softfail || return $?;
-    local runagfile_path;
-    for runagfile_path in "${runag_path}/runagfiles"/*;
-    do
-        if [ -d "${runagfile_path}" ]; then
-            local runagfile_dir_name;
-            runagfile_dir_name="$(basename "${runagfile_path}")" || softfail || return $?;
-            local runagfile_remote_url;
-            runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?;
-            git -C "${runagfile_path}" pull origin main || softfail || return $?;
-            git -C "${runagfile_path}" push --set-upstream origin main || softfail || return $?;
-            git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?;
-            ( cd "${runagfile_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runagfiles/${runagfile_dir_name}" && git fetch "offline-install" ) || softfail || return $?;
-        fi;
-    done;
-    cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $? )
-}
 runag::invocation_target () 
 { 
     if [ $# -eq 0 ]; then
@@ -3177,16 +3144,15 @@ runag::load_runag_library ()
 }
 runag::mini_library () 
 { 
-    printf "#!/usr/bin/env bash\n\n" || fail;
-    runag::print_license || fail;
-    printf "\n";
+    printf "#!/usr/bin/env bash\n\n" || fail "Failed to print the shebang line.";
+    runag::print_license && printf "\n" || fail "Error printing license information.";
     if [ "${1:-}" = "--nounset" ]; then
-        printf "set -o nounset\n\n" || fail;
+        printf "set -o nounset\n\n" || fail "Failed to print 'nounset' option.";
     fi;
-    declare -f fail || softfail || return $?;
-    declare -f softfail || softfail || return $?;
-    declare -f dir::should_exists || softfail || return $?;
-    declare -f file::write || softfail || return $?
+    declare -f fail || softfail "The 'fail' function is not defined." || return $?;
+    declare -f softfail || softfail "The 'softfail' function is not defined." || return $?;
+    declare -f dir::should_exists || softfail "The 'dir::should_exists' function is not defined." || return $?;
+    declare -f file::write || softfail "The 'file::write' function is not defined." || return $?
 }
 runag::print_license () 
 { 
@@ -3206,23 +3172,6 @@ runag::print_license ()
 #  limitations under the License.
 SHELL
 
-}
-runag::tasks () 
-{ 
-    if [ -d "${HOME}/.runag" ]; then
-        task::add runag::create_or_update_offline_install || softfail || return $?;
-        task::add runag::update_current_offline_install || softfail || return $?;
-    fi
-}
-runag::update_current_offline_install () 
-{ 
-    local runag_path="${HOME}/.runag";
-    if [ ! -d "${runag_path}/.git" ]; then
-        softfail "Unable to find rùnag checkout" || return $?;
-    fi;
-    local remote_path;
-    remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")" || softfail || return $?;
-    runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?
 }
 runagfile::add () 
 { 
@@ -5239,7 +5188,7 @@ task::add ()
     if [ "${task_type}" = "task-group" ]; then
         local function_name="$1";
         if ! declare -F "${function_name}" > /dev/null; then
-            [[ "${function_name}" =~ ^[a-zA-Z0-9:_]+$ ]] || softfail "Error: Only alphanumeric characters, colons (:), and underscores (_) are allowed" || return $?;
+            [[ "${function_name}" =~ ^[a-zA-Z0-9:_]+$ ]] || softfail "Error: Function name must contain only alphanumeric characters, colons (:), and underscores (_)." || return $?;
             eval "${function_name}() { task::display "\$@" ${function_name}::set; }";
         fi;
     fi
@@ -5250,11 +5199,11 @@ task::any ()
 }
 task::clear () 
 { 
-    declare -ga RUNAG_TASK=() || softfail || return $?
+    declare -ga RUNAG_TASK=() || softfail "Failed to clear the task array: unable to reset RUNAG_TASK." || return $?
 }
 task::display () 
 { 
-    task::any || softfail "The task list is empty" || return $?;
+    task::any || softfail "The task list is empty." || return $?;
     local nested_display;
     while [ "$#" -gt 0 ]; do
         case "$1" in 
@@ -5271,14 +5220,14 @@ task::display ()
         esac;
     done;
     if [[ $# -gt 0 ]]; then
-        ( task::clear || softfail || return $?;
+        ( task::clear || softfail "Error clearing tasks." || return $?;
         runag::invoke --no-subshell "$@";
-        softfail --unless-good --exit-status $? "Error ($?) occurred while processing the task group function: $*" || return $?;
+        softfail --unless-good --exit-status $? "Error occurred while processing the task group function ($?): $*" || return $?;
         task::display ${nested_display:+"--nested-display"} );
         return $?;
     fi;
     if ! [ -t 0 ] || ! [ -t 1 ] || ! command -v fzf > /dev/null; then
-        task::render --non-interactive || softfail || return $?;
+        task::render --non-interactive || softfail "Error rendering tasks non-interactively." || return $?;
         return $?;
     fi;
     local prompt_color="";
@@ -5306,13 +5255,13 @@ exit 0)";
             fi;
             return 0;
         fi;
-        softfail --unless-good --exit-status "${fzf_status}" "Task selection error" || return $?;
+        softfail --unless-good --exit-status "${fzf_status}" "Error during task selection." || return $?;
         IFS=" " read -r main_pointer line_number <<< "${fzf_result_string}";
-        [[ "${main_pointer}" =~ ^[0-9]+$ ]] || softfail "Invalid task pointer: Non-numeric value" || return $?;
-        [[ "${line_number}" =~ ^[0-9]+$ ]] || softfail "Invalid line_number: Non-numeric value" || return $?;
+        [[ "${main_pointer}" =~ ^[0-9]+$ ]] || softfail "Invalid task pointer: Non-numeric value." || return $?;
+        [[ "${line_number}" =~ ^[0-9]+$ ]] || softfail "Invalid line_number: Non-numeric value." || return $?;
         local item_type="${RUNAG_TASK[main_pointer]}";
         local item_length="${RUNAG_TASK[main_pointer + 1]}";
-        [[ "${item_length}" =~ ^[0-9]+$ ]] || softfail "Invalid task length: Non-numeric value" || return $?;
+        [[ "${item_length}" =~ ^[0-9]+$ ]] || softfail "Invalid task length: Non-numeric value." || return $?;
         if [ "${item_type}" != "basic-task" ] && [ "${item_type}" != "task-group" ]; then
             softfail "Unrecognized item type: ${item_type}" || return $?;
         fi;
@@ -5333,7 +5282,7 @@ exit 0)";
             esac;
         done;
         if ! (( item_pointer <= main_pointer + item_length + 1 )); then
-            softfail "Task contains no actionable command" || return $?;
+            softfail "Task contains no executable command." || return $?;
         fi;
         command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}");
         if [ -t 1 ] && [ "${item_type}" != "task-group" ]; then
@@ -5348,7 +5297,7 @@ exit 0)";
         if [ "${command_status}" = 130 ] && [ "${item_type}" = "task-group" ]; then
             continue;
         fi;
-        softfail --unless-good --exit-status "${command_status}" "Error (${command_status}) performing command: ${command_array[*]}" || return $?;
+        softfail --unless-good --exit-status "${command_status}" "Error performing command (${command_status}): ${command_array[*]}" || return $?;
         return "${command_status}";
     done
 }
