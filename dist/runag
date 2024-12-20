@@ -3029,40 +3029,6 @@ rubygems::direnv_credentials ()
         file::append_line_unless_present --keep-permissions ".npmignore" "/.envrc" || softfail || return $?;
     fi
 }
-runag::command () 
-{ 
-    if [ $# -eq 0 ]; then
-        softfail "Error: No arguments provided. Usage: runag::command <action> [...args]";
-        return 1;
-    fi;
-    local try_name;
-    local found_name;
-    local found_index;
-    local i=1;
-    local item;
-    while [ $i -le $# ]; do
-        item="${!i}";
-        if [[ "${item}" == -* ]]; then
-            break;
-        fi;
-        try_name="${try_name:+"${try_name}::"}${item//-/_}";
-        if declare -F "${try_name}" > /dev/null; then
-            found_name="${try_name}";
-            found_index="$i";
-        fi;
-        if declare -F "${try_name}::env" > /dev/null; then
-            "${try_name}::env" "${@:i+1}";
-            softfail --unless-good --exit-status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?;
-        fi;
-        ((i++));
-    done;
-    if [ -n "${found_name:-}" ]; then
-        "${found_name}" "${@:found_index+1}";
-    else
-        softfail "Error: No suitable function found for the provided arguments: $*";
-        return 1;
-    fi
-}
 runag::create_or_update_offline_install () 
 { 
     ( local runag_path="${HOME}/.runag";
@@ -3095,6 +3061,88 @@ runag::create_or_update_offline_install ()
         fi;
     done;
     cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $? )
+}
+runag::invocation_target () 
+{ 
+    if [ $# -eq 0 ]; then
+        softfail "Error: No arguments provided";
+        return $?;
+    fi;
+    local try_name;
+    local found_name;
+    local i=1;
+    local item;
+    while [ $i -le $# ]; do
+        item="${!i}";
+        if [[ "${item}" == -* ]]; then
+            break;
+        fi;
+        try_name="${try_name:+"${try_name}::"}${item//-/_}";
+        if declare -F "${try_name}" > /dev/null; then
+            found_name="${try_name}";
+        fi;
+        ((i++));
+    done;
+    if [ -n "${found_name:-}" ]; then
+        echo "${found_name}";
+    else
+        softfail "Error: No suitable function found for the provided arguments: $*";
+        return $?;
+    fi
+}
+runag::invoke () 
+{ 
+    local no_subshell=false;
+    while [ "$#" -gt 0 ]; do
+        case "$1" in 
+            -n | --no-subshell)
+                no_subshell=true;
+                shift
+            ;;
+            *)
+                break
+            ;;
+        esac;
+    done;
+    if [ "${no_subshell}" = true ]; then
+        runag::invoke::actual "$@";
+    else
+        ( runag::invoke::actual "$@" );
+    fi
+}
+runag::invoke::actual () 
+{ 
+    if [ $# -eq 0 ]; then
+        softfail "Error: No arguments provided. Usage: runag::invoke <action> [...args]";
+        return $?;
+    fi;
+    local try_name;
+    local found_name;
+    local found_index;
+    local i=1;
+    local item;
+    while [ $i -le $# ]; do
+        item="${!i}";
+        if [[ "${item}" == -* ]]; then
+            break;
+        fi;
+        try_name="${try_name:+"${try_name}::"}${item//-/_}";
+        if declare -F "${try_name}" > /dev/null; then
+            found_name="${try_name}";
+            found_index="$i";
+        fi;
+        if declare -F "${try_name}::env" > /dev/null; then
+            "${try_name}::env" "${@:i+1}";
+            softfail --unless-good --exit-status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?;
+        fi;
+        ((i++));
+    done;
+    if [ -n "${found_name:-}" ]; then
+        "${found_name}" "${@:found_index+1}";
+    else
+        softfail "Error: No suitable function found for the provided arguments: $*";
+        return $?;
+    fi
 }
 runag::load_runag_library () 
 { 
@@ -5187,7 +5235,14 @@ task::add ()
     if [[ ! -v RUNAG_TASK ]]; then
         declare -ga RUNAG_TASK=();
     fi;
-    RUNAG_TASK+=("${task_type}" "$#" "$@")
+    RUNAG_TASK+=("${task_type}" "$#" "$@");
+    if [ "${task_type}" = "task-group" ]; then
+        local function_name="$1";
+        if ! declare -F "${function_name}" > /dev/null; then
+            [[ "${function_name}" =~ ^[a-zA-Z0-9:_]+$ ]] || softfail "Error: Only alphanumeric characters, colons (:), and underscores (_) are allowed" || return $?;
+            eval "${function_name}() { task::display "\$@" ${function_name}::set; }";
+        fi;
+    fi
 }
 task::any () 
 { 
@@ -5195,7 +5250,7 @@ task::any ()
 }
 task::clear () 
 { 
-    declare -ga RUNAG_TASK=()
+    declare -ga RUNAG_TASK=() || softfail || return $?
 }
 task::display () 
 { 
@@ -5215,6 +5270,13 @@ task::display ()
             ;;
         esac;
     done;
+    if [[ $# -gt 0 ]]; then
+        ( task::clear || softfail || return $?;
+        runag::invoke --no-subshell "$@";
+        softfail --unless-good --exit-status $? "Error ($?) occurred while processing the task group function: $*" || return $?;
+        task::display ${nested_display:+"--nested-display"} );
+        return $?;
+    fi;
     if ! [ -t 0 ] || ! [ -t 1 ] || ! command -v fzf > /dev/null; then
         task::render --non-interactive || softfail || return $?;
         return $?;
@@ -5229,7 +5291,7 @@ task::display ()
         local fzf_result_string;
         local main_pointer;
         local line_number;
-        fzf_result_string="$( ( task::render --force-color-output || softfail "Error in task::render ($?)" || exit 2 ) | fzf --ansi --tac --with-nth="3.." ${line_number:+--bind "load:pos:-${line_number}"} | ( cut -d " " -f 1-2 || softfail "Error in cut ($?)" || exit 2 )
+        fzf_result_string="$( ( task::render --force-color-output || softfail "Error in task::render ($?)" || exit 2 ) | fzf --ansi --cycle --tac --with-nth="3.." --wrap ${line_number:+--bind "load:pos:-${line_number}"} | ( cut -d " " -f 1-2 || softfail "Error in cut ($?)" || exit 2 )
 for status in "${PIPESTATUS[@]}";
 do
     if [ "${status}" -ne 0 ]; then
@@ -5254,12 +5316,7 @@ exit 0)";
         if [ "${item_type}" != "basic-task" ] && [ "${item_type}" != "task-group" ]; then
             softfail "Unrecognized item type: ${item_type}" || return $?;
         fi;
-        local command_array=();
-        if [ "${item_type}" = "task-group" ]; then
-            command_array+=(task::group --nested-display);
-        else
-            command_array+=(runag::command);
-        fi;
+        local command_array=(runag::invoke);
         local item_pointer;
         for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
         do
@@ -5283,6 +5340,9 @@ exit 0)";
             echo '
 '"${prompt_color}> ${command_array[*]}${reset_attrs}";
         fi;
+        if [ "${item_type}" = "task-group" ]; then
+            command_array+=(--nested-display);
+        fi;
         "${command_array[@]}";
         local command_status=$?;
         if [ "${command_status}" = 130 ] && [ "${item_type}" = "task-group" ]; then
@@ -5291,33 +5351,6 @@ exit 0)";
         softfail --unless-good --exit-status "${command_status}" "Error (${command_status}) performing command: ${command_array[*]}" || return $?;
         return "${command_status}";
     done
-}
-task::group () 
-{ 
-    ( local nested_display;
-    while [ "$#" -gt 0 ]; do
-        case "$1" in 
-            -n | --nested-display)
-                nested_display=true;
-                shift
-            ;;
-            -*)
-                softfail "Unrecognized argument: $1" || return $?
-            ;;
-            *)
-                break
-            ;;
-        esac;
-    done;
-    task::clear || softfail || return $?;
-    runag::command "$@";
-    softfail --unless-good --exit-status $? "Error ($?) occurred while processing the task group function: $*" || return $?;
-    task::display ${nested_display:+"--nested-display"};
-    local task_exit_status=$?;
-    if [ "${task_exit_status}" = 130 ] && [ "${nested_display:-}" = true ]; then
-        return "${task_exit_status}";
-    fi;
-    softfail --unless-good --exit-status "${task_exit_status}" "Error: task::display encountered an issue (${task_exit_status})" || return $? )
 }
 task::render () 
 { 
@@ -5339,9 +5372,11 @@ task::render ()
         esac;
     done;
     local comment_color="";
+    local end_marker_color="";
     local reset_attrs="";
     if [ -t 1 ] || [ "${force_color_output}" = true ]; then
         comment_color="$(printf "setaf 13\nbold" | tput -S 2> /dev/null)" || comment_color="";
+        end_marker_color="$(printf "setaf 14\nbold" | tput -S 2> /dev/null)" || end_marker_color="";
         reset_attrs="$(tput sgr 0 2> /dev/null)" || reset_attrs="";
     fi;
     local main_pointer;
@@ -5356,9 +5391,9 @@ task::render ()
         fi;
         local command_array=();
         local comment="";
+        local end_marker="";
         if [ "${item_type}" = "task-group" ]; then
-            comment="-->";
-            command_array+=(task::group);
+            end_marker="-->";
         fi;
         local item_pointer;
         for ((item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ ))
@@ -5382,7 +5417,7 @@ task::render ()
             command_pointer="${main_pointer} ${output_line_number}";
         fi;
         command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}");
-        echo "${command_pointer:+"${command_pointer} "}${command_array[*]}${comment:+" ${comment_color}# ${comment}${reset_attrs}"}";
+        echo "${command_pointer:+"${command_pointer} "}${command_array[*]}${end_marker:+" ${end_marker_color}${end_marker}${reset_attrs}"}${comment:+" ${comment_color}# ${comment}${reset_attrs}"}";
         (( output_line_number += 1 ));
         (( main_pointer += item_length + 1 ));
     done
@@ -5527,11 +5562,11 @@ fi
 # If the first argument is provided, treat it as a command, run it, and then exit or return depending on whether the script is sourced
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
-    runag::command "$@"
+    runag::invoke "$@"
     softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     return $?
   else  # Script is run directly
-    runag::command "$@"
+    runag::invoke "$@"
     softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     exit $?
   fi
