@@ -3072,12 +3072,12 @@ runag::invoke ()
         esac;
     done;
     if [ "${no_subshell}" = true ]; then
-        runag::invoke::actual "$@";
+        runag::invoke::perform "$@";
     else
-        ( runag::invoke::actual "$@" );
+        ( runag::invoke::perform "$@" );
     fi
 }
-runag::invoke::actual () 
+runag::invoke::perform () 
 { 
     if [ $# -eq 0 ]; then
         softfail "Error: No arguments provided. Usage: runag::invoke <action> [...args]";
