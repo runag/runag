@@ -115,13 +115,13 @@ runag::invoke() {
   done
 
   if [ "${no_subshell}" = true ]; then
-    runag::invoke::actual "$@"  # Invoke without using a subshell.
+    runag::invoke::perform "$@"  # Invoke without using a subshell.
   else
-    ( runag::invoke::actual "$@" )  # Invoke in a subshell.
+    ( runag::invoke::perform "$@" )  # Invoke in a subshell.
   fi
 }
 
-# ### `runag::invoke::actual`
+# ### `runag::invoke::perform`
 #
 # This function performs the core logic of invoking the appropriate function based on the provided arguments.
 # It iterates over the arguments, constructs a function name, checks for matching functions, and calls the function.
@@ -133,11 +133,11 @@ runag::invoke() {
 #
 # #### Example:
 # ```bash
-# runag::invoke::actual action sub-action some-name
+# runag::invoke::perform action sub-action some-name
 # ```
 # This will attempt to call the `action::sub_action` function, invoking its corresponding `::env` setup function if defined.
 #
-runag::invoke::actual() {
+runag::invoke::perform() {
   # Exit if no arguments are provided.
   if [ $# -eq 0 ]; then
     softfail "Error: No arguments provided. Usage: runag::invoke <action> [...args]"
