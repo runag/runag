@@ -91,6 +91,7 @@ task::add() {
 # available or the input/output is not a terminal, it will fallback to non-interactive task rendering.
 #
 # #### Parameters:
+#
 # - `-n`, `--nested-display`: Indicates that the function is running in a nested context.
 #                             This affects the behavior when the task selection via `fzf` is canceled.
 #
@@ -263,12 +264,12 @@ task::display() {
 }
 
 # ### `task::render`
-# 
-# #### Description:
+#
 # Renders tasks to the output, either interactively with colors or non-interactively
 # if specified. Ensures consistent formatting of tasks and their metadata.
 #
 # #### Parameters:
+#
 # - `-n`, `--non-interactive`: Disables colorized output and renders tasks in plain text.
 # - `-c`, `--force-color-output`: Forces colorized output, regardless of terminal detection.
 #

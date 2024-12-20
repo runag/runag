@@ -22,9 +22,10 @@
 # `dir::should_exists`, and `file::write` functions.
 #
 # #### Parameters:
+#
 # - `--nounset`: An optional argument. When provided, it enables the 'nounset' option, causing the shell 
 #   to treat unset variables as errors.
-
+#
 runag::mini_library() {
   # Output the shebang for the script to specify the interpreter.
   printf "#!/usr/bin/env bash\n\n" || fail "Failed to print the shebang line."
@@ -78,6 +79,7 @@ SHELL
 # - Invokes the identified function with the remaining arguments.
 #
 # #### Flags:
+#
 # - `--no-subshell` (`-n`): If this flag is provided, the function is invoked without using a subshell.
 #   By default, the function is invoked within a subshell to prevent any modifications to the current shell environment.
 #   When `--no-subshell` is specified, the function runs in the current shell environment.
@@ -129,9 +131,11 @@ runag::invoke() {
 # If no suitable function is found, an error is logged.
 #
 # #### Parameters:
+#
 # - A variable number of arguments representing the function name and parameters.
 #
 # #### Example:
+#
 # ```bash
 # runag::invoke::perform action sub-action some-name
 # ```
@@ -201,9 +205,11 @@ runag::invoke::perform() {
 # If a matching function is found, it returns the function name. If no matching function is found, an error is logged.
 #
 # #### Parameters:
+#
 # - A variable number of arguments representing the function name and parameters.
 #
 # #### Example:
+#
 # ```bash
 # runag::invocation_target action sub-action some-name
 # ```
