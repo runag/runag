@@ -14,23 +14,42 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# ### `runag::mini_library`
+#
+# This function generates a minimal bash script preamble used for producing derivative scripts from Rùnag code. 
+# It outputs the shebang line, prints the project's license information, and optionally enables the 'nounset' 
+# shell option to treat unset variables as errors. Additionally, it outputs the source code of the `fail`, `softfail`, 
+# `dir::should_exists`, and `file::write` functions.
+#
+# #### Parameters:
+# - `--nounset`: An optional argument. When provided, it enables the 'nounset' option, causing the shell 
+#   to treat unset variables as errors.
+
 runag::mini_library() {
-  printf "#!/usr/bin/env bash\n\n" || fail
+  # Output the shebang for the script to specify the interpreter.
+  printf "#!/usr/bin/env bash\n\n" || fail "Failed to print the shebang line."
 
-  runag::print_license || fail
+  # Print the license information.
+  # shellcheck disable=SC2015
+  runag::print_license && printf "\n" || fail "Error printing license information."
 
-  printf "\n"
-
+  # If the argument is '--nounset', set the nounset option to treat unset variables as errors.
   if [ "${1:-}" = "--nounset" ]; then
-    printf "set -o nounset\n\n" || fail
+    printf "set -o nounset\n\n" || fail "Failed to print 'nounset' option."
   fi
 
-  declare -f fail || softfail || return $?
-  declare -f softfail || softfail || return $?
-  declare -f dir::should_exists || softfail || return $?
-  declare -f file::write || softfail || return $?
+  # Output the code for the functions
+  declare -f fail || softfail "The 'fail' function is not defined." || return $?
+  declare -f softfail || softfail "The 'softfail' function is not defined." || return $?
+  declare -f dir::should_exists || softfail "The 'dir::should_exists' function is not defined." || return $?
+  declare -f file::write || softfail "The 'file::write' function is not defined." || return $?
 }
 
+# ### `runag::print_license`
+#
+# This function prints the copyright and licensing information for the Rùnag project.
+# It includes the project's copyright notice and specifies that the project is licensed under the Apache License, Version 2.0.
+#
 runag::print_license() {
   cat <<SHELL
 #  Copyright 2012-2024 Rùnag project contributors
@@ -48,68 +67,6 @@ runag::print_license() {
 #  limitations under the License.
 SHELL
 }
-
-runag::tasks() {
-  if [ -d "${HOME}/.runag" ]; then
-    # Rùnag and rùnagfiles (task header)
-    
-    task::add runag::create_or_update_offline_install || softfail || return $?
-    task::add runag::update_current_offline_install || softfail || return $?
-  fi
-}
-
-runag::update_current_offline_install() {
-  local runag_path="${HOME}/.runag"
-
-  if [ ! -d "${runag_path}/.git" ]; then
-    softfail "Unable to find rùnag checkout" || return $?
-  fi
-
-  local remote_path; remote_path="$(git -C "${runag_path}" config "remote.offline-install.url")" || softfail || return $?
- 
-  runag::create_or_update_offline_install "${remote_path}/.." || softfail || return $?
-}
-
-runag::create_or_update_offline_install() (
-  local runag_path="${HOME}/.runag"
-
-  if [ -n "$1" ]; then
-    cd "$1" || softfail || return $?
-  fi
-
-  local target_directory="${PWD}" || softfail || return $?
-
-  if [ ! -d "${runag_path}/.git" ]; then
-    softfail "Unable to find rùnag checkout" || return $?
-  fi
-
-  local runag_remote_url; runag_remote_url="$(git -C "${runag_path}" remote get-url origin)" || softfail || return $?
-
-  git -C "${runag_path}" pull origin main || softfail || return $?
-  git -C "${runag_path}" push --set-upstream origin main || softfail || return $?
-
-  git::create_or_update_mirror "${runag_remote_url}" runag.git || softfail || return $?
-
-  ( cd "${runag_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runag.git" && git fetch "offline-install" ) || softfail || return $?
-
-  dir::should_exists --mode 0700 "runagfiles" || softfail || return $?
-
-  local runagfile_path; for runagfile_path in "${runag_path}/runagfiles"/*; do
-    if [ -d "${runagfile_path}" ]; then
-      local runagfile_dir_name; runagfile_dir_name="$(basename "${runagfile_path}")" || softfail || return $?
-      local runagfile_remote_url; runagfile_remote_url="$(git -C "${runagfile_path}" remote get-url origin)" || softfail || return $?
-
-      git -C "${runagfile_path}" pull origin main || softfail || return $?
-      git -C "${runagfile_path}" push --set-upstream origin main || softfail || return $?
-
-      git::create_or_update_mirror "${runagfile_remote_url}" "runagfiles/${runagfile_dir_name}" || softfail || return $?
-
-      ( cd "${runagfile_path}" && git::add_or_update_remote "offline-install" "${target_directory}/runagfiles/${runagfile_dir_name}" && git fetch "offline-install" ) || softfail || return $?
-    fi
-  done
-
-  cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $?
-)
 
 # ### `runag::invoke`
 #
