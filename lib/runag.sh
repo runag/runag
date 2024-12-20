@@ -111,12 +111,19 @@ runag::create_or_update_offline_install() (
   cp -f "${runag_path}/deploy-offline.sh" . || softfail || return $?
 )
 
-# ### `runag::command`
+# ### `runag::invoke`
+#
+# This function is responsible for invoking the appropriate function based on the provided arguments.
 #
 # - Constructs a function name by combining the arguments with `::`, replacing `-` with `_`.
 # - Stops processing if an argument starts with `-` (indicating a flag).
 # - If `::env` functions are defined, they are invoked first to perform any setup.
 # - Invokes the identified function with the remaining arguments.
+#
+# #### Flags:
+# - `--no-subshell` (`-n`): If this flag is provided, the function is invoked without using a subshell.
+#   By default, the function is invoked within a subshell to prevent any modifications to the current shell environment.
+#   When `--no-subshell` is specified, the function runs in the current shell environment.
 #
 # #### Parameters:
 #
@@ -125,7 +132,7 @@ runag::create_or_update_offline_install() (
 # #### Example:
 #
 # ```bash
-# runag::command action sub-action some-name --some-arg
+# runag::invoke action sub-action some-name --some-arg
 # ```
 #
 # In this case, the function will:
@@ -134,31 +141,65 @@ runag::create_or_update_offline_install() (
 # - Call `action::sub_action` (if it exists) with the remaining arguments.
 # - If `action::sub_action` does not exist but `action` does, call `action` with the remaining arguments.
 #
-# #### Notes:
-#
-# - The function uses `declare -F` to verify the existence of functions.
-# - Errors during `::env` function calls are handled gracefully using `softfail`.
-#
-runag::command() {
-  # Check if no arguments are provided
-  if [ $# -eq 0 ]; then
-    softfail "Error: No arguments provided. Usage: runag::command <action> [...args]"
-    return 1
+runag::invoke() {
+  local no_subshell=false
+
+  # Parse optional flags before processing the arguments.
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--no-subshell)
+        no_subshell=true
+        shift
+        ;;
+      *)
+        break  # Stop flag parsing
+        ;;
+    esac
+  done
+
+  if [ "${no_subshell}" = true ]; then
+    runag::invoke::actual "$@"  # Invoke without using a subshell.
+  else
+    ( runag::invoke::actual "$@" )  # Invoke in a subshell.
   fi
+}
 
-  # Declare local variables to track potential function names and indices
-  local try_name       # Candidate function name
-  local found_name     # Valid function name that will be invoked
-  local found_index    # Index where the function name was found
+# ### `runag::invoke::actual`
+#
+# This function performs the core logic of invoking the appropriate function based on the provided arguments.
+# It iterates over the arguments, constructs a function name, checks for matching functions, and calls the function.
+# If a `::env` setup function exists, it is called before the main function.
+# If no suitable function is found, an error is logged.
+#
+# #### Parameters:
+# - A variable number of arguments representing the function name and parameters.
+#
+# #### Example:
+# ```bash
+# runag::invoke::actual action sub-action some-name
+# ```
+# This will attempt to call the `action::sub_action` function, invoking its corresponding `::env` setup function if defined.
+#
+runag::invoke::actual() {
+  # Exit if no arguments are provided.
+  if [ $# -eq 0 ]; then
+    softfail "Error: No arguments provided. Usage: runag::invoke <action> [...args]"
+    return $?
+  fi
+  
+  # Declare local variables to track potential function names and indices.
+  local try_name       # Candidate function name.
+  local found_name     # Valid function name that will be invoked.
+  local found_index    # Index where the function name was found.
 
-  local i=1            # Index to iterate through arguments
-  local item           # Current argument being processed
+  local i=1            # Index to iterate through arguments.
+  local item           # Current argument being processed.
 
-  # Iterate through all arguments until a flag (starting with '-') is encountered
+  # Iterate through all arguments until a flag (starting with '-') is encountered.
   while [ $i -le $# ]; do
-    item="${!i}" # Access the current argument using indirect referencing
+    item="${!i}" # Access the current argument via indirect referencing.
 
-    # Stop processing if an argument starts with a dash (indicating a flag)
+    # Stop processing if an argument starts with a dash (indicating a flag).
     if [[ "${item}" == -* ]]; then
       break
     fi
@@ -167,31 +208,92 @@ runag::command() {
     # Append "::" to the previous name and replace hyphens with underscores.
     try_name="${try_name:+"${try_name}::"}${item//-/_}"
 
-    # Check if a function named `try_name` exists
+    # Check if a function named `try_name` exists.
     if declare -F "${try_name}" >/dev/null; then
-      # Save the function name and index for later invocation
+      # Save the function name and index for later invocation.
       found_name="${try_name}"
       found_index="$i"
     fi
 
-    # Check if a setup function named `${try_name}::env` exists
+    # Check if a setup function named `${try_name}::env` exists.
     if declare -F "${try_name}::env" >/dev/null; then
-      # Invoke the setup function with the remaining arguments
+      # Invoke the setup function with the remaining arguments.
       "${try_name}::env" "${@:i+1}"
 
-      # Handle errors gracefully if the `::env` function call fails
+      # Handle errors gracefully if the `::env` function call fails.
       softfail --unless-good --exit-status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?
     fi
 
-    ((i++)) # Move to the next argument
+    ((i++)) # Move to the next argument.
   done
 
-  # If a valid function name was found, call it with the remaining arguments
+  # If a valid function name was found, call it with the remaining arguments.
   if [ -n "${found_name:-}" ]; then
     "${found_name}" "${@:found_index+1}"
   else
-    # Handle cases where no matching function is found
+    # Handle the case where no matching function is found.
     softfail "Error: No suitable function found for the provided arguments: $*"
-    return 1
+    return $?
+  fi
+}
+
+# ### `runag::invocation_target`
+#
+# This function identifies the function name to be invoked based on the provided arguments.
+# It constructs the function name by concatenating arguments with `::` and replacing hyphens (`-`) with underscores (`_`).
+# If a matching function is found, it returns the function name. If no matching function is found, an error is logged.
+#
+# #### Parameters:
+# - A variable number of arguments representing the function name and parameters.
+#
+# #### Example:
+# ```bash
+# runag::invocation_target action sub-action some-name
+# ```
+# This will attempt to identify and return the target function name (`action::sub_action` in this case) if it exists.
+#
+runag::invocation_target() {
+  # Exit if no arguments are provided.
+  if [ $# -eq 0 ]; then
+    softfail "Error: No arguments provided"
+    return $?
+  fi
+
+  # Declare local variables to track potential function names and indices.
+  local try_name       # Candidate function name.
+  local found_name     # Valid function name that will be invoked.
+
+  local i=1            # Index to iterate through arguments.
+  local item           # Current argument being processed.
+
+  # Iterate through all arguments until a flag (starting with '-') is encountered.
+  while [ $i -le $# ]; do
+    item="${!i}" # Access the current argument via indirect referencing.
+
+    # Stop processing if an argument starts with a dash (indicating a flag).
+    if [[ "${item}" == -* ]]; then
+      break
+    fi
+
+    # Construct the candidate function name:
+    # Append "::" to the previous name and replace hyphens with underscores.
+    try_name="${try_name:+"${try_name}::"}${item//-/_}"
+
+    # Check if a function named `try_name` exists.
+    if declare -F "${try_name}" >/dev/null; then
+      # Store the function name for later use.
+      found_name="${try_name}"
+    fi
+
+    ((i++)) # Move to the next argument.
+  done
+
+  # If a valid function name was found, return it.
+  if [ -n "${found_name:-}" ]; then
+    echo "${found_name}"
+  else
+    # Handle the case where no matching function is found.
+    softfail "Error: No suitable function found for the provided arguments: $*"
+    return $?
   fi
 }

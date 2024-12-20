@@ -98,11 +98,11 @@ fi
 # If the first argument is provided, treat it as a command, run it, and then exit or return depending on whether the script is sourced
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
-    runag::command "$@"
+    runag::invoke "$@"
     softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     return $?
   else  # Script is run directly
-    runag::command "$@"
+    runag::invoke "$@"
     softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
     exit $?
   fi
