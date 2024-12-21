@@ -14,46 +14,98 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# ### `runagfile::add`
+#
+# This function adds a repository to the system by cloning it from GitHub 
+# into the user's runagfiles collection directory.
+#
+# #### Parameters:
+# 
+# - `repository` (string): The path to the repository, formatted as "username/repository". 
+#
 runagfile::add() {
-  local user_name; user_name="$(<<<"$1" cut -d "/" -f 1)" || softfail || return $?
-  local repo_name; repo_name="$(<<<"$1" cut -d "/" -f 2)" || softfail || return $?
-  git::place_up_to_date_clone "https://github.com/${user_name}/${repo_name}.git" "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" || softfail || return $?
+  local user_name
+  local repo_name
+
+  # Parse the input string to extract the GitHub username and repository name.
+  # The string should be in the format "username/repository".
+  IFS="/" read -r user_name repo_name <<< "$1" || softfail "Failed to parse the input string into the username and repository name" || return $?
+
+  # Attempt to clone the repository and place it in the designated directory.
+  # The repository is cloned into a folder named after the repository and username,
+  # with the suffix '-github' to avoid conflicts.
+  git::place_up_to_date_clone \
+    "https://github.com/${user_name}/${repo_name}.git" \
+    "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" \
+    || softfail "Failed to clone the repository from GitHub: https://github.com/${user_name}/${repo_name}.git" || return $?
 }
 
+# ### `runagfile::add_from_list`
+#
+# This function processes a list of repositories and attempts to add each one 
+# by calling `runagfile::add` for each repository path provided in the list.
+#
+# #### Parameters:
+#
+# - This function expects a list of repository paths, one per line, from standard input. 
+#   Each line should be in the format "username/repository".
+#
 runagfile::add_from_list() {
-  local line; while IFS="" read -r line; do
+  local line
+  
+  # Read each line from input. For each line that is not empty, call the `runagfile::add` function.
+  while IFS="" read -r line; do
     if [ -n "${line}" ]; then
+      # Attempt to add the repository using the `runagfile::add` function.
       runagfile::add "${line}" || softfail "Unable to add rùnagfile ${line}" || return $?
     fi
   done || softfail "Unable to add rùnagfiles from list" || return $?
 }
 
-# Find and load rùnagfiles
-
+# ### `runagfile::load`
+#
+# This function loads the `runagfile.sh` script from the current directory.
+#
+# If the script is not found in the local directory, it will attempt to load all rùnagfiles from the user's collection.
+#
+#
+# #### Parameters:
+# 
+# - `-w` or `--working-directory-only`: If specified, the function will only load the `runagfile.sh` 
+#   from the current working directory and will not search the rùnagfiles collection.
+#
 runagfile::load() {
   local working_directory_only=false
 
+  # Parse the arguments to handle the working directory option.
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -w|--working-directory-only)
+        # Set the flag to only load from the current directory.
         working_directory_only=true
         shift
         ;;
       -*)
+        # Handle unknown arguments.
         softfail "Unknown argument: $1" || return $?
         ;;
       *)
+        # Break the loop if no more recognized arguments.
         break
         ;;
     esac
   done
 
+  # Attempt to source the `runagfile.sh` from the current directory.
   if [ -f "./runagfile.sh" ]; then
     . "./runagfile.sh"
     softfail --unless-good --exit-status $? "Unable to load ./runagfile.sh ($?)" || return $?
 
+  # If the `-w` flag was not passed, search for `runagfile.sh` in the user's rùnagfiles collection.
   elif [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
-    local dir_path; for dir_path in "${HOME}/.runag/runagfiles/"*; do
+    local dir_path
+    # Iterate through the directories within rùnagfiles and attempt to source the `runagfile.sh` from each.
+    for dir_path in "${HOME}/.runag/runagfiles/"*; do
       if [ -f "${dir_path}/runagfile.sh" ]; then
         . "${dir_path}/runagfile.sh"
         softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?
