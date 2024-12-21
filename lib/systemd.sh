@@ -19,9 +19,9 @@ systemd::write_user_unit() {
 
   local user_units_dir="${HOME}/.config/systemd/user"
 
-  dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?
-  dir::should_exists --mode 0700 "${HOME}/.config/systemd" || softfail || return $?
-  dir::should_exists --mode 0700 "${user_units_dir}" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.config" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.config/systemd" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${user_units_dir}" || softfail || return $?
 
   # TODO: --absorb?
   file::write --mode 0600 "${user_units_dir}/${name}" || softfail || return $?

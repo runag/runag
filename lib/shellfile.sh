@@ -97,9 +97,9 @@ shellfile::write() {
 
   local shellfile_dir_path="${HOME}/.shellfile.d"
 
-  dir::should_exists --mode 0700 "${shellfile_dir_path}" || softfail || return $?
-  dir::should_exists --mode 0700 "${shellfile_dir_path}/rc" || softfail || return $?
-  dir::should_exists --mode 0700 "${shellfile_dir_path}/profile" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${shellfile_dir_path}" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${shellfile_dir_path}/rc" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${shellfile_dir_path}/profile" || softfail || return $?
 
   local output_path="${shellfile_dir_path}/${file_path}.sh"
   

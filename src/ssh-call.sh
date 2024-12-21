@@ -36,7 +36,7 @@ temp_file="$(mktemp)" || fail
   ssh::call::function_sources || fail
 
   declare -f log::notice || fail
-  declare -f dir::should_exists || fail
+  declare -f dir::ensure_exists || fail
 
   printf "\n"
 

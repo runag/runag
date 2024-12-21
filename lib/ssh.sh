@@ -15,8 +15,8 @@
 #  limitations under the License.
 
 sshd::disable_password_authentication() {
-  dir::should_exists --sudo --mode 0755 /etc/ssh  || softfail || return $?
-  dir::should_exists --sudo --mode 0755 /etc/ssh/sshd_config.d || softfail || return $?
+  dir::ensure_exists --sudo --mode 0755 /etc/ssh  || softfail || return $?
+  dir::ensure_exists --sudo --mode 0755 /etc/ssh/sshd_config.d || softfail || return $?
 
   file::write --sudo --mode 0644 /etc/ssh/sshd_config.d/disable-password-authentication.conf <<SHELL || softfail || return $?
 PasswordAuthentication no
@@ -25,8 +25,8 @@ SHELL
 }
 
 ssh::add_ssh_config_d_include_directive() {
-  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
-  dir::should_exists --mode 0700 "${HOME}/.ssh/ssh_config.d" || softfail "Unable to create ssh user config.d directory" || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.ssh/ssh_config.d" || softfail "Unable to create ssh user config.d directory" || return $?
 
   # The "Host *" here is for the case if there are any "Host" directives in .ssh/config,
   # as the last of "Host" will catch this "Include" in their scope
@@ -93,7 +93,7 @@ ssh::install_authorized_keys_from_pass() {
     home_dir="${HOME}"
   fi
 
-  "${ssh_call_command[@]}" dir::should_exists ${perhaps_sudo:+"--sudo"}  --mode 0700 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  "${ssh_call_command[@]}" dir::ensure_exists ${perhaps_sudo:+"--sudo"}  --mode 0700 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh" || softfail "Unable to create ssh user config directory" || return $?
 
   # id_ed25519.pub
   if pass::secret_exists "${profile_path}/id_ed25519.pub"; then
@@ -174,7 +174,7 @@ ssh::install_ssh_key_from_pass() {
   local secret_path="$1"
   local key_file_path; key_file_path="${2:-"${HOME}/.ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
-  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
 
   pass::use --absorb-in-callback --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
@@ -207,7 +207,7 @@ ssh::install_ssh_key_from_pass_to_remote() {
   local secret_path="$1"
   local key_file_path; key_file_path="${2:-".ssh/$(basename "${secret_path}")"}" || softfail || return $?
 
-  ssh::call --home dir::should_exists --mode 0700 ".ssh" || softfail "Unable to create ssh user config directory" || return $?
+  ssh::call --home dir::ensure_exists --mode 0700 ".ssh" || softfail "Unable to create ssh user config directory" || return $?
 
   pass::use "${pass_args[@]}" --absorb-in-callback --body "${secret_path}" ssh::call --home file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
@@ -354,7 +354,7 @@ ssh::add_host_to_known_hosts() {
   fi
 
   if [ ! -f "${known_hosts}" ]; then
-    dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
+    dir::ensure_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
     ( umask 0177 && touch "${known_hosts}") || softfail || return $?
   fi
 
