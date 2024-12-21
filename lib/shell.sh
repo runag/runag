@@ -97,63 +97,6 @@ shell::unset_locales() {
     LC_TELEPHONE
 }
 
-shell::related_cd() {
-  local caller_dir; caller_dir="$(dirname "${BASH_SOURCE[1]}")" || softfail || return $?
-
-  cd "${caller_dir}" || softfail || return $?
-
-  if [ -n "${1:-}" ]; then
-    cd "$1" || softfail || return $?
-  fi
-}
-
-# shell::related_source path [args...]
-# shell::related_source --recursive path [args...]
-
-shell::related_source() {
-  local caller_dir; caller_dir="$(dirname "${BASH_SOURCE[1]}")" || softfail || return $?
-
-  recursive_flag=false
-
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -r|--recursive)
-        recursive_flag=true
-        shift
-        ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
-
-  if [ "${recursive_flag}" = true ]; then
-    shell::related_source::walk_directory "${caller_dir}/$1" "${@:2}" || softfail "Unable to load: ${caller_dir}/$1" || return $?
-  else
-    . "${caller_dir}/$1" "${@:2}" || softfail "Unable to load: ${caller_dir}/$1" || return $?
-  fi
-}
-
-shell::related_source::walk_directory() {
-  local dir_list=()
-  local item dir_item
-
-  for item in "$1/"*; do
-    if [ -d "${item}" ]; then
-      dir_list+=("${item}")
-    elif [ -f "${item}" ] && [[ "${item}" =~ \.sh$ ]]; then
-      . "${item}" "${@:2}" || softfail "Unable to load: ${item}" || return $?
-    fi
-  done
-
-  for dir_item in "${dir_list[@]}"; do
-    shell::related_source::walk_directory "${dir_item}" "${@:2}" || softfail "Unable to load: ${dir_item}" || return $?
-  done
-}
-
 shell::open() {
   "${SHELL}" "$@" || true
 }
