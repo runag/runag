@@ -19,7 +19,7 @@
 # --group
 # --sudo
 # --for-me-only
-dir::should_exists() (
+dir::ensure_exists() (
   local dir_mode
   local dir_owner
   local dir_group

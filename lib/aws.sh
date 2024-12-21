@@ -58,7 +58,7 @@ aws::pass::write_credentials_file() {
   credentials_file="${credentials_file:-"${AWS_SHARED_CREDENTIALS_FILE:-"${default_credentials_dir}/credentials"}"}"
 
   local credentials_dir; credentials_dir="$(dirname "${credentials_file}")" || softfail || return $?
-  "${command_prefix[@]}" dir::should_exists --mode 0700 "${credentials_dir}" || softfail || return $?
+  "${command_prefix[@]}" dir::ensure_exists --mode 0700 "${credentials_dir}" || softfail || return $?
 
   local aws_access_key_id; aws_access_key_id="$(pass::use "${pass_path}/id")" || softfail || return $?
   local aws_secret_access_key; aws_secret_access_key="$(pass::use "${pass_path}/secret")" || softfail || return $?

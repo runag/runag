@@ -76,10 +76,10 @@ release::init() {
     esac
   done
 
-  dir::should_exists --mode 0700 "${dest_path}" || softfail || return $?
-  dir::should_exists --mode 0700 "${dest_path}/releases" || softfail || return $?
-  dir::should_exists --mode 0700 "${dest_path}/repo" || softfail || return $?
-  dir::should_exists --mode 0700 "${dest_path}/shared" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${dest_path}" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${dest_path}/releases" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${dest_path}/repo" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${dest_path}/shared" || softfail || return $?
 
   git init --quiet --bare "${dest_path}/repo" || softfail || return $?
   

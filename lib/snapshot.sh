@@ -65,42 +65,42 @@ snapshot::init() {
     local dest="${1:?}"
   fi
 
-  dir::should_exists --mode 0700 "${dest}" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${dest}" || softfail || return $?
 
   local snapshots_path
   
   if [ "${daily_snapshot}" = true ]; then
     snapshots_path="${dest}/daily-snapshots"
 
-    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${snapshots_path}" || softfail || return $?
     touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
   fi
 
   if [ "${weekly_snapshot}" = true ]; then
     snapshots_path="${dest}/weekly-snapshots"
 
-    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${snapshots_path}" || softfail || return $?
     touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
   fi
 
   if [ "${monthly_snapshot}" = true ]; then
     snapshots_path="${dest}/monthly-snapshots"
 
-    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${snapshots_path}" || softfail || return $?
     touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
   fi
 
   if [ "${snapshots_by_name}" = true ]; then
     snapshots_path="${dest}/snapshots-by-name"
 
-    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${snapshots_path}" || softfail || return $?
     touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
   fi
 
   if [ "${snapshots_by_time}" = true ]; then
     snapshots_path="${dest}/snapshots-by-time"
 
-    dir::should_exists --mode 0700 "${snapshots_path}" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${snapshots_path}" || softfail || return $?
     touch "${snapshots_path}/.safe-to-cleanup" || softfail || return $?
   fi
 }

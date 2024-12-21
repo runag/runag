@@ -39,11 +39,11 @@ sublime_text::get_config_path() {
     config_path="${APPDATA}/Sublime Text 3"
 
   else
-    dir::should_exists --mode 0700 "${HOME}/.config" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${HOME}/.config" || softfail || return $?
     config_path="${HOME}/.config/sublime-text-3"
   fi
 
-  dir::should_exists --mode 0700 "${config_path}" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${config_path}" || softfail || return $?
   echo "${config_path}"
 }
 
@@ -53,7 +53,7 @@ sublime_text::install_package_control() {
   local package_control_package="${installed_packages}/Package Control.sublime-package"
 
   if [ ! -f "${package_control_package}" ]; then
-    dir::should_exists --mode 0700 "${installed_packages}" || softfail || return $?
+    dir::ensure_exists --mode 0700 "${installed_packages}" || softfail || return $?
 
     local url="https://packagecontrol.io/Package%20Control.sublime-package"
 
@@ -69,8 +69,8 @@ sublime_text::install_config_file() {
   local file_name; file_name="$(basename "${src_path}")" || softfail || return $?
   local config_path; config_path="$(sublime_text::get_config_path)" || softfail || return $?
 
-  dir::should_exists --mode 0700 "${config_path}/Packages" || softfail || return $?
-  dir::should_exists --mode 0700 "${config_path}/Packages/User" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${config_path}/Packages" || softfail || return $?
+  dir::ensure_exists --mode 0700 "${config_path}/Packages/User" || softfail || return $?
 
   config::install "${src_path}" "${config_path}/Packages/User/${file_name}" || softfail || return $?
 }

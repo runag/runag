@@ -19,7 +19,7 @@
 # This function generates a minimal bash script preamble used for producing derivative scripts from Rùnag code. 
 # It outputs the shebang line, prints the project's license information, and optionally enables the 'nounset' 
 # shell option to treat unset variables as errors. Additionally, it outputs the source code of the `fail`, `softfail`, 
-# `dir::should_exists`, and `file::write` functions.
+# `dir::ensure_exists`, and `file::write` functions.
 #
 # #### Parameters:
 #
@@ -42,7 +42,7 @@ runag::mini_library() {
   # Output the code for the functions
   declare -f fail || softfail "The 'fail' function is not defined." || return $?
   declare -f softfail || softfail "The 'softfail' function is not defined." || return $?
-  declare -f dir::should_exists || softfail "The 'dir::should_exists' function is not defined." || return $?
+  declare -f dir::ensure_exists || softfail "The 'dir::ensure_exists' function is not defined." || return $?
   declare -f file::write || softfail "The 'file::write' function is not defined." || return $?
 }
 

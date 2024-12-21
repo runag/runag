@@ -459,8 +459,8 @@ ssh::call::internal() {
 ssh::call::set_ssh_args() {
   # Please note: Ssh_Args variable is not function-local for this function
 
-  dir::should_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create directory: ${HOME}/.ssh" || return $?
-  dir::should_exists --mode 0700 "${HOME}/.ssh/control-sockets" || softfail "Unable to create directory: ${HOME}/.ssh/control-sockets" || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create directory: ${HOME}/.ssh" || return $?
+  dir::ensure_exists --mode 0700 "${HOME}/.ssh/control-sockets" || softfail "Unable to create directory: ${HOME}/.ssh/control-sockets" || return $?
 
   # shellcheck disable=2031
   if ! [[ "${OSTYPE}" =~ ^msys ]] && [ "${REMOTE_CONTROL_MASTER:-}" != "no" ]; then

@@ -55,7 +55,7 @@ cifs::mount() {
   local mount_point="$2"
   local credentials_file="$3"
 
-  dir::should_exists --mode "${dir_mode}" "${mount_point}" || softfail || return $?
+  dir::ensure_exists --mode "${dir_mode}" "${mount_point}" || softfail || return $?
 
   # TODO: file::read_with_updated_block /etc/fstab SOMETHING | fstab::verify_and_write
 
