@@ -64,24 +64,34 @@ runagfile::add_from_list() {
 
 # ### `runagfile::load`
 #
-# This function loads the `runagfile.sh` script from the current directory.
+# This function locates and loads a rùnagfile.
 #
-# If the script is not found in the local directory, it will attempt to load all rùnagfiles from the user's collection.
+# Possible locations for the `runagfile.sh` script:
 #
+# - In the current working directory:
+#   - `./runagfile.sh`
+#   - `./runagfile/runagfile.sh`
+#
+# If the script is not found in the local directory, the function will attempt to load all rùnagfiles 
+# from the user's collection:
+#
+# - `${HOME}/.runag/runagfiles/*/runagfile.sh`
+# - `${HOME}/.runag/runagfiles/*/runagfile/runagfile.sh`
 #
 # #### Parameters:
 # 
-# - `-w` or `--working-directory-only`: If specified, the function will only load the `runagfile.sh` 
+# - `-w` or `--working-directory-only`: If this option is provided, the function will only load the `runagfile.sh` 
 #   from the current working directory and will not search the rùnagfiles collection.
 #
 runagfile::load() {
+  # Flag to indicate whether only the current working directory should be considered.
   local working_directory_only=false
 
-  # Parse the arguments to handle the working directory option.
+  # Parse the command-line arguments.
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -w|--working-directory-only)
-        # Set the flag to only load from the current directory.
+        # Set the flag to true, indicating that only the current directory should be considered.
         working_directory_only=true
         shift
         ;;
@@ -99,16 +109,27 @@ runagfile::load() {
   # Attempt to source the `runagfile.sh` from the current directory.
   if [ -f "./runagfile.sh" ]; then
     . "./runagfile.sh"
-    softfail --unless-good --exit-status $? "Unable to load ./runagfile.sh ($?)" || return $?
+    softfail --unless-good --exit-status $? "Failed to load './runagfile.sh' ($?)" || return $?
 
-  # If the `-w` flag was not passed, search for `runagfile.sh` in the user's rùnagfiles collection.
+  # Attempt to source the `runagfile.sh` from within the `runagfile` directory.
+  elif [ -f "./runagfile/runagfile.sh" ]; then
+    . "./runagfile/runagfile.sh"
+    softfail --unless-good --exit-status $? "Failed to load './runagfile/runagfile.sh' ($?)" || return $?
+
+  # If the `-w` flag was not specified, search the user's rùnagfiles collection for the `runagfile.sh`.
   elif [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
     local dir_path
-    # Iterate through the directories within rùnagfiles and attempt to source the `runagfile.sh` from each.
+    # Iterate over the directories within the rùnagfiles collection.
     for dir_path in "${HOME}/.runag/runagfiles/"*; do
+      # If `runagfile.sh` is found, source it.
       if [ -f "${dir_path}/runagfile.sh" ]; then
         . "${dir_path}/runagfile.sh"
-        softfail --unless-good --exit-status $? "Unable to load ${dir_path}/runagfile.sh ($?)" || return $?
+        softfail --unless-good --exit-status $? "Failed to load '${dir_path}/runagfile.sh' ($?)" || return $?
+
+      # If `runagfile/runagfile.sh` is found, source it.
+      elif [ -f "${dir_path}/runagfile/runagfile.sh" ]; then
+        . "${dir_path}/runagfile/runagfile.sh"
+        softfail --unless-good --exit-status $? "Failed to load '${dir_path}/runagfile/runagfile.sh' ($?)" || return $?
       fi
     done
   fi
