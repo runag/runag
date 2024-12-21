@@ -80,8 +80,8 @@ runagfile::add_from_list() {
 #
 # #### Parameters:
 # 
-# - `-w` or `--working-directory-only`: If this option is provided, the function will only load the `runagfile.sh` 
-#   from the current working directory and will not search the rùnagfiles collection.
+# - `-w` or `--working-directory-only`: If provided, this option restricts the function to loading
+# runagfile.sh only from the current directory, without searching the rùnagfiles collection.
 #
 runagfile::load() {
   # Flag to indicate whether only the current working directory should be considered.
@@ -91,17 +91,14 @@ runagfile::load() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -w|--working-directory-only)
-        # Set the flag to true, indicating that only the current directory should be considered.
         working_directory_only=true
         shift
         ;;
       -*)
-        # Handle unknown arguments.
         softfail "Unknown argument: $1" || return $?
         ;;
       *)
-        # Break the loop if no more recognized arguments.
-        break
+        break # Break the loop if no more recognized arguments.
         ;;
     esac
   done
@@ -119,8 +116,10 @@ runagfile::load() {
   # If the `-w` flag was not specified, search the user's rùnagfiles collection for the `runagfile.sh`.
   elif [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
     local dir_path
+
     # Iterate over the directories within the rùnagfiles collection.
     for dir_path in "${HOME}/.runag/runagfiles/"*; do
+
       # If `runagfile.sh` is found, source it.
       if [ -f "${dir_path}/runagfile.sh" ]; then
         . "${dir_path}/runagfile.sh"
