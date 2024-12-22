@@ -14,51 +14,38 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-nodejs::install_dependencies() (
-  . /etc/os-release || softfail || return $?
+# https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
+# https://github.com/nodejs/node/blob/main/BUILDING.md#building-nodejs-on-supported-platforms
 
-  # https://asdf-vm.com/guide/getting-started.html#plugin-dependencies
-  # https://github.com/nodejs/node/blob/main/BUILDING.md#building-nodejs-on-supported-platforms
-
-  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-    local package_list=(
-      curl # asdf requires that
-      dirmngr # asdf requires that
-      gawk # asdf requires that
-      gpg # asdf requires that
-    )
-
-    apt::install "${package_list[@]}" || softfail || return $?
-        
-  elif [ "${ID:-}" = arch ]; then
-    local package_list=(
-      curl # asdf requires that
-      gawk # asdf requires that
-      gnupg # asdf requires that, dirmngr is in gnupg
-    )
-
-    sudo pacman --sync --needed --noconfirm "${package_list[@]}" || softfail || return $?
-  fi
-)
-
-nodejs::install::apt() {
-  local version="$1"
-
-  apt::add_source_with_key "nodesource" \
-    "https://deb.nodesource.com/node_${version}.x nodistro main" \
-    "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" || softfail || return $?
-
-  apt::install nodejs || softfail || return $?
+nodejs::extend_package_list::debian() {
+  package_list+=(
+    curl # asdf requires that
+    dirmngr # asdf requires that
+    gawk # asdf requires that
+    gpg # asdf requires that
+  )
 }
 
-nodejs::install_yarn::apt() {
+nodejs::extend_package_list::arch() {
+  package_list+=(
+    curl # asdf requires that
+    gawk # asdf requires that
+    gnupg # asdf requires that, dirmngr is in gnupg
+  )
+}
+
+nodejs::add_apt_source() {
+  local version="$1"
+  apt::add_source_with_key "nodesource" \
+    "https://deb.nodesource.com/node_${version}.x nodistro main" \
+    "https://deb.nodesource.com/gpgkey/nodesource.gpg.key" || softfail "Unable to add nodejs apt source" || return $?
+}
+
+nodejs::add_yarn_apt_source() {
   apt::add_source_with_key "yarnpkg" \
     "https://dl.yarnpkg.com/debian/ stable main" \
     "https://dl.yarnpkg.com/debian/pubkey.gpg" || softfail "Unable to add yarn apt source" || return $?
-
-  apt::install yarn || softfail || return $?
 }
-
 
 # npm
 
