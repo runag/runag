@@ -182,7 +182,7 @@ git::ensure_git_is_installed() (
         apt::install git || softfail || return $?
 
       elif [ "${ID:-}" = arch ]; then
-        sudo pacman --sync --refresh --sysupgrade --noconfirm || softfail || return $?
+        sudo pacman --sync --sysupgrade --refresh --noconfirm || softfail || return $?
         sudo pacman --sync --needed --noconfirm git || softfail || return $?
 
       else
