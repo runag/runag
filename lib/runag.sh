@@ -279,7 +279,6 @@ runag::invocation_target() {
 # ```
 #
 runag::extend_package_list::debian() {
-  # Add essential dependencies for `apt` package manager to the package_list array.
   package_list+=(
     apt-transport-https  # Enables support for HTTPS in `apt`.
     curl                 # Command-line tool for transferring data using various protocols.
@@ -309,7 +308,6 @@ runag::extend_package_list::debian() {
 # ```
 #
 runag::extend_package_list::arch() {
-  # Add essential dependencies for `pacman` package manager to the package_list array.
   package_list+=(
     curl     # Command-line tool for transferring data using various protocols.
     git      # Version control system for tracking changes in source code.

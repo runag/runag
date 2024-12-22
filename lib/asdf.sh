@@ -14,22 +14,31 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-asdf::install_dependencies() (
-  . /etc/os-release || softfail || return $?
+# ### `asdf::extend_package_list::debian`
+#
+# #### Usage
+#
+# asdf::extend_package_list::debian
+#
+asdf::extend_package_list::debian() {
+  package_list+=(
+    curl  # Command-line tool for transferring data using various protocols.
+    git   # Version control system for tracking changes in source code.
+  )
+}
 
-  if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then
-    apt::install \
-      curl \
-      git \
-        || softfail || return $?
-
-  elif [ "${ID:-}" = arch ]; then
-    sudo pacman --sync --needed --noconfirm \
-      curl \
-      git \
-        || softfail || return $?
-  fi
-)
+# ### `asdf::extend_package_list::arch`
+#
+# #### Usage
+#
+# asdf::extend_package_list::arch
+#
+asdf::extend_package_list::arch() {
+  package_list+=(
+    curl  # Command-line tool for transferring data using various protocols.
+    git   # Version control system for tracking changes in source code.
+  )
+}
 
 asdf::install() {
   local asdf_version; asdf_version="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" || softfail || return $?
