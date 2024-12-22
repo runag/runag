@@ -260,3 +260,62 @@ runag::invocation_target() {
     return $?
   fi
 }
+
+# ### `runag::extend_package_list::apt`
+#
+# This function populates the `package_list` array with the essential dependencies required 
+# for running Rùnag on systems using `apt` as their package manager.
+#
+# #### Usage:
+# 
+# runag::extend_package_list::apt
+#
+# #### Example:
+# 
+# ```bash
+# package_list=()
+# runag::extend_package_list::apt
+# echo "${package_list[@]}"
+# ```
+#
+runag::extend_package_list::apt() {
+  # Add essential dependencies for `apt` package manager to the package_list array.
+  package_list+=(
+    apt-transport-https \  # Enables support for HTTPS in `apt`.
+    curl \                 # Command-line tool for transferring data using various protocols.
+    git \                  # Version control system for tracking changes in source code.
+    gpg \                  # GNU Privacy Guard for encryption and signing.
+    jq \                   # Command-line JSON processor.
+    pass \                 # Standard Unix password manager.
+    xxd                    # Command-line utility to create a hexdump or reverse it.
+  )
+}
+
+# ### `runag::extend_package_list::arch`
+#
+# This function populates the `package_list` array with the essential dependencies required 
+# for running Rùnag on systems using `pacman` (Arch Linux) as their package manager.
+#
+# #### Usage:
+# 
+# runag::extend_package_list::arch
+#
+# #### Example:
+# 
+# ```bash
+# package_list=()
+# runag::extend_package_list::arch
+# echo "${package_list[@]}"
+# ```
+#
+runag::extend_package_list::arch() {
+  # Add essential dependencies for `pacman` package manager to the package_list array.
+  package_list+=(
+    curl \       # Command-line tool for transferring data using various protocols.
+    git \        # Version control system for tracking changes in source code.
+    gnupg \      # GNU Privacy Guard for encryption and signing.
+    jq \         # Command-line JSON processor.
+    pass \       # Standard Unix password manager.
+    tinyxxd      # Lightweight version of the xxd utility for hexdump operations.
+  )
+}
