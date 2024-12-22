@@ -261,24 +261,24 @@ runag::invocation_target() {
   fi
 }
 
-# ### `runag::extend_package_list::apt`
+# ### `runag::extend_package_list::debian`
 #
 # This function populates the `package_list` array with the essential dependencies required 
-# for running Rùnag on systems using `apt` as their package manager.
+# for running Rùnag on systems using `apt` (Debian GNU/Linux) as their package manager.
 #
 # #### Usage:
 # 
-# runag::extend_package_list::apt
+# runag::extend_package_list::debian
 #
 # #### Example:
 # 
 # ```bash
 # package_list=()
-# runag::extend_package_list::apt
+# runag::extend_package_list::debian
 # echo "${package_list[@]}"
 # ```
 #
-runag::extend_package_list::apt() {
+runag::extend_package_list::debian() {
   # Add essential dependencies for `apt` package manager to the package_list array.
   package_list+=(
     apt-transport-https \  # Enables support for HTTPS in `apt`.
