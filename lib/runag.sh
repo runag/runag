@@ -281,13 +281,13 @@ runag::invocation_target() {
 runag::extend_package_list::debian() {
   # Add essential dependencies for `apt` package manager to the package_list array.
   package_list+=(
-    apt-transport-https \  # Enables support for HTTPS in `apt`.
-    curl \                 # Command-line tool for transferring data using various protocols.
-    git \                  # Version control system for tracking changes in source code.
-    gpg \                  # GNU Privacy Guard for encryption and signing.
-    jq \                   # Command-line JSON processor.
-    pass \                 # Standard Unix password manager.
-    xxd                    # Command-line utility to create a hexdump or reverse it.
+    apt-transport-https  # Enables support for HTTPS in `apt`.
+    curl                 # Command-line tool for transferring data using various protocols.
+    git                  # Version control system for tracking changes in source code.
+    gpg                  # GNU Privacy Guard for encryption and signing.
+    jq                   # Command-line JSON processor.
+    pass                 # Standard Unix password manager.
+    xxd                  # Command-line utility to create a hexdump or reverse it.
   )
 }
 
@@ -311,11 +311,11 @@ runag::extend_package_list::debian() {
 runag::extend_package_list::arch() {
   # Add essential dependencies for `pacman` package manager to the package_list array.
   package_list+=(
-    curl \       # Command-line tool for transferring data using various protocols.
-    git \        # Version control system for tracking changes in source code.
-    gnupg \      # GNU Privacy Guard for encryption and signing.
-    jq \         # Command-line JSON processor.
-    pass \       # Standard Unix password manager.
-    tinyxxd      # Lightweight version of the xxd utility for hexdump operations.
+    curl     # Command-line tool for transferring data using various protocols.
+    git      # Version control system for tracking changes in source code.
+    gnupg    # GNU Privacy Guard for encryption and signing.
+    jq       # Command-line JSON processor.
+    pass     # Standard Unix password manager.
+    tinyxxd  # Lightweight version of the xxd utility for hexdump operations.
   )
 }
