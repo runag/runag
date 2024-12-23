@@ -212,16 +212,6 @@ linux::adduser() {
   fi
 }
 
-linux::get_cpu_count() {
-  local cpu_count; cpu_count="$(grep -c ^processor /proc/cpuinfo 2>/dev/null)"
-
-  if [[ "${cpu_count}" =~ ^[0-9]+$ ]]; then
-    echo "${cpu_count}"
-  else
-    echo 1
-  fi
-}
-
 linux::get_default_path_env() {(
   . /etc/environment && echo "${PATH}" || softfail || return $?
 )}
