@@ -86,7 +86,47 @@ ssh::call() {
 
   local temp_dir; temp_dir="$(mktemp -d)" || softfail "Unable to make temp file" || return $?
 
-  ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
+  if [ -v REMOTE_LOCALE ]; then
+    (
+      unset -v \
+        LANG \
+        LANGUAGE \
+        LC_ALL \
+        \
+        LC_COLLATE \
+        LC_CTYPE \
+        LC_MESSAGES \
+        LC_MONETARY \
+        LC_NUMERIC \
+        LC_TIME \
+        \
+        LC_ADDRESS \
+        LC_IDENTIFICATION \
+        LC_MEASUREMENT \
+        LC_NAME \
+        LC_PAPER \
+        LC_RESPONSE \
+        LC_TELEPHONE
+
+      local locale_list=()
+
+      if declare -p REMOTE_LOCALE 2>/dev/null | grep -q '^declare -a'; then
+        locale_list+=("${REMOTE_LOCALE[@]}")
+
+      elif [ -n "${REMOTE_LOCALE:-}" ]; then
+        IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
+      fi
+
+      local item; for item in "${locale_list[@]}"; do
+        # shellcheck disable=2163
+        export "${item}"
+      done
+
+      ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
+    )
+  else
+    ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
+  fi
   
   local exit_status=$?
 
@@ -638,6 +678,42 @@ ssh::call::produce_script() {
 
   if [ -n "${REMOTE_UMASK:-}" ]; then
     printf "umask %q || exit \$?\n" "${REMOTE_UMASK}"
+  fi
+
+  # ssh_config may not contain "SendEnv LANG LC_*" settings for all hosts.
+  if [ -v REMOTE_LOCALE ]; then
+    echo unset -v \
+      LANG \
+      LANGUAGE \
+      LC_ALL \
+      \
+      LC_COLLATE \
+      LC_CTYPE \
+      LC_MESSAGES \
+      LC_MONETARY \
+      LC_NUMERIC \
+      LC_TIME \
+      \
+      LC_ADDRESS \
+      LC_IDENTIFICATION \
+      LC_MEASUREMENT \
+      LC_NAME \
+      LC_PAPER \
+      LC_RESPONSE \
+      LC_TELEPHONE
+
+    local locale_list=()
+
+    if declare -p REMOTE_LOCALE 2>/dev/null | grep -q '^declare -a'; then
+      locale_list+=("${REMOTE_LOCALE[@]}")
+
+    elif [ -n "${REMOTE_LOCALE:-}" ]; then
+      IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
+    fi
+
+    local item; for item in "${locale_list[@]}"; do
+      printf "export %q || exit \$?\n" "${item}"
+    done
   fi
 
   if [ -n "${remote_rc_string:-}" ]; then
