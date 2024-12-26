@@ -589,12 +589,7 @@ ssh::call::produce_script() {
   # env list
   local env_list=()
 
-  # check if REMOTE_ENV is array
-  # TODO: bash regexp (faster)?
-  if declare -p REMOTE_ENV 2>/dev/null | grep -q '^declare -a'; then
-    env_list+=("${REMOTE_ENV[@]}")
-
-  elif [ -n "${REMOTE_ENV:-}" ]; then
+  if [ -n "${REMOTE_ENV:-}" ]; then
     IFS=" " read -r -a env_list <<<"${REMOTE_ENV}" || softfail || return $?
   fi
 

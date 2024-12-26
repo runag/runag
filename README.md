@@ -205,9 +205,7 @@ Remote directory to run script in.
 
 #### `REMOTE_ENV`
 
-List of environment variable names, to be set in remote script with the values present in the calling rùnag instance at the moment of ssh call.
-Could be array of strings, or just plain string.
-The string is split into separate arguments using `IFS=" " read -a`, thereby `\` escape character have special meaning.
+String, space-separated list of environment variable names, to be set in remote script with the values present in the calling rùnag instance at the moment of ssh call.
 For any provided names (or for absence of them), rùnag will internaly add `"RUNAG_VERBOSE"`.
 
 #### `REMOTE_FORWARD_AGENT`
