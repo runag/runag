@@ -86,45 +86,39 @@ ssh::call() {
 
   local temp_dir; temp_dir="$(mktemp -d)" || softfail "Unable to make temp file" || return $?
 
-  if [ -v REMOTE_LOCALE ]; then
-    (
-      unset -v \
-        LANG \
-        LANGUAGE \
-        LC_ALL \
-        \
-        LC_COLLATE \
-        LC_CTYPE \
-        LC_MESSAGES \
-        LC_MONETARY \
-        LC_NUMERIC \
-        LC_TIME \
-        \
-        LC_ADDRESS \
-        LC_IDENTIFICATION \
-        LC_MEASUREMENT \
-        LC_NAME \
-        LC_PAPER \
-        LC_RESPONSE \
-        LC_TELEPHONE
+  local locale_list=()
 
-      local locale_list
+  if [ -n "${REMOTE_LOCALE:-}" ]; then
+    IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
+  fi
 
-      if local -n check_target=REMOTE_LOCALE && [[ $(declare -p ${!check_target} 2>/dev/null) =~ ^declare[[:space:]]-a ]]; then
-        locale_list=("${REMOTE_LOCALE[@]}")
-      elif [ -n "${REMOTE_LOCALE:-}" ]; then
-        IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
-      fi
+  if [ "${#locale_list[@]}" != 0 ]; then
+    unset -v \
+      LANG \
+      LANGUAGE \
+      LC_ALL \
+      \
+      LC_COLLATE \
+      LC_CTYPE \
+      LC_MESSAGES \
+      LC_MONETARY \
+      LC_NUMERIC \
+      LC_TIME \
+      \
+      LC_ADDRESS \
+      LC_IDENTIFICATION \
+      LC_MEASUREMENT \
+      LC_NAME \
+      LC_PAPER \
+      LC_RESPONSE \
+      LC_TELEPHONE || softfail || return $?
 
-      # TODO: check if array contains any non-empty element
+    local locale_item; for locale_item in "${locale_list[@]}"; do
+      # shellcheck disable=2163
+      export "${locale_item}" || softfail || return $?
+    done
 
-      local item; for item in "${locale_list[@]}"; do
-        # shellcheck disable=2163
-        export "${item}"
-      done
-
-      ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
-    )
+    ( ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@" )
   else
     ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
   fi
@@ -682,38 +676,15 @@ ssh::call::produce_script() {
   fi
 
   # ssh_config may not contain "SendEnv LANG LC_*" settings for all hosts.
-  if [ -v REMOTE_LOCALE ]; then
-    echo unset -v \
-      LANG \
-      LANGUAGE \
-      LC_ALL \
-      \
-      LC_COLLATE \
-      LC_CTYPE \
-      LC_MESSAGES \
-      LC_MONETARY \
-      LC_NUMERIC \
-      LC_TIME \
-      \
-      LC_ADDRESS \
-      LC_IDENTIFICATION \
-      LC_MEASUREMENT \
-      LC_NAME \
-      LC_PAPER \
-      LC_RESPONSE \
-      LC_TELEPHONE
+  local locale_list=()
 
-    local locale_list=()
+  if [ -n "${REMOTE_LOCALE:-}" ]; then
+    IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
+  fi
 
-    if declare -p REMOTE_LOCALE 2>/dev/null | grep -q '^declare -a'; then
-      locale_list+=("${REMOTE_LOCALE[@]}")
-
-    elif [ -n "${REMOTE_LOCALE:-}" ]; then
-      IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
-    fi
-
-    local item; for item in "${locale_list[@]}"; do
-      printf "export %q || exit \$?\n" "${item}"
+  if [ "${#locale_list[@]}" != 0 ]; then
+    local locale_item; for locale_item in "${locale_list[@]}"; do
+      printf "export %q || { exit_status=\$?; echo 'Error setting REMOTE_LOCALE values' >&2; exit \$?; }\n" "${locale_item}"
     done
   fi
 

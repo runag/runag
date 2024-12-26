@@ -229,7 +229,7 @@ Could be set to `"true"`
 
 #### `REMOTE_LOCALE`
 
-Could be array of strings, or just plain string.
+String.
 
 #### `REMOTE_PORT`
 
