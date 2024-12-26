@@ -530,16 +530,6 @@ ssh::call::set_ssh_args() {
   if [ -n "${REMOTE_USER:-}" ]; then
     Ssh_Args+=("-l" "${REMOTE_USER}")
   fi
-
-  if declare -p REMOTE_SSH_ARGS 2>/dev/null | grep -q '^declare -a'; then
-    Ssh_Args+=("${REMOTE_SSH_ARGS[@]}")
-
-  elif [ -n "${REMOTE_SSH_ARGS:-}" ]; then
-    local remote_ssh_args_array
-    # shellcheck disable=2162
-    IFS=" " <<<"${REMOTE_SSH_ARGS}" read -a remote_ssh_args_array || softfail || return $?
-    Ssh_Args+=("${remote_ssh_args_array[@]}")
-  fi
 }
 
 ssh::call::produce_script() {

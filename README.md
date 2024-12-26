@@ -252,19 +252,6 @@ You could set this to `"0"` to tell ssh to disable server alive messages.
 You could set this to `"no"` then rùnag will not set that variable at all,
 thus ssh could potentially use a value from your ssh config file.
 
-#### `REMOTE_SSH_ARGS`
-
-Additional SSH arguments. Could be array of strings, or just plain string.
-
-The string is split into separate arguments using `IFS=" " read -a`, thereby `\` escape character have special meaning.
-
-Examples:
-
-```
-REMOTE_SSH_ARGS=("-i" "path to/keyfile")`.
-REMOTE_SSH_ARGS="-i path\ to/keyfile"
-```
-
 #### `REMOTE_UMASK`
 
 Umask for remote commands
