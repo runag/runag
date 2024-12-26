@@ -606,37 +606,8 @@ ssh::call::produce_script() {
     fi
   done
 
-  # REMOTE_RC
-  local remote_rc_string
-  local remote_rc_require_functions=false
-
-  # check if REMOTE_RC is array
-  # TODO: bash regexp (faster)?
-  if declare -p REMOTE_RC 2>/dev/null | grep -q '^declare -a'; then
-
-    # if it contains more than 0 elements
-    if [ "${#REMOTE_RC[@]}" -gt 0 ]; then
-
-      # if zero element refers to a defined bash function
-      if declare -F "${REMOTE_RC[0]}" >/dev/null; then
-        remote_rc_require_functions=true
-      fi
-
-      # quote and join string
-      printf -v remote_rc_string " %q" "${REMOTE_RC[@]}" || softfail || return $?
-
-      # remove extra space resulted from join
-      remote_rc_string="${remote_rc_string:1}" || softfail || return $?
-    fi
-  
-  # check if REMOTE_RC is a non-zero length string
-  elif [ -n "${REMOTE_RC:-}" ]; then
-    remote_rc_require_functions=true
-    remote_rc_string="${REMOTE_RC}"
-  fi
-
   # functions dump
-  if [ "${remote_rc_require_functions}" = true ] || { [ "${command_mode}" = false ] && [ "${command_present}" = true ] && declare -F "$1" >/dev/null; }; then
+  if [ "${command_mode}" = false ] && [ "${command_present}" = true ] && declare -F "$1" >/dev/null; then
     if [ -z "${PS1:-}" ]; then
       declare -f || softfail "Unable to produce source code dump of functions" || return $?
     else
@@ -676,10 +647,6 @@ ssh::call::produce_script() {
     local locale_item; for locale_item in "${locale_list[@]}"; do
       printf "export %q || { exit_status=\$?; echo 'Error setting REMOTE_LOCALE values' >&2; exit \$?; }\n" "${locale_item}"
     done
-  fi
-
-  if [ -n "${remote_rc_string:-}" ]; then
-    printf "{\n%s\n} || { exit_status=\$?; echo 'Error performing REMOTE_RC line' >&2; exit \$?; }\n" "${remote_rc_string}" || softfail || return $?
   fi
 
   if [ "${command_present}" = false ] && [ "${terminal_mode}" = true ]; then
