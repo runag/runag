@@ -108,14 +108,15 @@ ssh::call() {
         LC_RESPONSE \
         LC_TELEPHONE
 
-      local locale_list=()
+      local locale_list
 
-      if declare -p REMOTE_LOCALE 2>/dev/null | grep -q '^declare -a'; then
-        locale_list+=("${REMOTE_LOCALE[@]}")
-
+      if local -n check_target=REMOTE_LOCALE && [[ $(declare -p ${!check_target} 2>/dev/null) =~ ^declare[[:space:]]-a ]]; then
+        locale_list=("${REMOTE_LOCALE[@]}")
       elif [ -n "${REMOTE_LOCALE:-}" ]; then
         IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
       fi
+
+      # TODO: check if array contains any non-empty element
 
       local item; for item in "${locale_list[@]}"; do
         # shellcheck disable=2163
