@@ -52,7 +52,7 @@ linux::update_remote_locale() (
   # we disable control master to get a clean locale state and not to affect later sessions
   export REMOTE_CONTROL_MASTER=no
 
-  ssh::call linux::reset_locales "$@" || fail
+  ssh::call linux::reset_locales --carry-on-with-disparities "$@" || fail
 )
 
 linux::reset_locales() {
