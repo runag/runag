@@ -215,10 +215,6 @@ release::build_and_deploy_services() (
   fi
 )
 
-# release::build() {
-
-# release::release::deploy_services() {
-
 release::cleanup() {
   local cleanup_kind
   local keep_amount=6
