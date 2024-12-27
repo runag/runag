@@ -42,18 +42,21 @@ direnv::save_variable_block() (
     esac
   done
 
-  local envrc_dir; envrc_dir="$(dirname "${envrc_path}")" || softfail || return $?
-  local envrc_basename; envrc_basename="$(basename "${envrc_path}")" || softfail || return $?
+  local envrc_dir; envrc_dir="$(dirname "${envrc_path}")" || softfail "Unable to obtain envrc_dir" || return $?
+  local envrc_basename; envrc_basename="$(basename "${envrc_path}")" || softfail "Unable to obtain envrc_basename" || return $?
 
   cd "${envrc_dir}" || softfail "Unable to change directory: ${envrc_dir}" || return $?
 
   if [ "${skip_allow_check}" != true ]; then
-    local json_support_test; json_support_test="$(direnv status --json | head -c 1; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain direnv status" || return $?
+    local json_support_test; json_support_test="$(direnv status --json)" || softfail "Unable to obtain direnv status" || return $?
 
-    if [ "${json_support_test}" = "{" ]; then
-      local found_any; found_any="$(direnv status --json | jq --raw-output --exit-status 'if (.state | has("foundRC")) and (.state | has("foundRC")) then if .state.foundRC == null and .state.foundRC == null then "empty-ok" else "non-empty" end else false end'; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to obtain possible empty list from direnv status" || return $?
+    if [ "${json_support_test:0:1}" = "{" ]; then
+      local found_any
+      local empty_test='if (.state | has("foundRC")) then if .state.foundRC == null then "empty-ok" else "non-empty" end else false end'
 
-      if [ "${found_any}" != "empty-ok" ]; then
+      found_any="$(direnv status --json | jq --raw-output --exit-status "${empty_test}"; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to perform direnv status empty test" || return $?
+
+      if [ "${found_any}" = "non-empty" ]; then
         local allowed_path
 
         if ! allowed_path="$(direnv status --json | jq --raw-output --exit-status 'if .state.foundRC.allowed == 0 then .state.foundRC.path else false end'; test "${PIPESTATUS[*]}" = "0 0")"; then
@@ -69,17 +72,19 @@ direnv::save_variable_block() (
         fi
       fi
     else
-      if ! { direnv status | grep -qFx "No .envrc or .env found" || { direnv status | grep -qFx "Found RC path ${PWD}/${envrc_basename}" && { direnv status | grep -qFx "Found RC allowed 0" || direnv status | grep -qFx "Found RC allowed true"; }; }; }; then
-        direnv status >&2
-        softfail "Found envrc file that is not currently allowed, or allowed file path is different than provided: ${PWD}/${envrc_basename}"
-        return $?
+      if ! direnv status | grep -qFx "No .envrc found" && ! direnv status | grep -qFx "No .envrc or .env found"; then
+        if ! direnv status | grep -qFx "Found RC path ${PWD}/${envrc_basename}" || ! direnv status | grep -qEx "Found RC allowed (0|true)"; then
+          direnv status >&2
+          softfail "Found envrc file that is not currently allowed, or allowed file path is different than provided: ${PWD}/${envrc_basename}"
+          return $?
+        fi
       fi
     fi
   fi
 
   shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_basename}" "${block_name}"
 
-  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+  test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to write variables block into direnv file" || return $?
   
-  direnv allow || softfail || return $?
+  direnv allow || softfail "Unable to perform direnv allow" || return $?
 )
