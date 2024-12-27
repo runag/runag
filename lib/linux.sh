@@ -45,14 +45,28 @@ linux::set_hostname() {
 }
 
 linux::update_remote_locale() (
-  # The server may not have the locales that are present on the local machine
-  # If you pass locale variables to it, a slight error may occur
-  shell::unset_locales || fail
+  local locale_list=()
+
+  if [ $# != 0 ]; then
+    locale_list=("$@")
+
+    # The server may not have the locales that are present on the local machine
+    # If you pass locale variables to it, a slight error may occur
+    shell::unset_locales || fail
+
+  elif [ -n "${REMOTE_LOCALE:-}" ]; then
+    IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
+  fi
+
+  if [ "${#locale_list[@]}" = 0 ]; then
+    softfail "Locale list is empty"
+    return $?
+  fi
 
   # we disable control master to get a clean locale state and not to affect later sessions
   export REMOTE_CONTROL_MASTER=no
 
-  ssh::call linux::reset_locales --carry-on-with-disparities "$@" || fail
+  ssh::call linux::reset_locales --carry-on "${locale_list[@]}" || softfail || return $?
 )
 
 linux::reset_locales() {
@@ -60,7 +74,7 @@ linux::reset_locales() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -c|--carry-on-with-disparities)
+      -c|--carry-on)
         carry_on=true
         shift
         ;;
