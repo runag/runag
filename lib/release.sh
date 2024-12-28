@@ -157,6 +157,8 @@ release::create() (
 
   cd "${dest_path}" || softfail || return $?
 
+  export RELEASE_SHARED_PATH="${PWD}/shared"
+
   local current_date; current_date="$(date --utc "+%Y%m%dT%H%M%SZ")" || softfail || return $?
 
   local release_dir; release_dir="$(mktemp -d "releases/${current_date}-XXX")" || softfail "Unable to make release directory" || return $?
