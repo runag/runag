@@ -40,15 +40,17 @@ asdf::extend_package_list::arch() {
   )
 }
 
-asdf::install() {
-  local asdf_version; asdf_version="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" || softfail || return $?
-  git::place_up_to_date_clone --branch "${asdf_version}" "https://github.com/asdf-vm/asdf.git" "${HOME}/.asdf" || softfail || return $?
-  asdf::load || softfail || return $?
-}
+asdf::install_self() {
+  local version_tag
+  
+  version_tag="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" \
+    || softfail "Unable to obtain asdf version tag" || return $?
 
-asdf::install_with_shellrc() {
-  asdf::install || softfail || return $?
-  asdf::install_shellfile || softfail || return $?
+  git::place_up_to_date_clone \
+    --branch "${version_tag}" \
+    "https://github.com/asdf-vm/asdf.git" \
+    "${HOME}/.asdf" \
+      || softfail || return $?
 }
 
 asdf::install_shellfile() {
@@ -82,12 +84,16 @@ SHELL
 }
 
 asdf::load() {
+  . "${HOME}/.asdf/asdf.sh" || softfail "Unable to load asdf" || return $?
+}
+
+asdf::install() {
+  local set_global=false
+
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -i|--if-installed)
-        if [ ! -f "${HOME}/.asdf/asdf.sh" ]; then
-          return 0
-        fi
+      -g|--global)
+        set_global=true
         shift
         ;;
       -*)
@@ -99,74 +105,17 @@ asdf::load() {
     esac
   done
 
-  . "${HOME}/.asdf/asdf.sh" || softfail "Unable to load asdf" || return $?
-}
-
-asdf::shim_dir() {
-  local home_dir="${HOME}"
-
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -u|--user)
-        home_dir="$(linux::get_home_dir "$2")" || softfail || return $?
-        shift; shift
-        ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
-
-  echo "${ASDF_DATA_DIR:-"${home_dir}/.asdf"}/shims"
-}
-
-asdf::path_env() {
-  local home_dir="${HOME}"
-
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -u|--user)
-        home_dir="$(linux::get_home_dir "$2")" || softfail || return $?
-        shift; shift
-        ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
-
-  echo "${ASDF_DATA_DIR:-"${home_dir}/.asdf"}/shims:${ASDF_DIR:-"${home_dir}/.asdf"}/bin"
-}
-
-asdf::add_plugin() {
   local plugin_name="$1"
-  if asdf plugin list | grep -qFx "${plugin_name}"; then
-    asdf plugin update "${plugin_name}" || softfail || return $?
-  else
-    asdf plugin add "$@" || softfail || return $?
+  local package_version="${2:-"latest"}"
+
+  asdf plugin add "${plugin_name}" || softfail || return $?
+  asdf plugin update "${plugin_name}" || softfail || return $?
+
+  # TODO: check if `plugin update` needed right after `plugin add`
+
+  asdf install "${plugin_name}" "${package_version}" || softfail || return $?
+
+  if [ "${set_global}" = true ]; then
+    asdf global "${plugin_name}" "${package_version}" || softfail || return $?
   fi
-}
-
-asdf::add_plugin_and_install_package() {
-  local package_name="$1"
-  local package_version="${2:-"latest"}"
-
-  asdf::add_plugin "${package_name}" || softfail || return $?
-
-  asdf install "${package_name}" "${package_version}" || softfail || return $?
-}
-
-asdf::add_plugin_install_package_and_set_global() {
-  local package_name="$1"
-  local package_version="${2:-"latest"}"
-
-  asdf::add_plugin_and_install_package "${package_name}" "${package_version}" || softfail || return $?
-  
-  asdf global "${package_name}" "${package_version}" || softfail || return $?
 }
