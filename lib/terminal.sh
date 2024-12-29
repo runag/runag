@@ -23,3 +23,11 @@ terminal::color_table() {
     echo "$(tput setab "${i}")tput setab ${i}$(tput sgr 0)"
   done
 }
+
+terminal::header() {
+  if [ -t 2 ]; then
+    echo $'\n'"$(printf "setaf 14\nbold" | tput -S 2>/dev/null)# ${1}$(tput sgr 0 2>/dev/null)"$'\n'
+  else
+    echo $'\n'"# ${1}"$'\n'
+  fi
+}
