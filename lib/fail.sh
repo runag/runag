@@ -20,6 +20,7 @@
 fail() {
   local exit_status
   local unless_good=false
+  local ignore_statuses
   local perform_softfail=false
   local trace_start=1
   local message
@@ -33,6 +34,10 @@ fail() {
       -u|--unless-good)
         unless_good=true
         shift
+        ;;
+      -i|--ignore)
+        ignore_statuses="$2"
+        shift; shift
         ;;
       -s|--soft)
         perform_softfail=true
@@ -68,6 +73,10 @@ fail() {
       return 0
     fi
     exit_status=1
+  fi
+
+  if [ "${exit_status}" = "${ignore_statuses:-}" ]; then
+    return 0
   fi
 
   { declare -F "log::error" >/dev/null && log::error "${message}"; } || echo "${message}" >&2
