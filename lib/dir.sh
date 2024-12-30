@@ -16,27 +16,28 @@
 
 # ### `dir::ensure_exists`
 #
-# Ensures that a directory exists with specific permissions and ownership.
-# 
-# This function creates a directory at the specified path if it does not exist, applying custom permissions, ownership, and group as specified by the user. If no specific permissions or ownership are provided, defaults will be applied. Additionally, it supports running with elevated privileges if needed.
+# Ensures a directory exists with the specified properties. This function creates the directory if it doesn't exist 
+# and applies the desired permissions, ownership, and group settings. Additionally, it provides options for running 
+# the commands with elevated privileges or limiting access to the current user only.
 #
 # #### Usage
 #
-# dir::ensure_exists [--mode <permissions>] [--owner <owner>] [--group <group>] [--sudo] [--for-me-only] <path>
-# 
-# Arguments:
-# - --mode <permissions>: Specify the directory's permissions (numeric, e.g., 0755).
-# - --owner <owner>: Specify the owner of the directory.
-# - --group <group>: Specify the group ownership of the directory.
-# - --sudo: If set, the function will use `sudo` to execute commands with elevated privileges.
-# - --for-me-only: Set default permissions to 0700 and ownership to the current user. Overrides other options.
-# - <path>: The directory path to be created or verified.
+# `dir::ensure_exists` [OPTIONS] <path>
+#
+# - `-m|--mode <permissions>`: Set the directory's permissions in numeric form (e.g., 0755).
+# - `-o|--owner <username>`: Set the directory's owner.
+# - `-g|--group <groupname>`: Set the directory's group.
+# - `-s|--sudo`: Use elevated privileges (sudo) for creating and modifying the directory.
+# - `-u|--user-only`: Shortcut to set permissions to 0700 and ownership to the current user.
+# - `<path>`: The path of the directory to ensure exists.
 #
 # #### Example
 #
-# dir::ensure_exists --mode 0755 --owner user --group admin /path/to/dir
-# dir::ensure_exists --sudo --for-me-only /path/to/dir
-#
+# ```bash
+# dir::ensure_exists --mode 0755 --owner user --group admin /path/to/directory
+# dir::ensure_exists --user-only /secure/directory
+# dir::ensure_exists --sudo /path/to/dir
+# ```
 dir::ensure_exists() {
   local mode
   local owner
@@ -46,6 +47,8 @@ dir::ensure_exists() {
   # The following commented line is not currently in use but could be used to fetch the group of the current user.
   # group="$(awk -F: -v user="${USER}" '$1 == user {print $4}' /etc/passwd)"
 
+
+  # Parse arguments to configure directory properties
   while [ "$#" -gt 0 ]; do
     case "$1" in
       -m|--mode)
@@ -68,7 +71,7 @@ dir::ensure_exists() {
         sudo=true
         shift
         ;;
-      -f|--for-me-only)
+      -u|--user-only)
         # Default permissions (0700) and ownership to the current user
         mode=0700
         owner="${USER}"
@@ -87,47 +90,49 @@ dir::ensure_exists() {
   # The directory path that is passed as the last argument
   local path="$1"
 
-  # If mode is set, validate it and apply the correct permissions
+  # If mode is set, validate it and and apply the specified mode
   if [ -n "${mode:-}" ]; then
   
     # Ensure that the mode is numeric
     if ! [[ "${mode}" =~ ^[0-9]+$ ]]; then
-      softfail "Mode should be numeric" || return $?
+      softfail "Invalid mode: Mode should be numeric" || return $?
     fi
 
     # Calculate umask value by subtracting mode from 0777
     local umask_value
-    umask_value="$(printf "0%o" "$(( 0777 - "${mode}" ))")" || softfail || return $?
+    umask_value="$(printf "0%o" "$(( 0777 - "${mode}" ))")" || softfail "Failed to calculate umask value" || return $?
 
     # If sudo is enabled, run mkdir with the correct umask and directory path
     if [ "${sudo:-}" = true ]; then
-      sudo --shell '$SHELL' -c "$(printf "umask %q && mkdir -p %q" "${umask_value}" "${path}")" || softfail || return $?
+      sudo --shell '$SHELL' -c "$(printf "umask %q && mkdir -p %q" "${umask_value}" "${path}")" \
+        || softfail "Failed to create directory with sudo and specified mode" || return $?
 
     else
       # Otherwise, use the local shell to apply the umask and create the directory
-      ( umask "${umask_value}" && mkdir -p "${path}" ) || softfail || return $?
+      ( umask "${umask_value}" && mkdir -p "${path}" ) \
+        || softfail "Failed to create directory with specified mode" || return $?
     fi
 
-    # If the directory exists, ensure it has the correct permissions
-    ${sudo:+"sudo"} chmod "${mode}" "${path}" || softfail || return $?
-  
+    # Ensure the directory has the correct access mode
+    ${sudo:+"sudo"} chmod "${mode}" "${path}" || softfail "Failed to set permissions on the directory" || return $?
+    
   else
-    # If no mode is specified, simply create the directory (with optional sudo)
-    ${sudo:+"sudo"} mkdir -p "${path}" || softfail || return $?
+    # Create the directory without setting a specific mode
+    ${sudo:+"sudo"} mkdir -p "${path}" || softfail "Failed to create directory" || return $?
   fi
 
-  # If the owner is set, assign ownership to the directory
+  # Set ownership if specified
   if [ -n "${owner:-}" ]; then
     # If no group is set, retrieve the default group for the user
     if [ -z "${group:-}" ]; then
-      group="$(id -g -n "${owner}")" || softfail || return $?
+      group="$(id -g -n "${owner}")" || softfail "Failed to retrieve group for owner '${owner}'" || return $?
     fi
 
     # Change the ownership of the directory
-    ${sudo:+"sudo"} chown "${owner}:${group}" "${path}" || softfail || return $?
+    ${sudo:+"sudo"} chown "${owner}:${group}" "${path}" || softfail "Failed to set ownership to ${owner}:${group}" || return $?
     
   # If only the group is set, change the group ownership
   elif [ -n "${group:-}" ]; then
-    ${sudo:+"sudo"} chgrp "${group}" "${path}" || softfail || return $?
+    ${sudo:+"sudo"} chgrp "${group}" "${path}" || softfail "Failed to set group ownership to '${group}'" || return $?
   fi
 }
