@@ -53,7 +53,7 @@ dir::ensure_exists() {
     case "$1" in
       -m|--mode)
         # Set directory permissions in numeric format (e.g., 0755)
-        mode="0$2"
+        mode="$2"
         shift 2
         ;;
       -o|--owner)
@@ -73,13 +73,14 @@ dir::ensure_exists() {
         ;;
       -u|--user-only)
         # Default permissions (0700) and ownership to the current user
-        mode=0700
+        mode="${mode:-0700}"
         owner="${USER}"
         shift
         ;;
       -*)
         # If an unknown argument is provided, call the 'softfail' function and exit
-        softfail "Unknown argument: $1" || return $?
+        softfail "Unknown argument: $1"
+        return $?
         ;;
       *)
         break
@@ -94,13 +95,13 @@ dir::ensure_exists() {
   if [ -n "${mode:-}" ]; then
   
     # Ensure that the mode is numeric
-    if ! [[ "${mode}" =~ ^[0-9]+$ ]]; then
+    if ! [[ "${mode}" =~ ^[0-7]+$ ]]; then
       softfail "Invalid mode: Mode should be numeric" || return $?
     fi
 
     # Calculate umask value by subtracting mode from 0777
     local umask_value
-    umask_value="$(printf "0%o" "$(( 0777 - "${mode}" ))")" || softfail "Failed to calculate umask value" || return $?
+    umask_value="$(printf "0%o" "$(( 0777 - "0${mode}" ))")" || softfail "Failed to calculate umask value" || return $?
 
     # If sudo is enabled, run mkdir with the correct umask and directory path
     if [ "${sudo:-}" = true ]; then
