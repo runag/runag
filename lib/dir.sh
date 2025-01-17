@@ -72,17 +72,18 @@ dir::ensure_exists() {
         shift
         ;;
       -u|--user-only)
-        # Default permissions (0700) and ownership to the current user
+        # Set default permissions (0700) and ownership to the current user
         mode="${mode:-0700}"
         owner="${USER}"
         shift
         ;;
       -*)
-        # If an unknown argument is provided, call the 'softfail' function and exit
+        # If an unknown argument is provided, print a stack trace and return 1.
         softfail "Unknown argument: $1"
         return $?
         ;;
       *)
+        # Break from the loop when no more options are provided
         break
         ;;
     esac
