@@ -329,7 +329,7 @@ systemd::service_action::status() {
   exit_statuses+=($?)
   printf "\n"
 
-  if [[ "${exit_statuses[*]}" =~ [^03[:space:]] ]]; then # I'm not sure about number 3 here
+  if [[ "${exit_statuses[*]}" =~ [^0[:space:]] ]]; then
     softfail || return $?
   fi
 }
