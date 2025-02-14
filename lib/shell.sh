@@ -31,7 +31,7 @@ shell::with() (
   done
 
   "${call_array[@]}"
-  softfail --unless-good --exit-status $? || return $?
+  softfail --unless-good --status $? || return $?
 
   "$@"
 )

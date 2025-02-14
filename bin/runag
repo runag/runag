@@ -88,10 +88,10 @@ else
   # Load the rùnagfile
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
     runagfile::load
-    softfail --unless-good --exit-status $? "Error: Failed to load rùnagfile ($?)" || return $?
+    softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || return $?
   else  # Script is run directly
     runagfile::load
-    softfail --unless-good --exit-status $? "Error: Failed to load rùnagfile ($?)" || exit $?
+    softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || exit $?
   fi
 fi
 
@@ -99,11 +99,11 @@ fi
 if [ -n "${1:-}" ]; then
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
     runag::invoke "$@"
-    softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
+    softfail --unless-good --status $? "Error: Failed ($?) to run command: $*"
     return $?
   else  # Script is run directly
     runag::invoke "$@"
-    softfail --unless-good --exit-status $? "Error: Failed ($?) to run command: $*"
+    softfail --unless-good --status $? "Error: Failed ($?) to run command: $*"
     exit $?
   fi
 fi
@@ -113,12 +113,12 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if declare -F runagfile::main >/dev/null; then
     # Call the main function if it exists
     runagfile::main
-    softfail --unless-good --exit-status $? "Error: Failed to run runagfile::main ($?)"
+    softfail --unless-good --status $? "Error: Failed to run runagfile::main ($?)"
     exit $?
   elif task::any && [ -t 0 ] && [ -t 1 ]; then
     # Display tasks interactively if available
     task::display
-    softfail --unless-good --exit-status $? "Error: Failed to display tasks ($?)"
+    softfail --unless-good --status $? "Error: Failed to display tasks ($?)"
     exit $?
   fi
 

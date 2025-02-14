@@ -159,7 +159,7 @@ postgresql::is_role_exists() {
 
   local role_exists
 
-  role_exists="$(postgresql::psql --sudo --query "SELECT 1 FROM pg_roles WHERE rolname='${role_name}'" --dbname postgres)" || fail --exit-status 2 "Unable to query postgresql" # no softfail here!
+  role_exists="$(postgresql::psql --sudo --query "SELECT 1 FROM pg_roles WHERE rolname='${role_name}'" --dbname postgres)" || fail --status 2 "Unable to query postgresql" # no softfail here!
 
   test "${role_exists}" = 1
 }
@@ -169,7 +169,7 @@ postgresql::is_database_exists() {
 
   local database_exists
   
-  database_exists="$(postgresql::psql --query "SELECT 1 FROM pg_database WHERE datname='${database_name}'" --dbname postgres)" || fail --exit-status 2 "Unable to query postgresql" # no softfail here!
+  database_exists="$(postgresql::psql --query "SELECT 1 FROM pg_database WHERE datname='${database_name}'" --dbname postgres)" || fail --status 2 "Unable to query postgresql" # no softfail here!
 
   test "${database_exists}" = 1
 }

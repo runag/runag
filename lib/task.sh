@@ -127,7 +127,7 @@ task::display() {
 
     # Invoke the task group function to define the tasks to be managed.
     runag::invoke --no-subshell "$@"
-    softfail --unless-good --exit-status $? "Error occurred while processing the task group function ($?): $*" || return $?
+    softfail --unless-good --status $? "Error occurred while processing the task group function ($?): $*" || return $?
 
     # Display the task list with optional nested display mode.
     task::display ${nested_display:+"--nested-display"}
@@ -189,7 +189,7 @@ task::display() {
     fi
 
     # Handle errors during task selection.
-    softfail --unless-good --exit-status "${fzf_status}" "Error during task selection." || return $?
+    softfail --unless-good --status "${fzf_status}" "Error during task selection." || return $?
 
     # Parse the result from `fzf` to obtain the selected task.
     <<<"${fzf_result_string}" IFS=" " read -r main_pointer line_number
@@ -259,7 +259,7 @@ task::display() {
     fi
 
     # Handle errors during task execution.
-    softfail --unless-good --exit-status "${command_status}" "Error performing command (${command_status}): ${command_array[*]}" || return $?
+    softfail --unless-good --status "${command_status}" "Error performing command (${command_status}): ${command_array[*]}" || return $?
 
     return "${command_status}"
   done

@@ -50,7 +50,7 @@ pass::each() {
       fi
       
       "$@" "${found_relative_path}"
-      softfail --unless-good --exit-status $? || exit $?
+      softfail --unless-good --status $? || exit $?
     fi
   done
 }
@@ -212,7 +212,7 @@ pass::use() {
       fi
 
       "${callback_function}" --absorb "${temp_file}" "$@"
-      softfail --unless-good --exit-status $? "Unable to process secret data in ${callback_function} ($?)" || return $?
+      softfail --unless-good --status $? "Unable to process secret data in ${callback_function} ($?)" || return $?
 
       return 0
     fi
@@ -267,7 +267,7 @@ pass::use() {
   # run callback function
   if [ -n "${callback_function}" ]; then
     "${callback_function}" "$@" "${secret_data}"
-    softfail --unless-good --exit-status $? "Unable to process secret data in ${callback_function} ($?)" || return $?
+    softfail --unless-good --status $? "Unable to process secret data in ${callback_function} ($?)" || return $?
   else
     printf "%s" "${secret_data}" || softfail || return $?
   fi

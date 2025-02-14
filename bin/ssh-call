@@ -77,7 +77,7 @@ runag::load_runag_library "../lib" || {
 # run command if we are not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   ssh::call --command "$@"
-  softfail --unless-good --exit-status $? || exit $?
+  softfail --unless-good --status $? || exit $?
 fi
 SHELL
 # END run_ssh_call_command

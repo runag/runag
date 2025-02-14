@@ -106,12 +106,12 @@ runagfile::load() {
   # Attempt to source the `runagfile.sh` from the current directory.
   if [ -f "./runagfile.sh" ]; then
     . "./runagfile.sh"
-    softfail --unless-good --exit-status $? "Failed to load './runagfile.sh' ($?)" || return $?
+    softfail --unless-good --status $? "Failed to load './runagfile.sh' ($?)" || return $?
 
   # Attempt to source the `runagfile.sh` from within the `runagfile` directory.
   elif [ -f "./runagfile/runagfile.sh" ]; then
     . "./runagfile/runagfile.sh"
-    softfail --unless-good --exit-status $? "Failed to load './runagfile/runagfile.sh' ($?)" || return $?
+    softfail --unless-good --status $? "Failed to load './runagfile/runagfile.sh' ($?)" || return $?
 
   # If the `-w` flag was not specified, search the user's rùnagfiles collection for the `runagfile.sh`.
   elif [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
@@ -123,12 +123,12 @@ runagfile::load() {
       # If `runagfile.sh` is found, source it.
       if [ -f "${dir_path}/runagfile.sh" ]; then
         . "${dir_path}/runagfile.sh"
-        softfail --unless-good --exit-status $? "Failed to load '${dir_path}/runagfile.sh' ($?)" || return $?
+        softfail --unless-good --status $? "Failed to load '${dir_path}/runagfile.sh' ($?)" || return $?
 
       # If `runagfile/runagfile.sh` is found, source it.
       elif [ -f "${dir_path}/runagfile/runagfile.sh" ]; then
         . "${dir_path}/runagfile/runagfile.sh"
-        softfail --unless-good --exit-status $? "Failed to load '${dir_path}/runagfile/runagfile.sh' ($?)" || return $?
+        softfail --unless-good --status $? "Failed to load '${dir_path}/runagfile/runagfile.sh' ($?)" || return $?
       fi
     done
   fi
