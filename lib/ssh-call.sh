@@ -131,7 +131,7 @@ ssh::call() {
   
   local exit_status=$?
 
-  # softfail --unless-good --exit-status "${exit_status}"
+  # softfail --unless-good --status "${exit_status}"
 
   if [ "${keep_temp_files}" != true ]; then
     local remove_list=("${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr")
@@ -235,7 +235,7 @@ ssh::call::internal() {
     fi
 
     upload_remote_temp="$(ssh "${Ssh_Args[@]}" "${ssh_destination}" "mktemp -d")" \
-      || softfail --exit-status $? "Unable to create remote temp directory for file upload" || return $?
+      || softfail --status $? "Unable to create remote temp directory for file upload" || return $?
 
     upload_rsync_dest="${upload_remote_temp}/${upload_basename}"
 
@@ -279,7 +279,7 @@ ssh::call::internal() {
 
   # shellcheck disable=2029
   remote_temp_dir="$(ssh "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "${script_upload_command}")" <"${temp_dir}/script")" \
-    || softfail --exit-status $? "Unable to upload script" || return $?
+    || softfail --status $? "Unable to upload script" || return $?
 
   if [ -z "${remote_temp_dir}" ]; then
     softfail "Unable to get remote temp file name" || return $?
@@ -310,7 +310,7 @@ ssh::call::internal() {
 
         <"${temp_dir}/stdin" ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" \
           'cat >"${temp_dir}/stdin"; if [ "$(cksum <"${temp_dir}/stdin")" != %q ]; then exit 254; fi' "${stdin_checksum}" \
-            || softfail --exit-status $? "Unable to store stdin data on remote" || return $?
+            || softfail --status $? "Unable to store stdin data on remote" || return $?
 
         remote_stdin_file="${remote_temp_dir}/stdin"
       fi
@@ -485,12 +485,12 @@ ssh::call::internal() {
   # remove remote temp files
   if [ "${keep_temp_files}" != true ]; then
     ssh::call::invoke "${remote_temp_dir}" "${ssh_destination}" 'rm -fd "${temp_dir}/script" "${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr" "${temp_dir}/output_concat_good" "${temp_dir}/exit_status" "${temp_dir}/done" "${temp_dir}"'
-    softfail --unless-good --exit-status $? "Unable to remove remote temp files"
+    softfail --unless-good --status $? "Unable to remove remote temp files"
 
     if [ -n "${upload_remote_temp:-}" ]; then
       # shellcheck disable=2029
       ssh "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "$(printf "rm -rf %q" "${upload_remote_temp}")")"
-      softfail --unless-good --exit-status $? "Unable to remove remote temp directory for file upload"
+      softfail --unless-good --status $? "Unable to remove remote temp directory for file upload"
     fi
   fi
 

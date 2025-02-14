@@ -182,7 +182,7 @@ runag::invoke::perform() {
       "${try_name}::env" "${@:i+1}"
 
       # Handle errors gracefully if the `::env` function call fails.
-      softfail --unless-good --exit-status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?
+      softfail --unless-good --status $? "Error: Failed to invoke ${try_name}::env ($?)" || return $?
     fi
 
     ((i++)) # Move to the next argument.
