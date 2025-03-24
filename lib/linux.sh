@@ -129,6 +129,7 @@ linux::reset_locales() {
   if [ "${carry_on}" = false ]; then
     local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
+    # `declare -g` requires Bash 4.2 or newer (released in 2011)
     ( declare -gx "$@" && /usr/bin/true ) 2>"${temp_file}" || softfail || return $?
 
     if [ -s "${temp_file}" ]; then
@@ -141,6 +142,7 @@ linux::reset_locales() {
     fi
   fi
 
+  # `declare -g` requires Bash 4.2 or newer (released in 2011)
   # -g global variable scope
   # -x export
   declare -gx "$@" || softfail || return $?

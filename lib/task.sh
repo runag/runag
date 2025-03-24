@@ -31,6 +31,7 @@ task::any() {
 #
 task::clear() {
   # Declare RUNAG_TASK as a global (-g) empty array (-a).
+  # `declare -g` requires Bash 4.2 or newer (released in 2011)
   declare -ga RUNAG_TASK=() || softfail "Failed to clear the task array: unable to reset RUNAG_TASK." || return $?
 }
 
@@ -62,6 +63,7 @@ task::add() {
 
   # Ensure the global RUNAG_TASK array is initialized before adding tasks.
   if [[ ! -v RUNAG_TASK ]]; then
+    # `declare -g` requires Bash 4.2 or newer (released in 2011)
     declare -ga RUNAG_TASK=()
   fi
 

@@ -68,6 +68,7 @@ shell::enable_trace() {
 }
 
 shell::assign_and_mark_for_export() {
+  # `declare -g` requires Bash 4.2 or newer (released in 2011)
   # -g global variable scope
   # -x export
   declare -gx "$1"="$2"
