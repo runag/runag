@@ -67,10 +67,10 @@ rubygems::direnv_credentials() {
     GEM_HOST_API_KEY \
     || fail
 
-  file::append_line_unless_present --keep-permissions ".gitignore" "/.envrc" || softfail || return $?
+  file::write --append-line-unless-present ".gitignore" "/.envrc" || softfail || return $?
   
   if [ -f .npmignore ]; then
-    file::append_line_unless_present --keep-permissions ".npmignore" "/.envrc" || softfail || return $?
+    file::write --append-line-unless-present ".npmignore" "/.envrc" || softfail || return $?
   fi
 }
 
@@ -82,7 +82,7 @@ ruby::without_docs() {
 }
 
 ruby::dangerously_append_nodocument_to_gemrc() {
-  file::append_line_unless_present --keep-permissions "${HOME}/.gemrc" "gem: --no-document" || softfail || return $?
+  file::write --append-line-unless-present "${HOME}/.gemrc" "gem: --no-document" || softfail || return $?
 }
 
 ruby::install_disable_spring_shellfile() {

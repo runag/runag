@@ -23,14 +23,14 @@ systemd::write_user_unit() {
   dir::ensure_exists --mode 0700 "${HOME}/.config/systemd" || softfail || return $?
   dir::ensure_exists --mode 0700 "${user_units_dir}" || softfail || return $?
 
-  # TODO: --absorb?
+  # TODO: --consume?
   file::write --mode 0600 "${user_units_dir}/${name}" || softfail || return $?
 }
 
 systemd::write_system_unit() {
   local name="$1"
 
-  # TODO: --absorb?
+  # TODO: --consume?
   file::write --sudo --mode 0644 "/etc/systemd/system/${name}" || softfail || return $?
 }
 

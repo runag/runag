@@ -27,7 +27,7 @@ temp_file="$(mktemp)" || fail
 
   printf "\n"
 
-  file::get_block bin/runag set_shell_options || fail
+  file::read_section set_shell_options bin/runag || fail
 
   printf "\n"
 
@@ -35,8 +35,8 @@ temp_file="$(mktemp)" || fail
 
   printf "\n"
 
-  file::get_block bin/runag invoke_runagfile || fail
+  file::read_section invoke_runagfile bin/runag || fail
 
 } >"${temp_file}" || fail
 
-file::write --absorb "${temp_file}" --mode 0755 dist/runag || fail
+file::write --consume "${temp_file}" --mode 0755 dist/runag || fail

@@ -45,7 +45,7 @@ shellfile::write_loader_block() {
   done
 
   # I use a random variable name here to reduce the chance of overwriting someone else's data
-  file::write_block --keep-permissions --mode 0644 "${file_path}" "${block_name}" <<SHELL || softfail || return $?
+  file::write --mode 0644 --section "${block_name}" "${file_path}" <<SHELL || softfail || return $?
 if [ -d "\${HOME}"/$(printf "%q" "${directory_path}") ]; then
   for __file_bb21go6nkCN82Gk9XeY2 in "\${HOME}"/$(printf "%q" "${directory_path}")/*.sh; do
     if [ -f "\${__file_bb21go6nkCN82Gk9XeY2}" ]; then
@@ -93,7 +93,7 @@ shellfile::write() {
 
   local file_path="$1"
 
-  # TODO: handle --absorb as an argument and propogate it down to file::write
+  # TODO: handle --consume as an argument and propogate it down to file::write
 
   local shellfile_dir_path="${HOME}/.shellfile.d"
 
@@ -212,9 +212,13 @@ shellfile::install_flush_history_rc() {
   shellfile::write "$@" "rc/flush-history" <<SHELL || softfail || return $?
 ${license_text}
 
-if [ -n "\${BASH_VERSION:-}" ]; then
-  export PROMPT_COMMAND="\${PROMPT_COMMAND:+"\${PROMPT_COMMAND}; "}history -a"
-fi
+HISTSIZE=10000
+
+shopt -s histappend
+
+#if [ -n "\${BASH_VERSION:-}" ]; then
+#  PROMPT_COMMAND="\${PROMPT_COMMAND:+"\${PROMPT_COMMAND}; "}history -a && history -r"
+#fi
 SHELL
 }
 

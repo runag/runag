@@ -160,7 +160,7 @@ ssh::call::internal() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      --absorb)
+      --consume)
         absorb_file="$2"
         shift; shift
         ;;

@@ -259,14 +259,14 @@ git::add_signed_off_by_trailer_in_commit_msg_hook() (
       softfail "Not a /bin/sh script: ${hook_file}" || return $?
     fi
   else
-    file::write --keep-permissions "${hook_file}" "#!/bin/sh" || softfail || return $?
+    file::write "${hook_file}" "#!/bin/sh" || softfail || return $?
   fi
 
   chmod u+x "${hook_file}" || softfail || return $?
 
   local license_text; license_text="$(runag::print_license)" || softfail || return $?
 
-  file::write_block --keep-permissions "${hook_file}" "add-signed-off-by-trailer" <<SHELL || softfail || return $?
+  file::write --section "add-signed-off-by-trailer" "${hook_file}" <<SHELL || softfail || return $?
 ${license_text}
 
 user_name="\$(git config user.name)" || exit 1

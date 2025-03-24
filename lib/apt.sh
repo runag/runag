@@ -104,7 +104,7 @@ apt::add_source_with_key() {
   test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to get key or save it: ${key_url}" || return $?
 
   # Write the GPG key to the system's keyring
-  file::write --sudo --mode 0644 --absorb "${temp_file}" "/etc/apt/keyrings/${source_name}.gpg" || softfail "Failed to write GPG key to keyring." || return $?
+  file::write --sudo --mode 0644 --consume "${temp_file}" "/etc/apt/keyrings/${source_name}.gpg" || softfail "Failed to write GPG key to keyring." || return $?
 
   # Add the source repository to the apt sources list
   <<<"deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/${source_name}.gpg] ${source_string}" file::write --sudo --mode 0644 "/etc/apt/sources.list.d/${source_name}.list" || softfail "Failed to add repository source: ${source_name}" || return $?

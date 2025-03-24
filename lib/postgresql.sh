@@ -62,7 +62,7 @@ postgresql::install_dictionaries::do() {
     test -f "${file}" || continue
  
     local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
-    file::write --sudo --mode 0644 --source "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
+    file::write --sudo --mode 0644 --copy "${file}" "${dest}/tsearch_data/${file_basename}" || softfail || return $?
  
     file_found=true
   done

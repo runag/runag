@@ -82,7 +82,7 @@ direnv::save_variable_block() (
     fi
   fi
 
-  shell::dump_variables --export "$@" | file::write_block --mode 0600 "${envrc_basename}" "${block_name}"
+  shell::dump_variables --export "$@" | file::write --mode 0600 --section "${block_name}" "${envrc_basename}"
 
   test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to write variables block into direnv file" || return $?
   

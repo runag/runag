@@ -38,7 +38,7 @@ restic::install() {
 
   bzip2 --decompress --stdout "${temp_file}" >"${temp_file}.out" || softfail || return $?
 
-  file::write --sudo --mode 0755 --absorb "${temp_file}.out" /usr/local/bin/restic || softfail || return $?
+  file::write --sudo --mode 0755 --consume "${temp_file}.out" /usr/local/bin/restic || softfail || return $?
 
   rm "${temp_file}" || softfail || return $?
 }

@@ -32,7 +32,7 @@ linux::set_hostname() {
 
   local previous_name_escaped; previous_name_escaped="$(<<<"${previous_name}" sed 's/\./\\./g')" || softfail || return $?
 
-  file::append_line_unless_present --sudo --keep-permissions --mode 0644 "${hosts_file}" "127.0.1.1	${new_name}" || softfail || return $?
+  file::write --append-line-unless-present --root --mode 0644 "${hosts_file}" "127.0.1.1	${new_name}" || softfail || return $?
 
   sudo hostnamectl set-hostname "${new_name}" || softfail || return $?
 
@@ -41,7 +41,7 @@ linux::set_hostname() {
   grep -vxE \
     "[[:blank:]]*127.0.1.1[[:blank:]]+${previous_name_escaped}[[:blank:]]*" "${hosts_file}" >"${temp_file}" || softfail || return $?
 
-  file::write --sudo --keep-permissions --mode 0644 --absorb "${temp_file}" "${hosts_file}" || softfail || return $?
+  file::write --sudo --mode 0644 --consume "${temp_file}" "${hosts_file}" || softfail || return $?
 }
 
 linux::update_remote_locale() (
@@ -106,7 +106,7 @@ linux::reset_locales() {
     done
   } >"${temp_file}" || softfail || return $?
 
-  file::write --sudo --absorb "${temp_file}" --mode 0644 /etc/locale.conf || softfail || return $?
+  file::write --sudo --consume "${temp_file}" --mode 0644 /etc/locale.conf || softfail || return $?
 
   shell::unset_locales || softfail || return $?
 

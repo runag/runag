@@ -119,7 +119,7 @@ pass::use() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -a|--absorb-in-callback)
+      -a|--consume-in-callback)
         absorb_in_callback=true
         shift
         ;;
@@ -211,7 +211,7 @@ pass::use() {
         softfail "Zero-length secret data from pass" || return $?
       fi
 
-      "${callback_function}" --absorb "${temp_file}" "$@"
+      "${callback_function}" --consume "${temp_file}" "$@"
       softfail --unless-good --status $? "Unable to process secret data in ${callback_function} ($?)" || return $?
 
       return 0
@@ -305,5 +305,5 @@ pass show "${pass_name}" | tail -n +2
 SHELL
   } >"${temp_file}" || fail
 
-  file::write --absorb "${temp_file}" --sudo --mode 0755 "/usr/lib/password-store/extensions/${extension_name}.bash" || fail
+  file::write --consume "${temp_file}" --sudo --mode 0755 "/usr/lib/password-store/extensions/${extension_name}.bash" || fail
 }

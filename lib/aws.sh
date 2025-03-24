@@ -63,7 +63,7 @@ aws::pass::write_credentials_file() {
   local aws_access_key_id; aws_access_key_id="$(pass::use "${pass_path}/id")" || softfail || return $?
   local aws_secret_access_key; aws_secret_access_key="$(pass::use "${pass_path}/secret")" || softfail || return $?
 
-  "${command_prefix[@]}" file::write_block --mode 0600 "${credentials_file}" "PROFILE ${profile_name}" <<INI || softfail || return $?
+  "${command_prefix[@]}" file::write --mode 0600 --section "PROFILE ${profile_name}" "${credentials_file}" <<INI || softfail || return $?
 [${profile_name}]
 aws_access_key_id=${aws_access_key_id}
 aws_secret_access_key=${aws_secret_access_key}

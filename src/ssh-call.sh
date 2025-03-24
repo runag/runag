@@ -27,7 +27,7 @@ temp_file="$(mktemp)" || fail
 
   printf "\n"
 
-  file::get_block bin/ssh-call set_shell_options || fail
+  file::read_section set_shell_options bin/ssh-call || fail
 
   printf "\n"
 
@@ -40,8 +40,8 @@ temp_file="$(mktemp)" || fail
 
   printf "\n"
 
-  file::get_block bin/ssh-call run_ssh_call_command || fail
+  file::read_section run_ssh_call_command bin/ssh-call || fail
 
 } >"${temp_file}" || fail
 
-file::write --absorb "${temp_file}" --mode 0755 dist/ssh-call || fail
+file::write --consume "${temp_file}" --mode 0755 dist/ssh-call || fail

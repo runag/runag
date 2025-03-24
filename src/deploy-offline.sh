@@ -68,4 +68,4 @@ temp_file="$(mktemp)" || fail
 
 } >"${temp_file}" || fail
 
-file::write --absorb "${temp_file}" --mode 0644 deploy-offline.sh || fail
+file::write --consume "${temp_file}" --mode 0644 deploy-offline.sh || fail

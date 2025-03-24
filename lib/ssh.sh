@@ -32,7 +32,7 @@ ssh::add_ssh_config_d_include_directive() {
   # as the last of "Host" will catch this "Include" in their scope
   #
   # Note that the scope of any "Host" directives in *.conf files are contained within their respective files
-  file::write_block --mode 0600 "${HOME}/.ssh/config" "include-files-from-ssh-config-d" <<SHELL || softfail "Unable to add configuration to user ssh config" || return $?
+  file::write --mode 0600 --section "include-files-from-ssh-config-d" "${HOME}/.ssh/config" <<SHELL || softfail "Unable to add configuration to user ssh config" || return $?
 Host *
 Include ~/.ssh/ssh_config.d/*.conf
 SHELL
@@ -97,12 +97,12 @@ ssh::install_authorized_keys_from_pass() {
 
   # id_ed25519.pub
   if pass::secret_exists "${profile_path}/id_ed25519.pub"; then
-    pass::use --absorb-in-callback "${profile_path}/id_ed25519.pub" "${ssh_call_command[@]}" file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh/authorized_keys" "${profile_name}-id_ed25519.pub" || softfail || return $?
+    pass::use --consume-in-callback "${profile_path}/id_ed25519.pub" "${ssh_call_command[@]}" file::write ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} --section "${profile_name}-id_ed25519.pub" "${home_dir:+"${home_dir}/"}.ssh/authorized_keys" || softfail || return $?
   fi
 
   # authorized_keys
   if pass::secret_exists "${profile_path}/authorized_keys"; then
-    pass::use --absorb-in-callback --body "${profile_path}/authorized_keys" "${ssh_call_command[@]}" file::write_block ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} "${home_dir:+"${home_dir}/"}.ssh/authorized_keys" "${profile_name}-authorized_keys" || softfail || return $?
+    pass::use --consume-in-callback --body "${profile_path}/authorized_keys" "${ssh_call_command[@]}" file::write ${perhaps_sudo:+"--sudo"} --mode 0600 ${file_owner:+"--owner" "${file_owner}"} ${file_group:+"--group" "${file_group}"} --section "${profile_name}-authorized_keys" "${home_dir:+"${home_dir}/"}.ssh/authorized_keys" || softfail || return $?
   fi
 }
 
@@ -148,7 +148,7 @@ ssh::install_ssh_profile_from_pass() {
 
   # known hosts
   if pass::secret_exists "${profile_path}/known_hosts"; then
-    pass::use --absorb-in-callback --body "${profile_path}/known_hosts" file::write_block --mode 0600 "${HOME}/.ssh/known_hosts" "${profile_name}" || softfail || return $?
+    pass::use --consume-in-callback --body "${profile_path}/known_hosts" file::write --mode 0600 --section "${profile_name}" "${HOME}/.ssh/known_hosts" || softfail || return $?
   fi
 }
 
@@ -160,13 +160,13 @@ ssh::install_ssh_profile_from_pass::write_config() {
   
   local temp_file; temp_file="$(mktemp)" || softfail || return $?
 
-  pass::use --absorb-in-callback --body "${pass_config_path}" file::write --mode 0600 "${temp_file}" || softfail || return $?
+  pass::use --consume-in-callback --body "${pass_config_path}" file::write --mode 0600 "${temp_file}" || softfail || return $?
 
   if pass::secret_exists "${profile_path}/id_ed25519"; then
     sed --in-place -E "s#IdentityFile %k#IdentityFile ${HOME}/.ssh/${profile_name}.id_ed25519#g" "${temp_file}" || softfail || return $?
   fi
 
-  file::write --absorb "${temp_file}" --mode 0600 "${config_file_path}" || softfail || return $?
+  file::write --consume "${temp_file}" --mode 0600 "${config_file_path}" || softfail || return $?
 }
 
 # ssh private key should be in body, password may be in password, optional .pub secret can contain public key in 1st line (password field)
@@ -176,7 +176,7 @@ ssh::install_ssh_key_from_pass() {
 
   dir::ensure_exists --mode 0700 "${HOME}/.ssh" || softfail "Unable to create ssh user config directory" || return $?
 
-  pass::use --absorb-in-callback --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
+  pass::use --consume-in-callback --body "${secret_path}" file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
     pass::use "${secret_path}.pub" file::write --mode 0600 "${key_file_path}.pub" || softfail || return $?
@@ -209,7 +209,7 @@ ssh::install_ssh_key_from_pass_to_remote() {
 
   ssh::call --home dir::ensure_exists --mode 0700 ".ssh" || softfail "Unable to create ssh user config directory" || return $?
 
-  pass::use "${pass_args[@]}" --absorb-in-callback --body "${secret_path}" ssh::call --home file::write --mode 0600 "${key_file_path}" || softfail || return $?
+  pass::use "${pass_args[@]}" --consume-in-callback --body "${secret_path}" ssh::call --home file::write --mode 0600 "${key_file_path}" || softfail || return $?
 
   if pass::secret_exists "${secret_path}.pub"; then
     pass::use "${pass_args[@]}" "${secret_path}.pub" ssh::call --home file::write --mode 0600 "${key_file_path}.pub" || softfail || return $?
