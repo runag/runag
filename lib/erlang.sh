@@ -42,7 +42,8 @@ erlang::extend_package_list::arch() {
 }
 
 erlang::extend_package_list::observer::debian() {
-  local webview_packages; mapfile -t package_list < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f 1) || softfail || return $?
+  # mapfile requires Bash 4.0 or newer (released in 2009)
+  local -a webview_packages; mapfile -t webview_packages < <(apt-cache --names-only search '^libwxgtk-webview.*-dev' | cut -d " " -f 1) || softfail || return $?
 
   package_list+=(
     libgl1-mesa-dev
