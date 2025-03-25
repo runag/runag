@@ -170,7 +170,7 @@ file::write() {
         shift
 
         # Let the filter function parse its own arguments and return how many were consumed
-        filter_arguments_count="$("${filter_function}" "$@" --parse-arguments)" || softfail "Filter argument parsing failed for '${filter_function}'." || return $?
+        filter_arguments_count="$("${filter_function}" --parse-arguments "$@")" || softfail "Filter argument parsing failed for '${filter_function}'." || return $?
 
         # Ensure the parsed argument count is a numeric value
         if ! [[ "${filter_arguments_count}" =~ ^[0-9]+$ ]]; then
@@ -412,13 +412,13 @@ file::write() {
 # echo "new line" | file::write --append-line-unless-present "/path/to/file"
 #
 file::write_filter::append_line_unless_present() {
-  local existing_file="${1:-}"
-
-  # If the last argument is --parse-arguments, output the number of arguments this filter consumes and return
-  if [ "${!#}" = "--parse-arguments" ]; then
+  # If the first argument is --parse-arguments, output the number of arguments this filter consumes and return
+  if [ "${1:-}" = "--parse-arguments" ]; then
     echo 0
     return
   fi
+
+  local existing_file="${1:-}"
 
   # Read the first line from input
   local input_data; input_data="$(head -n 1)" || softfail "Failed to read input data from standard input." || return $?
@@ -452,20 +452,20 @@ file::write_filter::append_line_unless_present() {
 #
 # ### Example
 #
-# echo "new content" | file::write_filter::section my-section config-file
+# echo "new content" | file::write --section my-section config-file
 #
 file::write_filter::section() {
+  # If the first argument is --parse-arguments, output the number of arguments this filter consumes and return
+  if [ "${1:-}" = "--parse-arguments" ]; then
+    echo 1
+    return
+  fi
+
   # Validate required arguments
   test -n "${1:-}" || softfail "Section name is required." || return $?
 
   local section_name="$1"
   local existing_file="${2:-}"
-
-  # If the last argument is --parse-arguments, output the number of arguments this filter consumes and return
-  if [ "${!#}" = "--parse-arguments" ]; then
-    echo 1
-    return
-  fi
 
   local existing_lines
   local line
