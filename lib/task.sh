@@ -100,9 +100,6 @@ task::add() {
 #                             This affects the behavior when the task selection via `fzf` is canceled.
 #
 task::display() {
-  # Check if any tasks exist.
-  task::any || softfail "The task list is empty." || return $?
-
   local nested_display
 
   # Parse function arguments.
@@ -137,6 +134,9 @@ task::display() {
 
     return $?
   fi
+
+  # Check if any tasks exist.
+  task::any || softfail "The task list is empty." || return $?
 
   # Check if `fzf` is available and if both stdin (0) and stdout (1) are terminals.
   if ! [ -t 0 ] || ! [ -t 1 ] || ! command -v fzf >/dev/null; then
