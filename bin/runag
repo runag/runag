@@ -122,10 +122,9 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     exit $?
   fi
 
-  # If no main function or tasks are available, log an error
-  log::error "Error: It seems that no function name or command has been specified. Please define 'runagfile::main' or provide a command."
-  log::error "Hint: For easier usage, consider adding tasks to the task list and running interactively."
-
+  # Log an error if no entry point or command is provided
+  log::error "Error: No function or command specified. Define 'runagfile::main' or supply a valid command to proceed."
+  
   printf "\n"
 
   if task::any; then
