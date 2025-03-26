@@ -82,11 +82,48 @@ task::add() {
       # Ensure the function name contains only valid characters.
       [[ "${function_name}" =~ ^[a-zA-Z0-9:_]+$ ]] || softfail "Error: Function name must contain only alphanumeric characters, colons (:), and underscores (_)." || return $?
 
-      # Create a function that calls `task::display` with arguments.
-      eval "${function_name}() { task::display "\$@" ${function_name}::set; }"
+      # Create a function that calls `task::display_set` with arguments.
+      eval "${function_name}() { task::display_set ${function_name}::set "\$@"; }"
     fi
   fi
 }
+
+# ## `task::display_set`
+#
+# Calls a specified task group function, processes the tasks, and displays them.
+#
+# ### Usage
+# 
+# task::display_set <function_name> [--nested-display] [additional arguments...]
+#
+# * `<function_name>`: Name of the function that defines a set of tasks.
+# * `--nested-display`: Optional. Display the task list in nested format.
+# * `[additional arguments...]`: Arguments passed to the function.
+#
+# ### Example
+#
+# task::display_set my_task_group --nested-display --option1 value
+#
+task::display_set() (
+  local function_name="$1"; shift
+
+  local nested_display
+
+  if [ "${1:-}" = "--nested-display" ]; then
+    nested_display=true
+    shift
+  fi
+
+  # Clear any existing tasks from the RUNAG_TASK array.
+  task::clear || softfail "Failed to clear existing tasks." || return $?
+
+  # Call the provided task group function to define the list of tasks.
+  runag::invoke --no-subshell "${function_name}" "$@"
+  softfail --unless-good --status $? "Task group function '${function_name}' failed to define tasks." || return $?
+
+  # Display the list of tasks, using nested display mode if specified.
+  task::display ${nested_display:+"--nested-display"}
+)
 
 # ### `task::display`
 #
@@ -118,23 +155,6 @@ task::display() {
     esac
   done
 
-  # If additional arguments are provided, invoke the task group function and display tasks.
-  if [[ $# -gt 0 ]]; then
-    ( 
-    # Clear any existing tasks in the `RUNAG_TASK` array.
-    task::clear || softfail "Error clearing tasks." || return $?
-
-    # Invoke the task group function to define the tasks to be managed.
-    runag::invoke --no-subshell "$@"
-    softfail --unless-good --status $? "Error occurred while processing the task group function ($?): $*" || return $?
-
-    # Display the task list with optional nested display mode.
-    task::display ${nested_display:+"--nested-display"}
-    )
-
-    return $?
-  fi
-
   # Check if any tasks exist.
   task::any || softfail "The task list is empty." || return $?
 
@@ -144,43 +164,42 @@ task::display() {
     return $?
   fi
 
-  # Set color attributes for terminal output if necessary.
-  local prompt_color=""
-  local reset_attrs=""
+  # Set color attributes.
+  local prompt_color
+  local reset_attrs
 
-  # If stdout (1) is a terminal, set color attributes.
-  if [ -t 1 ]; then
-    prompt_color="$(printf "setaf 11\nbold" | tput -S 2>/dev/null)" || prompt_color=""
-    reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
-  fi
+  prompt_color="$(printf "setaf 11\nbold" | tput -S 2>/dev/null)" || prompt_color=""
+  reset_attrs="$(tput sgr 0 2>/dev/null)" || reset_attrs=""
 
   # Begin the interactive task selection loop.
   while : ; do
+    local fzf_task_list
     local fzf_result_string
+    local fzf_status
+    local _fzf_result_tail
     local main_pointer
     local line_number
 
-    # The `read` command combined with the `lastpipe` shell option cannot be used here 
-    # because it's uncertain whether job control is enabled.
+    # Render the task list with color output for selection in fzf.
+    fzf_task_list="$(task::render --force-color-output)" || softfail "Failed to render task list for fzf interface." || exit $?
 
-    # Render tasks and use `fzf` for interactive selection.
-    fzf_result_string="$(
-      ( task::render --force-color-output || softfail "Error in task::render ($?)" || exit 2 ) |
-      fzf --ansi --cycle --tac --with-nth="3.." --wrap ${line_number:+--bind "load:pos:-${line_number}"} |
-      ( cut -d " " -f 1-2 || softfail "Error in cut ($?)" || exit 2 )
-      
-      # Check pipeline statuses for errors.
-      for status in "${PIPESTATUS[@]}"; do
-        if [ "${status}" -ne 0 ]; then
-          exit "${status}"
-        fi
-      done
+    # You cannot use read combined with lastpipe in this context because it's uncertain whether job control is enabled.
+    # If job control is enabled, the expected behavior (i.e., updating variables in the current shell) cannot be guaranteed.
 
-      exit 0
-    )"
+    # This command feeds the task list (fzf_task_list) as input to fzf and captures the selected result.
+    # fzf is configured with several options:
+    #   * --ansi: Enables ANSI color codes so that colored output is preserved.
+    #   * --cycle: Allows cycling through the list (when the end is reached, it loops back to the beginning).
+    #   * --tac: Reverses the order of the input, showing the last entries first.
+    #   * --with-nth="3..": Uses fields from the third column onward for filtering and display,
+    #     ignoring the first two fields (which may contain metadata like indexes).
+    #   * --wrap: Wraps long lines in the display.
+    #   * ${line_number:+--bind "load:pos:-${line_number}"}: If the variable 'line_number' is set,
+    #     this adds a binding to load the fzf cursor at the specified line number.
+    fzf_result_string="$(<<<"${fzf_task_list}" fzf --ansi --cycle --tac --with-nth="3.." --wrap ${line_number:+--bind "load:pos:-${line_number}"})"
 
     # Capture the status of `fzf`.
-    local fzf_status=$?
+    fzf_status=$?
 
     # Handle the case where task selection was canceled.
     if [ "${fzf_status}" = 1 ] || [ "${fzf_status}" = 130 ]; then
@@ -194,15 +213,15 @@ task::display() {
     softfail --unless-good --status "${fzf_status}" "Error during task selection." || return $?
 
     # Parse the result from `fzf` to obtain the selected task.
-    <<<"${fzf_result_string}" IFS=" " read -r main_pointer line_number
+    <<<"${fzf_result_string}" IFS=" " read -r main_pointer line_number _fzf_result_tail
 
     # Validate the format of the task pointer and line number.
     [[ "${main_pointer}" =~ ^[0-9]+$ ]] || softfail "Invalid task pointer: Non-numeric value." || return $?
     [[ "${line_number}" =~ ^[0-9]+$ ]] || softfail "Invalid line_number: Non-numeric value." || return $?
 
     # Retrieve task information.
-    local item_type="${RUNAG_TASK[main_pointer]}"
-    local item_length="${RUNAG_TASK[main_pointer + 1]}"
+    local item_type="${RUNAG_TASK[${main_pointer}]}"
+    local item_length="${RUNAG_TASK[$(( main_pointer + 1 ))]}"
 
     # Ensure the task length is a valid numeric value.
     [[ "${item_length}" =~ ^[0-9]+$ ]] || softfail "Invalid task length: Non-numeric value." || return $?
@@ -218,13 +237,13 @@ task::display() {
     local item_pointer
 
     # Parse additional arguments for the selected task.
-    for (( item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ )); do 
-      case "${RUNAG_TASK[item_pointer]}" in
+    for (( item_pointer = main_pointer + 2; item_pointer <= (main_pointer + 1 + item_length); item_pointer++ )); do 
+      case "${RUNAG_TASK[${item_pointer}]}" in
         -c|--comment)
           (( item_pointer += 1 )) # Skip comment value.
           ;;
         -*)
-          softfail "Unrecognized argument: ${RUNAG_TASK[item_pointer]}" || return $?
+          softfail "Unrecognized argument: ${RUNAG_TASK[${item_pointer}]}" || return $?
           ;;
         *)
           break
@@ -232,29 +251,31 @@ task::display() {
       esac
     done
 
-    # Ensure the task contains a valid command.
-    if ! (( item_pointer <= main_pointer + item_length + 1 )); then
-      softfail "Task contains no executable command." || return $?
+    # Ensure the task includes a command to run.
+    if ! (( item_pointer <= (main_pointer + 1 + item_length) )); then
+      softfail "The selected task does not include a runnable command." || return $?
     fi
 
-    # Add the remaining arguments for the selected task to the command array.
-    command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}")
-
-    # If output is a terminal, print the command before execution.
-    if [ -t 1 ] && [ "${item_type}" != "task-group" ]; then
-      echo $'\n'"${prompt_color}> ${command_array[*]}${reset_attrs}" 
-    fi
-
-    # If the task is a task group, pass the nested display option.
     if [ "${item_type}" = "task-group" ]; then
-      command_array+=(--nested-display)
+      # If this is a task group, include the nested display flag.
+      command_array+=("${RUNAG_TASK[${item_pointer}]}" "--nested-display")
+      command_array+=("${RUNAG_TASK[@]:$(( item_pointer + 1 )):$(( (item_length - 1) - (item_pointer - (main_pointer + 2)) ))}")
+    else
+      # Add task arguments to the command array.
+      command_array+=("${RUNAG_TASK[@]:${item_pointer}:$(( item_length - (item_pointer - (main_pointer + 2)) ))}")
+
+      # If output is going to a terminal, print the command before running it.
+      if [ -t 1 ]; then
+        printf "\n%s\n" "${prompt_color}> ${command_array[*]}${reset_attrs}"
+      fi
     fi
 
-    # Run the task command.
+    # Run the selected task command.
     "${command_array[@]}"
-
+    
+    # Capture the exit status of the task command.
     local command_status=$?
-
+    
     # If the task is part of a task group, continue iteration on cancellation.
     if [ "${command_status}" = 130 ] && [ "${item_type}" = "task-group" ]; then
       continue
@@ -335,16 +356,16 @@ task::render() {
   # basic-task | 3           | foo | bar | qux | basic-task |
   #
   # main_pointer 4
-  # item_pointer 7
   # item_length  3
+  # item_pointer 6
 
   # Iterate through tasks stored in the RUNAG_TASK array and format their output.
   local main_pointer
   local output_line_number=1
 
   for (( main_pointer = 0; main_pointer < ${#RUNAG_TASK[@]}; main_pointer++ )); do 
-    local item_type="${RUNAG_TASK[main_pointer]}"
-    local item_length="${RUNAG_TASK[main_pointer + 1]}"
+    local item_type="${RUNAG_TASK[${main_pointer}]}"
+    local item_length="${RUNAG_TASK[$(( main_pointer + 1 ))]}"
 
     # Validate item length is a numeric value.
     [[ "${item_length}" =~ ^[0-9]+$ ]] || softfail "Invalid task length: Non-numeric value" || return $?
@@ -355,25 +376,26 @@ task::render() {
     fi
 
     local command_array=()
+    local command_string
     local comment=""
     local end_marker=""
 
     # Add task group-specific formatting if applicable.
     if [ "${item_type}" = "task-group" ]; then
-      end_marker="-->"
+      end_marker="# -->"
     fi
 
     local item_pointer
 
     # Parse task arguments.
     for (( item_pointer = main_pointer + 2; item_pointer <= main_pointer + item_length + 1; item_pointer++ )); do 
-      case "${RUNAG_TASK[item_pointer]}" in
+      case "${RUNAG_TASK[${item_pointer}]}" in
         -c|--comment)
           (( item_pointer += 1 )) # Capture comment value.
-          comment="${RUNAG_TASK[item_pointer]}"
+          comment="${RUNAG_TASK[${item_pointer}]}"
           ;;
         -*)
-          softfail "Unrecognized argument: ${RUNAG_TASK[item_pointer]}" || return $?
+          softfail "Unrecognized argument: ${RUNAG_TASK[${item_pointer}]}" || return $?
           ;;
         *)
           break
@@ -384,18 +406,23 @@ task::render() {
     # Ensure task has actionable commands.
     (( item_pointer <= main_pointer + item_length + 1 )) || softfail "Task contains no actionable command" || return $?
 
-    local command_pointer=""
+    # Construct the command array for the current task.
+    command_array+=("${RUNAG_TASK[@]:${item_pointer}:$(( item_length - (item_pointer - (main_pointer + 2)) ))}")
 
-    # Prepare interactive output if not in non-interactive mode.
-    if [ "${non_interactive}" = false ]; then
-      command_pointer="${main_pointer} ${output_line_number}"
+    # Construct the command string differently based on interactivity mode.
+    if [ "${non_interactive}" = true ]; then
+      # Format and quote each element of the command array for non-interactive use.
+      printf -v command_string " %q" "${command_array[@]}" || softfail || return $?
+    else
+      # In interactive mode, build a simpler unquoted command string.
+      command_string=" ${main_pointer} ${output_line_number} ${command_array[*]}"
     fi
 
-    # Construct the command array for the current task.
-    command_array+=("${RUNAG_TASK[@]:item_pointer:((item_length - (item_pointer - main_pointer - 2)))}")
-
-    # Print the formatted task output.
-    echo "${command_pointer:+"${command_pointer} "}${command_array[*]}${end_marker:+" ${end_marker_color}${end_marker}${reset_attrs}"}${comment:+" ${comment_color}# ${comment}${reset_attrs}"}"
+    # Display the final formatted task output with optional end marker and comment.
+    printf '%s%s%s\n' \
+      "${command_string:1}" \
+      "${end_marker:+" ${end_marker_color}${end_marker}${reset_attrs}"}" \
+      "${comment:+" ${comment_color}# ${comment}${reset_attrs}"}"
 
     # Increment counters for the next iteration.
     (( output_line_number += 1 ))
