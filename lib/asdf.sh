@@ -43,8 +43,11 @@ asdf::extend_package_list::arch() {
 asdf::install_self() {
   local version_tag
   
-  version_tag="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" \
-    || softfail "Unable to obtain asdf version tag" || return $?
+  # version_tag="${1:-"$(github::query_release --get tag_name asdf-vm/asdf)"}" \
+  #   || softfail "Unable to obtain asdf version tag" || return $?
+
+  # TODO: migrate to the new version
+  version_tag="v0.15.0"
 
   git::place_up_to_date_clone \
     --branch "${version_tag}" \
