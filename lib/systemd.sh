@@ -244,7 +244,7 @@ systemd::service_action::disable_timer() {
   fi
 
   "${systemctl_command[@]}" stop "${service_name}.timer" || softfail || return $?
-  "${systemctl_command[@]}" --quiet disable "${service_name}.timer" || softfail || return $?
+  "${systemctl_command[@]}" disable "${service_name}.timer" || softfail || return $?
 }
 
 systemd::service_action::enable_timer() {
@@ -276,7 +276,7 @@ systemd::service_action::enable_timer() {
     local systemctl_command=(sudo systemctl)
   fi
 
-  "${systemctl_command[@]}" --quiet reenable "${service_name}.timer" || softfail || return $?
+  "${systemctl_command[@]}" reenable "${service_name}.timer" || softfail || return $?
   "${systemctl_command[@]}" start "${service_name}.timer" || softfail || return $?
 }
 

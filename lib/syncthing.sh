@@ -33,7 +33,7 @@ syncthing::install() (
     sudo pacman --sync --needed --noconfirm syncthing || softfail || return $?
   fi
 
-  systemctl --user --quiet --now enable syncthing.service || softfail || return $?
+  systemctl --user --now enable syncthing.service || softfail || return $?
 
 #   # https://wiki.archlinux.org/title/Desktop_entries#Hide_desktop_entries
 #   file::write "${HOME}/.local/share/applications/syncthing-start.desktop" <<SHELL || fail
