@@ -43,19 +43,6 @@ add user/repo
 run [function_name [function_arguments]]
 ```
 
-
-## Offline install
-
-```sh
-# create offline install
-mkdir runag-offline-install && cd runag-offline-install
-runag offline_runag_install::create_or_update
-
-# perform offline install from the runag-offline-install directory
-bash deploy-offline.sh
-```
-
-
 ## Rùnagfile
 
 Possible rùnagfile locations are:
