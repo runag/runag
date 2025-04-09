@@ -33,9 +33,10 @@ fs::get_absolute_path() {
 }
 
 fs::convert_msys_path_to_windows() {
-  echo "$1" | sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
-  test "${PIPESTATUS[*]}" = "0 0 0" || softfail || return $?
-}  
+  #       /c/foo -> c:/foo                            c:/foo -> c:\foo
+  <<<"$1" sed "s/^\\/\\([[:alpha:]]\\)\\//\\1:\\//" | sed "s/\\//\\\\/g"
+  test "${PIPESTATUS[*]}" = "0 0" || softfail || return $?
+}
 
 fs::update_symlink() {
   local target_thing="$1"
