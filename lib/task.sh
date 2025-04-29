@@ -118,7 +118,7 @@ task::display_set() (
   task::clear || softfail "Failed to clear existing tasks." || return $?
 
   # Call the provided task group function to define the list of tasks.
-  runag::invoke --no-subshell "${function_name}" "$@"
+  "${function_name}" "$@"
   softfail --unless-good --status $? "Task group function '${function_name}' failed to define tasks." || return $?
 
   # Display the list of tasks, using nested display mode if specified.
@@ -232,7 +232,7 @@ task::display() {
     fi
 
     # Initialize the command array for the task.
-    local command_array=(runag::invoke)
+    local command_array=()
 
     local item_pointer
 
