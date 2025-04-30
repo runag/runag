@@ -40,28 +40,6 @@ runagfile::add() {
     || softfail "Failed to clone the repository from GitHub: https://github.com/${user_name}/${repo_name}.git" || return $?
 }
 
-# ### `runagfile::add_from_list`
-#
-# This function processes a list of repositories and attempts to add each one 
-# by calling `runagfile::add` for each repository path provided in the list.
-#
-# #### Parameters:
-#
-# - This function expects a list of repository paths, one per line, from standard input. 
-#   Each line should be in the format "username/repository".
-#
-runagfile::add_from_list() {
-  local line
-  
-  # Read each line from input. For each line that is not empty, call the `runagfile::add` function.
-  while IFS="" read -r line; do
-    if [ -n "${line}" ]; then
-      # Attempt to add the repository using the `runagfile::add` function.
-      runagfile::add "${line}" || softfail "Unable to add rùnagfile ${line}" || return $?
-    fi
-  done || softfail "Unable to add rùnagfiles from list" || return $?
-}
-
 # ## `runagfile::load`
 #
 # Loads a rùnagfile from the current directory or a known subdirectory.
