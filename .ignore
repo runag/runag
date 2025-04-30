@@ -1,7 +1,7 @@
-# the purpose of this line it to get back rùnagfile's content into the vscode search
+# Re-include runagfile content in VS Code search
 !/runagfiles/*
 
-# exclude derivative files from search
+# Exclude derivative files from search
 /deploy.sh
 /deploy-offline.sh
 /dist

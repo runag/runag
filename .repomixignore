@@ -1,0 +1,9 @@
+# Files that are not source code
+/CONTRIBUTING.md
+/CONTRIBUTORS.md
+/LICENSE
+
+# Generated files
+/deploy.sh
+/deploy-offline.sh
+/dist

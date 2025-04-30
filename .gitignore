@@ -1,8 +1,11 @@
-# ignore runagfiles
+# Ignore runagfiles directory
 /runagfiles/*
 
-# ignore deploy keys for virtualized environments
+# Ignore deploy keys used in virtualized environments
 /.virt-deploy-keys
 
-# packages
+# Ignore package archives
 runag-*.tgz
+
+# Ignore Repomix output
+/runag-repomix.xml
