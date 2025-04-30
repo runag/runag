@@ -86,10 +86,10 @@ if [ "${1:-}" == "--skip-runagfile-load" ]; then
   shift  # Remove the argument from the positional parameters
 else
   # Load the rùnagfile
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then  # Script is sourced
-    runagfile::load
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then # Script is sourced
+    runagfile::load --if-exists
     softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || return $?
-  else  # Script is run directly
+  else # Script is run directly
     runagfile::load
     softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || exit $?
   fi

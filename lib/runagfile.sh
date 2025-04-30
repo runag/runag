@@ -62,74 +62,76 @@ runagfile::add_from_list() {
   done || softfail "Unable to add rùnagfiles from list" || return $?
 }
 
-# ### `runagfile::load`
+# ## `runagfile::load`
 #
-# This function locates and loads a rùnagfile.
+# Loads a rùnagfile from the current directory or a known subdirectory.
 #
-# Possible locations for the `runagfile.sh` script:
+# This function searches for a `runagfile.sh` script in the following locations:
 #
-# - In the current working directory:
-#   - `./runagfile.sh`
-#   - `./runagfile/runagfile.sh`
+# * Current directory:
+#   * `runagfile.sh`
+#   * `runagfile/runagfile.sh`
+#   * `<name>-runagfile/runagfile.sh`, if there is exactly one matching directory
 #
-# If the script is not found in the local directory, the function will attempt to load all rùnagfiles 
-# from the user's collection:
+# If `--if-exists` is passed, the function exits silently if no rùnagfile is found.
 #
-# - `${HOME}/.runag/runagfiles/*/runagfile.sh`
-# - `${HOME}/.runag/runagfiles/*/runagfile/runagfile.sh`
+# ### Usage
 #
-# #### Parameters:
-# 
-# - `-w` or `--working-directory-only`: If provided, this option restricts the function to loading
-# runagfile.sh only from the current directory, without searching the rùnagfiles collection.
+# runagfile::load [--if-exists]
+#
+# * `--if-exists`: suppresses the error if no rùnagfile is found
+#
+# ### Examples
+#
+# runagfile::load
+# runagfile::load --if-exists
 #
 runagfile::load() {
-  # Flag to indicate whether only the current working directory should be considered.
-  local working_directory_only=false
+  local if_exists=false
 
-  # Parse the command-line arguments.
+  # Parse optional command-line arguments
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -w|--working-directory-only)
-        working_directory_only=true
+      -e|--if-exists)
+        if_exists=true
         shift
         ;;
       -*)
         softfail "Unknown argument: $1" || return $?
         ;;
       *)
-        break # Break the loop if no more recognized arguments.
+        break
         ;;
     esac
   done
 
-  # Attempt to source the `runagfile.sh` from the current directory.
-  if [ -f "./runagfile.sh" ]; then
-    . "./runagfile.sh"
-    softfail --unless-good --status $? "Failed to load './runagfile.sh' ($?)" || return $?
-
-  # Attempt to source the `runagfile.sh` from within the `runagfile` directory.
-  elif [ -f "./runagfile/runagfile.sh" ]; then
-    . "./runagfile/runagfile.sh"
-    softfail --unless-good --status $? "Failed to load './runagfile/runagfile.sh' ($?)" || return $?
-
-  # If the `-w` flag was not specified, search the user's rùnagfiles collection for the `runagfile.sh`.
-  elif [ "${working_directory_only}" = false ] && [ -d "${HOME}/.runag/runagfiles" ]; then
-    local dir_path
-
-    # Iterate over the directories within the rùnagfiles collection.
-    for dir_path in "${HOME}/.runag/runagfiles/"*; do
-
-      # If `runagfile.sh` is found, source it.
-      if [ -f "${dir_path}/runagfile.sh" ]; then
-        . "${dir_path}/runagfile.sh"
-        softfail --unless-good --status $? "Failed to load '${dir_path}/runagfile.sh' ($?)" || return $?
-
-      # If `runagfile/runagfile.sh` is found, source it.
-      elif [ -f "${dir_path}/runagfile/runagfile.sh" ]; then
-        . "${dir_path}/runagfile/runagfile.sh"
-        softfail --unless-good --status $? "Failed to load '${dir_path}/runagfile/runagfile.sh' ($?)" || return $?
-      fi
-    done
+  # Attempt to load from the current directory
+  if [ -f "runagfile.sh" ]; then
+    . "runagfile.sh"
+    softfail --unless-good --status $? "Failed to load './runagfile.sh' (exit code $?)"
+    return $?
   fi
+
+  # Attempt to load from the runagfile/ subdirectory
+  if [ -f "runagfile/runagfile.sh" ]; then
+    . "runagfile/runagfile.sh"
+    softfail --unless-good --status $? "Failed to load './runagfile/runagfile.sh' (exit code $?)"
+    return $?
+  fi
+
+  # Attempt to load from a *-runagfile/ directory if exactly one exists
+  local matches=(*-runagfile)
+
+  if [ "${#matches[@]}" -eq 1 ] && [ -d "${matches[0]}" ] && [ -f "${matches[0]}/runagfile.sh" ]; then
+    . "${matches[0]}/runagfile.sh"
+    softfail --unless-good --status $? "Failed to load '${matches[0]}/runagfile.sh' (exit code $?)"
+    return $?
+  fi
+
+  # Return silently if --if-exists was provided
+  if [ "${if_exists}" = true ]; then
+    return
+  fi
+
+  softfail "No 'runagfile.sh' found in any known location"
 }

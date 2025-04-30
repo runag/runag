@@ -201,7 +201,7 @@ release::build_and_deploy_services() (
   cd "${release_dir}" || softfail || return $?
 
   if [ "${load_local_runagfile}" = true ]; then
-    runagfile::load --working-directory-only || softfail || return $?
+    runagfile::load || softfail || return $?
   fi
 
   if declare -F release::env >/dev/null; then
