@@ -14,77 +14,36 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-direnv::save_variable_block() (
-  local block_name="SHELL VARIABLES"
-  local envrc_path=".envrc"
-  local skip_allow_check=false
+# ## `direnv::is_allowed`
+#
+# Checks whether the specified `.envrc` file is explicitly allowed by direnv.
+#
+# ### Usage
+#
+# direnv::is_allowed [<envrc_path>]
+#
+# * `<envrc_path>`: Path to the `.envrc` file to check (defaults to `.envrc` in the current directory)
+#
+# Returns successfully if the file is currently allowed.
+# Otherwise, it returns a non-zero exit status.
+#
+direnv::is_allowed() (
+  local envrc_path="${1:-".envrc"}"
+  local envrc_dir envrc_basename envrc_realpath status_output
 
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -b|--block-name)
-        block_name="$2"
-        shift; shift
-        ;;
-      -e|--envrc-path)
-        envrc_path="$2"
-        shift; shift
-        ;;
-      -s|--skip-allow-check)
-        skip_allow_check=true
-        shift
-        ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
+  # Extract the directory and filename components
+  envrc_dir="$(dirname "${envrc_path}")" || softfail "Failed to get directory from path" || return $?
+  envrc_basename="$(basename "${envrc_path}")" || softfail "Failed to get filename from path" || return $?
 
-  local envrc_dir; envrc_dir="$(dirname "${envrc_path}")" || softfail "Unable to obtain envrc_dir" || return $?
-  local envrc_basename; envrc_basename="$(basename "${envrc_path}")" || softfail "Unable to obtain envrc_basename" || return $?
+  cd "${envrc_dir}" || softfail "Failed to change to directory: ${envrc_dir}" || return $?
 
-  cd "${envrc_dir}" || softfail "Unable to change directory: ${envrc_dir}" || return $?
+  envrc_realpath="${PWD}/${envrc_basename}"
 
-  if [ "${skip_allow_check}" != true ]; then
-    local json_support_test; json_support_test="$(direnv status --json)" || softfail "Unable to obtain direnv status" || return $?
+  # Fetch direnv status as JSON
+  status_output="$(direnv status --json)" || softfail "Failed to get direnv status" || return $?
 
-    if [ "${json_support_test:0:1}" = "{" ]; then
-      local found_any
-      local empty_test='if (.state | has("foundRC")) then if .state.foundRC == null then "empty-ok" else "non-empty" end else false end'
-
-      found_any="$(direnv status --json | jq --raw-output --exit-status "${empty_test}"; test "${PIPESTATUS[*]}" = "0 0")" || softfail "Unable to perform direnv status empty test" || return $?
-
-      if [ "${found_any}" = "non-empty" ]; then
-        local allowed_path
-
-        if ! allowed_path="$(direnv status --json | jq --raw-output --exit-status 'if .state.foundRC.allowed == 0 then .state.foundRC.path else false end'; test "${PIPESTATUS[*]}" = "0 0")"; then
-          direnv status --json >&2
-          softfail "Found envrc file that is not currently allowed or unable to obtain foundRC.path from direnv status"
-          return $?
-        fi
-
-        if [ "${allowed_path}" != "${PWD}/${envrc_basename}" ]; then
-          direnv status --json >&2
-          softfail "Allowed envrc file path is different than provided: ${PWD}/${envrc_basename}"
-          return $?
-        fi
-      fi
-    else
-      if ! direnv status | grep -qFx "No .envrc found" && ! direnv status | grep -qFx "No .envrc or .env found"; then
-        if ! direnv status | grep -qFx "Found RC path ${PWD}/${envrc_basename}" || ! direnv status | grep -qEx "Found RC allowed (0|true)"; then
-          direnv status >&2
-          softfail "Found envrc file that is not currently allowed, or allowed file path is different than provided: ${PWD}/${envrc_basename}"
-          return $?
-        fi
-      fi
-    fi
-  fi
-
-  shell::dump_variables --export "$@" | file::write --mode 0600 --section "${block_name}" "${envrc_basename}"
-
-  test "${PIPESTATUS[*]}" = "0 0" || softfail "Unable to write variables block into direnv file" || return $?
-  
-  direnv allow || softfail "Unable to perform direnv allow" || return $?
+  # Use jq to check whether the envrc file is currently allowed
+  # jq with --exit-status returns 0 if the result is not false or null
+  <<<"${status_output}" jq --raw-output --exit-status --arg envrc_realpath "${envrc_realpath}" \
+    '((.state | has("foundRC")) and ((.state.foundRC == null) or (.state.foundRC.allowed == 0 and .state.foundRC.path == $envrc_realpath)))' >/dev/null
 )

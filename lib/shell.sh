@@ -36,27 +36,26 @@ shell::with() (
   "$@"
 )
 
-shell::dump_variables() {
-  local prefix
-
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      -e|--export)
-        prefix="export "
-        shift
-        ;;
-      -*)
-        softfail "Unknown argument: $1" || return $?
-        ;;
-      *)
-        break
-        ;;
-    esac
-  done
-
+# ## `shell::emit_exports`
+#
+# Outputs shell `export` statements for each non-empty variable passed as argument.
+# Intended for persisting or scripting variable values in a safe, quoted format.
+#
+# ### Usage
+#
+# shell::emit_exports VAR1 VAR2 ...
+#
+# * `VAR1`, `VAR2`, ...: names of variables whose values should be exported
+#
+# ### Examples
+#
+# shell::emit_exports PATH HOME CUSTOM_VAR
+#
+shell::emit_exports() {
   local list_item; for list_item in "$@"; do
-    if [ -n "${!list_item:-}" ]; then
-      echo "${prefix:-}$(printf "%q=%q" "${list_item}" "${!list_item}")"
+    if [[ -n "${!list_item:-}" ]]; then
+      # Output a properly quoted export statement for non-empty variables
+      echo "export $(printf "%q=%q" "${list_item}" "${!list_item}")"
     fi
   done
 }

@@ -59,21 +59,41 @@ rubygems::credentials() {
 YAML
 }
 
-# shellcheck disable=SC2034
+# ## `rubygems::direnv_credentials`
+#
+# Saves the RubyGems API key to `.envrc` so that direnv can automatically
+# load it as an environment variable in the current directory.
+#
+# ### Usage
+#
+# rubygems::direnv_credentials <API_KEY>
+#
+# * `<API_KEY>`: The RubyGems API key to be stored in `.envrc` as `GEM_HOST_API_KEY`.
+#
 rubygems::direnv_credentials() {
+  # shellcheck disable=SC2034
   local GEM_HOST_API_KEY="$1"
+  local envrc_path=".envrc"
 
-  direnv::save_variable_block --block-name RUBYGEMS-CREDENTIALS \
+  # Ensure .envrc is allowed by direnv
+  direnv::is_allowed "${envrc_path}" || softfail "'.envrc' is not allowed by direnv" || return $?
+
+  # Write the credentials to .envrc with a section label
+  file::write --user-only --capture --section "RUBYGEMS-CREDENTIALS" "${envrc_path}" shell::emit_exports \
     GEM_HOST_API_KEY \
-    || fail
+      || softfail "Failed to write RubyGems credentials to .envrc" || return $?
 
+  # Re-authorize .envrc with direnv
+  direnv allow "${envrc_path}" || softfail "Failed to allow '.envrc' via direnv" || return $?
+
+  # Ensure .envrc is ignored by Git
   file::write --append-line-unless-present ".gitignore" "/.envrc" || softfail || return $?
-  
+
+  # Also ignore .envrc in npm packages, if applicable
   if [ -f .npmignore ]; then
     file::write --append-line-unless-present ".npmignore" "/.envrc" || softfail || return $?
   fi
 }
-
 
 # ---- configuration ----
 
