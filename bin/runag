@@ -90,7 +90,7 @@ else
     runagfile::load --if-exists
     softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || return $?
   else # Script is run directly
-    runagfile::load
+    runagfile::load --if-exists
     softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || exit $?
   fi
 fi
