@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,68 +15,81 @@
 #  limitations under the License.
 
 # BEGIN set_shell_options
-# Set shell options only if the script is not sourced
+# Configure shell options unless the script is being sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  # Enable verbose mode if RUNAG_VERBOSE is true
+  # Enable trace output if RUNAG_VERBOSE is set to true
   if [ "${RUNAG_VERBOSE:-}" = true ]; then
-    # PS4: Customize trace output to include subshell, filename, line number, and function name
-    PS4='+${BASH_SUBSHELL} ${BASH_SOURCE:+"${BASH_SOURCE}:${LINENO}: "}${FUNCNAME[0]:+"in \`${FUNCNAME[0]}'"'"' "}** '
-    set -o xtrace   # Enable command tracing
+    # Show subshell level, function name, source file, and line number in trace output
+    PS4='+${FUNCNAME[0]:+" ${FUNCNAME[0]}"}${BASH_SOURCE:+" (${BASH_SOURCE}:${LINENO})"}   '
+    set -o xtrace
   fi
-  set -o nounset    # Treat unset variables as an error
+  # Exit immediately if an unset variable is referenced
+  set -o nounset
 fi
 # END set_shell_options
 
-# BEGIN load_runag_library
-# Function to load the rùnag library from a given directory
+# ## `runag::load_runag_library`
+#
+# Loads the core Runag library files required for script initialization.
+#
+# ### Usage
+#
+# runag::load_runag_library <library-directory>
+#
+# Arguments:
+#   <library-directory>   Relative path to the directory containing Runag .sh library files
+#
 runag::load_runag_library() {
-  local self_path   # Absolute path to this script
-  local lib_dir     # Library directory path
-  local file_path   # Path to individual library file
+  local self_path="${BASH_SOURCE[0]}"
+  local self_dir
 
-  # If the script is a symlink, resolve it to determine the actual script path
-  if [ -L "${BASH_SOURCE[0]}" ]; then
-    self_path="$(readlink -f "${BASH_SOURCE[0]}")" || {
-      echo "Error: Unable to resolve symlink ${BASH_SOURCE[0]} ($?)" >&2
+  # Resolve the full path if the script is a symbolic link
+  if [ -L "${self_path}" ]; then
+    self_path="$(readlink -f "${self_path}")" || {
+      echo "Could not resolve symbolic link for ${BASH_SOURCE[0]} (exit code $?)." >&2
       return 1
     }
-  else
-    self_path="${BASH_SOURCE[0]}"
   fi
 
-  # Derive library directory path by appending provided argument to script directory
-  lib_dir="$(dirname "${self_path}")/$1" || {
-    echo "Error: Unable to determine directory for ${self_path} ($?)" >&2
+  # Determine the directory in which the script resides
+  self_dir="$(dirname "${self_path}")" || {
+    echo "Could not determine the directory of ${self_path} (exit code $?)." >&2
     return 1
   }
 
-  # Verify that the library directory exists
-  if [ ! -d "${lib_dir}" ]; then
-    echo "Error: rùnag library directory not found: ${lib_dir}" >&2
-    return 1
-  fi
+  # Construct the path to the library directory
+  local lib_dir="${self_dir}/$1"
 
-  # Source all .sh files in the library directory
-  for file_path in "${lib_dir}"/*.sh; do
+  # Verify that the library directory exists
+  test -d "${lib_dir}" || {
+    echo "The specified library directory '${lib_dir}' was not found." >&2
+    return 1
+  }
+
+  # Load each .sh file in the library directory
+  local file_path; for file_path in "${lib_dir}"/*.sh; do
     if [ -f "${file_path}" ]; then
-      . "${file_path}" || {
-        echo "Error: Unable to load library file ${file_path} ($?)" >&2
+      # shellcheck disable=SC1090
+      source "${file_path}" || {
+        echo "Failed to load library file: ${file_path} (exit code $?)." >&2
         return 1
       }
     fi
   done
 }
 
-# Load the rùnag library
+# Load all required Runag library files from the '../lib' directory
 runag::load_runag_library "../lib" || {
-  echo "Error: Failed to load rùnag library ($?)" >&2
+  echo "Could not initialize the Runag library (exit code $?)." >&2
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then
-    return 1  # Use return when sourced
+    return 1 # Return if this script is being sourced
   else
-    exit 1    # Use exit when run directly
+    exit 1 # Exit if this script is being run directly
   fi
 }
-# END load_runag_library
+
+# Remove the function to avoid leaving it in the global namespace
+unset -f runag::load_runag_library
 
 # BEGIN invoke_runagfile
 # == By now, all required library functions should be available ==
@@ -85,13 +98,13 @@ runag::load_runag_library "../lib" || {
 if [ "${1:-}" == "--skip-runagfile-load" ]; then
   shift  # Remove the argument from the positional parameters
 else
-  # Load the rùnagfile
+  # Load the runagfile
   if [ "${BASH_SOURCE[0]}" != "$0" ]; then # Script is sourced
     runagfile::load --if-exists
-    softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || return $?
+    softfail --unless-good --status $? "Error: Failed to load runagfile ($?)" || return $?
   else # Script is run directly
     runagfile::load --if-exists
-    softfail --unless-good --status $? "Error: Failed to load rùnagfile ($?)" || exit $?
+    softfail --unless-good --status $? "Error: Failed to load runagfile ($?)" || exit $?
   fi
 fi
 

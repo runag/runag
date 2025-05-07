@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,35 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ### `runagfile::add`
-#
-# This function adds a repository to the system by cloning it from GitHub 
-# into the user's runagfiles collection directory.
-#
-# #### Parameters:
-# 
-# - `repository` (string): The path to the repository, formatted as "username/repository". 
-#
-runagfile::add() {
-  local user_name
-  local repo_name
-
-  # Parse the input string to extract the GitHub username and repository name.
-  # The string should be in the format "username/repository".
-  IFS="/" read -r user_name repo_name <<< "$1" || softfail "Failed to parse the input string into the username and repository name" || return $?
-
-  # Attempt to clone the repository and place it in the designated directory.
-  # The repository is cloned into a folder named after the repository and username,
-  # with the suffix '-github' to avoid conflicts.
-  git::place_up_to_date_clone \
-    "https://github.com/${user_name}/${repo_name}.git" \
-    "${HOME}/.runag/runagfiles/${repo_name}-${user_name}-github" \
-    || softfail "Failed to clone the repository from GitHub: https://github.com/${user_name}/${repo_name}.git" || return $?
-}
-
 # ## `runagfile::load`
 #
-# Loads a rùnagfile from the current directory or a known subdirectory.
+# Loads a runagfile from the current directory or a known subdirectory.
 #
 # This function searches for a `runagfile.sh` script in the following locations:
 #
@@ -51,13 +25,13 @@ runagfile::add() {
 #   * `runagfile/runagfile.sh`
 #   * `<name>-runagfile/runagfile.sh`, if there is exactly one matching directory
 #
-# If `--if-exists` is passed, the function exits silently if no rùnagfile is found.
+# If `--if-exists` is passed, the function exits silently if no runagfile is found.
 #
 # ### Usage
 #
 # runagfile::load [--if-exists]
 #
-# * `--if-exists`: suppresses the error if no rùnagfile is found
+# * `--if-exists`: suppresses the error if no runagfile is found
 #
 # ### Examples
 #
@@ -85,6 +59,7 @@ runagfile::load() {
 
   # Attempt to load from the current directory
   if [ -f "runagfile.sh" ]; then
+    # shellcheck disable=SC1091
     . "runagfile.sh"
     softfail --unless-good --status $? "Failed to load './runagfile.sh' (exit code $?)"
     return $?
@@ -92,6 +67,7 @@ runagfile::load() {
 
   # Attempt to load from the runagfile/ subdirectory
   if [ -f "runagfile/runagfile.sh" ]; then
+    # shellcheck disable=SC1091
     . "runagfile/runagfile.sh"
     softfail --unless-good --status $? "Failed to load './runagfile/runagfile.sh' (exit code $?)"
     return $?
@@ -101,6 +77,7 @@ runagfile::load() {
   local matches=(*-runagfile)
 
   if [ "${#matches[@]}" -eq 1 ] && [ -d "${matches[0]}" ] && [ -f "${matches[0]}/runagfile.sh" ]; then
+    # shellcheck disable=SC1091
     . "${matches[0]}/runagfile.sh"
     softfail --unless-good --status $? "Failed to load '${matches[0]}/runagfile.sh' (exit code $?)"
     return $?

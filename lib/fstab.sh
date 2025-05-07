@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -34,7 +34,10 @@ fstab::add_mount_option() {
 
   local option="$1"
 
-  local skip; skip="$(<<<"${option}" sed 's/^\([[:alnum:]]\+\).*/\1/')" || softfail || return $?
+  local skip
+  
+  # shellcheck disable=SC2001
+  skip="$(<<<"${option}" sed 's/^\([[:alnum:]]\+\).*/\1/')" || softfail || return $?
 
   sed "/^\(#\|[[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+.*[[:blank:][:punct:]]${skip}\([[:blank:][:punct:]]\|$\)\)/!s/^\([[:graph:]]\+[[:blank:]]\+[[:graph:]]\+[[:blank:]]\+${fstype}[[:blank:]]\+defaults\)\([^[:alnum:]]\|$\)/\1,${option}\2/g;" \
     /etc/fstab | fstab::verify_and_write

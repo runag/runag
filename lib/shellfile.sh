@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -106,31 +106,13 @@ shellfile::write() {
   file::write --mode 0600 "${output_path}" || softfail || return $?
 
   if [ "${source_now}" = true ]; then
+    # shellcheck disable=SC1090
     . "${output_path}" || softfail || return $?
   fi
 }
 
 
 # ---- misc files
-
-shellfile::install_runag_path_profile() {
-  local license_text; license_text="$(runag::print_license)" || softfail || return $?
-
-  shellfile::write "$@" "profile/runag-path" <<SHELL || softfail || return $?
-${license_text}
-
-if [ -d "\${HOME}/.runag/bin" ]; then
-  case ":\${PATH}:" in
-  *":\${HOME}/.runag/bin:"*)
-    true
-    ;;
-  *)
-    export PATH="\${HOME}/.runag/bin:\${PATH}"
-    ;;
-  esac
-fi
-SHELL
-}
 
 shellfile::install_local_bin_path_profile() {
   local license_text; license_text="$(runag::print_license)" || softfail || return $?

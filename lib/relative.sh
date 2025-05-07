@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -108,6 +108,7 @@ relative::source() {
     relative::source::walk_directory "${caller_dir}/$1" "${@:2}" || softfail "Unable to load recursively from: ${caller_dir}/$1" || return $?
   else
     # Source the specified file.
+    # shellcheck disable=SC1090
     . "${caller_dir}/$1" "${@:2}" || softfail "Unable to load: ${caller_dir}/$1" || return $?
   fi
 }
@@ -136,6 +137,7 @@ relative::source::walk_directory() {
       dir_list+=("${item}")
     # If the item is a file and has a `.sh` extension, source it.
     elif [ -f "${item}" ] && [[ "${item}" =~ \.sh$ ]]; then
+      # shellcheck disable=SC1090
       . "${item}" "${@:2}" || softfail "Unable to load: ${item}" || return $?
     fi
   done

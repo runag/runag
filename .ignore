@@ -1,7 +1,2 @@
-# Re-include runagfile content in VS Code search
-!/runagfiles/*
-
-# Exclude derivative files from search
-/deploy.sh
-/deploy-offline.sh
+# Exclude generated files from search
 /dist

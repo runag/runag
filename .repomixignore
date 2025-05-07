@@ -4,6 +4,4 @@
 /LICENSE
 
 # Generated files
-/deploy.sh
-/deploy-offline.sh
 /dist

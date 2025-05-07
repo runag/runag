@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -99,39 +99,21 @@ ssh::call() {
   fi
 
   if [ "${#locale_list[@]}" != 0 ]; then
-    unset -v \
-      LANG \
-      LANGUAGE \
-      LC_ALL \
-      \
-      LC_COLLATE \
-      LC_CTYPE \
-      LC_MESSAGES \
-      LC_MONETARY \
-      LC_NUMERIC \
-      LC_TIME \
-      \
-      LC_ADDRESS \
-      LC_IDENTIFICATION \
-      LC_MEASUREMENT \
-      LC_NAME \
-      LC_PAPER \
-      LC_RESPONSE \
-      LC_TELEPHONE || softfail || return $?
+    (
+    unset -v LANG LANGUAGE "${!LC_@}" || softfail || return $?
 
     local locale_item; for locale_item in "${locale_list[@]}"; do
       # shellcheck disable=2163
       export "${locale_item}" || softfail || return $?
     done
 
-    ( ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@" )
+    ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
+    )
   else
     ssh::call::internal --temp-dir "${temp_dir}" "${internal_args[@]}" "$@"
   fi
   
   local exit_status=$?
-
-  # softfail --unless-good --status "${exit_status}"
 
   if [ "${keep_temp_files}" != true ]; then
     local remove_list=("${temp_dir}/stdin" "${temp_dir}/stdout" "${temp_dir}/stderr")
@@ -338,6 +320,14 @@ ssh::call::internal() {
     local retry_limit="${REMOTE_RECONNECT_TIME_LIMIT:-600}"
     local first_run=true
 
+    local notice_prefix="[NOTICE] " notice_postfix=""
+
+    # Set color formatting if stderr is a terminal
+    if [ -t 2 ]; then
+      notice_prefix="$(printf "setaf 14\nbold" | tput -S 2>/dev/null)"
+      notice_postfix="$(tput sgr 0 2>/dev/null)"
+    fi
+
     while true; do
       if [ "${first_run}" = true ]; then
         first_run=false
@@ -348,7 +338,8 @@ ssh::call::internal() {
           softfail "Unable to obtain task result, maximum time limit reached"
           return 1
         fi
-        log::notice "Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)..."
+
+        echo "${notice_prefix}Attempting to obtain result ($(( retry_limit - (SECONDS - started_at) )) second(s) till timeout)...${notice_postfix}" >&2
       fi
 
       # retrieve exit status
@@ -528,7 +519,7 @@ ssh::call::set_ssh_args() {
     Ssh_Args+=("-p" "${REMOTE_PORT}")
   fi
 
-  if [ "${REMOTE_SERVER_ALIVE_INTERVAL:-}" != "no" ]; then
+  if [ "${REMOTE_SERVER_ALIVE_INTERVAL:-}" != "unset" ]; then
     # the idea of 20 seconds is from https://datatracker.ietf.org/doc/html/rfc3948
     Ssh_Args+=("-o" "ServerAliveInterval=${REMOTE_SERVER_ALIVE_INTERVAL:-"20"}")
   fi
@@ -581,10 +572,10 @@ ssh::call::produce_script() {
   fi
 
   # shell options
-  if [ "${RUNAG_VERBOSE:-}" = true ]; then
-    echo PS4=\'+\$\{BASH_SUBSHELL\}\ \$\{BASH_SOURCE:+\"\$\{BASH_SOURCE\}:\$\{LINENO\}:\ \"\}\$\{FUNCNAME\[0\]:+\"in\ \\\`\$\{FUNCNAME\[0\]\}\'\"\'\"\'\ \"\}\*\*\ \'
-    echo "set -o xtrace"
-  elif shopt -o -q xtrace; then
+  if shopt -o -q xtrace; then
+    if [ -n "${PS4:-}" ]; then
+      printf "PS4=%q\n" "${PS4}" || softfail
+    fi
     echo "set -o xtrace"
   fi
 
@@ -599,11 +590,9 @@ ssh::call::produce_script() {
     IFS=" " read -r -a env_list <<<"${REMOTE_ENV}" || softfail || return $?
   fi
 
-  env_list+=(RUNAG_VERBOSE)
-
   local env_list_item; for env_list_item in "${env_list[@]}"; do
     if [ -n "${!env_list_item:-}" ]; then
-      echo "export $(printf "%q=%q" "${env_list_item}" "${!env_list_item}")"
+      printf "export %s\n" "$(printf "%q=%q" "${env_list_item}" "${!env_list_item}")"
     fi
   done
 
@@ -645,8 +634,9 @@ ssh::call::produce_script() {
   fi
 
   if [ "${#locale_list[@]}" != 0 ]; then
+    printf "unset -v LANG LANGUAGE \"\${!LC_@}\" || { echo 'Error unsetting locales' >&2; exit 1; }\n"
     local locale_item; for locale_item in "${locale_list[@]}"; do
-      printf "export %q || { exit_status=\$?; echo 'Error setting REMOTE_LOCALE values' >&2; exit \$?; }\n" "${locale_item}"
+      printf "export %q || { echo 'Error setting REMOTE_LOCALE values' >&2; exit 1; }\n" "${locale_item}"
     done
   fi
 
@@ -702,13 +692,4 @@ ssh::call::invoke() {
 
   # shellcheck disable=2029
   ssh ${terminal_mode:+"-t"} "${Ssh_Args[@]}" "${ssh_destination}" "$(printf "sh -c %q" "${command_string}")"
-}
-
-ssh::call::function_sources() {
-  declare -f ssh::call || softfail || return $?
-  declare -f ssh::call::internal || softfail || return $?
-  declare -f ssh::call::set_ssh_args || softfail || return $?
-  declare -f ssh::call::produce_script || softfail || return $?
-  declare -f ssh::call::interactive_terminal_functions_filter || softfail || return $?
-  declare -f ssh::call::invoke || softfail || return $?
 }

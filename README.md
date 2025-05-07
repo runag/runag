@@ -1,257 +1,191 @@
 <!--
-Copyright 2012-2024 Rùnag project contributors
+  Copyright 2012-2025 Rùnag project contributors
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
 
 # Rùnag
 
-💜 Rùnag is an attempt to make a shell-only library to deploy linux/macos/windows workstations and servers. Shell is used partially as a way to solve bootstrap problem having a freshly installed system and partially as an exercise in stoicism.
+## Table of contents
 
-It probably won't help you to deploy some complex setups, but it can configure a pretty solid workstation and bootstrap some simple servers.
+* [Rùnag](#rùnag)
+  * [General environment variables](#general-environment-variables)
+  * [Environment variables related to remote operations](#environment-variables-related-to-remote-operations)
+    * [Basic SSH connection](#basic-ssh-connection)
+    * [Remote environment configuration](#remote-environment-configuration)
+    * [Retry and debug options](#retry-and-debug-options)
+    * [SSH session options](#ssh-session-options)
+  * [License](#license)
+  * [Get involved](#get-involved)
 
-You are now looking at the repository which mostly contains a standard library. For the examples of what could be accomplished with the library please check "rùnagfiles", that resides in other repositories:
+## General environment variables
 
-* [💚 Rùnagfile to configure a workstation](https://github.com/runag/workstation-runagfile). It creates a computer that could be used for daily pursuits without much of an additional configuration and setup. It installs and configures software, identities and keys, configures a scheduled backup.
+* **`RUNAG_TASK` —  Global task array**
 
+  * Although not an environment variable, `RUNAG_TASK` is a global Bash array accessible during script runtime.
+  
+  * Stores the list of tasks used by `task::` functions.
+  
+  * Documented here to help prevent naming conflicts.
 
-## One-liner to deploy rùnag an a new machine
+* **`RUNAG_VERBOSE` — Verbose shell tracing**
 
-### Linux
-```sh
-bash <(wget -qO- https://raw.githubusercontent.com/runag/runag/main/deploy.sh) [commands...]
-```
+  * When set to `"true"`, enables detailed shell tracing.
+  
+  * The output includes function names, source files, and line numbers.
 
-### MacOS
-```sh
-bash <(curl -Ssf https://raw.githubusercontent.com/runag/runag/main/deploy.sh) [commands...]
-```
+## Environment variables related to remote operations
 
-### Commands: 
-```sh
-add user/repo
-run [function_name [function_arguments]]
-```
+These environment variables configure the behavior of remote operations performed by functions such as `ssh::call` and `rsync::sync`.
 
-## Rùnagfile
+### Basic SSH connection
 
-Possible rùnagfile locations are:
+* **`REMOTE_USER` — SSH username**
 
-```sh
-# in current working directory
-./runagfile.sh
+  * Specifies the username for the SSH connection.
 
-# in home directory
-~/.runag/runagfiles/*/runagfile.sh
-```
+* **`REMOTE_HOST` — Remote host address**
 
+  * Specifies the target host, in any format accepted by `ssh` (e.g., `"example.com"` or an IP address).
 
-## Interactive use or use in scripts besides rùnagfiles
+* **`REMOTE_PORT` — SSH port**
 
-You may load Rùnag into your interactive bash terminal or in your scripts with the `. runag` or `source runag` command.
+  * Specifies the port to use when connecting via SSH.
 
+### Remote environment configuration
 
-## API docs
+* **`REMOTE_DIR` — Remote working directory**
 
-Please refer to the source code for now.
+  * Specifies the directory to switch to on the remote host before running a script or command.
 
-<!-- API TOC BEGIN -->
+* **`REMOTE_ENV` — Forwarded environment variables**
 
-### Rùnag core
+  * A space-separated list of local environment variable names to forward to the remote host.
 
-* [fail](lib/fail.sh)
-* [log](lib/log.sh)
-* [runag](lib/runag.sh)
-* [runagfile](lib/runagfile.sh)
-* [task](lib/task.sh)
+  * Only variables that are already defined locally (i.e., `[ -n "$VAR" ]` evaluates as true) are forwarded.
 
-### General utility
+  * *Example:* `"VAR1 VAR2"`
 
-* [config](lib/config.sh)
-* [dir](lib/dir.sh)
-* [file](lib/file.sh)
-* [fs](lib/fs.sh)
-* [shell](lib/shell.sh)
-* [snapshot](lib/snapshot.sh)
-* [ui](lib/ui.sh)
-* [terminal](lib/terminal.sh)
+* **`REMOTE_LOCALE` — Remote locale configuration**
 
-### Interfacing with OS anv VMs
+  * A space-separated list of locale variable assignments to apply in the remote environment for a single `ssh::call`.
 
-* [apt](lib/apt.sh)
-* [btrfs](lib/btrfs.sh)
-* [cross_platform](lib/cross_platform.sh)
-* [fstab](lib/fstab.sh)
-* [linux](lib/linux.sh)
-* [macos](lib/macos.sh)
-* [shellfile](lib/shellfile.sh)
-* [systemd](lib/systemd.sh)
-* [ubuntu](lib/ubuntu.sh)
+  * This sidesteps SSH’s `SendEnv` and `AcceptEnv` mechanism to ensure consistent locale behavior without relying on SSH environment forwarding.
 
-### Managment of keys, passwords, and other secrets
+  * Before applying the new values, `ssh::call` clears any existing `LANG`, `LANGUAGE`, and `LC_*` variables.
 
-* [checksum](lib/checksum.sh)
-* [gpg](lib/gpg.sh)
-* [pass](lib/pass.sh)
+  * The locale is first set locally in a subshell for the `ssh` invocation, and then again on the remote host before running the command.
 
-### Development
+  * *Example:* `"LANG=C.UTF-8 LC_TIME=en_DK.UTF-8"`
 
-* [asdf](lib/asdf.sh)
-* [direnv](lib/direnv.sh)
-* [erlang](lib/erlang.sh)
-* [git](lib/git.sh)
-* [imagemagick](lib/imagemagick.sh)
-* [nodejs](lib/nodejs.sh)
-* [postgresql](lib/postgresql.sh)
-* [python](lib/python.sh)
-* [rails](lib/rails.sh)
-* [ruby](lib/ruby.sh)
+  * *See also:* Use `linux::update_remote_locale` to configure persistent locale defaults on the remote system.
 
-### Networking and access to remote systems
+* **`REMOTE_NON_ROOT_UMASK` — Umask for non-root users**
 
-* [aws](lib/aws.sh)
-* [cifs](lib/cifs.sh)
-* [postfix](lib/postfix.sh)
-* [rsync](lib/rsync.sh)
-* [ssh-call](lib/ssh-call.sh)
-* [ssh](lib/ssh.sh)
-* [syncthing](lib/syncthing.sh)
-* [tailscale](lib/tailscale.sh)
-* [wifi](lib/wifi.sh)
+  * Sets the file creation mask (`umask`) when the remote command is run by a non-root user.
 
-### API access to cloud services
+  * Accepts standard `umask` syntax.
 
-* [github](lib/github.sh)
-* [leaseweb](lib/leaseweb.sh)
-* [letsencrypt](lib/letsencrypt.sh)
+  * *Example:* `0022`
 
-### Application deployment
+* **`REMOTE_UMASK` — Explicit umask**
 
-* [release](lib/release.sh)
+  * Sets the file creation mask (`umask`) for the remote session, regardless of user.
 
-### Desktop applications
+  * If both `REMOTE_UMASK` and `REMOTE_NON_ROOT_UMASK` are set, this value takes precedence.
 
-* [firefox](lib/firefox.sh)
-* [sublime-merge](lib/sublime-merge.sh)
-* [sublime-text](lib/sublime-text.sh)
-* [vscode](lib/vscode.sh)
+  * *Example:* `0022`
 
-### Miscellaneous tools
+### Retry and debug options
 
-* [benchmark](lib/benchmark.sh)
-* [nvidia](lib/nvidia.sh)
-* [restic](lib/restic.sh)
+* **`REMOTE_KEEP_TEMP_FILES` — Preserve temporary files**
 
-<!-- API TOC END -->
+  * If set to `true`, temporary files created by `ssh::call` (such as the script and I/O streams) are kept on both local and remote machines.
 
+  * Useful for debugging.
 
-## Environment variables
- 
+  * Defaults to `false`.
 
-### General
+* **`REMOTE_RECONNECT_DELAY` — Retry delay**
 
-#### `RUNAG_VERBOSE`
+  * Delay (in seconds) between retry attempts to retrieve results after a remote command fails due to a network-related `ssh` error.
 
-Could be set to `"true"`
+  * Supports integers or floating-point values, depending on the `sleep` implementation.
 
-#### `RUNAG_DIST_REPO`
+  * Defaults to `5`.
 
-TODO
+* **`REMOTE_RECONNECT_TIME_LIMIT` — Maximum retry duration**
 
-### SSH-related variables
+  * Maximum time (in seconds) that `ssh::call` will spend attempting to reconnect before stopping.
 
-#### `REMOTE_CONTROL_MASTER`
+  * Defaults to `600` (10 minutes).
 
-Session sharing is enabled by default in rùnag (except when running on Windows).
-By default ControlMaster will be set to `"auto"`.
-To disable session sharing, set this to `"no"`.
+### SSH session options
 
-#### `REMOTE_CONTROL_PATH`
+* **`REMOTE_CONTROL_MASTER` — SSH connection sharing**
 
-Path to the control socket.
-By default rùnag will use `"${HOME}/.ssh/control-socket.%C"`.
+  * Enables SSH connection sharing via the `ControlMaster` setting.
 
-#### `REMOTE_CONTROL_PERSIST`
+  * Defaults to `auto`, which enables connection sharing on non-Windows systems.
 
-To disable `ControlPersist` set this to `"no"`.
-By default rùnag will use `600` seconds.
+  * Set to `no` to disable connection sharing.
 
-#### `REMOTE_DIR`
+* **`REMOTE_CONTROL_PATH` — SSH control socket path**
 
-Remote directory to run script in.
+  * Sets the path to the SSH control socket used for connection sharing.
 
-#### `REMOTE_ENV`
+  * Defaults to `"${HOME}/.ssh/control-sockets/%C"`.
 
-String, space-separated list of environment variable names, to be set in remote script with the values present in the calling rùnag instance at the moment of ssh call.
-For any provided names (or for absence of them), rùnag will internaly add `"RUNAG_VERBOSE"`.
+  * If `REMOTE_FORWARD_AGENT` is `true`, the default path changes to `"${HOME}/.ssh/control-sockets/%C.with-forward-agent"`.
 
-#### `REMOTE_FORWARD_AGENT`
+* **`REMOTE_CONTROL_PERSIST` — SSH control socket lifetime**
 
-Could be set to `"true"`
+  * Sets the `ControlPersist` timeout (in seconds), allowing the control socket to remain open after a command finishes.
 
-#### `REMOTE_HOST`
+  * Defaults to `600` (10 minutes).
 
-Host name, for example `"example.com"`.
+  * Set to `no` to disable persistence.
 
-#### `REMOTE_IDENTITY_FILE`
+* **`REMOTE_FORWARD_AGENT` — Enable SSH agent forwarding**
 
-Path to identity file, for example `"${HOME}/.ssh/id_ed25519"`.
-By default rùnag will not provide any identity file path so ssh could use it's defaults.
+  * Set to `true` to enable SSH agent forwarding (`ForwardAgent=yes`), allowing the remote host to access SSH keys from the local agent.
 
-#### `REMOTE_KEEP_TEMP_FILES`
+  * When enabled, the default control socket filename gains a `.with-forward-agent` suffix to avoid conflicts.
 
-Could be set to `"true"`
+* **`REMOTE_IDENTITY_FILE` — SSH private key path**
 
-#### `REMOTE_LOCALE`
+  * Specifies the path to the SSH private key used for authentication.
 
-String.
+  * If unset, `ssh` uses its default keys or those specified in its configuration.
 
-#### `REMOTE_PORT`
+  * *Example:* `"${HOME}/.ssh/id_ed25519"`
 
-Port number. 
-By default rùnag will not provide any port number so ssh could use it's defaults.
+* **`REMOTE_SERVER_ALIVE_INTERVAL` — Keep-alive interval**
 
-#### `REMOTE_RECONNECT_DELAY`
+  * Sets the SSH `ServerAliveInterval` in seconds.
 
-Integer (could be float but that depends on your `sleep` command implementation).
+  * When non-zero, SSH sends periodic keep-alive messages to prevent disconnection due to inactivity.
 
-#### `REMOTE_RECONNECT_TIME_LIMIT`
+  * Defaults to `20`.
 
-Seconds, integer
+  * Set to `0` to disable keep-alive messages.
 
-#### `REMOTE_SERVER_ALIVE_INTERVAL`
-
-Will set `ServerAliveInterval`.
-By default rùnag will set `"20"` as `ServerAliveInterval`.
-You could set this to `"0"` to tell ssh to disable server alive messages.
-You could set this to `"no"` then rùnag will not set that variable at all,
-thus ssh could potentially use a value from your ssh config file.
-
-#### `REMOTE_UMASK`
-
-Umask for remote commands
-
-#### `REMOTE_USER`
-
-User name.
-By default rùnag will not provide any user name so ssh could use it's defaults.
-
+  * Set to `unset` to let the SSH configuration decide.
 
 ## License
 
-[Apache License, Version 2.0](LICENSE).
+This project is licensed under the terms of the [Apache License, Version 2.0](LICENSE)
 
+## Get involved
 
-## Contributing
-
-Please check [CONTRIBUTING](CONTRIBUTING.md) file for details.
+Check out the [CONTRIBUTING](CONTRIBUTING.md) file to learn how to contribute, and the [CONTRIBUTORS](CONTRIBUTORS.md) file to see who’s helped make it happen.

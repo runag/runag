@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,60 +14,96 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# Treat unset variables as an error
 set -o nounset
 
-. bin/runag --skip-runagfile-load || { echo "Unable to load rùnag" >&2; exit 1; }
+# Exit if there are uncommitted changes in the working directory or staging area.
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Uncommitted changes detected. Please commit or stash your work before proceeding."
+  exit 1
+fi
 
-docs::make() {
-  # rm docs/lib/*.md || softfail || return $?
+# Load the Runag library for use in script building
+# shellcheck disable=SC1091
+source index.sh || { echo "Failed to load the Runag library." >&2; exit 1; }
 
-  local files_list; files_list="$(mktemp)" || softfail || return $?
-  local readme_content; readme_content="$(mktemp)" || softfail || return $?
+# Build the bin/runag script
+# --------------------------
 
-  local file; for file in lib/*.sh; do
-    if [ -f "${file}" ]; then
-      local file_basename; file_basename="$(basename "${file}")" || softfail || return $?
+# Create a temporary file to assemble the script
+temp_file="$(mktemp)" || fail "Could not create a temporary file."
 
-      echo "* [${file_basename%%.*}](${file})" >> "${files_list}" || softfail || return $?
+{
+  # Write the shebang to specify the Bash interpreter
+  printf "#!/usr/bin/env bash\n\n" || fail "Could not write the shebang line."
 
-      # local output; output="docs/${file%.*}.md" || softfail || return $?
-      # ?? <"${file}" >"${output}" || softfail || return $?
-      # echo "* [${file_basename%%.*}](${output})" >> "${files_list}" || softfail || return $?
-    fi
-  done
+  # Insert the license header from the Runag library
+  runag::print_license && printf "\n" || fail "Could not write license information."
 
-  sort "${files_list}" > "${files_list}.tmp" || softfail || return $?
-  mv "${files_list}.tmp" "${files_list}" || softfail || return $?
-  
-  # "awk NF" is to remove empty line
-  < README.md awk '/API TOC BEGIN/{ line = 1; next } /API TOC END/{ line = 0 } line' | grep -v "^###" | awk NF | sort > "${readme_content}"
-  test "${PIPESTATUS[*]}" = "0 0 0 0" || softfail || return $?
+  # Add a comment indicating the commit this build was generated from
+  printf "# This script was built from commit " || fail "Could not write commit comment."
+  git rev-parse HEAD && printf "\n" || fail "Could not retrieve the Git commit hash."
 
-  if ! diff --strip-trailing-cr "${readme_content}" "${files_list}" >/dev/null 2>&1; then
-    if command -v git >/dev/null; then
-      git diff --ignore-cr-at-eol --color --unified=6 --no-index "${readme_content}" "${files_list}" | tee
-    else
-      diff --strip-trailing-cr --context=6 --color "${readme_content}" "${files_list}"
-    fi
-    log::error "Please update API TOC in README.md"
-  fi
+  # Include shell configuration section
+  file::read_section set_shell_options bin/runag && printf "\n" ||
+    fail "Could not read the 'set_shell_options' section from bin/runag."
 
-  rm "${files_list}" || softfail || return $?
-  rm "${readme_content}" || softfail || return $?
-}
+  # Output all currently defined functions
+  declare -f || fail "Could not output all currently defined functions."
 
-# run shellcheck
-# shellcheck disable=SC2046
-shellcheck build.sh index.sh \
-  bin/* \
-  $(find lib -name '*.sh') \
-  $(find src -name '*.sh')
+  # Include the script invocation logic
+  printf "\n" && file::read_section invoke_runagfile bin/runag ||
+    fail "Could not read the 'invoke_runagfile' section from bin/runag."
 
-# make docs
-docs::make || fail
+} >"${temp_file}" || fail "Could not write assembled content to temporary file."
 
-# build files
-bash src/deploy.sh
-bash src/runag.sh
-bash src/ssh-call.sh
-bash src/deploy-offline.sh
+# Move the newly built script to its destination with proper permissions
+file::write --consume "${temp_file}" --mode 0755 dist/runag ||
+  fail "Could not write the newly built script to 'dist/runag'."
+
+
+# Build the dist/ssh-call script
+# ------------------------------
+
+# Create a temporary file to assemble the script
+temp_file="$(mktemp)" || fail "Could not create a temporary file."
+
+{
+  # Write the shebang to specify the Bash interpreter
+  printf "#!/usr/bin/env bash\n\n" || fail "Could not write the shebang line."
+
+  # Insert the license header from the Runag library
+  runag::print_license && printf "\n" || fail "Could not write license information."
+
+  # Add a comment indicating the commit this build was generated from
+  printf "# This script was built from commit " || fail "Could not write commit comment."
+  git rev-parse HEAD && printf "\n" || fail "Could not retrieve the Git commit hash."
+
+  # Include shell configuration section
+  file::read_section set_shell_options bin/ssh-call && printf "\n" ||
+    fail "Could not read the 'set_shell_options' section from bin/ssh-call."
+
+  # Output utility functions
+  declare -f fail &&
+  declare -f softfail &&
+  declare -f dir::ensure_exists ||
+    fail "Required utility functions are missing."
+
+  # Output ssh::call functions
+  declare -f ssh::call &&
+  declare -f ssh::call::internal &&
+  declare -f ssh::call::set_ssh_args &&
+  declare -f ssh::call::produce_script &&
+  declare -f ssh::call::interactive_terminal_functions_filter &&
+  declare -f ssh::call::invoke ||
+    fail "Required ssh::call functions are missing."
+
+  # Include the script invocation logic
+  printf "\n" && file::read_section run_ssh_call_command bin/ssh-call ||
+    fail "Could not read the 'run_ssh_call_command' section from bin/ssh-call."
+
+} >"${temp_file}" || fail "Could not write assembled content to temporary file."
+
+# Move the newly built script to its destination with proper permissions
+file::write --consume "${temp_file}" --mode 0755 dist/ssh-call ||
+  fail "Could not write the newly built script to 'dist/ssh-call'."

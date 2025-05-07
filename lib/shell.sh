@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -71,30 +71,6 @@ shell::assign_and_mark_for_export() {
   # -g global variable scope
   # -x export
   declare -gx "$1"="$2"
-}
-
-shell::unset_locales() {
-  # man 5 locale
-  # https://wiki.debian.org/Locale
-  unset -v \
-    LANG \
-    LANGUAGE \
-    LC_ALL \
-    \
-    LC_COLLATE \
-    LC_CTYPE \
-    LC_MESSAGES \
-    LC_MONETARY \
-    LC_NUMERIC \
-    LC_TIME \
-    \
-    LC_ADDRESS \
-    LC_IDENTIFICATION \
-    LC_MEASUREMENT \
-    LC_NAME \
-    LC_PAPER \
-    LC_RESPONSE \
-    LC_TELEPHONE
 }
 
 shell::open() {

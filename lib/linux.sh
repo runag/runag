@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -30,7 +30,10 @@ linux::set_hostname() {
     return 0
   fi
 
-  local previous_name_escaped; previous_name_escaped="$(<<<"${previous_name}" sed 's/\./\\./g')" || softfail || return $?
+  local previous_name_escaped
+  
+  # shellcheck disable=SC2001
+  previous_name_escaped="$(<<<"${previous_name}" sed 's/\./\\./g')" || softfail || return $?
 
   file::write --append-line-unless-present --root --mode 0644 "${hosts_file}" "127.0.1.1	${new_name}" || softfail || return $?
 
@@ -52,7 +55,7 @@ linux::update_remote_locale() (
 
     # The server may not have the locales that are present on the local machine
     # If you pass locale variables to it, a slight error may occur
-    shell::unset_locales || fail
+    unset -v LANG LANGUAGE "${!LC_@}" || softfail || return $?
 
   elif [ -n "${REMOTE_LOCALE:-}" ]; then
     IFS=" " read -r -a locale_list <<<"${REMOTE_LOCALE}" || softfail || return $?
@@ -108,7 +111,7 @@ linux::reset_locales() {
 
   file::write --sudo --consume "${temp_file}" --mode 0644 /etc/locale.conf || softfail || return $?
 
-  shell::unset_locales || softfail || return $?
+  unset -v LANG LANGUAGE "${!LC_@}" || softfail || return $?
 
   # Workaround for strange bash behaviour
   #
@@ -229,6 +232,7 @@ linux::adduser() {
 }
 
 linux::get_default_path_env() {(
+  # shellcheck disable=SC1091
   . /etc/environment && echo "${PATH}" || softfail || return $?
 )}
 
@@ -250,6 +254,7 @@ linux::get_ipv6_address() {
 
 # gnome-keyring and libsecret (for git and ssh)
 linux::install_gnome_keyring_and_libsecret() (
+  # shellcheck disable=SC1091
   . /etc/os-release || softfail || return $?
 
   if [ "${ID:-}" = debian ] || [ "${ID_LIKE:-}" = debian ]; then

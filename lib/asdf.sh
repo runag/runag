@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -87,6 +87,7 @@ SHELL
 }
 
 asdf::load() {
+  # shellcheck disable=SC1091
   . "${HOME}/.asdf/asdf.sh" || softfail "Unable to load asdf" || return $?
 }
 

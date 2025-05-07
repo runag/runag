@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 # ### `runag::mini_library`
 #
-# This function generates a minimal bash script preamble used for producing derivative scripts from Rùnag code. 
+# This function generates a minimal bash script preamble used for producing derivative scripts from Runag code. 
 # It outputs the shebang line, prints the project's license information, and optionally enables the 'nounset' 
 # shell option to treat unset variables as errors. Additionally, it outputs the source code of the `fail`, `softfail`, 
 # `dir::ensure_exists`, and `file::write` functions.
@@ -28,15 +28,15 @@
 #
 runag::mini_library() {
   # Output the shebang for the script to specify the interpreter.
-  printf "#!/usr/bin/env bash\n\n" || fail "Failed to print the shebang line."
+  printf "#!/usr/bin/env bash\n\n" || softfail "Failed to print the shebang line." || return $?
 
   # Print the license information.
   # shellcheck disable=SC2015
-  runag::print_license && printf "\n" || fail "Error printing license information."
+  runag::print_license && printf "\n" || softfail "Error printing license information." || return $?
 
   # If the argument is '--nounset', set the nounset option to treat unset variables as errors.
   if [ "${1:-}" = "--nounset" ]; then
-    printf "set -o nounset\n\n" || fail "Failed to print 'nounset' option."
+    printf "set -o nounset\n\n" || softfail "Failed to print 'nounset' option." || return $?
   fi
 
   # Output the code for the functions
@@ -48,12 +48,12 @@ runag::mini_library() {
 
 # ### `runag::print_license`
 #
-# This function prints the copyright and licensing information for the Rùnag project.
+# This function prints the copyright and licensing information for the Runag project.
 # It includes the project's copyright notice and specifies that the project is licensed under the Apache License, Version 2.0.
 #
 runag::print_license() {
   cat <<SHELL
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ SHELL
 # ### `runag::extend_package_list::debian`
 #
 # This function populates the `package_list` array with the essential dependencies required 
-# for running Rùnag on systems using `apt` (Debian GNU/Linux) as their package manager.
+# for running Runag on systems using `apt` (Debian GNU/Linux) as their package manager.
 #
 # #### Usage:
 # 
@@ -101,7 +101,7 @@ runag::extend_package_list::debian() {
 # ### `runag::extend_package_list::arch`
 #
 # This function populates the `package_list` array with the essential dependencies required 
-# for running Rùnag on systems using `pacman` (Arch Linux) as their package manager.
+# for running Runag on systems using `pacman` (Arch Linux) as their package manager.
 #
 # #### Usage:
 # 

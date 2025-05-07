@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Copyright 2012-2024 Rùnag project contributors
+#  Copyright 2012-2025 Runag project contributors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,49 +19,29 @@
 # 9 11 14 13 - looks good in dark mode, looks good in light only with bold
 
 log::error() {
-  local message="${1:-"(empty log message)"}"
-  if [ -t 2 ]; then
-    echo "$(printf "setaf 9\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
-  else
-    echo "[ERROR] ${message}" >&2
-  fi
+  # Red
+  [ -t 2 ] && printf "%s\n" "$(printf "setaf 9\nbold" | tput -S 2>/dev/null)${*:-"Log message missing."}$(tput sgr 0 2>/dev/null)" >&2 ||
+  printf "[ERROR] %s\n" "${*:-"Log message missing."}" >&2
 }
 
 log::warning() {
-  local message="${1:-"(empty log message)"}"
-  if [ -t 2 ]; then
-    echo "$(printf "setaf 11\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
-  else
-    echo "[WARNING] ${message}" >&2
-  fi
+  # Yellow
+  [ -t 2 ] && printf "%s\n" "$(printf "setaf 11\nbold" | tput -S 2>/dev/null)${*:-"Log message missing."}$(tput sgr 0 2>/dev/null)" >&2 ||
+  printf "[WARNING] %s\n" "${*:-"Log message missing."}" >&2
 }
 
 log::notice() {
-  local message="${1:-"(empty log message)"}"
-  if [ -t 2 ]; then
-    echo "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
-  else
-    echo "[NOTICE] ${message}" >&2
-  fi
+  # Cyan/light blue
+  [ -t 2 ] && printf "%s\n" "$(printf "setaf 14\nbold" | tput -S 2>/dev/null)${*:-"Log message missing."}$(tput sgr 0 2>/dev/null)" >&2 ||
+  printf "[NOTICE] %s\n" "${*:-"Log message missing."}" >&2
 }
 
 log::success() {
-  local message="${1:-"(empty log message)"}"
-  if [ -t 2 ]; then
-    echo "$(printf "setaf 13\nbold" | tput -S 2>/dev/null)${message}$(tput sgr 0 2>/dev/null)" >&2
-  else
-    echo "[SUCCESS] ${message}" >&2
-  fi
+  # Magenta/light purple
+  [ -t 2 ] && printf "%s\n" "$(printf "setaf 13\nbold" | tput -S 2>/dev/null)${*:-"Log message missing."}$(tput sgr 0 2>/dev/null)" >&2 ||
+  printf "[SUCCESS] %s\n" "${*:-"Log message missing."}" >&2
 }
 
 log::elapsed_time() {
   log::notice "Elapsed time: $((SECONDS / 3600))h$(((SECONDS % 3600) / 60))m$((SECONDS % 60))s"
-}
-
-log::function_sources() {
-  declare -f log::error || softfail || return $?
-  declare -f log::warning || softfail || return $?
-  declare -f log::notice || softfail || return $?
-  declare -f log::success || softfail || return $?
-  declare -f log::elapsed_time || softfail || return $?
 }
