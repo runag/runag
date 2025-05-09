@@ -27,8 +27,10 @@ fi
 # shellcheck disable=SC1091
 source index.sh || { echo "Failed to load the Runag library." >&2; exit 1; }
 
-# Build the bin/runag script
-# --------------------------
+# --- Build the bin/runag script
+
+# Set the script file name
+script_file="runag"
 
 # Create a temporary file to assemble the script
 temp_file="$(mktemp)" || fail "Could not create a temporary file."
@@ -45,25 +47,27 @@ temp_file="$(mktemp)" || fail "Could not create a temporary file."
   git rev-parse HEAD && printf "\n" || fail "Could not retrieve the Git commit hash."
 
   # Include shell configuration section
-  file::read_section set_shell_options bin/runag && printf "\n" ||
-    fail "Could not read the 'set_shell_options' section from bin/runag."
+  file::read_section set_shell_options "bin/${script_file}" && printf "\n" ||
+    fail "Could not read the 'set_shell_options' section from bin/${script_file}."
 
   # Output all currently defined functions
   declare -f || fail "Could not output all currently defined functions."
 
   # Include the script invocation logic
-  printf "\n" && file::read_section invoke_runagfile bin/runag ||
-    fail "Could not read the 'invoke_runagfile' section from bin/runag."
+  printf "\n" && file::read_section invoke_command "bin/${script_file}" ||
+    fail "Could not read the 'invoke_command' section from bin/${script_file}."
 
 } >"${temp_file}" || fail "Could not write assembled content to temporary file."
 
 # Move the newly built script to its destination with proper permissions
-file::write --consume "${temp_file}" --mode 0755 dist/runag ||
-  fail "Could not write the newly built script to 'dist/runag'."
+file::write --consume "${temp_file}" --mode 0755 "dist/${script_file}" ||
+  fail "Could not write the newly built script to 'dist/${script_file}'."
 
 
-# Build the dist/ssh-call script
-# ------------------------------
+# --- Build the dist/ssh-call script
+
+# Set the script file name
+script_file="ssh-call"
 
 # Create a temporary file to assemble the script
 temp_file="$(mktemp)" || fail "Could not create a temporary file."
@@ -80,8 +84,8 @@ temp_file="$(mktemp)" || fail "Could not create a temporary file."
   git rev-parse HEAD && printf "\n" || fail "Could not retrieve the Git commit hash."
 
   # Include shell configuration section
-  file::read_section set_shell_options bin/ssh-call && printf "\n" ||
-    fail "Could not read the 'set_shell_options' section from bin/ssh-call."
+  file::read_section set_shell_options "bin/${script_file}" && printf "\n" ||
+    fail "Could not read the 'set_shell_options' section from bin/${script_file}."
 
   # Output utility functions
   declare -f fail &&
@@ -99,20 +103,21 @@ temp_file="$(mktemp)" || fail "Could not create a temporary file."
     fail "Required ssh::call functions are missing."
 
   # Include the script invocation logic
-  printf "\n" && file::read_section run_ssh_call_command bin/ssh-call ||
-    fail "Could not read the 'run_ssh_call_command' section from bin/ssh-call."
+  printf "\n" && file::read_section invoke_command "bin/${script_file}" ||
+    fail "Could not read the 'invoke_command' section from bin/${script_file}."
 
 } >"${temp_file}" || fail "Could not write assembled content to temporary file."
 
 # Move the newly built script to its destination with proper permissions
-file::write --consume "${temp_file}" --mode 0755 dist/ssh-call ||
-  fail "Could not write the newly built script to 'dist/ssh-call'."
+file::write --consume "${temp_file}" --mode 0755 "dist/${script_file}" ||
+  fail "Could not write the newly built script to 'dist/${script_file}'."
+
 
 # Add the built executables to the staging area
 git add dist/runag || fail "Failed to add 'dist/runag' to the staging area."
 git add dist/ssh-call || fail "Failed to add 'dist/ssh-call' to the staging area."
 
-# Commit the changes
+# Commit the changes to the repository
 git commit -m "Add built executables for runag and ssh-call
 
 * Bundles the required library functions for standalone usage

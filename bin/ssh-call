@@ -89,10 +89,10 @@ runag::load_runag_library "../lib" || {
 # Remove the function to avoid leaving it in the global namespace
 unset -f runag::load_runag_library
 
-# BEGIN run_ssh_call_command
+# BEGIN invoke_command
 # Run the ssh::call if the script is executed directly, not sourced
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   ssh::call --command "$@"
   softfail --unless-good --status $? "ssh::call command failed to complete successfully." || exit $?
 fi
-# END run_ssh_call_command
+# END invoke_command

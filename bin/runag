@@ -91,7 +91,7 @@ runag::load_runag_library "../lib" || {
 # Remove the function to avoid leaving it in the global namespace
 unset -f runag::load_runag_library
 
-# BEGIN invoke_runagfile
+# BEGIN invoke_command
 # == By now, all required library functions should be available ==
 
 # Option to skip loading the runagfile
@@ -146,4 +146,4 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
 
   exit 1
 fi
-# END invoke_runagfile
+# END invoke_command
