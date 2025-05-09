@@ -107,3 +107,16 @@ temp_file="$(mktemp)" || fail "Could not create a temporary file."
 # Move the newly built script to its destination with proper permissions
 file::write --consume "${temp_file}" --mode 0755 dist/ssh-call ||
   fail "Could not write the newly built script to 'dist/ssh-call'."
+
+# Add the built executables to the staging area
+git add dist/runag || fail "Failed to add 'dist/runag' to the staging area."
+git add dist/ssh-call || fail "Failed to add 'dist/ssh-call' to the staging area."
+
+# Commit the changes
+git commit -m "Add built executables for runag and ssh-call
+
+* Bundles the required library functions for standalone usage
+* Includes the built 'dist/runag' executable
+* Includes the built 'dist/ssh-call' executable
+* Generated using the 'build.sh' script" ||
+  fail "Failed to commit the built executables."
