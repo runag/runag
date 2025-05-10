@@ -379,3 +379,31 @@ systemd::service_action::journal() (
 
   "${journalctl_command[@]}" --unit "${service_name}.service" --lines 2048 "${follow_argument[@]}" || softfail || return $?
 )
+
+# ## `systemd::list_units_filter`
+#
+# Remove non-informative lines from the output of `systemctl list-units`.
+#
+# ### Usage
+#
+# systemctl --user --all --type=service list-units | systemd::list_units_filter
+#
+# The function does not accept any arguments or options.
+#
+# ### Examples
+#
+# systemctl --user --all --type=service list-units | systemd::list_units_filter
+#
+systemd::list_units_filter() {
+  # 1st sed: Remove lines that indicate the number of timers or loaded units, handling ANSI color codes
+  # 2nd sed: Remove consecutive empty lines but keep single empty lines
+  grep::filter -xF --line-buffered "LOAD   = Reflects whether the unit definition was properly loaded." |
+  grep::filter -xF --line-buffered "ACTIVE = The high-level unit activation state, i.e. generalization of SUB." |
+  grep::filter -xF --line-buffered "SUB    = The low-level unit activation state, values depend on unit type." |
+  grep::filter -xF --line-buffered "To show all installed unit files use 'systemctl list-unit-files'." |
+  sed --unbuffered '/^\(\x1B\[[0-9;]*m\)*[0-9]\+ \(timers\|loaded units\) listed\.\(\x1B\[[0-9;]*m\)*$/d' |
+  sed --unbuffered '/^$/N;/^\n$/D'
+
+  # Check if any command in the pipeline failed
+  shell::is_pipe_good || softfail "Failed to filter the list of systemd units." || return $?
+}

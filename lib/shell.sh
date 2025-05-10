@@ -76,3 +76,7 @@ shell::assign_and_mark_for_export() {
 shell::open() {
   "${SHELL}" "$@" || true
 }
+
+shell::is_pipe_good () {
+  ! [[ "${PIPESTATUS[*]}" =~ [^[:space:]0] ]]
+}
