@@ -67,7 +67,7 @@ runag::load_runag_library() {
   }
 
   # Load each .sh file in the library directory
-  local file_path; for file_path in "${lib_dir}"/*.sh; do
+  local file_path; for file_path in "${lib_dir}"/core/*.sh "${lib_dir}"/integrations/*.sh "${lib_dir}"/workflows/*.sh; do
     if [ -f "${file_path}" ]; then
       # shellcheck disable=SC1090
       source "${file_path}" || {

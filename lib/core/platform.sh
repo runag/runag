@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ## `cross_platform::config_home`
+# ## `platform::config_home`
 #
 # Determines the platform-specific configuration home directory.
 #
@@ -25,9 +25,9 @@
 #
 # ### Usage
 #
-# cross_platform::config_home
+# platform::config_home
 #
-cross_platform::config_home() {
+platform::config_home() {
   # Determine configuration directory based on the operating system type
   case "${OSTYPE}" in
     linux*)

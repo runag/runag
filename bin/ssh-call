@@ -68,9 +68,9 @@ runag::load_runag_library() {
 
   # Load selected library files
   # shellcheck disable=SC1091,SC2015
-  source "${lib_dir}/dir.sh" &&
-  source "${lib_dir}/fail.sh" &&
-  source "${lib_dir}/ssh-call.sh" || {
+  source "${lib_dir}/core/dir.sh" &&
+  source "${lib_dir}/core/fail.sh" &&
+  source "${lib_dir}/integrations/ssh-call.sh" || {
     echo "Failed to load library files from '${lib_dir}' (exit code $?)." >&2
     return 1
   }
