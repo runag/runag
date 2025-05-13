@@ -77,6 +77,18 @@ shell::open() {
   "${SHELL}" "$@" || true
 }
 
+# ## `shell::is_pipe_good`
+#
+# Checks if all components of a pipeline completed successfully.
+#
+# This function verifies the exit status of each command in a pipeline
+# using the `PIPESTATUS` array. It returns true (0) if all commands
+# succeeded, and false (1) otherwise.
+#
+# ### Usage
+#
+# shell::is_pipe_good
+#
 shell::is_pipe_good () {
   ! [[ "${PIPESTATUS[*]}" =~ [^[:space:]0] ]]
 }
