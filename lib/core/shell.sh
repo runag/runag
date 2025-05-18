@@ -92,3 +92,34 @@ shell::open() {
 shell::is_pipe_good () {
   ! [[ "${PIPESTATUS[*]}" =~ [^[:space:]0] ]]
 }
+
+# ## `shell::argument_exists`
+#
+# Checks if a specific argument is present in a list of provided arguments.
+#
+# This function iterates over a list of arguments starting from the second
+# parameter and checks if any of them match the first parameter.
+#
+# ### Usage
+#
+# shell::argument_exists <argument-to-find> [<arguments-to-search-in>...]
+#
+# Arguments:
+#   <argument-to-find>        The argument to search for in the list
+#   [<arguments-to-search-in>...] A space-separated list of arguments to search within
+#
+# ### Examples
+#
+# shell::argument_exists "--help" "--help" "-v" "--config"
+# shell::argument_exists "test" "run" "build" "test"
+#
+shell::argument_exists() {
+  local arg
+  # Iterate over arguments starting from the second one
+  for arg in "${@:2}"; do
+    # Check if the current argument matches the search target
+    [ "${arg}" = "$1" ] && return 0
+  done
+  # If no match is found after checking all arguments, return 1 (false)
+  return 1
+}

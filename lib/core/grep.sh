@@ -14,6 +14,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# ## `grep::filter`
+#
+# Filters out lines that match the specified patterns using `grep`.
+# If no lines are found, it exits with status 0 without triggering an error.
+#
+# ### Usage
+#
+# grep::filter ARGUMENTS...
+#
+# Arguments:
+#   ARGUMENTS...  Any valid `grep` arguments or options.
+#
+# ### Examples
+#
+# grep::filter -E "DEBUG|TRACE" file1.log file2.log
+#
 grep::filter () {
   grep -v "$@" || [ $? = 1 ]
 }

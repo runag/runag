@@ -20,8 +20,8 @@
 #
 # This function checks the `OSTYPE` environment variable to identify the
 # operating system and then outputs the conventional path for user-specific
-# application configuration files. It supports Linux, macOS (darwin), and
-# Windows (msys).
+# application configuration files. It supports Linux, macOS, and
+# Windows.
 #
 # ### Usage
 #
@@ -38,13 +38,56 @@ platform::config_home() {
       # For macOS, use ~/Library/Application Support
       echo "${HOME}/Library/Application Support"
       ;;
-    msys*)
-      # For Windows (msys/git bash), use APPDATA
+    msys*|cygwin*)
+      # For Windows, use APPDATA
       echo "${APPDATA}"
       ;;
     *)
       # If the platform is not recognized, report a soft failure
-      softfail "The operating system platform is not supported." || return $?
+      softfail "The operating system platform is not supported."
+      return 1
       ;;
   esac
+}
+
+# ## `platform::copy_to_clipboard`
+#
+# Copies standard input to the system clipboard.
+#
+# This function attempts to use various clipboard tools (wl-copy, xclip,
+# pbcopy) in a preferred order. If none of these tools are available,
+# it prints the input to standard output as a fallback.
+#
+# ### Usage
+#
+# platform::copy_to_clipboard
+#
+platform::copy_to_clipboard() {
+  # Attempt to use wl-copy (Wayland-based Linux) if available
+  if command -v wl-copy >/dev/null 2>&1; then
+    wl-copy || softfail "Could not access the clipboard using wl-copy." || return 1
+
+  # Else, attempt to use xclip (X11-based Linux) if available
+  elif command -v xclip >/dev/null 2>&1; then
+    xclip -selection clipboard || softfail "Could not access the clipboard using xclip." || return 1
+
+  # Else, attempt to use pbcopy (macOS) if available
+  elif command -v pbcopy >/dev/null 2>&1; then
+    pbcopy || softfail "Could not access the clipboard using pbcopy." || return 1
+  
+  # Attempt to use clip (Windows) if available
+  elif command -v clip >/dev/null 2>&1; then
+    clip || softfail "Could not access the clipboard using clip." || return 1
+
+  # If no clipboard tool is found, print to standard output
+  else
+    echo "No clipboard tool was found. Printing to standard output instead:" >&2
+    cat || softfail "Failed to read from stdin." || return 1
+    
+    # This is not necessarily an error since the data was displayed
+    return
+  fi
+
+  # Notify the user of the successful operation
+  echo "Copied to clipboard." >&2
 }
