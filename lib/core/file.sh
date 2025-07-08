@@ -79,7 +79,8 @@ file::write() {
       -m|--mode)
         # Set file permissions in numeric format (e.g., 0644)
         if [ -z "${2:-}" ]; then
-          softfail "Error: Missing argument for $1 option" || return $?
+          printf "Error: Missing argument for %s option\n" "$1" >&2
+          return 1
         fi
         mode="$2"
         shift 2
@@ -87,7 +88,8 @@ file::write() {
       -o|--owner)
         # Set the file's owner
         if [ -z "${2:-}" ]; then
-          softfail "Error: Missing argument for $1 option" || return $?
+          printf "Error: Missing argument for %s option\n" "$1" >&2
+          return 1
         fi
         owner="$2"
         shift 2
@@ -95,13 +97,14 @@ file::write() {
       -g|--group)
         # Set the file's group ownership
         if [ -z "${2:-}" ]; then
-          softfail "Error: Missing argument for $1 option" || return $?
+          printf "Error: Missing argument for %s option\n" "$1" >&2
+          return 1
         fi
         group="$2"
         shift 2
         ;;
       -s|--sudo)
-        # Enable the use of sudo to perform actions with elevated privileges
+        # Enable the use of sudo to perform operations with elevated privileges
         sudo=true
         shift
         ;;
@@ -127,7 +130,8 @@ file::write() {
       -c|--copy)
         # Use the "copy" method and specify the source file
         if [ -z "${2:-}" ]; then
-          softfail "Error: Missing argument for $1 option" || return $?
+          printf "Error: Missing argument for %s option\n" "$1" >&2
+          return 1
         fi
         method="copy"
         source_file="$2"
@@ -136,7 +140,8 @@ file::write() {
       -n|--consume)
         # Use the "consume" method and specify the source file
         if [ -z "${2:-}" ]; then
-          softfail "Error: Missing argument for $1 option" || return $?
+          printf "Error: Missing argument for %s option\n" "$1" >&2
+          return 1
         fi
         method="consume"
         source_file="$2"
@@ -161,7 +166,8 @@ file::write() {
         # Check if the corresponding filter function is defined
         if ! declare -F "${filter_function}" >/dev/null; then
           # Fail if the filter function for the specified option does not exist
-          softfail "Unknown option '${1}' or filter function '${filter_function}' is not defined." || return $?
+          printf "Unknown option '%s' or filter function '%s' is not defined.\n" "$1" "${filter_function}" >&2
+          return 1
         fi
 
         filter_command=("${filter_function}")
@@ -170,11 +176,13 @@ file::write() {
         shift
 
         # Let the filter function parse its own arguments and return how many were consumed
-        filter_arguments_count="$("${filter_function}" --parse-arguments "$@")" || softfail "Filter argument parsing failed for '${filter_function}'." || return $?
+        filter_arguments_count="$("${filter_function}" --parse-arguments "$@")" ||
+          { printf "Filter argument parsing failed for '%s'.\n" "${filter_function}" >&2; return 1; }
 
         # Ensure the parsed argument count is a numeric value
         if ! [[ "${filter_arguments_count}" =~ ^[0-9]+$ ]]; then
-          softfail "Filter '${filter_function}' returned non-numeric value when parsing arguments." || return $?
+          printf "Filter '%s' returned non-numeric value when parsing arguments.\n" "${filter_function}" >&2
+          return 1
         fi
 
         # Append parsed arguments to the filter command array
@@ -185,7 +193,8 @@ file::write() {
         ;;
       -*)
         # Fail if an unrecognized option is provided
-        softfail "Unrecognized option: $1" || return $?
+        printf "Unrecognized option: %s\n" "$1" >&2
+        return 1
         ;;
       *)
         # Break from the loop when no more options are provided
@@ -196,7 +205,8 @@ file::write() {
 
   # Verify that a file path argument is provided
   if [ -z "${1:-}" ]; then
-    softfail "Error: A file path must be provided as an argument." || return $?
+    echo "Error: A file path must be provided as an argument." >&2
+    return 1
   fi
 
   # Define the file path from the first argument
@@ -219,45 +229,51 @@ file::write() {
   if ${sudo:+"sudo"} test -e "${file_path}"; then
     # Verify that the file is writable
     if ! ${sudo:+"sudo"} test -w "${file_path}"; then
-      softfail "The file exists but the user does not have write access: ${file_path}" || return $?
+      printf "The file exists but the user does not have write access: %s\n" "${file_path}" >&2
+      return 1
     fi
 
     # Verify that the file is a regular file
     if ! ${sudo:+"sudo"} test -f "${file_path}"; then
-      softfail "The file exists but it is not a regular file: ${file_path}" || return $?
+      printf "The file exists but it is not a regular file: %s\n" "${file_path}" >&2
+      return 1
     fi
   fi
 
   # Check if a source file is specified and ensure it exists and is readable
   if [ -n "${source_file:-}" ] && ! [ -r "${source_file}" ]; then
     # Fail with a error message if the source file is missing or unreadable
-    softfail "Source file does not exist or is not readable: ${source_file}" || return $?
+    printf "Source file does not exist or is not readable: %s\n" "${source_file}" >&2
+    return 1
   fi
 
   # Check if the 'mkdir' flag is set to true
   if [ "${mkdir}" = true ]; then
     # Get the directory path from the file path
-    dir_path="$(dirname "${file_path}")" || softfail "Failed to determine the directory path from ${file_path}" || return $?
+    dir_path="$(dirname "${file_path}")" ||
+      { printf "Failed to determine the directory path from %s\n" "${file_path}" >&2; return 1; }
 
     # If a mode is specified, calculate a compatible directory mode
     if [ -n "${mode:-}" ]; then
       # Convert the mode string to numeric value
-      dir_mode=$(( "0${mode}" )) || softfail "Failed to parse mode value: ${mode}" || return $?
+      dir_mode=$(( "0${mode}" )) ||
+        { printf "Failed to parse mode value: %s\n" "${mode}" >&2; return 1; }
 
       # Ensure the user has execute (search) permission on the directory
-      dir_mode=$(( (dir_mode & 0400) == 0400 ? (dir_mode | 0100) : dir_mode )) || \
-        softfail "Failed to adjust directory mode for user execute permissions" || return $?
+      dir_mode=$(( (dir_mode & 0400) == 0400 ? (dir_mode | 0100) : dir_mode )) ||
+        { echo "Failed to adjust directory mode for user execute permissions" >&2; return 1; }
 
       # Ensure the group has execute (search) permission on the directory
-      dir_mode=$(( (dir_mode & 040) == 040 ? (dir_mode | 010) : dir_mode )) || \
-        softfail "Failed to adjust directory mode for group execute permissions" || return $?
+      dir_mode=$(( (dir_mode & 040) == 040 ? (dir_mode | 010) : dir_mode )) ||
+        { echo "Failed to adjust directory mode for group execute permissions" >&2; return 1; }
 
       # Ensure others have execute (search) permission on the directory
-      dir_mode=$(( (dir_mode & 04) == 04 ? (dir_mode | 01) : dir_mode )) || \
-        softfail "Failed to adjust directory mode for other execute permissions" || return $?
+      dir_mode=$(( (dir_mode & 04) == 04 ? (dir_mode | 01) : dir_mode )) ||
+        { echo "Failed to adjust directory mode for other execute permissions" >&2; return 1; }
 
       # Format the directory mode as an octal string
-      printf -v dir_mode "0%o" "${dir_mode}" || softfail "Failed to format directory mode as octal" || return $?
+      printf -v dir_mode "0%o" "${dir_mode}" ||
+        { echo "Failed to format directory mode as octal" >&2; return 1; }
     fi
 
     # Ensure the directory exists with the specified properties
@@ -266,24 +282,27 @@ file::write() {
       ${owner:+--owner "${owner}"} \
       ${group:+--group "${group}"} \
       ${sudo:+"--sudo"} \
-      "${dir_path}" || \
-      softfail "Failed to ensure the directory exists: ${dir_path}" || return $?
+      "${dir_path}" ||
+        { printf "Failed to ensure the directory exists: %s\n" "${dir_path}" >&2; return 1; }
   fi
 
   if ${sudo:+"sudo"} test -f "${file_path}"; then
     # Retrieve the current file permissions if the mode is not already specified
     if [ -z "${mode:-}" ]; then
-      mode="$(${sudo:+"sudo"} stat -c %a "${file_path}")" || softfail "Failed to retrieve file permissions for ${file_path}" || return $?
+      mode="$(${sudo:+"sudo"} stat -c %a "${file_path}")" ||
+        { printf "Failed to retrieve file permissions for %s\n" "${file_path}" >&2; return 1; }
     fi
 
     # Retrieve the current file owner if the owner is not already specified
     if [ -z "${owner:-}" ]; then
-      owner="$(${sudo:+"sudo"} stat -c %U "${file_path}")" || softfail "Failed to retrieve file owner for ${file_path}" || return $?
+      owner="$(${sudo:+"sudo"} stat -c %U "${file_path}")" ||
+        { printf "Failed to retrieve file owner for %s\n" "${file_path}" >&2; return 1; }
     fi
 
     # Retrieve the current file group if the group is not already specified
     if [ -z "${group:-}" ]; then
-      group="$(${sudo:+"sudo"} stat -c %G "${file_path}")" || softfail "Failed to retrieve file group for ${file_path}" || return $?
+      group="$(${sudo:+"sudo"} stat -c %G "${file_path}")" ||
+        { printf "Failed to retrieve file group for %s\n" "${file_path}" >&2; return 1; }
     fi
   fi
 
@@ -291,13 +310,16 @@ file::write() {
   if [ -z "${mode:-}" ]; then
     # Get the umask value depending on whether sudo is used
     if [ "${sudo:-}" = true ]; then
-      umask_value="$(sudo --shell umask)" || softfail "Failed to retrieve umask value with sudo" || return $?
+      umask_value="$(sudo --shell umask)" ||
+        { echo "Failed to retrieve umask value with sudo" >&2; return 1; }
     else
-      umask_value="$(umask)" || softfail "Failed to retrieve umask value" || return $?
+      umask_value="$(umask)" ||
+        { echo "Failed to retrieve umask value" >&2; return 1; }
     fi
 
     # Calculate the mode by applying the umask to the default 0666 permissions
-    mode="$(printf "%o" "$(( 0666 ^ "${umask_value}" ))")" || softfail "Failed to calculate mode from umask" || return $?
+    mode="$(printf "%o" "$(( 0666 ^ "${umask_value}" ))")" ||
+      { echo "Failed to calculate mode from umask" >&2; return 1; }
   fi
 
   # Set the file owner if the owner is not already specified
@@ -311,40 +333,48 @@ file::write() {
 
   # If no group is set, retrieve the default group for the user
   if [ -z "${group:-}" ]; then
-    group="$(id -g -n "${owner}")" || softfail "Failed to retrieve group for owner '${owner}'" || return $?
+    group="$(id -g -n "${owner}")" ||
+      { printf "Failed to retrieve group for owner '%s'\n" "${owner}" >&2; return 1; }
   fi
 
   # Create a temporary file and store its path in the temp_file variable
-  temp_file="$(mktemp)" || softfail "Failed to create a temporary file" || return $?
+  temp_file="$(mktemp)" ||
+    { echo "Failed to create a temporary file" >&2; return 1; }
 
   # Handle different input methods based on the specified method
   case "$method" in
     copy|consume)
       # If the method is "copy" or "consume", copy the contents of the source file to the temporary file
-      cat "${source_file}" >"${temp_file}" || softfail "Failed to copy data from source file '${source_file}' to temporary file" || return $?
+      cat "${source_file}" >"${temp_file}" ||
+        { printf "Failed to copy data from source file '%s' to temporary file\n" "${source_file}" >&2; return 1; }
       ;;
     capture)
       # If the method is "capture", capture the command output and write it to the temporary file
-      "$@" >"${temp_file}" || softfail "Failed to capture output and write to temporary file" || return $?
+      "$@" >"${temp_file}" ||
+        { echo "Failed to capture output and write to temporary file" >&2; return 1; }
       ;;
     fetch)
       # TODO: --terminal-input flag to cancel this check?
       # Check if stdin is a terminal and fail if data input is required
       if [ -t 0 ]; then
-        softfail "Stdin cannot be a terminal for file::write. Use a data source or specify a different input method" || return $?
+        echo "Stdin cannot be a terminal for file::write. Use a data source or specify a different input method" >&2
+        return 1
       fi
       # If stdin is not a terminal, capture the input and write it to the temporary file
-      cat >"${temp_file}" || softfail "Failed to read input from stdin and write to temporary file" || return $?
+      cat >"${temp_file}" ||
+        { echo "Failed to read input from stdin and write to temporary file" >&2; return 1; }
       ;;
     string)
       # If the input is a string, write it to the temporary file
       if [ -n "$*" ]; then
-        printf "%s\n" "$*" >"${temp_file}" || softfail "Failed to write string data to temporary file" || return $?
+        printf "%s\n" "$*" >"${temp_file}" ||
+          { echo "Failed to write string data to temporary file" >&2; return 1; }
       fi
       ;;
     -*)
       # If an unknown method is specified, fail with an error message
-      softfail "Unknown input method specified: $1" || return $?
+      printf "Unknown input method specified: %s\n" "$1" >&2
+      return 1
       ;;
   esac
 
@@ -352,50 +382,60 @@ file::write() {
   if [ ${#filter_command[@]} -gt 0 ]; then
     # If the file exists, copy its content to a temporary file to allow access without sudo privileges
     if ${sudo:+"sudo"} test -f "${file_path}"; then
-      existing_file_temp="$(mktemp)" || softfail "Could not create a temporary file to store existing content." || return $?
-      ${sudo:+"sudo"} cat "${file_path}" >"${existing_file_temp}" || softfail "Copying existing content to a temporary file did not work." || return $?
+      existing_file_temp="$(mktemp)" ||
+        { echo "Could not create a temporary file to store existing content." >&2; return 1; }
+
+      ${sudo:+"sudo"} cat "${file_path}" >"${existing_file_temp}" ||
+        { echo "Copying existing content to a temporary file did not work." >&2; return 1; }
     fi
 
     # Create a temporary file for storing the filtered output
-    filter_output_temp="$(mktemp)" || softfail "Something went wrong while creating a temporary file for filtered output." || return $?
+    filter_output_temp="$(mktemp)" ||
+      { echo "Something went wrong while creating a temporary file for filtered output." >&2; return 1; }
 
     # Apply the filter command to process the content
-    "${filter_command[@]}" <"${temp_file}" "${existing_file_temp:-}" >"${filter_output_temp}" || softfail "Filtering process failed to complete successfully." || return $?
+    "${filter_command[@]}" <"${temp_file}" "${existing_file_temp:-}" >"${filter_output_temp}" ||
+      { echo "Filtering process failed to complete successfully." >&2; return 1; }
 
     # Replace the temporary file with the filtered output
-    mv "${filter_output_temp}" "${temp_file}" || softfail "Could not update the temporary file with the filtered content." || return $?
+    mv "${filter_output_temp}" "${temp_file}" ||
+      { echo "Could not update the temporary file with the filtered content." >&2; return 1; }
 
     # Remove the temporary file for existing content if it was created
     if [ -n "${existing_file_temp:-}" ]; then
-      rm "${existing_file_temp}" || softfail "Cleaning up the temporary file for existing content didn't work." || return $?
+      rm "${existing_file_temp}" ||
+        { echo "Cleaning up the temporary file for existing content didn't work." >&2; return 1; }
     fi
   fi
 
   # Check if empty input is not allowed and the temporary file is empty
   if [ "${allow_empty:-}" != true ] && [ ! -s "${temp_file}" ]; then
     # Remove the temporary file
-    rm "${temp_file}" || softfail "Failed to remove the temporary file: ${temp_file}" || return $?
+    rm "${temp_file}" ||
+      { printf "Failed to remove the temporary file: %s\n" "${temp_file}" >&2; return 1; }
 
     # Fail with a error message
-    softfail "Empty input is not permitted for file::write unless the --allow-empty flag is specified." || return $?
+    echo "Empty input is not permitted for file::write unless the --allow-empty flag is specified." >&2
+    return 1
   fi
 
   # Change the ownership of the temporary file to the specified owner and group
-  ${sudo:+"sudo"} chown "${owner}:${group}" "${temp_file}" || \
-    softfail "Failed to change ownership of ${temp_file} to ${owner}:${group}" || return $?
+  ${sudo:+"sudo"} chown "${owner}:${group}" "${temp_file}" ||
+    { printf "Failed to change ownership of %s to %s:%s\n" "${temp_file}" "${owner}" "${group}" >&2; return 1; }
 
   # Set the specified permissions for the temporary file
-  ${sudo:+"sudo"} chmod "${mode}" "${temp_file}" || \
-    softfail "Failed to set permissions (${mode}) on ${temp_file}" || return $?
+  ${sudo:+"sudo"} chmod "${mode}" "${temp_file}" ||
+    { printf "Failed to set permissions (%s) on %s\n" "${mode}" "${temp_file}" >&2; return 1; }
 
   # Move the temporary file to the desired file path
-  ${sudo:+"sudo"} mv "${temp_file}" "${file_path}" || \
-    softfail "Failed to move ${temp_file} to ${file_path}" || return $?
+  ${sudo:+"sudo"} mv "${temp_file}" "${file_path}" ||
+    { printf "Failed to move %s to %s\n" "${temp_file}" "${file_path}" >&2; return 1; }
 
   # Check if the method is set to "consume"
   if [ "${method}" = consume ]; then
     # Remove the source file as part of the consume operation
-    rm "${source_file}" || softfail "Failed to remove the source file: ${source_file}" || return $?
+    rm "${source_file}" ||
+      { printf "Failed to remove the source file: %s\n" "${source_file}" >&2; return 1; }
   fi
 }
 
@@ -421,23 +461,28 @@ file::write_filter::append_line_unless_present() {
   local existing_file="${1:-}"
 
   # Read the first line from input
-  local input_data; input_data="$(head -n 1)" || softfail "Failed to read input data from standard input." || return $?
+  local input_data
+  input_data="$(head -n 1)" ||
+    { echo "Failed to read input data from standard input." >&2; return 1; }
 
   if [ -n "${existing_file}" ] && [ -s "${existing_file}" ]; then
     # If the file exists, check if the input line is already present
     if grep -qFx "${input_data}" "${existing_file}"; then
       # Output the current content as no changes are needed
-      cat "${existing_file}" || softfail "Failed to read file '${existing_file}'." || return $?
+      cat "${existing_file}" ||
+        { printf "Failed to read file '%s'.\n" "${existing_file}" >&2; return 1; }
       return
     else
       # Append a newline to the existing content file if the content does not already end with one
       # If the content ends with multiple newlines, they will all be preserved
-      sed "\$a\\" "${existing_file}" || softfail "Could not append newline to '${existing_file}'." || return $?
+      sed "\$a\\" "${existing_file}" ||
+        { printf "Could not append newline to '%s'.\n" "${existing_file}" >&2; return 1; }
     fi
   fi
 
   # Output the input line
-  printf "%s\n" "${input_data}" || softfail "Failed to write input data to output." || return $?
+  printf "%s\n" "${input_data}" ||
+    { echo "Failed to write input data to output." >&2; return 1; }
 }
 
 # ## `file::write_filter::section`
@@ -462,7 +507,7 @@ file::write_filter::section() {
   fi
 
   # Validate required arguments
-  test -n "${1:-}" || softfail "Section name is required." || return $?
+  test -n "${1:-}" || { echo "Section name is required." >&2; return 1; }
 
   local section_name="$1"
   local existing_file="${2:-}"
@@ -478,16 +523,19 @@ file::write_filter::section() {
   if [ -n "${existing_file}" ] && [ -s "${existing_file}" ]; then
     # Read all lines from the file into an array
     # mapfile requires Bash 4.0 or newer (released in 2009)
-    mapfile -t existing_lines <"${existing_file}" || softfail "Failed to read content from '${existing_file}'." || return $?
+    mapfile -t existing_lines <"${existing_file}" ||
+      { printf "Failed to read content from '%s'.\n" "${existing_file}" >&2; return 1; }
 
     for line in "${existing_lines[@]}"; do
       case "${state}" in
         search)
           if [ "${line}" = "# BEGIN ${section_name}" ]; then
             state="within-section"
-            file::section_envelope "${section_name}" || softfail "Failed to write updated section '${section_name}'." || return $?
+            file::section_envelope "${section_name}" ||
+              { printf "Failed to write updated section '%s'.\n" "${section_name}" >&2; return 1; }
           else
-            printf '%s\n' "${line}" || softfail "Failed to write preserved line before section '${section_name}'." || return $?
+            printf '%s\n' "${line}" ||
+              { printf "Failed to write preserved line before section '%s'.\n" "${section_name}" >&2; return 1; }
           fi
           ;;
         within-section)
@@ -496,7 +544,8 @@ file::write_filter::section() {
           fi
           ;;
         section-found)
-          printf '%s\n' "${line}" || softfail "Failed to write preserved line after section '${section_name}'." || return $?
+          printf '%s\n' "${line}" ||
+            { printf "Failed to write preserved line after section '%s'.\n" "${section_name}" >&2; return 1; }
           ;;
       esac
     done
@@ -504,7 +553,8 @@ file::write_filter::section() {
     case "${state}" in
       within-section)
         # Started section but never found the end marker
-        softfail "Section '${section_name}' is missing an end marker." || return $?
+        printf "Section '%s' is missing an end marker.\n" "${section_name}" >&2
+        return 1
         ;;
       section-found)
         return
@@ -513,7 +563,8 @@ file::write_filter::section() {
   fi
 
   # If no existing section was found, append a new section
-  file::section_envelope "${section_name}" || softfail "Failed to append new section '${section_name}'." || return $?
+  file::section_envelope "${section_name}" ||
+    { printf "Failed to append new section '%s'.\n" "${section_name}" >&2; return 1; }
 }
 
 # ## `file::section_envelope`
@@ -532,14 +583,17 @@ file::section_envelope() {
   local section_name="$1"
 
   # Print section start marker
-  printf "# BEGIN %s\n" "${section_name}" || softfail "Failed to write start marker for section '${section_name}'." || return $?
+  printf "# BEGIN %s\n" "${section_name}" ||
+    { printf "Failed to write start marker for section '%s'.\n" "${section_name}" >&2; return 1; }
 
   # Ensure a newline at the end of the input, if not already present
   # Preserves any existing trailing newlines
-  sed "\$a\\" || softfail "Failed to append newline to input content for section '${section_name}'." || return $?
+  sed "\$a\\" ||
+    { printf "Failed to append newline to input content for section '%s'.\n" "${section_name}" >&2; return 1; }
 
   # Print section end marker
-  printf "# END %s\n" "${section_name}" || softfail "Failed to write end marker for section '${section_name}'." || return $?
+  printf "# END %s\n" "${section_name}" ||
+    { printf "Failed to write end marker for section '%s'.\n" "${section_name}" >&2; return 1; }
 }
 
 # ## `file::read_section`
@@ -556,15 +610,16 @@ file::section_envelope() {
 #
 file::read_section() {
   # Check for required arguments
-  test -n "${1:-}" || softfail "Section name is required." || return $?
-  test -n "${2:-}" || softfail "File path is required." || return $?
+  test -n "${1:-}" || { echo "Section name is required." >&2; return 1; }
+  test -n "${2:-}" || { echo "File path is required." >&2; return 1; }
 
   local section_name="$1"
   local file_path="$2"
 
   # Fail if the specified file does not exist
   if [ ! -f "${file_path}" ]; then
-    softfail "File '${file_path}' does not exist." || return $?
+    printf "File '%s' does not exist.\n" "${file_path}" >&2
+    return 1
   fi
 
   local file_lines
@@ -578,7 +633,8 @@ file::read_section() {
 
   # Read all lines from the file into an array
   # mapfile requires Bash 4.0 or newer (released in 2009)
-  mapfile -t file_lines <"${file_path}" || softfail "Failed to read content from '${file_path}'." || return $?
+  mapfile -t file_lines <"${file_path}" ||
+    { printf "Failed to read content from '%s'.\n" "${file_path}" >&2; return 1; }
 
   # Traverse lines to extract the requested section
   for line in "${file_lines[@]}"; do
@@ -601,11 +657,13 @@ file::read_section() {
 
   # Fail if no section markers were found
   if [ "${state}" != "section-found" ]; then
-    softfail "Section '${section_name}' not found in '${file_path}'." || return $?
+    printf "Section '%s' not found in '%s'.\n" "${section_name}" "${file_path}" >&2
+    return 1
   fi
 
   # Output the extracted lines
   for line in "${section_lines[@]}"; do
-    printf "%s\n" "${line}" || softfail "Failed to print content of section '${section_name}'." || return $?
+    printf "%s\n" "${line}" ||
+      { printf "Failed to print content of section '%s'.\n" "${section_name}" >&2; return 1; }
   done
 }

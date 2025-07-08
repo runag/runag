@@ -44,10 +44,6 @@ dir::ensure_exists() {
   local group
   local sudo
 
-  # The following commented line is not currently in use but could be used to fetch the group of the current user.
-  # group="$(awk -F: -v user="${USER}" '$1 == user {print $4}' /etc/passwd)"
-
-
   # Parse arguments to configure directory properties
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -78,9 +74,8 @@ dir::ensure_exists() {
         shift
         ;;
       -*)
-        # If an unknown argument is provided, print a stack trace and return 1.
-        softfail "Unknown argument: $1"
-        return $?
+        printf "Unknown argument: %s\n" "$1" >&2
+        return 1
         ;;
       *)
         # Break from the loop when no more options are provided
@@ -97,44 +92,66 @@ dir::ensure_exists() {
   
     # Ensure that the mode is numeric
     if ! [[ "${mode}" =~ ^[0-7]+$ ]]; then
-      softfail "Invalid mode: Mode should be numeric" || return $?
+      echo "Invalid mode: Mode should be numeric" >&2
+      return 1
     fi
 
     # Calculate umask value by subtracting mode from 0777
     local umask_value
-    umask_value="$(printf "0%o" "$(( 0777 - "0${mode}" ))")" || softfail "Failed to calculate umask value" || return $?
+    umask_value="$(printf "0%o" "$(( 0777 - "0${mode}" ))")" || {
+      echo "Failed to calculate umask value" >&2
+      return 1
+    }
 
     # If sudo is enabled, run mkdir with the correct umask and directory path
     if [ "${sudo:-}" = true ]; then
-      sudo --shell '$SHELL' -c "$(printf "umask %q && mkdir -p %q" "${umask_value}" "${path}")" \
-        || softfail "Failed to create directory with sudo and specified mode" || return $?
-
+      sudo --shell '$SHELL' -c "$(printf "umask %q && mkdir -p %q" "${umask_value}" "${path}")" || {
+        echo "Failed to create directory with sudo and specified mode" >&2
+        return 1
+      }
     else
       # Otherwise, use the local shell to apply the umask and create the directory
-      ( umask "${umask_value}" && mkdir -p "${path}" ) \
-        || softfail "Failed to create directory with specified mode" || return $?
+      ( umask "${umask_value}" && mkdir -p "${path}" ) || {
+        echo "Failed to create directory with specified mode" >&2
+        return 1
+      }
     fi
 
     # Ensure the directory has the correct access mode
-    ${sudo:+"sudo"} chmod "${mode}" "${path}" || softfail "Failed to set permissions on the directory" || return $?
+    ${sudo:+"sudo"} chmod "${mode}" "${path}" || {
+      echo "Failed to set permissions on the directory" >&2
+      return 1
+    }
     
   else
     # Create the directory without setting a specific mode
-    ${sudo:+"sudo"} mkdir -p "${path}" || softfail "Failed to create directory" || return $?
+    ${sudo:+"sudo"} mkdir -p "${path}" || {
+      echo "Failed to create directory" >&2
+      return 1
+    }
   fi
 
   # Set ownership if specified
   if [ -n "${owner:-}" ]; then
     # If no group is set, retrieve the default group for the user
     if [ -z "${group:-}" ]; then
-      group="$(id -g -n "${owner}")" || softfail "Failed to retrieve group for owner '${owner}'" || return $?
+      group="$(id -g -n "${owner}")" || {
+        printf "Failed to retrieve group for owner '%s'\n" "${owner}" >&2
+        return 1
+      }
     fi
 
     # Change the ownership of the directory
-    ${sudo:+"sudo"} chown "${owner}:${group}" "${path}" || softfail "Failed to set ownership to ${owner}:${group}" || return $?
+    ${sudo:+"sudo"} chown "${owner}:${group}" "${path}" || {
+      printf "Failed to set ownership to %s:%s\n" "${owner}" "${group}" >&2
+      return 1
+    }
     
   # If only the group is set, change the group ownership
   elif [ -n "${group:-}" ]; then
-    ${sudo:+"sudo"} chgrp "${group}" "${path}" || softfail "Failed to set group ownership to '${group}'" || return $?
+    ${sudo:+"sudo"} chgrp "${group}" "${path}" || {
+      printf "Failed to set group ownership to '%s'\n" "${group}" >&2
+      return 1
+    }
   fi
 }

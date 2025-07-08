@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-log::error() {
+log::err() {
   # Red
   [ -t 2 ] && printf "%s\n" "$(printf "setaf 9\nbold" | tput -S 2>/dev/null)${*:-"Log message missing."}$(tput sgr 0 2>/dev/null)" >&2 ||
   printf "[ERROR] %s\n" "${*:-"Log message missing."}" >&2
@@ -32,10 +32,10 @@ log::notice() {
   printf "[NOTICE] %s\n" "${*:-"Log message missing."}" >&2
 }
 
-log::success() {
+log::info() {
   # Magenta/light purple
   [ -t 2 ] && printf "%s\n" "$(printf "setaf 13\nbold" | tput -S 2>/dev/null)${*:-"Log message missing."}$(tput sgr 0 2>/dev/null)" >&2 ||
-  printf "[SUCCESS] %s\n" "${*:-"Log message missing."}" >&2
+  printf "[INFO] %s\n" "${*:-"Log message missing."}" >&2
 }
 
 log::elapsed_time() {
