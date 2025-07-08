@@ -17,17 +17,16 @@
 # TODO: Do I need to account for Directory's Group Ownership with `setgid`?
 # TODO: Do I need to account for Group Ownership Propagation via ACL?
 
-# ### `file::write`
-#
 # Writes data to a file, with options for permissions, ownership, and input sources.
 # This function provides multiple methods to write to a file, such as copying, consuming a file,
 # capturing output, or writing strings directly. It ensures the file exists with correct properties.
 #
-# #### Usage
+# Usage:
 #
-# file::write [options]... <file_path> [input_data]
+#   file::write [options]... <file_path> [input_data]
 #
 # Options:
+#
 #   -m, --mode <mode>                Set file permissions in numeric format (e.g., 0644).
 #   -o, --owner <owner>              Set the file owner.
 #   -g, --group <group>              Set the file group ownership.
@@ -41,17 +40,17 @@
 #   -e, --allow-empty                Allow empty input to be written.
 #   --<filter-command> [options]...  Apply a filter command to the input data.
 #
-# #### Example
+# Examples:
 #
-# # Write "Hello, World!" to a file with user-only access
-# file::write --user-only /path/to/file "Hello, World!"
+#   # Write "Hello, World!" to a file with user-only access
+#   file::write --user-only /path/to/file "Hello, World!"
 #
-# # Copy content from an existing file
-# file::write --copy /source/file /destination/file
+#   # Copy content from an existing file
+#   file::write --copy /source/file /destination/file
 #
-# # Capture output of a command
-# file::write --capture /path/to/file ls -la
-
+#   # Capture output of a command
+#   file::write --capture /path/to/file ls -la
+#
 file::write() {
   local mode
   local owner
@@ -439,17 +438,13 @@ file::write() {
   fi
 }
 
-# ## `file::write_filter::append_line_unless_present`
-#
 # Appends a line from standard input to the file only if it doesn't already exist.
 #
-# ### Usage
+# Usage:
+#   file::write_filter::append_line_unless_present "existing_file"
 #
-# file::write_filter::append_line_unless_present "existing_file"
-#
-# ### Example
-#
-# echo "new line" | file::write --append-line-unless-present "/path/to/file"
+# Examples:
+#   echo "new line" | file::write --append-line-unless-present "/path/to/file"
 #
 file::write_filter::append_line_unless_present() {
   # If the first argument is --parse-arguments, output the number of arguments this filter consumes and return
@@ -485,19 +480,15 @@ file::write_filter::append_line_unless_present() {
     { echo "Failed to write input data to output." >&2; return 1; }
 }
 
-# ## `file::write_filter::section`
-#
 # Replaces a named section in an existing file with new content from standard input.
 # If the section does not exist, appends a new section at the end.
 # The section is marked using "# BEGIN <section>" and "# END <section>" lines.
 #
-# ### Usage
+# Usage:
+#   file::write_filter::section <section_name> [existing_file]
 #
-# file::write_filter::section <section_name> [existing_file]
-#
-# ### Example
-#
-# echo "new content" | file::write --section my-section config-file
+# Example:
+#   echo "new content" | file::write --section my-section config-file
 #
 file::write_filter::section() {
   # If the first argument is --parse-arguments, output the number of arguments this filter consumes and return
@@ -567,17 +558,13 @@ file::write_filter::section() {
     { printf "Failed to append new section '%s'.\n" "${section_name}" >&2; return 1; }
 }
 
-# ## `file::section_envelope`
-#
 # Wraps standard input content with clearly marked section boundaries.
 #
-# ### Usage
+# Usage:
+#   file::section_envelope <section_name>
 #
-# file::section_envelope <section_name>
-#
-# ### Example
-#
-# echo "data" | file::section_envelope my-section
+# Example:
+#   echo "data" | file::section_envelope my-section
 #
 file::section_envelope() {
   local section_name="$1"
@@ -596,17 +583,13 @@ file::section_envelope() {
     { printf "Failed to write end marker for section '%s'.\n" "${section_name}" >&2; return 1; }
 }
 
-# ## `file::read_section`
-#
 # Extracts a named section of lines from a file, delimited by `# BEGIN <name>` and `# END <name>`.
 #
-# ### Usage
+# Usage:
+#   file::read_section "section_name" "file_path"
 #
-# file::read_section "section_name" "file_path"
-#
-# ### Example
-#
-# file::read_section "my-section" "/path/to/file"
+# Example:
+#   file::read_section "my-section" "/path/to/file"
 #
 file::read_section() {
   # Check for required arguments
