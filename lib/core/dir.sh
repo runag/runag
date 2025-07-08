@@ -14,30 +14,30 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# ### `dir::ensure_exists`
+# Ensures a directory exists with the specified properties.
+# This function creates the directory if it doesn't exist and applies the desired permissions,
+# ownership, and group settings. Additionally, it provides options for running the commands with
+# elevated privileges or limiting access to the current user only.
 #
-# Ensures a directory exists with the specified properties. This function creates the directory if it doesn't exist 
-# and applies the desired permissions, ownership, and group settings. Additionally, it provides options for running 
-# the commands with elevated privileges or limiting access to the current user only.
+# Usage:
 #
-# #### Usage
+#   `dir::ensure_exists` [OPTIONS] <path>
 #
-# `dir::ensure_exists` [OPTIONS] <path>
+# Options:
 #
-# - `-m|--mode <permissions>`: Set the directory's permissions in numeric form (e.g., 0755).
-# - `-o|--owner <username>`: Set the directory's owner.
-# - `-g|--group <groupname>`: Set the directory's group.
-# - `-s|--sudo`: Use elevated privileges (sudo) for creating and modifying the directory.
-# - `-u|--user-only`: Shortcut to set permissions to 0700 and ownership to the current user.
-# - `<path>`: The path of the directory to ensure exists.
+#   -m, --mode <permissions>  Set the directory's permissions in numeric form (e.g., 0755).
+#   -o, --owner <username>    Set the directory's owner.
+#   -g, --group <groupname>   Set the directory's group.
+#   -s, --sudo                Use elevated privileges (sudo) for creating and modifying the directory.
+#   -u, --user-only           Shortcut to set permissions to 0700 and ownership to the current user.
+#   <path>                    The path of the directory to ensure exists.
 #
-# #### Example
+# Examples:
 #
-# ```bash
-# dir::ensure_exists --mode 0755 --owner user --group admin /path/to/directory
-# dir::ensure_exists --user-only /secure/directory
-# dir::ensure_exists --sudo /path/to/dir
-# ```
+#   dir::ensure_exists --mode 0755 --owner user --group admin /path/to/directory
+#   dir::ensure_exists --user-only /secure/directory
+#   dir::ensure_exists --sudo /path/to/dir
+# 
 dir::ensure_exists() {
   local mode
   local owner
