@@ -78,7 +78,7 @@ linux::update_remote_locale() (
 #
 # This function performs the following steps:
 #   * Uncomments the specified locales in /etc/locale.gen
-#   * Regenerates locales with `locale-gen`, unless `--may-skip-locale-gen` is specified and all required locales are already available
+#   * Regenerates locales with `locale-gen`, unless `--skip-locale-gen-if-present` is specified and all required locales are already available
 #   * Updates /etc/locale.conf with the provided locale environment variables
 #   * Unsets any existing locale-related variables in the current shell
 #   * Detects a known Bash locale issue and, unless skipped, halts with guidance to retry in a new shell
@@ -88,15 +88,15 @@ linux::update_remote_locale() (
 #   linux::reset_locales [options] VAR=VALUE [...]
 #
 # Options:
-#   -i, --ignore-first-run-fright   Skip the workaround check for the known Bash locale issue (useful in automation)
-#   -m, --may-skip-locale-gen       Skip locale generation if the required locales already exist in the system
+#   -i, --ignore-first-run-fright     Skip the workaround check for the known Bash locale issue
+#   -s, --skip-locale-gen-if-present  Skip locale generation if the required locales already exist in the system
 #
 # Example:
 #   linux::reset_locales LANG=en_US.UTF-8 LC_TIME=de_DE.UTF-8
 
 linux::reset_locales() {
   local ignore_first_run_fright=false
-  local may_skip_locale_gen=false
+  local skip_locale_gen_if_present=false
 
   # Parse options
   while [ "$#" -gt 0 ]; do
@@ -105,8 +105,8 @@ linux::reset_locales() {
         ignore_first_run_fright=true
         shift
         ;;
-      -m|--may-skip-locale-gen)
-        may_skip_locale_gen=true
+      -s|--skip-locale-gen-if-present)
+        skip_locale_gen_if_present=true
         shift
         ;;
       -*)
@@ -127,9 +127,9 @@ linux::reset_locales() {
       local locale_name="${BASH_REMATCH[1]}"
 
       # Check if locale generation can be skipped (only if requested)
-      if [ "$may_skip_locale_gen" = true ]; then
+      if [ "$skip_locale_gen_if_present" = true ]; then
         if ! { { locale -a | grep -qFx "$locale_name"; } || { locale -a | grep -qFx "${locale_name/%.UTF-8/.utf8}"; }; }; then
-          may_skip_locale_gen=false # Locale not found - force generation
+          skip_locale_gen_if_present=false # Locale not found - force generation
         fi
       fi
 
@@ -142,7 +142,7 @@ linux::reset_locales() {
   done
 
   # Regenerate the locales unless it has been confirmed that it can be skipped
-  if [ "$may_skip_locale_gen" != true ]; then
+  if [ "$skip_locale_gen_if_present" != true ]; then
     sudo locale-gen --keep-existing || {
       echo "locale-gen failed" >&2
       return 1
