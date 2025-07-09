@@ -69,20 +69,49 @@ linux::update_remote_locale() (
   # we disable control master to get a clean locale state and not to affect later sessions
   export REMOTE_CONTROL_MASTER=no
 
-  ssh::call linux::reset_locales --carry-on "${locale_list[@]}" || softfail || return $?
+  ssh::call linux::reset_locales --ignore-first-run-fright "${locale_list[@]}" || softfail || return $?
 )
 
-linux::reset_locales() {
-  local carry_on=false
+# linux::reset_locales
+#
+# Resets and updates system locale settings on a Linux system.
+#
+# This function performs the following steps:
+#   * Uncomments the specified locales in /etc/locale.gen
+#   * Regenerates locales with `locale-gen`, unless `--may-skip-locale-gen` is specified and all required locales are already available
+#   * Updates /etc/locale.conf with the provided locale environment variables
+#   * Unsets any existing locale-related variables in the current shell
+#   * Detects a known Bash locale issue and, unless skipped, halts with guidance to retry in a new shell
+#   * Exports the new locale variables into the current Bash environment
+#
+# Usage:
+#   linux::reset_locales [options] VAR=VALUE [...]
+#
+# Options:
+#   -i, --ignore-first-run-fright   Skip the workaround check for the known Bash locale issue (useful in automation)
+#   -m, --may-skip-locale-gen       Skip locale generation if the required locales already exist in the system
+#
+# Example:
+#   linux::reset_locales LANG=en_US.UTF-8 LC_TIME=de_DE.UTF-8
 
+linux::reset_locales() {
+  local ignore_first_run_fright=false
+  local may_skip_locale_gen=false
+
+  # Parse options
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -c|--carry-on)
-        carry_on=true
+      -i|--ignore-first-run-fright)
+        ignore_first_run_fright=true
+        shift
+        ;;
+      -m|--may-skip-locale-gen)
+        may_skip_locale_gen=true
         shift
         ;;
       -*)
-        softfail "Unknown argument: $1" || return $?
+        printf 'Unknown argument: %s\n' "$1" >&2
+        return 1
         ;;
       *)
         break
@@ -90,65 +119,140 @@ linux::reset_locales() {
     esac
   done
 
-  local item; for item in "$@"; do
-    if [[ "${item}" =~ ^[[:alpha:]_]+=(.*)$ ]]; then
-      local locale_match; locale_match="$(<<<"${BASH_REMATCH[1]}" sed -E 's/[.]/[.]/g')" || softfail || return $?
-      sudo sed --in-place -E 's/^#\s*('"${locale_match}"'(\s|$))/\1/g' /etc/locale.gen || softfail || return $?
+  # Loop through remaining arguments (expected to be VAR=locale format)
+  local item
+  for item in "$@"; do
+    # Extract the locale name from the VAR=locale string
+    if [[ "$item" =~ ^[[:alpha:]_]+=(.*)$ ]]; then
+      local locale_name="${BASH_REMATCH[1]}"
+
+      # Check if locale generation can be skipped (only if requested)
+      if [ "$may_skip_locale_gen" = true ]; then
+        if ! { { locale -a | grep -qFx "$locale_name"; } || { locale -a | grep -qFx "${locale_name/%.UTF-8/.utf8}"; }; }; then
+          may_skip_locale_gen=false # Locale not found - force generation
+        fi
+      fi
+
+      # Uncomment the corresponding line in /etc/locale.gen to enable the locale
+      sudo sed --in-place -E "s/^#\s*(${locale_name//./[.]}(\s|\$))/\1/g" /etc/locale.gen || {
+        echo "Failed to update /etc/locale.gen" >&2
+        return 1
+      }
     fi
   done
 
-  sudo locale-gen --keep-existing || softfail || return $?
+  # Regenerate the locales unless it has been confirmed that it can be skipped
+  if [ "$may_skip_locale_gen" != true ]; then
+    sudo locale-gen --keep-existing || {
+      echo "locale-gen failed" >&2
+      return 1
+    }
+  fi
 
-  # sudo update-locale --reset "$@" || softfail || return $?
-  # the following should do the same
+  # Prepare /etc/locale.conf from given variables
+  local temp_file
+  temp_file="$(mktemp)" || {
+    echo "Failed to create temporary file" >&2
+    return 1
+  }
 
-  local temp_file; temp_file="$(mktemp)" || softfail || return $?
   {
-    local locale_line; for locale_line in "$@"; do
-      printf "%q\n" "${locale_line}" || softfail || return $?
+    local line
+    for line in "$@"; do
+      printf '%q\n' "$line" || {
+        echo "Failed to format locale line" >&2
+        return 1
+      }
     done
-  } >"${temp_file}" || softfail || return $?
+  } >"$temp_file" || {
+    echo "Failed to write to temporary file" >&2
+    return 1
+  }
 
-  file::write --sudo --consume "${temp_file}" --mode 0644 /etc/locale.conf || softfail || return $?
+  sudo install \
+    --compare \
+    --mode=0644 \
+    --owner=root \
+    --group=root \
+    --no-target-directory \
+    "$temp_file" /etc/locale.conf || {
+      echo "Failed to update /etc/locale.conf" >&2
+      return 1
+  }
 
-  unset -v LANG LANGUAGE "${!LC_@}" || softfail || return $?
+  rm "$temp_file" || {
+    echo "Failed to remove temporary file" >&2
+    return 1
+  }
 
-  # Workaround for strange bash behaviour
+  # Clear existing locale variables in the current environment
+  unset -v LANG LANGUAGE "${!LC_@}" || {
+    echo "Failed to unset locale variables" >&2
+    return 1
+  }
+
+  # Workaround for a Bash locale quirk.
   #
-  # Right after fresh OS install you may get the following warning on the first script run:
+  # Immediately after a fresh OS install, the first run of this script may trigger a warning like:
   #
-  # <file>: line <line>: warning: setlocale: LC_<type>: cannot change locale (<locale name>): No such file or directory
+  #   <file>: line <line>: warning: setlocale: LC_<type>: cannot change locale (<locale name>): No such file or directory
   #
-  # In that case bash will not change it's own locale, as requested, but any child process started from that bash
-  # will use new locale as specified in environment.
+  # In this situation, Bash itself will not apply the new locale, even though the environment variables are set.
+  # However, any child process started from that Bash session *will* respect the new locale settings.
   #
-  # The same command will produce no warnings on every consecutive run
+  # The warning only appears once - subsequent runs of the same command in the same or a new shell will succeed quietly.
   #
-  # I expect this peculiarity to be fixed before bash will get dead-code elimination, but if it's not going to happen
-  # then /usr/bin/true here is just for you guys from 2265, I hope that you are doing great there.
+  # I call `/usr/bin/true` here as a no-op to help trigger and detect the issue.
   #
-  # printf '%(%c)T\n' could be used to test that case
+  # I expect this quirk will be resolved long before Bash gets dead-code elimination - but if not,
+  # hello to whoever's maintaining this in the year 2265. Hope you're doing well.
   #
-  if [ "${carry_on}" = false ]; then
-    local temp_file; temp_file="$(mktemp)" || softfail || return $?
+  # Tip: You can test for this condition with: `printf '%(%c)T\n'`
+  #
+  # It may be worth reporting if it's not already known.
+
+  if [ "$ignore_first_run_fright" != true ]; then
+    local error_file
+    error_file="$(mktemp)" || {
+      echo "Failed to create error log" >&2
+      return 1
+    }
 
     # `declare -g` requires Bash 4.2 or newer (released in 2011)
-    ( declare -gx "$@" && /usr/bin/true ) 2>"${temp_file}" || softfail || return $?
+    ( declare -gx "$@" && /usr/bin/true ) 2>"$error_file" || {
+      echo "Failed to declare global locale variables" >&2
+      return 1
+    }
 
-    if [ -s "${temp_file}" ]; then
-      cat "${temp_file}" >&2 || softfail || return $?
-      rm "${temp_file}" || softfail || return $?
-      softfail "Unable to change locale, please try to run the same command once again in a new bash process"
-      return $?
+    if [ -s "$error_file" ]; then
+      cat "$error_file" >&2 || {
+        echo "Failed to display error log" >&2
+        return 1
+      }
+
+      rm "$error_file" || {
+        echo "Failed to remove temporary file" >&2
+        return 1
+      }
+
+      echo "Unable to apply locale changes in the current shell. Please try running this command again in a new shell." >&2
+      return 1
     else
-      rm "${temp_file}" || softfail || return $?
+      rm "$error_file" || {
+        echo "Failed to remove temporary file" >&2
+        return 1
+      }
     fi
   fi
 
+  # Final export of the provided locale variables
   # `declare -g` requires Bash 4.2 or newer (released in 2011)
-  # -g global variable scope
-  # -x export
-  declare -gx "$@" || softfail || return $?
+  #   -g global variable scope
+  #   -x export
+  declare -gx "$@" || {
+    echo "Failed to export locale variables" >&2
+    return 1
+  }
 }
 
 linux::configure_inotify() {
