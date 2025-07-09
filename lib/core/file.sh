@@ -21,6 +21,9 @@
 # This function provides multiple methods to write to a file, such as copying, consuming a file,
 # capturing output, or writing strings directly. It ensures the file exists with correct properties.
 #
+# Please note that using the --sudo option will slow down this function by a factor of 10.
+# Hopefully, this won't be an issue if you're only processing a handful of files.
+#
 # Usage:
 #
 #   file::write [options]... <file_path> [input_data]
